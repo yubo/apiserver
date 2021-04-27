@@ -1,0 +1,92 @@
+global:
+  logLevel: 10
+  logFlushFrequency: 5
+  watchdogSec: 10
+
+logging:
+  level: info
+
+debug:
+  address: "127.0.0.1:6831"
+  pprof: true
+  expvar: true
+  metrics: true
+
+tracing:
+  httpBody: true       # log http request body
+  httpHeader: true     # log http request header
+  respTraceId: true    # inject trace id into response header
+  jaeger:
+    reporter:
+      localAgentHostPort: 127.0.0.1:6831
+      logSpans: false
+
+apiserver:
+  advertiseAddress: 127.0.0.1
+  corsAllowedOriginList:
+  hSTSDirectives:
+  externalHost:
+  maxRequestsInFlight:
+  maxMutatingRequestsInFlight:
+  requestTimeout:
+  goawayChance:
+  livezGracePeriod:
+  minRequestTimeout:
+  shutdownTimeout:
+  shutdownDelayDuration:
+  maxRequestBodyBytes:
+  enablePriorityAndFairness:
+
+authentication:
+
+  
+session:
+  enabled: true
+  storage: "db" # mem | db
+  cookieName: "golib-example-sid"
+  sidLength: 24
+  httpOnly: true
+  domain:
+  gcInterval: "60s"
+  cookieLifetime: 16h
+
+swagger: # depend http
+  enabled: true
+  clientId: "1234"
+  clientSecret: "1234"
+  name: "helo"
+  url: "/apidocs.json"
+  schemes:
+    - name: "oauth2"
+      type: "accessCode"
+      authorizationURL: "http://localhost/o/oauth2/authorize"
+      tokenURL: "http://localhost/o/oauth2/token"
+    - name: "apiKey"
+      type: "apiKey"
+      fieldName: "X-API-KEY"
+      valueSource: "header" # can be "header", "query" or "cookie"
+    - name: "base"
+      type: "base"
+
+grpc:
+  addr: ":8081"
+  maxRecvMsgSize: 1024000
+
+db:
+  driver: "sqlite3"
+  dsn: "file:helo.db?cache=shared&mode=memory"
+  #driver: "mysql"
+  #dsn: "root:1234@tcp(localhost:3306)/test?loc=Local&parseTime=true"
+  #
+
+mail:
+  from: ["norelay-sso@example.com", "SSO"]
+  host: "smtp.example.com"
+  port: 25
+  username: ""
+  password: ""
+  tmpDir: "/tmp"
+# include ./global.yml
+
+auth:
+  name: "helo.auth"

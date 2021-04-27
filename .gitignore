@@ -1,0 +1,6 @@
+run/
+example/helo
+tmp/
+
+*.bak
+*.log

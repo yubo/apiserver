@@ -1,0 +1,16 @@
+syntax = "proto3";
+option go_package = "github.com/yubo/golib/example/tracing";
+package tracing;
+
+message Request {
+	string Name = 1;
+}
+
+message Response {
+	string Message = 1;
+}
+
+service Service {
+	rpc C1(Request) returns (Response) {
+	}
+}

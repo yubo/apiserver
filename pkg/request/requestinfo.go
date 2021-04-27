@@ -1,0 +1,115 @@
+/*
+Copyright 2016 The Kubernetes Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package request
+
+import (
+	"context"
+	"net/http"
+	"strings"
+
+	"github.com/yubo/golib/staging/util/sets"
+)
+
+// LongRunningRequestCheck is a predicate which is true for long-running http requests.
+type LongRunningRequestCheck func(r *http.Request, requestInfo *RequestInfo) bool
+
+type RequestInfoResolver interface {
+	NewRequestInfo(req *http.Request) (*RequestInfo, error)
+}
+
+// RequestInfo holds information parsed from the http.Request
+type RequestInfo struct {
+	// IsResourceRequest indicates whether or not the request is for an API resource or subresource
+	IsResourceRequest bool
+	// Path is the URL path of the request
+	Path string
+	// Verb is the kube verb associated with the request for API requests, not the http verb.  This includes things like list and watch.
+	// for non-resource requests, this is the lowercase http verb
+	Verb string
+
+	APIPrefix string
+	//APIGroup   string
+	//APIVersion string
+	Namespace string
+	// Resource is the name of the resource being requested.  This is not the kind.  For example: pods
+	Resource string
+	// Subresource is the name of the subresource being requested.  This is a different resource, scoped to the parent resource, but it may have a different kind.
+	// For instance, /pods has the resource "pods" and the kind "Pod", while /pods/foo/status has the resource "pods", the sub resource "status", and the kind "Pod"
+	// (because status operates on pods). The binding resource for a pod though may be /pods/foo/binding, which has resource "pods", subresource "binding", and kind "Binding".
+	Subresource string
+	// Name is empty for some verbs, but if the request directly indicates a name (not in body content) then this field is filled in.
+	Name string
+	// Parts are the path parts for the request, always starting with /{resource}/{name}
+	Parts []string
+}
+
+// specialVerbs contains just strings which are used in REST paths for special actions that don't fall under the normal
+// CRUDdy GET/POST/PUT/DELETE actions on REST objects.
+// TODO: find a way to keep this up to date automatically.  Maybe dynamically populate list as handlers added to
+// master's Mux.
+var specialVerbs = sets.NewString("proxy", "watch")
+
+// specialVerbsNoSubresources contains root verbs which do not allow subresources
+var specialVerbsNoSubresources = sets.NewString("proxy")
+
+// namespaceSubresources contains subresources of namespace
+// this list allows the parser to distinguish between a namespace subresource, and a namespaced resource
+var namespaceSubresources = sets.NewString("status", "finalize")
+
+// NamespaceSubResourcesForTest exports namespaceSubresources for testing in pkg/controlplane/master_test.go, so we never drift
+var NamespaceSubResourcesForTest = sets.NewString(namespaceSubresources.List()...)
+
+type RequestInfoFactory struct {
+	APIPrefixes          sets.String // without leading and trailing slashes
+	GrouplessAPIPrefixes sets.String // without leading and trailing slashes
+}
+
+func (r *RequestInfoFactory) NewRequestInfo(req *http.Request) (*RequestInfo, error) {
+	// start with a non-resource request until proven otherwise
+	return &RequestInfo{
+		IsResourceRequest: false,
+		Path:              req.URL.Path,
+		Verb:              strings.ToLower(req.Method),
+	}, nil
+}
+
+type requestInfoKeyType int
+
+// requestInfoKey is the RequestInfo key for the context. It's of private type here. Because
+// keys are interfaces and interfaces are equal when the type and the value is equal, this
+// does not conflict with the keys defined in pkg/api.
+const requestInfoKey requestInfoKeyType = iota
+
+// WithRequestInfo returns a copy of parent in which the request info value is set
+func WithRequestInfo(parent context.Context, info *RequestInfo) context.Context {
+	return WithValue(parent, requestInfoKey, info)
+}
+
+// RequestInfoFrom returns the value of the RequestInfo key on the ctx
+func RequestInfoFrom(ctx context.Context) (*RequestInfo, bool) {
+	info, ok := ctx.Value(requestInfoKey).(*RequestInfo)
+	return info, ok
+}
+
+// splitPath returns the segments for a URL path.
+func splitPath(path string) []string {
+	path = strings.Trim(path, "/")
+	if path == "" {
+		return []string{}
+	}
+	return strings.Split(path, "/")
+}
