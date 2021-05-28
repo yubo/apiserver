@@ -22,10 +22,11 @@ tracing:
       logSpans: false
 
 apiserver:
-  advertiseAddress: 127.0.0.1
+  externalHost:
+  bindAddress: 0.0.0.0
+  bindPort: 8080
   corsAllowedOriginList:
   hSTSDirectives:
-  externalHost:
   maxRequestsInFlight:
   maxMutatingRequestsInFlight:
   requestTimeout:

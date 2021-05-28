@@ -1,18 +1,15 @@
 package main
 
 import (
-	"os"
-
 	"github.com/yubo/golib/staging/logs"
+	"k8s.io/klog/v2"
 )
 
 func main() {
-	cmd := newServerCmd()
-
 	logs.InitLogs()
 	defer logs.FlushLogs()
 
-	if err := cmd.Execute(); err != nil {
-		os.Exit(1)
+	if err := newServerCmd().Execute(); err != nil {
+		klog.Fatal(err)
 	}
 }

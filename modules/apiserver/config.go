@@ -48,10 +48,13 @@ func (s *config) Flags(fss *cliflag.NamedFlagSets) {
 
 // config contains the config while running a generic api server.
 type config struct {
-	AdvertiseAddress            net.IP // plublicAddress
+	ExternalHost string
+	BindAddress  net.IP
+	BindPort     int    // BindPort is ignored when Listener is set, will serve https even with 0.
+	BindNetwork  string // BindNetwork is the type of network to bind to - defaults to "tcp", accepts "tcp", "tcp4", and "tcp6".
+
 	CorsAllowedOriginList       []string
 	HSTSDirectives              []string
-	ExternalHost                string
 	MaxRequestsInFlight         int
 	MaxMutatingRequestsInFlight int
 	RequestTimeout              time.Duration
@@ -66,13 +69,6 @@ type config struct {
 	// apiserver library can wire it to a flag.
 	MaxRequestBodyBytes       int64
 	EnablePriorityAndFairness bool
-
-	BindAddress net.IP
-	// BindPort is ignored when Listener is set, will serve https even with 0.
-	BindPort int
-	// BindNetwork is the type of network to bind to - defaults to "tcp", accepts "tcp",
-	// "tcp4", and "tcp6".
-	BindNetwork string
 
 	// ExternalAddress is the address advertised, even if BindAddress is a loopback. By default this
 	// is set to BindAddress if the later no loopback, or to the first host interface address.
@@ -104,14 +100,10 @@ func newConfig() *config {
 // Validate will be called by config reader
 func (s *config) Validate() error {
 	if len(s.ExternalHost) == 0 {
-		if len(s.AdvertiseAddress) > 0 {
-			s.ExternalHost = s.AdvertiseAddress.String()
+		if hostname, err := os.Hostname(); err == nil {
+			s.ExternalHost = hostname
 		} else {
-			if hostname, err := os.Hostname(); err == nil {
-				s.ExternalHost = hostname
-			} else {
-				return fmt.Errorf("error finding host name: %v", err)
-			}
+			return fmt.Errorf("error finding host name: %v", err)
 		}
 		klog.Infof("external host was not specified, using %v", s.ExternalHost)
 	}
@@ -183,12 +175,6 @@ func validateHSTSDirectives(hstsDirectives []string) error {
 func (s *config) AddUniversalFlags(fs *pflag.FlagSet) {
 	// Note: the weird ""+ in below lines seems to be the only way to get gofmt to
 	// arrange these text blocks sensibly. Grrr.
-
-	fs.IPVar(&s.AdvertiseAddress, "advertise-address", s.AdvertiseAddress, ""+
-		"The IP address on which to advertise the apiserver to members of the cluster. This "+
-		"address must be reachable by the rest of the cluster. If blank, the --bind-address "+
-		"will be used. If --bind-address is unspecified, the host's default interface will "+
-		"be used.")
 
 	fs.StringSliceVar(&s.CorsAllowedOriginList, "cors-allowed-origins", s.CorsAllowedOriginList, ""+
 		"List of allowed origins for CORS, comma separated.  An allowed origin can be a regular "+

@@ -84,7 +84,7 @@ func (p *apiserver) serverInit() error {
 	c.MinRequestTimeout = cf.MinRequestTimeout
 	c.ShutdownDelayDuration = cf.ShutdownDelayDuration
 	c.MaxRequestBodyBytes = cf.MaxRequestBodyBytes
-	c.PublicAddress = cf.AdvertiseAddress
+	c.PublicAddress = cf.BindAddress
 
 	if cf.Listener == nil {
 		var err error
