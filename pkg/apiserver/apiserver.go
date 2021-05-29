@@ -317,7 +317,7 @@ func DefaultBuildHandlerChain(ctx context.Context, apiHandler http.Handler, c *S
 
 	if authn, ok := options.AuthnFrom(ctx); ok {
 		handler = filters.TrackCompleted(handler)
-		handler = filters.WithAuthentication(handler, authn.Authenticator(), failedHandler, authn.APIAudiences())
+		handler = filters.WithAuthentication(handler, authn.Authenticator(), failedHandler /*, authn.APIAudiences()*/)
 		handler = filters.TrackStarted(handler, "authentication")
 	}
 

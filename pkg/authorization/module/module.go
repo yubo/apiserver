@@ -15,27 +15,27 @@ const (
 )
 
 var (
-	_server = &authorization{name: moduleName}
+	_authz  = &authorization{name: moduleName}
 	hookOps = []proc.HookOps{{
-		Hook:        _server.init,
+		Hook:        _authz.init,
 		Owner:       moduleName,
 		HookNum:     proc.ACTION_TEST,
 		Priority:    proc.PRI_SYS_INIT,
 		SubPriority: options.PRI_M_HTTP,
 	}, {
-		Hook:        _server.init,
+		Hook:        _authz.init,
 		Owner:       moduleName,
 		HookNum:     proc.ACTION_START,
 		Priority:    proc.PRI_SYS_INIT,
 		SubPriority: options.PRI_M_AUTHZ,
 	}, {
-		Hook:        _server.start,
+		Hook:        _authz.start,
 		Owner:       moduleName,
 		HookNum:     proc.ACTION_START,
 		Priority:    proc.PRI_SYS_START,
 		SubPriority: options.PRI_M_AUTHZ,
 	}, {
-		Hook:        _server.stop,
+		Hook:        _authz.stop,
 		Owner:       moduleName,
 		HookNum:     proc.ACTION_STOP,
 		Priority:    proc.PRI_SYS_START,

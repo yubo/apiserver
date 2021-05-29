@@ -22,6 +22,13 @@ import (
 	_ "github.com/yubo/apiserver/pkg/swagger/register"
 	_ "github.com/yubo/apiserver/pkg/tracing/register"
 	_ "github.com/yubo/golib/orm/sqlite"
+
+	// authn
+	_ "github.com/yubo/apiserver/pkg/authentication/register/bootstrap"
+	_ "github.com/yubo/apiserver/pkg/authentication/register/oidc"
+	_ "github.com/yubo/apiserver/pkg/authentication/register/serviceaccount"
+	_ "github.com/yubo/apiserver/pkg/authentication/register/tokenfile"
+	_ "github.com/yubo/apiserver/pkg/authentication/register/webhook"
 )
 
 const (

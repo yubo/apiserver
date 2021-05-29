@@ -65,3 +65,15 @@ func (a *Authenticator) AuthenticateRequest(req *http.Request) (*authenticator.R
 
 	return resp, ok, err
 }
+
+func (a *Authenticator) Name() string {
+	return "bearer token authenticator"
+}
+
+func (a *Authenticator) Priority() int {
+	return authenticator.PRI_AUTH_TOKEN
+}
+
+func (a *Authenticator) Available() bool {
+	return a.auth != nil
+}

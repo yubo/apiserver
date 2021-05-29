@@ -106,3 +106,15 @@ func (a *ProtocolAuthenticator) AuthenticateRequest(req *http.Request) (*authent
 
 	return resp, ok, err
 }
+
+func (a *ProtocolAuthenticator) Name() string {
+	return "websocket token authenticator"
+}
+
+func (a *ProtocolAuthenticator) Priority() int {
+	return authenticator.PRI_AUTH_WEBSOCKET_TOKEN
+}
+
+func (a *ProtocolAuthenticator) Available() bool {
+	return a.auth != nil
+}

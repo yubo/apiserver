@@ -17,7 +17,6 @@ limitations under the License.
 package filters
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
@@ -32,7 +31,7 @@ import (
 // stores any such user found onto the provided context for the request. If authentication fails or returns an error
 // the failed handler is used. On success, "Authorization" header is removed from the request and handler
 // is invoked to serve the request.
-func WithAuthentication(handler http.Handler, auth authenticator.Request, failed http.Handler, apiAuds authenticator.Audiences) http.Handler {
+func WithAuthentication(handler http.Handler, auth authenticator.Request, failed http.Handler /*, apiAuds authenticator.Audiences*/) http.Handler {
 	if auth == nil {
 		klog.Warning("Authentication is disabled")
 		return handler
@@ -41,12 +40,12 @@ func WithAuthentication(handler http.Handler, auth authenticator.Request, failed
 		klog.V(8).Infof("entering authn filter")
 		authenticationStart := time.Now()
 
-		if len(apiAuds) > 0 {
-			req = req.WithContext(authenticator.WithAudiences(req.Context(), apiAuds))
-		}
+		//if len(apiAuds) > 0 {
+		//	req = req.WithContext(authenticator.WithAudiences(req.Context(), apiAuds))
+		//}
 		resp, ok, err := auth.AuthenticateRequest(req)
 		klog.V(8).Infof("authn resp %+v ok %v err %v", resp, ok, err)
-		defer recordAuthMetrics(req.Context(), resp, ok, err, apiAuds, authenticationStart)
+		defer recordAuthMetrics(req.Context(), resp, ok, err /*apiAuds,*/, authenticationStart)
 		if err != nil || !ok {
 			if err != nil {
 				klog.ErrorS(err, "Unable to authenticate the request")
@@ -55,12 +54,12 @@ func WithAuthentication(handler http.Handler, auth authenticator.Request, failed
 			return
 		}
 
-		if !audiencesAreAcceptable(apiAuds, resp.Audiences) {
-			err = fmt.Errorf("unable to match the audience: %v , accepted: %v", resp.Audiences, apiAuds)
-			klog.Error(err)
-			failed.ServeHTTP(w, req)
-			return
-		}
+		//if !audiencesAreAcceptable(apiAuds, resp.Audiences) {
+		//	err = fmt.Errorf("unable to match the audience: %v , accepted: %v", resp.Audiences, apiAuds)
+		//	klog.Error(err)
+		//	failed.ServeHTTP(w, req)
+		//	return
+		//}
 
 		// authorization header is not required anymore in case of a successful authentication.
 		req.Header.Del("Authorization")

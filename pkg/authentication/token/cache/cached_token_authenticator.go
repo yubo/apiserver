@@ -117,6 +117,19 @@ func newWithClock(authenticator authenticator.Token, cacheErrs bool, successTTL,
 	}
 }
 
+func (a *cachedTokenAuthenticator) Name() string {
+	return "cached token authenticator"
+}
+func (a *cachedTokenAuthenticator) Priority() int {
+	if a.authenticator != nil {
+		return a.authenticator.Priority()
+	}
+	return 0
+}
+func (a *cachedTokenAuthenticator) Available() bool {
+	return a.authenticator != nil
+}
+
 // AuthenticateToken implements authenticator.Token
 func (a *cachedTokenAuthenticator) AuthenticateToken(ctx context.Context, token string) (*authenticator.Response, bool, error) {
 	record := a.doAuthenticateToken(ctx, token)

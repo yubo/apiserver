@@ -67,11 +67,11 @@ var (
 	)
 )
 
-func recordAuthMetrics(ctx context.Context, resp *authenticator.Response, ok bool, err error, apiAudiences authenticator.Audiences, authStart time.Time) {
+func recordAuthMetrics(ctx context.Context, resp *authenticator.Response, ok bool, err error /*, apiAudiences authenticator.Audiences*/, authStart time.Time) {
 	var resultLabel string
 
 	switch {
-	case err != nil || (resp != nil && !audiencesAreAcceptable(apiAudiences, resp.Audiences)):
+	case err != nil || (resp != nil /*&& !audiencesAreAcceptable(apiAudiences, resp.Audiences)*/):
 		resultLabel = errorLabel
 	case !ok:
 		resultLabel = failureLabel

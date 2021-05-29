@@ -47,7 +47,7 @@ type SecureServing interface {
 }
 
 type Authn interface {
-	APIAudiences() authenticator.Audiences
+	//APIAudiences() authenticator.Audiences
 	Authenticator() authenticator.Request
 }
 

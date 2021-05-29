@@ -19,8 +19,8 @@ package union
 import (
 	"net/http"
 
-	utilerrors "github.com/yubo/golib/staging/util/errors"
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
+	utilerrors "github.com/yubo/golib/staging/util/errors"
 )
 
 // unionAuthRequestHandler authenticates requests using a chain of authenticator.Requests
@@ -68,4 +68,17 @@ func (authHandler *unionAuthRequestHandler) AuthenticateRequest(req *http.Reques
 	}
 
 	return nil, false, utilerrors.NewAggregate(errlist)
+}
+
+func (a *unionAuthRequestHandler) Name() string {
+	return "union authenticator"
+}
+func (a *unionAuthRequestHandler) Priority() int {
+	if len(a.Handlers) > 0 {
+		return a.Handlers[0].Priority()
+	}
+	return 0
+}
+func (a *unionAuthRequestHandler) Available() bool {
+	return len(a.Handlers) > 0
 }

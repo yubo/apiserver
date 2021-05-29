@@ -14,21 +14,21 @@ const (
 )
 
 var (
-	_server = &authentication{name: moduleName}
+	_authn  = &authentication{name: moduleName}
 	hookOps = []proc.HookOps{{
-		Hook:        _server.init,
+		Hook:        _authn.init,
 		Owner:       moduleName,
 		HookNum:     proc.ACTION_TEST,
 		Priority:    proc.PRI_SYS_INIT,
 		SubPriority: options.PRI_M_AUTHN,
 	}, {
-		Hook:        _server.init,
+		Hook:        _authn.init,
 		Owner:       moduleName,
 		HookNum:     proc.ACTION_START,
 		Priority:    proc.PRI_SYS_INIT,
 		SubPriority: options.PRI_M_AUTHN,
 	}, {
-		Hook:        _server.stop,
+		Hook:        _authn.stop,
 		Owner:       moduleName,
 		HookNum:     proc.ACTION_STOP,
 		Priority:    proc.PRI_SYS_START,
@@ -42,14 +42,17 @@ type authentication struct {
 	config         *config
 	authentication *Authentication
 
+	authenticators      Authenticators
+	tokenAuthenticators TokenAuthenticators
+
 	ctx       context.Context
 	cancel    context.CancelFunc
 	stoppedCh chan struct{}
 }
 
-func (p *authentication) APIAudiences() authenticator.Audiences {
-	return p.authentication.APIAudiences
-}
+//func (p *authentication) APIAudiences() authenticator.Audiences {
+//	return p.authentication.APIAudiences
+//}
 
 func (p *authentication) Authenticator() authenticator.Request {
 	return p.authentication.Authenticator
@@ -66,7 +69,7 @@ func (p *authentication) init(ops *proc.HookOps) (err error) {
 	}
 	p.config = cf
 
-	if p.authentication, err = newAuthentication(p.ctx, p.config); err != nil {
+	if err = p.initAuthentication(); err != nil {
 		return err
 	}
 

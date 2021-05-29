@@ -152,3 +152,15 @@ func (t *TokenAuthenticator) AuthenticateToken(ctx context.Context, token string
 		},
 	}, true, nil
 }
+
+func (a *TokenAuthenticator) Name() string {
+	return "bearer OIDC authenticator"
+}
+
+func (a *TokenAuthenticator) Priority() int {
+	return authenticator.PRI_TOKEN_BOOTSTRAP
+}
+
+func (a *TokenAuthenticator) Available() bool {
+	return true
+}

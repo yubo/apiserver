@@ -19,8 +19,8 @@ package union
 import (
 	"context"
 
-	utilerrors "github.com/yubo/golib/staging/util/errors"
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
+	utilerrors "github.com/yubo/golib/staging/util/errors"
 )
 
 // unionAuthTokenHandler authenticates tokens using a chain of authenticator.Token objects
@@ -68,4 +68,14 @@ func (authHandler *unionAuthTokenHandler) AuthenticateToken(ctx context.Context,
 	}
 
 	return nil, false, utilerrors.NewAggregate(errlist)
+}
+
+func (a *unionAuthTokenHandler) Name() string {
+	return "union token authenticator"
+}
+func (a *unionAuthTokenHandler) Priority() int {
+	return authenticator.PRI_AUTH_TOKEN
+}
+func (a *unionAuthTokenHandler) Available() bool {
+	return len(a.Handlers) > 0
 }

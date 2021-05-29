@@ -49,3 +49,16 @@ func (g *GroupAdder) AuthenticateRequest(req *http.Request) (*authenticator.Resp
 	}
 	return r, true, nil
 }
+
+func (a *GroupAdder) Name() string {
+	return "groupAdder authenticator"
+}
+func (a *GroupAdder) Priority() int {
+	if a.Authenticator != nil {
+		return a.Authenticator.Priority()
+	}
+	return 0
+}
+func (a *GroupAdder) Available() bool {
+	return a.Authenticator != nil
+}

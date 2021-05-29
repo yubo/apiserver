@@ -214,6 +214,18 @@ func (a *Authenticator) Close() {
 	a.cancel()
 }
 
+func (a *Authenticator) Name() string {
+	return "bearer OIDC authenticator"
+}
+
+func (a *Authenticator) Priority() int {
+	return authenticator.PRI_TOKEN_OIDC
+}
+
+func (a *Authenticator) Available() bool {
+	return len(a.issuerURL) > 0
+}
+
 func New(opts Options) (*Authenticator, error) {
 	return newAuthenticator(opts, func(ctx context.Context, a *Authenticator, config *oidc.Config) {
 		// Asynchronously attempt to initialize the authenticator. This enables

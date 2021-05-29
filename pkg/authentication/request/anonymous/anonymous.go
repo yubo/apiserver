@@ -29,15 +29,30 @@ const (
 	unauthenticatedGroup = user.AllUnauthenticated
 )
 
+type Authenticator struct{}
+
 func NewAuthenticator() authenticator.Request {
-	return authenticator.RequestFunc(func(req *http.Request) (*authenticator.Response, bool, error) {
-		auds, _ := authenticator.AudiencesFrom(req.Context())
-		return &authenticator.Response{
-			User: &user.DefaultInfo{
-				Name:   anonymousUser,
-				Groups: []string{unauthenticatedGroup},
-			},
-			Audiences: auds,
-		}, true, nil
-	})
+	return &Authenticator{}
+}
+
+func (a *Authenticator) AuthenticateRequest(req *http.Request) (*authenticator.Response, bool, error) {
+	auds, _ := authenticator.AudiencesFrom(req.Context())
+	return &authenticator.Response{
+		User: &user.DefaultInfo{
+			Name:   anonymousUser,
+			Groups: []string{unauthenticatedGroup},
+		},
+		Audiences: auds,
+	}, true, nil
+}
+func (a *Authenticator) Name() string {
+	return "anonymous authenticator"
+}
+
+func (a *Authenticator) Priority() int {
+	return authenticator.PRI_TOKEN_OIDC
+}
+
+func (a *Authenticator) Available() bool {
+	return true
 }

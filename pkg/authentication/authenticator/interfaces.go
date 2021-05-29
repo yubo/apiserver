@@ -26,12 +26,18 @@ import (
 // Token checks a string value against a backing authentication store and
 // returns a Response or an error if the token could not be checked.
 type Token interface {
+	Name() string
+	Priority() int
+	Available() bool
 	AuthenticateToken(ctx context.Context, token string) (*Response, bool, error)
 }
 
 // Request attempts to extract authentication information from a request and
 // returns a Response or an error if the request could not be checked.
 type Request interface {
+	Name() string
+	Priority() int
+	Available() bool
 	AuthenticateRequest(req *http.Request) (*Response, bool, error)
 }
 
