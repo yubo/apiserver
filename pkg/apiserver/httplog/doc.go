@@ -1,5 +1,5 @@
 /*
-Copyright 2016 The Kubernetes Authors.
+Copyright 2014 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,6 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package filters contains all the http handler chain filters which
-// are not api related.
-package filters // import "github.com/yubo/apiserver/pkg/apiserver/server/filters"
+// Package httplog contains a helper object and functions to maintain a log
+// along with an http response.
+package httplog // import "github.com/yubo/apiserver/pkg/apiserver/httplog"

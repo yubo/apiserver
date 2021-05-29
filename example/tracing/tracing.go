@@ -3,6 +3,7 @@ package tracing
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -12,7 +13,6 @@ import (
 	"github.com/yubo/apiserver/pkg/openapi"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/golib/net/rpc"
-	"github.com/yubo/golib/proc"
 	"k8s.io/klog/v2"
 )
 
@@ -23,30 +23,29 @@ const (
 type Module struct {
 	Name string
 	http options.HttpServer
+	ctx  context.Context
 }
 
-var (
-	_module = &Module{Name: moduleName}
-	hookOps = []proc.HookOps{{
-		Hook:     _module.start,
-		Owner:    moduleName,
-		HookNum:  proc.ACTION_START,
-		Priority: proc.PRI_MODULE,
-	}}
-)
+func New(ctx context.Context) *Module {
+	return &Module{
+		ctx: ctx,
+	}
+}
 
-func (p *Module) start(ops *proc.HookOps) error {
-	ctx := ops.Context()
-
+func (p *Module) Start() error {
 	var ok bool
-	if p.http, ok = options.GenericServerFrom(ctx); !ok {
-		panic("unable to get http server")
+	if p.http, ok = options.GenericServerFrom(p.ctx); !ok {
+		return fmt.Errorf("unable to get http server from the context")
 	}
 
-	if grpc, ok := options.GrpcServerFrom(ctx); !ok {
-		panic("unable to get grpc server")
+	if grpc, ok := options.GrpcServerFrom(p.ctx); !ok {
+		return fmt.Errorf("unable to get grpc server from the context")
 	} else {
 		RegisterServiceServer(grpc, &grpcserver{})
+	}
+
+	if !opentracing.IsGlobalTracerRegistered() {
+		return fmt.Errorf(" opentracing is not registered")
 	}
 
 	p.installWs()
@@ -173,8 +172,4 @@ func (s *grpcserver) C1(ctx context.Context, in *Request) (*Response, error) {
 	sp.LogFields(log.String("msg", "from C1"))
 
 	return &Response{Message: "Hello " + in.Name}, nil
-}
-
-func init() {
-	proc.RegisterHooks(hookOps)
 }

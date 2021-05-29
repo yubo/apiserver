@@ -1,4 +1,4 @@
-package authentication
+package module
 
 import (
 	"context"

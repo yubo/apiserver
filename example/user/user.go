@@ -2,45 +2,47 @@
 package user
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
 	"github.com/emicklei/go-restful"
-	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/openapi"
+	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/responsewriters"
 	"github.com/yubo/golib/orm"
-	"github.com/yubo/golib/proc"
 	"k8s.io/klog/v2"
-)
-
-const (
-	moduleName = "user"
 )
 
 type Module struct {
 	Name string
 	http options.HttpServer
-	//auth optioins.Auth
-	db *orm.DB
+	db   *orm.DB
+	ctx  context.Context
 }
 
-var (
-	_module = &Module{Name: moduleName}
-	hookOps = []proc.HookOps{{
-		Hook:     _module.start,
-		Owner:    moduleName,
-		HookNum:  proc.ACTION_START,
-		Priority: proc.PRI_MODULE,
-	}}
-)
+func New(ctx context.Context) *Module {
+	return &Module{
+		ctx: ctx,
+	}
+}
 
-func (p *Module) start(ops *proc.HookOps) error {
-	ctx := ops.Context()
-	p.http = options.GenericServerMustFrom(ctx)
-	p.db, _ = options.DBFrom(ctx)
+func (p *Module) Start() error {
+	var ok bool
+	p.http, ok = options.GenericServerFrom(p.ctx)
+	if !ok {
+		return fmt.Errorf("unable to get http server from the context")
+	}
+
+	p.db, ok = options.DBFrom(p.ctx)
+	if !ok {
+		return fmt.Errorf("unable to get db from the context")
+	}
+
 	p.installWs()
+
+	addAuthScope()
 	return nil
 }
 
@@ -106,11 +108,6 @@ func (p *Module) updateUser(w http.ResponseWriter, req *http.Request, param *Upd
 
 func (p *Module) deleteUser(w http.ResponseWriter, req *http.Request, in *DeleteUserInput) (*User, error) {
 	return deleteUser(p.db, in.Name)
-}
-
-func init() {
-	proc.RegisterHooks(hookOps)
-	addAuthScope()
 }
 
 func addAuthScope() {

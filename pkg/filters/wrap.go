@@ -20,10 +20,10 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/yubo/apiserver/pkg/apiserver/httplog"
 	"github.com/yubo/apiserver/pkg/metrics"
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/golib/staging/util/runtime"
-	"github.com/yubo/apiserver/modules/apiserver/httplog"
 	"k8s.io/klog/v2"
 )
 

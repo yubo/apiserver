@@ -7,8 +7,8 @@ import (
 	"github.com/emicklei/go-restful"
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
-	//genericoptions "github.com/yubo/apiserver/modules/apiserver/options"
-	//"github.com/yubo/apiserver/modules/apiserver/server"
+	//genericoptions "github.com/yubo/apiserver/pkg/apiserver/options"
+	//"github.com/yubo/apiserver/pkg/apiserver/server"
 )
 
 type Client interface {

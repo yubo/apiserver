@@ -14,6 +14,5 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package filters contains all the http handler chain filters which
-// are not api related.
-package filters // import "github.com/yubo/apiserver/pkg/apiserver/server/filters"
+// Package mux contains abstractions for http multiplexing of APIs.
+package mux // import "github.com/yubo/apiserver/pkg/apiserver/mux"

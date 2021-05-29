@@ -1,43 +1,59 @@
 // this is a sample echo rest api module
-package echo
+package session
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/emicklei/go-restful"
-	"github.com/yubo/apiserver/pkg/options"
+	"github.com/yubo/apiserver/example/user"
 	"github.com/yubo/apiserver/pkg/openapi"
+	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/golib/net/session"
-	"github.com/yubo/golib/proc"
-)
-
-const (
-	moduleName = "demo.session"
 )
 
 type module struct {
 	Name    string
 	http    options.GenericServer
 	session session.SessionManager
+	ctx     context.Context
 }
 
-var (
-	_module = &module{Name: moduleName}
-	hookOps = []proc.HookOps{{
-		Hook:     _module.start,
-		Owner:    moduleName,
-		HookNum:  proc.ACTION_START,
-		Priority: proc.PRI_MODULE,
-	}}
-)
+func New(ctx context.Context) *module {
+	return &module{
+		ctx: ctx,
+	}
+}
 
-func (p *module) start(ops *proc.HookOps) error {
-	ctx := ops.Context()
-	p.http, _ = options.GenericServerFrom(ctx)
-	p.session, _ = options.SessionManagerFrom(ctx)
+func (p *module) Start() error {
+	var ok bool
+
+	p.http, ok = options.GenericServerFrom(p.ctx)
+	if !ok {
+		return fmt.Errorf("unable to get http server from the context")
+	}
+
+	p.session, ok = options.SessionManagerFrom(p.ctx)
+	if !ok {
+		return fmt.Errorf("unable to get session manager from the context")
+	}
+
+	db, ok := options.DBFrom(p.ctx)
+	if !ok {
+		return fmt.Errorf("unable to get db")
+	}
+
+	if err := db.ExecRows([]byte(session.CREATE_TABLE_SQLITE)); err != nil {
+		return err
+	}
+	if err := db.ExecRows([]byte(user.CREATE_TABLE_SQLITE)); err != nil {
+		return err
+	}
+
 	p.installWs()
+
 	return nil
 }
 
@@ -121,8 +137,4 @@ func Filter(manager session.SessionManager) restful.FilterFunction {
 
 		sess.Update(resp)
 	}
-}
-
-func init() {
-	proc.RegisterHooks(hookOps)
 }

@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 // from k8s.io/apiserver/pkg/server/options/authentication.go
-package authentication
+package module
 
 import (
 	"errors"

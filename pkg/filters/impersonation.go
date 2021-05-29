@@ -25,7 +25,7 @@ import (
 
 	"k8s.io/klog/v2"
 
-	"github.com/yubo/apiserver/modules/apiserver/httplog"
+	"github.com/yubo/apiserver/pkg/apiserver/httplog"
 	"github.com/yubo/apiserver/pkg/authentication/serviceaccount"
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
