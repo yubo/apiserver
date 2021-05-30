@@ -1,19 +1,19 @@
-package oidc
+package abac
 
 import (
 	"github.com/spf13/pflag"
-	"github.com/yubo/apiserver/pkg/authentication"
-	"github.com/yubo/apiserver/pkg/authentication/token/tokenfile"
+	"github.com/yubo/apiserver/pkg/authorization"
+	"github.com/yubo/apiserver/pkg/authorization/abac"
+	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/golib/proc"
 	pconfig "github.com/yubo/golib/proc/config"
 	"github.com/yubo/golib/util"
-	"k8s.io/klog/v2"
 )
 
 const (
-	moduleName       = "authentication"
-	submoduleName    = "tokenAuthFile"
+	moduleName       = "authorization"
+	submoduleName    = "ABAC"
 	noUsernamePrefix = "-"
 )
 
@@ -24,20 +24,18 @@ var (
 		Owner:       moduleName,
 		HookNum:     proc.ACTION_START,
 		Priority:    proc.PRI_SYS_INIT - 1,
-		SubPriority: options.PRI_M_AUTHN,
+		SubPriority: options.PRI_M_AUTHZ,
 	}}
 	_config *config
 )
 
 type config struct {
-	TokenAuthFile string `yaml:"tokenAuthFile"`
+	PolicyFile string `yaml:"policyFile"`
 }
 
 func (o *config) addFlags(fs *pflag.FlagSet) {
-	fs.StringVar(&o.TokenAuthFile, "token-auth-file", o.TokenAuthFile, ""+
-		"If set, the file that will be used to secure the secure port of the API server "+
-		"via token authentication.")
-
+	fs.StringVar(&o.PolicyFile, "authorization-policy-file", o.PolicyFile, ""+
+		"File with authorization policy in json line by line format, used with --authorization-mode=ABAC, on the secure port.")
 }
 
 func (o *config) changed() interface{} {
@@ -70,21 +68,18 @@ func (p *authModule) init(ops *proc.HookOps) error {
 	}
 	p.config = cf
 
-	if len(cf.TokenAuthFile) == 0 {
-		klog.Infof("%s is not set, skip", p.name)
-		return nil
-	}
-
-	auth, err := tokenfile.NewCSV(cf.TokenAuthFile)
-	if err != nil {
-		return err
-	}
-
-	return authentication.RegisterTokenAuthn(auth)
+	return nil
 }
 
 func init() {
 	proc.RegisterHooks(hookOps)
 	_config = defaultConfig()
-	_config.addFlags(proc.NamedFlagSets().FlagSet("authentication"))
+	_config.addFlags(proc.NamedFlagSets().FlagSet("authorization"))
+
+	factory := func() (authorizer.Authorizer, error) {
+		return abac.NewFromFile(_auth.config.PolicyFile)
+	}
+
+	authorization.RegisterAuthz(submoduleName, factory)
+
 }

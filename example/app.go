@@ -12,6 +12,20 @@ import (
 	"github.com/yubo/golib/proc"
 	"k8s.io/klog/v2"
 
+	// authz's submodule, should be loaded before the authz module
+	_ "github.com/yubo/apiserver/pkg/authorization/register/abac"
+	_ "github.com/yubo/apiserver/pkg/authorization/register/alwaysallow"
+	_ "github.com/yubo/apiserver/pkg/authorization/register/alwaysdeny"
+	_ "github.com/yubo/apiserver/pkg/authorization/register/rbac"
+	_ "github.com/yubo/apiserver/pkg/authorization/register/webhook"
+
+	// authn
+	_ "github.com/yubo/apiserver/pkg/authentication/register/bootstrap"
+	_ "github.com/yubo/apiserver/pkg/authentication/register/oidc"
+	_ "github.com/yubo/apiserver/pkg/authentication/register/serviceaccount"
+	_ "github.com/yubo/apiserver/pkg/authentication/register/tokenfile"
+	_ "github.com/yubo/apiserver/pkg/authentication/register/webhook"
+
 	_ "github.com/yubo/apiserver/pkg/apiserver/register"
 	_ "github.com/yubo/apiserver/pkg/authentication/register"
 	_ "github.com/yubo/apiserver/pkg/authorization/register"
@@ -22,13 +36,6 @@ import (
 	_ "github.com/yubo/apiserver/pkg/swagger/register"
 	_ "github.com/yubo/apiserver/pkg/tracing/register"
 	_ "github.com/yubo/golib/orm/sqlite"
-
-	// authn
-	_ "github.com/yubo/apiserver/pkg/authentication/register/bootstrap"
-	_ "github.com/yubo/apiserver/pkg/authentication/register/oidc"
-	_ "github.com/yubo/apiserver/pkg/authentication/register/serviceaccount"
-	_ "github.com/yubo/apiserver/pkg/authentication/register/tokenfile"
-	_ "github.com/yubo/apiserver/pkg/authentication/register/webhook"
 )
 
 const (

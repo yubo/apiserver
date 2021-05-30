@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/pflag"
-	"github.com/yubo/apiserver/pkg/authentication/module"
+	"github.com/yubo/apiserver/pkg/authentication"
 	"github.com/yubo/apiserver/pkg/authentication/token/oidc"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/golib/proc"
@@ -153,9 +153,11 @@ func (p *authModule) init(ops *proc.HookOps) error {
 		return err
 	}
 
-	return module.RegisterTokenAuthn(auth)
+	return authentication.RegisterTokenAuthn(auth)
 }
 
 func init() {
 	proc.RegisterHooks(hookOps)
+	_config = defaultConfig()
+	_config.addFlags(proc.NamedFlagSets().FlagSet("authentication"))
 }

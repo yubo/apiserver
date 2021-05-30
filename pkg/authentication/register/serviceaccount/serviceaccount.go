@@ -150,4 +150,6 @@ func (p *authModule) init(ops *proc.HookOps) error {
 
 func init() {
 	proc.RegisterHooks(hookOps)
+	_config = defaultConfig()
+	_config.addFlags(proc.NamedFlagSets().FlagSet("authentication"))
 }

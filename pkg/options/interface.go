@@ -53,5 +53,4 @@ type Authn interface {
 
 type Authz interface {
 	Authorizer() authorizer.Authorizer
-	RuleResolver() authorizer.RuleResolver
 }

@@ -1,19 +1,23 @@
-package oidc
+package abac
 
 import (
+	"context"
+	"fmt"
+
 	"github.com/spf13/pflag"
-	"github.com/yubo/apiserver/pkg/authentication"
-	"github.com/yubo/apiserver/pkg/authentication/token/tokenfile"
+	"github.com/yubo/apiserver/pkg/authorization"
+	"github.com/yubo/apiserver/pkg/authorization/authorizer"
+	"github.com/yubo/apiserver/pkg/authorization/rbac"
+	"github.com/yubo/apiserver/pkg/listers"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/golib/proc"
 	pconfig "github.com/yubo/golib/proc/config"
 	"github.com/yubo/golib/util"
-	"k8s.io/klog/v2"
 )
 
 const (
-	moduleName       = "authentication"
-	submoduleName    = "tokenAuthFile"
+	moduleName       = "authorization"
+	submoduleName    = "RBAC"
 	noUsernamePrefix = "-"
 )
 
@@ -24,20 +28,16 @@ var (
 		Owner:       moduleName,
 		HookNum:     proc.ACTION_START,
 		Priority:    proc.PRI_SYS_INIT - 1,
-		SubPriority: options.PRI_M_AUTHN,
+		SubPriority: options.PRI_M_AUTHZ,
 	}}
 	_config *config
 )
 
 type config struct {
-	TokenAuthFile string `yaml:"tokenAuthFile"`
+	//PolicyFile string `yaml:"policyFile"`
 }
 
 func (o *config) addFlags(fs *pflag.FlagSet) {
-	fs.StringVar(&o.TokenAuthFile, "token-auth-file", o.TokenAuthFile, ""+
-		"If set, the file that will be used to secure the secure port of the API server "+
-		"via token authentication.")
-
 }
 
 func (o *config) changed() interface{} {
@@ -53,6 +53,7 @@ func (o *config) Validate() error {
 
 type authModule struct {
 	name   string
+	ctx    context.Context
 	config *config
 }
 
@@ -61,7 +62,7 @@ func defaultConfig() *config {
 }
 
 func (p *authModule) init(ops *proc.HookOps) error {
-	configer := ops.Configer()
+	ctx, configer := ops.ContextAndConfiger()
 
 	cf := defaultConfig()
 	if err := configer.ReadYaml(moduleName, cf,
@@ -69,22 +70,29 @@ func (p *authModule) init(ops *proc.HookOps) error {
 		return err
 	}
 	p.config = cf
+	p.ctx = ctx
 
-	if len(cf.TokenAuthFile) == 0 {
-		klog.Infof("%s is not set, skip", p.name)
-		return nil
-	}
-
-	auth, err := tokenfile.NewCSV(cf.TokenAuthFile)
-	if err != nil {
-		return err
-	}
-
-	return authentication.RegisterTokenAuthn(auth)
+	return nil
 }
 
 func init() {
 	proc.RegisterHooks(hookOps)
 	_config = defaultConfig()
-	_config.addFlags(proc.NamedFlagSets().FlagSet("authentication"))
+	_config.addFlags(proc.NamedFlagSets().FlagSet("authorization"))
+
+	factory := func() (authorizer.Authorizer, error) {
+
+		db, ok := options.DBFrom(_auth.ctx)
+		if !ok {
+			return nil, fmt.Errorf("unable to get db from the context")
+		}
+		return rbac.New(
+			&rbac.RoleGetter{Lister: listers.NewRoleLister(db)},
+			&rbac.RoleBindingLister{Lister: listers.NewRoleBindingLister(db)},
+			&rbac.ClusterRoleGetter{Lister: listers.NewClusterRoleLister(db)},
+			&rbac.ClusterRoleBindingLister{Lister: listers.NewClusterRoleBindingLister(db)},
+		), nil
+	}
+
+	authorization.RegisterAuthz(submoduleName, factory)
 }

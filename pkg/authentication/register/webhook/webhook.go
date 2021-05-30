@@ -95,10 +95,6 @@ func (p *authModule) init(ops *proc.HookOps) error {
 	return nil
 }
 
-func init() {
-	proc.RegisterHooks(hookOps)
-}
-
 // DefaultAuthWebhookRetryBackoff is the default backoff parameters for
 // both authentication and authorization webhook used by the apiserver.
 func DefaultAuthWebhookRetryBackoff() *wait.Backoff {
@@ -108,4 +104,10 @@ func DefaultAuthWebhookRetryBackoff() *wait.Backoff {
 		Jitter:   0.2,
 		Steps:    5,
 	}
+}
+
+func init() {
+	proc.RegisterHooks(hookOps)
+	_config = defaultConfig()
+	_config.addFlags(proc.NamedFlagSets().FlagSet("authentication"))
 }

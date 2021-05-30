@@ -1,9 +1,9 @@
 package register
 
 import (
-	"github.com/yubo/apiserver/pkg/authorization/module"
+	"github.com/yubo/apiserver/pkg/authorization"
 )
 
 func init() {
-	module.Register()
+	authorization.Register()
 }

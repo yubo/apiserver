@@ -2,7 +2,7 @@ package oidc
 
 import (
 	"github.com/spf13/pflag"
-	"github.com/yubo/apiserver/pkg/authentication/module"
+	"github.com/yubo/apiserver/pkg/authentication"
 	"github.com/yubo/apiserver/pkg/authentication/token/bootstrap"
 	"github.com/yubo/apiserver/pkg/listers"
 	"github.com/yubo/apiserver/pkg/options"
@@ -75,10 +75,12 @@ func (p *authModule) init(ops *proc.HookOps) error {
 		return nil
 	}
 
-	return module.RegisterTokenAuthn(bootstrap.NewTokenAuthenticator(
+	return authentication.RegisterTokenAuthn(bootstrap.NewTokenAuthenticator(
 		listers.NewSecretLister(options.DBMustFrom(ctx))))
 }
 
 func init() {
 	proc.RegisterHooks(hookOps)
+	_config = defaultConfig()
+	_config.addFlags(proc.NamedFlagSets().FlagSet("authentication"))
 }
