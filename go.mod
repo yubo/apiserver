@@ -39,3 +39,7 @@ require (
 	k8s.io/klog/v2 v2.4.0
 	sigs.k8s.io/yaml v1.2.0
 )
+
+replace (
+	github.com/yubo/golib  => ../golib
+)

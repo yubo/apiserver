@@ -27,8 +27,8 @@ var (
 		Hook:        _auth.init,
 		Owner:       moduleName,
 		HookNum:     proc.ACTION_START,
-		Priority:    proc.PRI_SYS_INIT - 1,
-		SubPriority: options.PRI_M_AUTHZ,
+		Priority:    proc.PRI_SYS_INIT,
+		SubPriority: options.PRI_M_AUTHZ - 1,
 	}}
 	_config *config
 )
@@ -76,6 +76,11 @@ func (o *config) changed() interface{} {
 
 func (o *config) Validate() error {
 	allErrors := []error{}
+
+	if o.WebhookConfigFile == "" {
+		return nil
+	}
+
 	if o.WebhookConfigFile == "" {
 		allErrors = append(allErrors, fmt.Errorf("authorization-mode Webhook's authorization config file not passed"))
 	}

@@ -51,7 +51,6 @@ type config struct {
 	HttpBody    bool
 	HttpHeader  bool
 	RespTraceId bool
-	ServerName  string
 }
 
 func newConfig() *config {
@@ -118,8 +117,8 @@ func (p *tracing) init(ops *proc.HookOps) (err error) {
 		return nil
 	}
 
-	if cf.ServerName == "" {
-		cf.ServerName = proc.NameFrom(ctx)
+	if cf.Jaeger.ServiceName == "" {
+		cf.Jaeger.ServiceName = proc.NameFrom(ctx)
 	}
 	p.config = cf
 	return
@@ -158,7 +157,7 @@ func (p *tracing) start(ops *proc.HookOps) (err error) {
 	opentracing.SetGlobalTracer(p.tracer)
 
 	//ops.SetContext(options.WithTracer(p.ctx, p.tracer))
-	klog.Infof("tracing enabled %s", cf.ServerName)
+	klog.Infof("tracing enabled %s", cf.Jaeger.ServiceName)
 	return nil
 }
 
@@ -192,8 +191,7 @@ func (p *tracing) newTracer(cf *jaegercfg.Configuration) (opentracing.Tracer, io
 		})
 	}
 
-	return cf.NewTracer(jaegercfg.Logger(l),
-		jaegercfg.Metrics(prometheus.New()))
+	return cf.NewTracer(jaegercfg.Logger(l), jaegercfg.Metrics(prometheus.New()))
 }
 
 type logger struct{}

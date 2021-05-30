@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/yubo/apiserver/example/session"
@@ -65,7 +64,7 @@ func newServerCmd() *cobra.Command {
 	ctx = proc.WithName(ctx, AppName)
 	ctx = proc.WithConfigOps(ctx) //config.WithBaseBytes2("http", app.DefaultOptions),
 
-	cmd := proc.NewRootCmd(ctx, os.Args[1:])
+	cmd := proc.NewRootCmd(ctx)
 	cmd.AddCommand(options.NewVersionCmd())
 
 	return cmd

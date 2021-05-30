@@ -140,9 +140,6 @@ func (p *authorization) init(ops *proc.HookOps) error {
 	p.ctx, p.cancel = context.WithCancel(ctx)
 
 	cf := newConfig()
-	klog.Infof(">>> %s", cf)
-	klog.Infof(">>> %s", _config)
-	klog.Infof(">>> %s", _config.Changed())
 	if err := configer.ReadYaml(p.name, cf,
 		pconfig.WithOverride(_config.Changed())); err != nil {
 		return err
@@ -191,6 +188,11 @@ func (p *authorization) initAuthorization() (err error) {
 		factory, ok := p.authzFactorys[mode]
 		if !ok {
 			return fmt.Errorf("unknown authorization mode %s specified", mode)
+		}
+
+		if factory == nil {
+			klog.V(5).Infof("authorizer factory %q is nil, skip", mode)
+			continue
 		}
 
 		authz, err := factory()

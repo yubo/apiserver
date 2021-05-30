@@ -10,6 +10,6 @@ func main() {
 	defer logs.FlushLogs()
 
 	if err := newServerCmd().Execute(); err != nil {
-		klog.Fatal(err)
+		klog.Error(err)
 	}
 }

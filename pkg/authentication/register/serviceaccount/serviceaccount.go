@@ -26,8 +26,8 @@ var (
 		Hook:        _auth.init,
 		Owner:       moduleName,
 		HookNum:     proc.ACTION_START,
-		Priority:    proc.PRI_SYS_INIT - 1,
-		SubPriority: options.PRI_M_AUTHN,
+		Priority:    proc.PRI_SYS_INIT,
+		SubPriority: options.PRI_M_AUTHN - 1,
 	}}
 	_config *config
 )
@@ -96,6 +96,11 @@ func (o *config) changed() interface{} {
 
 func (o *config) Validate() error {
 	allErrors := []error{}
+
+	if len(o.Issuer) == 0 {
+		return nil
+	}
+
 	if len(o.Issuer) > 0 && strings.Contains(o.Issuer, ":") {
 		if _, err := url.Parse(o.Issuer); err != nil {
 			allErrors = append(allErrors, fmt.Errorf("service-account-issuer contained a ':' but was not a valid URL: %v", err))
