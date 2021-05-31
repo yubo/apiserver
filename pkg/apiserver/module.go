@@ -8,6 +8,7 @@ import (
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/golib/proc"
 	pconfig "github.com/yubo/golib/proc/config"
+	"k8s.io/klog/v2"
 )
 
 const (
@@ -65,6 +66,7 @@ func (p *apiserver) init(ops *proc.HookOps) (err error) {
 		return err
 	}
 	p.config = cf
+	klog.V(10).Infof("%s config: %s\n", p.name, cf)
 
 	if err := p.serverInit(); err != nil {
 		return err

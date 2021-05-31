@@ -117,7 +117,7 @@ func (p *Module) b(w http.ResponseWriter, req *http.Request) error {
 
 	// call b1
 	_, _, err := openapi.HttpRequest(&openapi.RequestOptions{
-		Url:    "http://localhost:8080/tracing/b1",
+		Url:    fmt.Sprintf("http://%s/tracing/b1", req.Host),
 		Method: "GET",
 		Ctx:    ctx,
 	})

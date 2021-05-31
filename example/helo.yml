@@ -17,7 +17,7 @@ tracing:
   httpHeader: true     # log http request header
   respTraceId: true    # inject trace id into response header
   jaeger:
-    serviceName: 
+    serviceName: helo
     reporter:
       localAgentHostPort: 127.0.0.1:6831
       logSpans: false
@@ -25,19 +25,18 @@ tracing:
 apiserver:
   externalHost:
   bindAddress: 0.0.0.0
-  bindPort: 8080
+  bindPort: 18080
   corsAllowedOriginList:
-  hSTSDirectives:
-  maxRequestsInFlight:
-  maxMutatingRequestsInFlight:
-  requestTimeout:
-  goawayChance:
-  livezGracePeriod:
-  minRequestTimeout:
-  shutdownTimeout:
-  shutdownDelayDuration:
-  maxRequestBodyBytes:
-  enablePriorityAndFairness:
+  hstsDirectives:
+  maxRequestsInFlight: 400
+  maxMutatingRequestsInFlight: 200
+  requestTimeout: 60s
+  livezGracePeriod: 0s
+  minRequestTimeout: 1800s
+  #shutdownTimeout: 60s
+  shutdownDelayDuration: 0s
+  maxRequestBodyBytes: 3145728
+  enablePriorityAndFairness: true
 
 authentication:
 authorization:
@@ -55,10 +54,10 @@ session:
 
 swagger: # depend http
   enabled: true
-  clientId: "1234"
-  clientSecret: "1234"
   name: "helo"
   url: "/apidocs.json"
+  clientId: "1234"
+  clientSecret: "1234"
   schemes:
     - name: "Token"
       type: "apiKey"

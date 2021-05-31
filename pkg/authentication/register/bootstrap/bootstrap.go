@@ -1,6 +1,8 @@
 package oidc
 
 import (
+	"fmt"
+
 	"github.com/spf13/pflag"
 	"github.com/yubo/apiserver/pkg/authentication"
 	"github.com/yubo/apiserver/pkg/authentication/token/bootstrap"
@@ -75,8 +77,13 @@ func (p *authModule) init(ops *proc.HookOps) error {
 		return nil
 	}
 
+	db, ok := options.DBFrom(ctx)
+	if !ok {
+		return fmt.Errorf("unable to get db from the context")
+	}
+
 	return authentication.RegisterTokenAuthn(bootstrap.NewTokenAuthenticator(
-		listers.NewSecretLister(options.DBMustFrom(ctx))))
+		listers.NewSecretLister(db)))
 }
 
 func init() {

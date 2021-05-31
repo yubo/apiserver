@@ -26,7 +26,6 @@ import (
 	"time"
 
 	"github.com/spf13/pflag"
-
 	cliflag "github.com/yubo/golib/staging/cli/flag"
 	"github.com/yubo/golib/staging/util/errors"
 	utilerrors "github.com/yubo/golib/staging/util/errors"
@@ -46,33 +45,36 @@ func (s *config) Flags(fss *cliflag.NamedFlagSets) {
 	s.AddUniversalFlags(fss.FlagSet(moduleName))
 }
 
+func (s *config) String() string {
+	return util.Prettify(s)
+}
+
 // config contains the config while running a generic api server.
 type config struct {
-	ExternalHost string
-	BindAddress  net.IP
-	BindPort     int    // BindPort is ignored when Listener is set, will serve https even with 0.
-	BindNetwork  string // BindNetwork is the type of network to bind to - defaults to "tcp", accepts "tcp", "tcp4", and "tcp6".
-
-	CorsAllowedOriginList       []string
-	HSTSDirectives              []string
-	MaxRequestsInFlight         int
-	MaxMutatingRequestsInFlight int
-	RequestTimeout              time.Duration
-	GoawayChance                float64
-	LivezGracePeriod            time.Duration
-	MinRequestTimeout           int
-	ShutdownTimeout             time.Duration
-	ShutdownDelayDuration       time.Duration
+	ExternalHost                string        `yaml:"externalHost"`
+	BindAddress                 net.IP        `yaml:"bindAddress"`
+	BindPort                    int           `yaml:"bindPort"`    // BindPort is ignored when Listener is set, will serve https even with 0.
+	BindNetwork                 string        `yaml:"bindNetwork"` // BindNetwork is the type of network to bind to - defaults to "tcp", accepts "tcp", "tcp4", and "tcp6".
+	CorsAllowedOriginList       []string      `yaml:"corsAllowedOriginList"`
+	HSTSDirectives              []string      `yaml:"hstsDirectives"`
+	MaxRequestsInFlight         int           `yaml:"maxRequestsInFlight"`
+	MaxMutatingRequestsInFlight int           `yaml:"maxMutatingRequestsInFlight"`
+	RequestTimeout              time.Duration `yaml:"requestTimeout"`
+	GoawayChance                float64       `yaml:"goawayChance"`
+	LivezGracePeriod            time.Duration `yaml:"livezGracePeriod"`
+	MinRequestTimeout           time.Duration `yaml:"minRequestTimeout"`
+	ShutdownTimeout             time.Duration `yaml:"shutdownTimeout"`
+	ShutdownDelayDuration       time.Duration `yaml:"shutdownDelayDuration"`
 	// The limit on the request body size that would be accepted and
 	// decoded in a write request. 0 means no limit.
 	// We intentionally did not add a flag for this option. Users of the
 	// apiserver library can wire it to a flag.
-	MaxRequestBodyBytes       int64
-	EnablePriorityAndFairness bool
+	MaxRequestBodyBytes       int64 `yaml:"maxRequestBodyBytes"`
+	EnablePriorityAndFairness bool  `yaml:"enablePriorityAndFairness"`
 
 	// ExternalAddress is the address advertised, even if BindAddress is a loopback. By default this
 	// is set to BindAddress if the later no loopback, or to the first host interface address.
-	ExternalAddress net.IP
+	ExternalAddress net.IP `yaml:""`
 
 	// Listener is the secure server network listener.
 	// either Listener or BindAddress/BindPort/BindNetwork is set,
@@ -84,11 +86,11 @@ func newConfig() *config {
 	return &config{
 		MaxRequestsInFlight:         400,
 		MaxMutatingRequestsInFlight: 200,
-		RequestTimeout:              time.Duration(60) * time.Second,
-		LivezGracePeriod:            time.Duration(0),
-		MinRequestTimeout:           1800,
-		ShutdownTimeout:             time.Duration(60) * time.Second,
-		ShutdownDelayDuration:       time.Duration(0),
+		RequestTimeout:              60 * time.Second,
+		LivezGracePeriod:            0,
+		MinRequestTimeout:           1800 * time.Second,
+		ShutdownTimeout:             60 * time.Second,
+		ShutdownDelayDuration:       0,
 		MaxRequestBodyBytes:         int64(3 * 1024 * 1024),
 		EnablePriorityAndFairness:   true,
 
@@ -216,7 +218,7 @@ func (s *config) AddUniversalFlags(fs *pflag.FlagSet) {
 		"and become live. From apiserver's start time to when this amount of time has elapsed, /livez will assume "+
 		"that unfinished post-start hooks will complete successfully and therefore return true.")
 
-	fs.IntVar(&s.MinRequestTimeout, "min-request-timeout", s.MinRequestTimeout, ""+
+	fs.DurationVar(&s.MinRequestTimeout, "min-request-timeout", s.MinRequestTimeout, ""+
 		"An optional field indicating the minimum number of seconds a handler must keep "+
 		"a request open before timing it out. Currently only honored by the watch request "+
 		"handler, which picks a randomized value above this number as the connection timeout, "+

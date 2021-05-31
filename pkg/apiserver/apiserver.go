@@ -175,8 +175,8 @@ type Server struct {
 	// after this duration.
 	RequestTimeout time.Duration
 	// If specified, long running requests such as watch will be allocated a random timeout between this value, and
-	// twice this value.  Note that it is up to the request handlers to ignore or honor this timeout. In seconds.
-	MinRequestTimeout int
+	// twice this value.  Note that it is up to the request handlers to ignore or honor this timeout.
+	MinRequestTimeout time.Duration
 
 	ShutdownDelayDuration time.Duration
 
@@ -247,9 +247,9 @@ func NewServer(ctx context.Context) *Server {
 		EnableMetrics:               true,
 		MaxRequestsInFlight:         400,
 		MaxMutatingRequestsInFlight: 200,
-		RequestTimeout:              time.Duration(60) * time.Second,
-		MinRequestTimeout:           1800,
-		ShutdownDelayDuration:       time.Duration(0),
+		RequestTimeout:              60 * time.Second,
+		MinRequestTimeout:           1800 * time.Second,
+		ShutdownDelayDuration:       0,
 		MaxRequestBodyBytes:         int64(3 * 1024 * 1024),
 		LongRunningFunc:             filters.BasicLongRunningRequestCheck(sets.NewString("watch"), sets.NewString()),
 		APIServerID:                 proc.NameFrom(ctx) + "-" + uuid.New().String(),
@@ -290,7 +290,7 @@ func (c *Server) init(ctx context.Context) error {
 
 	apiServerHandler := NewAPIServerHandler(ctx, handlerChainBuilder)
 
-	c.minRequestTimeout = time.Duration(c.MinRequestTimeout) * time.Second
+	c.minRequestTimeout = c.MinRequestTimeout
 	c.ShutdownTimeout = c.RequestTimeout
 	c.Handler = apiServerHandler
 	c.maxRequestBodyBytes = c.MaxRequestBodyBytes
