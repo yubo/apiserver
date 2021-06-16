@@ -143,6 +143,14 @@ func (p *Request) prepare() error {
 		p.header.Set("X-API-Key", *p.ApiKey)
 	}
 
+	if p.Token != nil {
+		if p.TokenField == nil {
+			p.header.Set("Authorization", "Bearer "+*p.Token)
+		} else {
+			p.header.Set("Authorization", fmt.Sprintf("%s %s", *p.TokenField, *p.Token))
+		}
+	}
+
 	if p.Bearer != nil {
 		p.header.Set("Authorization", "Bearer "+*p.Bearer)
 	}

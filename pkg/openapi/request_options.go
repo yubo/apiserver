@@ -18,6 +18,8 @@ type RequestOptions struct {
 	User               *string
 	Pwd                *string
 	Bearer             *string
+	Token              *string
+	TokenField         *string
 	ApiKey             *string
 	InputParam         interface{}
 	InputContent       []byte
@@ -112,6 +114,16 @@ func WithBearer(bearer string) RequestOption {
 	})
 }
 
+func WithToken(token string) RequestOption {
+	return newFuncRequestOption(func(o *RequestOptions) {
+		o.Token = &token
+	})
+}
+func WithTokenField(tokenField string) RequestOption {
+	return newFuncRequestOption(func(o *RequestOptions) {
+		o.TokenField = &tokenField
+	})
+}
 func WithApiKey(apiKey string) RequestOption {
 	return newFuncRequestOption(func(o *RequestOptions) {
 		o.ApiKey = &apiKey
