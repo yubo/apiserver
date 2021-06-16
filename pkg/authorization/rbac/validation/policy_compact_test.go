@@ -19,8 +19,8 @@ package validation
 import (
 	"testing"
 
-	"github.com/yubo/apiserver/staging/api/rbac"
-	//rbacv1helpers "github.com/yubo/apiserver/staging/api/rbac/v1"
+	"github.com/yubo/apiserver/pkg/api/rbac"
+	//rbacv1helpers "github.com/yubo/apiserver/pkg/api/rbac/v1"
 	//"k8s.io/component-helpers/auth/rbac/validation"
 )
 

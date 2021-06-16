@@ -19,8 +19,8 @@ package serviceaccount
 import (
 	"testing"
 
-	v1 "github.com/yubo/apiserver/staging/api/core/v1"
-	metav1 "github.com/yubo/apiserver/staging/api/meta/v1"
+	v1 "github.com/yubo/apiserver/pkg/api/core/v1"
+	metav1 "github.com/yubo/apiserver/pkg/api/meta/v1"
 )
 
 func TestMakeUsername(t *testing.T) {

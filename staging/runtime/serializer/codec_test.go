@@ -29,7 +29,7 @@ import (
 
 	"github.com/yubo/apiserver/staging/runtime"
 	runtimetesting "github.com/yubo/apiserver/staging/runtime/testing"
-	metav1 "github.com/yubo/apiserver/staging/api/meta/v1"
+	metav1 "github.com/yubo/apiserver/pkg/api/meta/v1"
 	"github.com/yubo/apiserver/staging/conversion"
 	"github.com/yubo/golib/staging/util/diff"
 	utilruntime "github.com/yubo/golib/staging/util/runtime"

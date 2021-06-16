@@ -22,8 +22,8 @@ import (
 	"testing"
 
 	"github.com/yubo/apiserver/pkg/authentication/user"
-	corev1 "github.com/yubo/apiserver/staging/api/core/v1"
-	metav1 "github.com/yubo/apiserver/staging/api/meta/v1"
+	corev1 "github.com/yubo/apiserver/pkg/api/core/v1"
+	metav1 "github.com/yubo/apiserver/pkg/api/meta/v1"
 	bootstrapapi "github.com/yubo/apiserver/staging/cluster-bootstrap/token/api"
 	"github.com/yubo/apiserver/staging/labels"
 	"github.com/yubo/golib/staging/api/errors"

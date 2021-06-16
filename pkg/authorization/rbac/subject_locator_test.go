@@ -23,7 +23,7 @@ import (
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	rbacregistryvalidation "github.com/yubo/apiserver/pkg/authorization/rbac/validation"
-	"github.com/yubo/apiserver/staging/api/rbac"
+	"github.com/yubo/apiserver/pkg/api/rbac"
 )
 
 func TestSubjectLocator(t *testing.T) {

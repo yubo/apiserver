@@ -26,10 +26,10 @@ import (
 
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
-	"github.com/yubo/apiserver/staging/api/abac"
+	"github.com/yubo/apiserver/pkg/api/abac"
 	"k8s.io/klog/v2"
 	// Import latest API for init/side-effects
-	//_ "github.com/yubo/apiserver/staging/api/abac/latest"
+	//_ "github.com/yubo/apiserver/pkg/api/abac/latest"
 )
 
 type policyLoadError struct {

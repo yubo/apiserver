@@ -25,9 +25,9 @@ import (
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	rbacregistryvalidation "github.com/yubo/apiserver/pkg/authorization/rbac/validation"
-	metav1 "github.com/yubo/apiserver/staging/api/meta/v1"
-	rbacv1 "github.com/yubo/apiserver/staging/api/rbac"
-	rbacv1helpers "github.com/yubo/apiserver/staging/api/rbac/v1"
+	metav1 "github.com/yubo/apiserver/pkg/api/meta/v1"
+	rbacv1 "github.com/yubo/apiserver/pkg/api/rbac"
+	rbacv1helpers "github.com/yubo/apiserver/pkg/api/rbac/v1"
 )
 
 func newRule(verbs, resources, nonResourceURLs string) rbacv1.PolicyRule {

@@ -31,7 +31,7 @@ import (
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/responsewriters"
-	authenticationv1 "github.com/yubo/apiserver/staging/api/authentication/v1"
+	authenticationv1 "github.com/yubo/apiserver/pkg/api/authentication/v1"
 )
 
 // WithImpersonation is a filter that will inspect and check requests that attempt to change the user.Info for their requests

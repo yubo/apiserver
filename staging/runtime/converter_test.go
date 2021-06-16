@@ -30,7 +30,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/yubo/apiserver/staging/api/meta/v1/unstructured"
+	"github.com/yubo/apiserver/pkg/api/meta/v1/unstructured"
 	"github.com/yubo/apiserver/staging/conversion"
 	"github.com/yubo/apiserver/staging/runtime"
 	"github.com/yubo/golib/staging/util/diff"

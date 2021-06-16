@@ -29,7 +29,7 @@ import (
 
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/pkg/authentication/user"
-	corev1 "github.com/yubo/apiserver/staging/api/core/v1"
+	corev1 "github.com/yubo/apiserver/pkg/api/core/v1"
 	"github.com/yubo/golib/staging/api/errors"
 	//corev1listers "k8s.io/client-go/listers/core/v1"
 	corev1listers "github.com/yubo/apiserver/pkg/listers"

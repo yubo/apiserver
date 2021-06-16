@@ -22,9 +22,9 @@ import (
 	"github.com/emicklei/go-restful"
 	"github.com/opentracing/opentracing-go"
 	"github.com/yubo/apiserver/pkg/authentication/user"
-	metav1 "github.com/yubo/apiserver/staging/api/meta/v1"
+	metav1 "github.com/yubo/apiserver/pkg/api/meta/v1"
 	"github.com/yubo/golib/net/session"
-	// "github.com/yubo/apiserver/staging/api/audit"
+	// "github.com/yubo/apiserver/pkg/api/audit"
 )
 
 // The key type is unexported to prevent collisions

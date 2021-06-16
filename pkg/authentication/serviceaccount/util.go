@@ -21,8 +21,8 @@ import (
 	"strings"
 
 	"github.com/yubo/apiserver/pkg/authentication/user"
-	v1 "github.com/yubo/apiserver/staging/api/core/v1"
-	apimachineryvalidation "github.com/yubo/apiserver/staging/api/validation"
+	v1 "github.com/yubo/apiserver/pkg/api/core/v1"
+	apimachineryvalidation "github.com/yubo/apiserver/pkg/api/validation"
 )
 
 const (

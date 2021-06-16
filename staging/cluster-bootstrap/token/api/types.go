@@ -17,7 +17,7 @@ limitations under the License.
 package api
 
 import (
-	"github.com/yubo/apiserver/staging/api/core/v1"
+	"github.com/yubo/apiserver/pkg/api/core/v1"
 )
 
 const (

@@ -21,7 +21,7 @@ import (
 	"strings"
 	"time"
 
-	v1 "github.com/yubo/apiserver/staging/api/core/v1"
+	v1 "github.com/yubo/apiserver/pkg/api/core/v1"
 	"github.com/yubo/golib/staging/util/sets"
 	"github.com/yubo/apiserver/staging/cluster-bootstrap/token/api"
 	legacyutil "github.com/yubo/apiserver/staging/cluster-bootstrap/token/util"

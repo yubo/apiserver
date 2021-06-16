@@ -2,7 +2,7 @@ package listers
 
 import (
 	"github.com/yubo/apiserver/pkg/storage"
-	v1 "github.com/yubo/apiserver/staging/api/core/v1"
+	v1 "github.com/yubo/apiserver/pkg/api/core/v1"
 	"github.com/yubo/apiserver/staging/labels"
 	"github.com/yubo/golib/orm"
 )

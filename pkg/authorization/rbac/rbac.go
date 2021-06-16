@@ -28,8 +28,8 @@ import (
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	rbacregistryvalidation "github.com/yubo/apiserver/pkg/authorization/rbac/validation"
 	"github.com/yubo/apiserver/pkg/listers"
-	"github.com/yubo/apiserver/staging/api/rbac"
-	rbacv1helpers "github.com/yubo/apiserver/staging/api/rbac/v1"
+	"github.com/yubo/apiserver/pkg/api/rbac"
+	rbacv1helpers "github.com/yubo/apiserver/pkg/api/rbac/v1"
 	"github.com/yubo/apiserver/staging/labels"
 	utilerrors "github.com/yubo/golib/staging/util/errors"
 )

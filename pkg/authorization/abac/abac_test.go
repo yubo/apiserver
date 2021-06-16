@@ -25,7 +25,7 @@ import (
 
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
-	"github.com/yubo/apiserver/staging/api/abac"
+	"github.com/yubo/apiserver/pkg/api/abac"
 	"github.com/yubo/apiserver/staging/runtime"
 )
 

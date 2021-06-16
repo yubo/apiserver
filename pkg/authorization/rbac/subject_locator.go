@@ -21,7 +21,7 @@ import (
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	rbacregistryvalidation "github.com/yubo/apiserver/pkg/authorization/rbac/validation"
-	"github.com/yubo/apiserver/staging/api/rbac"
+	"github.com/yubo/apiserver/pkg/api/rbac"
 	utilerrors "github.com/yubo/golib/staging/util/errors"
 )
 
