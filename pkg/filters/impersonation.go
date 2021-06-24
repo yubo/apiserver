@@ -31,7 +31,7 @@ import (
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/responsewriters"
-	authenticationv1 "github.com/yubo/apiserver/pkg/api/authentication/v1"
+	"github.com/yubo/golib/api"
 )
 
 // WithImpersonation is a filter that will inspect and check requests that attempt to change the user.Info for their requests
@@ -57,7 +57,7 @@ func WithImpersonation(handler http.Handler, a authorizer.Authorizer) http.Handl
 
 		// if groups are not specified, then we need to look them up differently depending on the type of user
 		// if they are specified, then they are the authority (including the inclusion of system:authenticated/system:unauthenticated groups)
-		groupsSpecified := len(req.Header[authenticationv1.ImpersonateGroupHeader]) > 0
+		groupsSpecified := len(req.Header[api.ImpersonateGroupHeader]) > 0
 
 		// make sure we're allowed to impersonate each thing we're requesting.  While we're iterating through, start building username
 		// and group information
@@ -159,10 +159,10 @@ func WithImpersonation(handler http.Handler, a authorizer.Authorizer) http.Handl
 		//ae := request.AuditEventFrom(ctx)
 
 		// clear all the impersonation headers from the request
-		req.Header.Del(authenticationv1.ImpersonateUserHeader)
-		req.Header.Del(authenticationv1.ImpersonateGroupHeader)
+		req.Header.Del(api.ImpersonateUserHeader)
+		req.Header.Del(api.ImpersonateGroupHeader)
 		for headerName := range req.Header {
-			if strings.HasPrefix(headerName, authenticationv1.ImpersonateUserExtraHeaderPrefix) {
+			if strings.HasPrefix(headerName, api.ImpersonateUserExtraHeaderPrefix) {
 				req.Header.Del(headerName)
 			}
 		}
@@ -201,7 +201,7 @@ type ImpersonationRequest struct {
 func buildImpersonationRequests(headers http.Header) ([]ImpersonationRequest, error) {
 	impersonationRequests := []ImpersonationRequest{}
 
-	requestedUser := headers.Get(authenticationv1.ImpersonateUserHeader)
+	requestedUser := headers.Get(api.ImpersonateUserHeader)
 	hasUser := len(requestedUser) > 0
 	if hasUser {
 		if namespace, name, err := serviceaccount.SplitUsername(requestedUser); err == nil {
@@ -214,7 +214,7 @@ func buildImpersonationRequests(headers http.Header) ([]ImpersonationRequest, er
 	}
 
 	hasGroups := false
-	for _, group := range headers[authenticationv1.ImpersonateGroupHeader] {
+	for _, group := range headers[api.ImpersonateGroupHeader] {
 		hasGroups = true
 		impersonationRequests = append(impersonationRequests,
 			ImpersonationRequest{Kind: ImpersonationGroup, Name: group})
@@ -222,12 +222,12 @@ func buildImpersonationRequests(headers http.Header) ([]ImpersonationRequest, er
 
 	hasUserExtra := false
 	for headerName, values := range headers {
-		if !strings.HasPrefix(headerName, authenticationv1.ImpersonateUserExtraHeaderPrefix) {
+		if !strings.HasPrefix(headerName, api.ImpersonateUserExtraHeaderPrefix) {
 			continue
 		}
 
 		hasUserExtra = true
-		extraKey := unescapeExtraKey(strings.ToLower(headerName[len(authenticationv1.ImpersonateUserExtraHeaderPrefix):]))
+		extraKey := unescapeExtraKey(strings.ToLower(headerName[len(api.ImpersonateUserExtraHeaderPrefix):]))
 
 		// make a separate request for each extra value they're trying to set
 		for _, value := range values {
@@ -241,7 +241,7 @@ func buildImpersonationRequests(headers http.Header) ([]ImpersonationRequest, er
 			//	Kind: "UserExtra",
 			//	// we only parse out a group above, but the parsing will fail if there isn't SOME version
 			//	// using the internal version will help us fail if anyone starts using it
-			//	APIVersion: authenticationv1.SchemeGroupVersion.String(),
+			//	APIVersion: api.SchemeGroupVersion.String(),
 			//	Name:       value,
 			//	// ObjectReference doesn't have a subresource field.  FieldPath is close and available, so we'll use that
 			//	// TODO fight the good fight for ObjectReference to refer to resources and subresources

@@ -19,8 +19,7 @@ package serviceaccount
 import (
 	"testing"
 
-	v1 "github.com/yubo/apiserver/pkg/api/core/v1"
-	metav1 "github.com/yubo/apiserver/pkg/api/meta/v1"
+	"github.com/yubo/golib/pkg/api"
 )
 
 func TestMakeUsername(t *testing.T) {
@@ -126,18 +125,18 @@ func TestMatchUsername(t *testing.T) {
 
 func TestIsServiceAccountToken(t *testing.T) {
 
-	secretIns := &v1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
+	secretIns := &api.Secret{
+		ObjectMeta: api.ObjectMeta{
 			Name:            "token-secret-1",
 			Namespace:       "default",
 			UID:             "23456",
 			ResourceVersion: "1",
 			Annotations: map[string]string{
-				v1.ServiceAccountNameKey: "default",
-				v1.ServiceAccountUIDKey:  "12345",
+				api.ServiceAccountNameKey: "default",
+				api.ServiceAccountUIDKey:  "12345",
 			},
 		},
-		Type: v1.SecretTypeServiceAccountToken,
+		Type: api.SecretTypeServiceAccountToken,
 		Data: map[string][]byte{
 			"token":     []byte("ABC"),
 			"ca.crt":    []byte("CA Data"),
@@ -145,22 +144,22 @@ func TestIsServiceAccountToken(t *testing.T) {
 		},
 	}
 
-	secretTypeMistmatch := &v1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
+	secretTypeMistmatch := &api.Secret{
+		ObjectMeta: api.ObjectMeta{
 			Name:            "token-secret-2",
 			Namespace:       "default",
 			UID:             "23456",
 			ResourceVersion: "1",
 			Annotations: map[string]string{
-				v1.ServiceAccountNameKey: "default",
-				v1.ServiceAccountUIDKey:  "12345",
+				api.ServiceAccountNameKey: "default",
+				api.ServiceAccountUIDKey:  "12345",
 			},
 		},
-		Type: v1.SecretTypeOpaque,
+		Type: api.SecretTypeOpaque,
 	}
 
-	saIns := &v1.ServiceAccount{
-		ObjectMeta: metav1.ObjectMeta{
+	saIns := &api.ServiceAccount{
+		ObjectMeta: api.ObjectMeta{
 			Name:            "default",
 			UID:             "12345",
 			Namespace:       "default",
@@ -168,8 +167,8 @@ func TestIsServiceAccountToken(t *testing.T) {
 		},
 	}
 
-	saInsNameNotEqual := &v1.ServiceAccount{
-		ObjectMeta: metav1.ObjectMeta{
+	saInsNameNotEqual := &api.ServiceAccount{
+		ObjectMeta: api.ObjectMeta{
 			Name:            "non-default",
 			UID:             "12345",
 			Namespace:       "default",
@@ -177,8 +176,8 @@ func TestIsServiceAccountToken(t *testing.T) {
 		},
 	}
 
-	saInsUIDNotEqual := &v1.ServiceAccount{
-		ObjectMeta: metav1.ObjectMeta{
+	saInsUIDNotEqual := &api.ServiceAccount{
+		ObjectMeta: api.ObjectMeta{
 			Name:            "default",
 			UID:             "67890",
 			Namespace:       "default",
@@ -187,8 +186,8 @@ func TestIsServiceAccountToken(t *testing.T) {
 	}
 
 	tests := map[string]struct {
-		secret *v1.Secret
-		sa     *v1.ServiceAccount
+		secret *api.Secret
+		sa     *api.ServiceAccount
 		expect bool
 	}{
 		"correct service account": {

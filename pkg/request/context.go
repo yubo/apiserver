@@ -22,7 +22,7 @@ import (
 	"github.com/emicklei/go-restful"
 	"github.com/opentracing/opentracing-go"
 	"github.com/yubo/apiserver/pkg/authentication/user"
-	metav1 "github.com/yubo/apiserver/pkg/api/meta/v1"
+	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/net/session"
 	// "github.com/yubo/apiserver/pkg/api/audit"
 )
@@ -44,6 +44,12 @@ const (
 	respKey
 	tracerKey
 	sessionKey
+
+	// bodyKey is the context key for the request body
+	bodyKey
+
+	// paramKey is the context key for the request param
+	paramKey key = iota
 )
 
 // NewContext instantiates a base context object for request flows.
@@ -53,7 +59,7 @@ func NewContext() context.Context {
 
 // NewDefaultContext instantiates a base context object for request flows in the default namespace
 func NewDefaultContext() context.Context {
-	return WithNamespace(NewContext(), metav1.NamespaceDefault)
+	return WithNamespace(NewContext(), api.NamespaceDefault)
 }
 
 // WithValue returns a copy of parent in which the value associated with key is val.
@@ -89,17 +95,6 @@ func UserFrom(ctx context.Context) (user.Info, bool) {
 	return user, ok
 }
 
-// WithAuditEvent returns set audit event struct.
-//func WithAuditEvent(parent context.Context, ev *audit.Event) context.Context {
-//	return WithValue(parent, auditKey, ev)
-//}
-
-// AuditEventFrom returns the audit event struct on the ctx
-//func AuditEventFrom(ctx context.Context) *audit.Event {
-//	ev, _ := ctx.Value(auditKey).(*audit.Event)
-//	return ev
-//}
-
 // WithResp returns a copy of parent in which the response value is set
 func WithResp(parent context.Context, resp *restful.Response) context.Context {
 	return WithValue(parent, respKey, resp)
@@ -131,4 +126,24 @@ func WithSession(parent context.Context, sess session.Session) context.Context {
 func SessionFrom(ctx context.Context) (session.Session, bool) {
 	s, ok := ctx.Value(sessionKey).(session.Session)
 	return s, ok
+}
+
+// WithBody returns a copy of parent in which the body value is set
+func WithBody(parent context.Context, body interface{}) context.Context {
+	return WithValue(parent, bodyKey, body)
+}
+
+// BodyFrom returns the value of the param key on the ctx
+func BodyFrom(ctx context.Context) interface{} {
+	return ctx.Value(bodyKey)
+}
+
+// WithParam returns a copy of parent in which the param value is set
+func WithParam(parent context.Context, param interface{}) context.Context {
+	return WithValue(parent, paramKey, param)
+}
+
+// ParamFrom returns the value of the param key on the ctx
+func ParamFrom(ctx context.Context) interface{} {
+	return ctx.Value(paramKey)
 }

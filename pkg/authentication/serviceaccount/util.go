@@ -20,9 +20,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/yubo/apiserver/pkg/authentication/user"
-	v1 "github.com/yubo/apiserver/pkg/api/core/v1"
 	apimachineryvalidation "github.com/yubo/apiserver/pkg/api/validation"
+	"github.com/yubo/apiserver/pkg/authentication/user"
+	"github.com/yubo/golib/api"
 )
 
 const (
@@ -131,13 +131,13 @@ func (sa *ServiceAccountInfo) UserInfo() user.Info {
 }
 
 // IsServiceAccountToken returns true if the secret is a valid api token for the service account
-func IsServiceAccountToken(secret *v1.Secret, sa *v1.ServiceAccount) bool {
-	if secret.Type != v1.SecretTypeServiceAccountToken {
+func IsServiceAccountToken(secret *api.Secret, sa *api.ServiceAccount) bool {
+	if secret.Type != api.SecretTypeServiceAccountToken {
 		return false
 	}
 
-	name := secret.Annotations[v1.ServiceAccountNameKey]
-	uid := secret.Annotations[v1.ServiceAccountUIDKey]
+	name := secret.Annotations[api.ServiceAccountNameKey]
+	uid := secret.Annotations[api.ServiceAccountUIDKey]
 	if name != sa.Name {
 		// Name must match
 		return false
@@ -150,8 +150,8 @@ func IsServiceAccountToken(secret *v1.Secret, sa *v1.ServiceAccount) bool {
 	return true
 }
 
-//func GetOrCreateServiceAccount(coreClient v1core.CoreV1Interface, namespace, name string) (*v1.ServiceAccount, error) {
-//	sa, err := coreClient.ServiceAccounts(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+//func GetOrCreateServiceAccount(coreClient v1core.CoreV1Interface, namespace, name string) (*api.ServiceAccount, error) {
+//	sa, err := coreClient.ServiceAccounts(namespace).Get(context.TODO(), name, api.GetOptions{})
 //	if err == nil {
 //		return sa, nil
 //	}

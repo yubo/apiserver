@@ -45,6 +45,7 @@ func (a *Authenticator) AuthenticateRequest(req *http.Request) (*authenticator.R
 		Audiences: auds,
 	}, true, nil
 }
+
 func (a *Authenticator) Name() string {
 	return "anonymous authenticator"
 }

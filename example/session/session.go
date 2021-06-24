@@ -9,8 +9,8 @@ import (
 
 	"github.com/emicklei/go-restful"
 	"github.com/yubo/apiserver/example/user"
-	"github.com/yubo/apiserver/pkg/openapi"
 	"github.com/yubo/apiserver/pkg/options"
+	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/golib/net/session"
 )
 
@@ -58,15 +58,15 @@ func (p *module) Start() error {
 }
 
 func (p *module) installWs() {
-	openapi.SwaggerTagRegister("session", "demo session")
+	rest.SwaggerTagRegister("session", "demo session")
 
 	ws := new(restful.WebService)
 
-	openapi.WsRouteBuild(&openapi.WsOption{
-		Ws:     ws.Path("/session").Produces(openapi.MIME_JSON).Consumes("*/*"),
+	rest.WsRouteBuild(&rest.WsOption{
+		Ws:     ws.Path("/session").Produces(rest.MIME_JSON).Consumes("*/*"),
 		Filter: Filter(p.session),
 		Tags:   []string{"session"},
-	}, []openapi.WsRoute{{
+	}, []rest.WsRoute{{
 		Method: "GET", SubPath: "/",
 		Desc:   "get session info",
 		Handle: p.info,
@@ -127,7 +127,7 @@ func Filter(manager session.SessionManager) restful.FilterFunction {
 	return func(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
 		sess, err := manager.Start(resp, req.Request)
 		if err != nil {
-			openapi.HttpWriteErr(resp, fmt.Errorf("session start err %s", err))
+			rest.HttpWriteErr(resp, fmt.Errorf("session start err %s", err))
 			return
 		}
 		ctx := session.WithSession(req.Request.Context(), sess)

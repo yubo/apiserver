@@ -25,11 +25,9 @@ import (
 	"strings"
 
 	"github.com/yubo/apiserver/pkg/authentication/user"
+	"github.com/yubo/apiserver/pkg/authorization/abac/api"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
-	"github.com/yubo/apiserver/pkg/api/abac"
 	"k8s.io/klog/v2"
-	// Import latest API for init/side-effects
-	//_ "github.com/yubo/apiserver/pkg/api/abac/latest"
 )
 
 type policyLoadError struct {
@@ -47,7 +45,7 @@ func (p policyLoadError) Error() string {
 }
 
 // PolicyList is simply a slice of Policy structs.
-type PolicyList []*abac.Policy
+type PolicyList []*api.Policy
 
 // NewFromFile attempts to create a policy list from the given file.
 //
@@ -64,7 +62,7 @@ func NewFromFile(path string) (PolicyList, error) {
 	scanner := bufio.NewScanner(file)
 	pl := make(PolicyList, 0)
 
-	decoder := abac.Codecs.UniversalDecoder()
+	decoder := api.Codecs.UniversalDecoder()
 
 	i := 0
 	unversionedLines := 0
@@ -78,7 +76,7 @@ func NewFromFile(path string) (PolicyList, error) {
 			continue
 		}
 
-		decodedPolicy := &abac.Policy{}
+		decodedPolicy := &api.Policy{}
 		err := decoder.Decode(b, decodedPolicy)
 		if err != nil {
 			return nil, policyLoadError{path, i, b, err}
@@ -97,7 +95,7 @@ func NewFromFile(path string) (PolicyList, error) {
 	return pl, nil
 }
 
-func matches(p abac.Policy, a authorizer.Attributes) bool {
+func matches(p api.Policy, a authorizer.Attributes) bool {
 	if subjectMatches(p, a.GetUser()) {
 		if verbMatches(p, a) {
 			// Resource and non-resource requests are mutually exclusive, at most one will match a policy
@@ -113,7 +111,7 @@ func matches(p abac.Policy, a authorizer.Attributes) bool {
 }
 
 // subjectMatches returns true if specified user and group properties in the policy match the attributes
-func subjectMatches(p abac.Policy, user user.Info) bool {
+func subjectMatches(p api.Policy, user user.Info) bool {
 	matched := false
 
 	if user == nil {
@@ -154,7 +152,7 @@ func subjectMatches(p abac.Policy, user user.Info) bool {
 	return matched
 }
 
-func verbMatches(p abac.Policy, a authorizer.Attributes) bool {
+func verbMatches(p api.Policy, a authorizer.Attributes) bool {
 	// TODO: match on verb
 
 	// All policies allow read only requests
@@ -170,7 +168,7 @@ func verbMatches(p abac.Policy, a authorizer.Attributes) bool {
 	return false
 }
 
-func nonResourceMatches(p abac.Policy, a authorizer.Attributes) bool {
+func nonResourceMatches(p api.Policy, a authorizer.Attributes) bool {
 	// A non-resource policy cannot match a resource request
 	if !a.IsResourceRequest() {
 		// Allow wildcard match
@@ -189,7 +187,7 @@ func nonResourceMatches(p abac.Policy, a authorizer.Attributes) bool {
 	return false
 }
 
-func resourceMatches(p abac.Policy, a authorizer.Attributes) bool {
+func resourceMatches(p api.Policy, a authorizer.Attributes) bool {
 	// A resource policy cannot match a non-resource request
 	if a.IsResourceRequest() {
 		if p.Spec.Resource == "*" || p.Spec.Resource == a.GetResource() {

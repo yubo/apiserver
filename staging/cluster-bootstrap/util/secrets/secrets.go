@@ -21,10 +21,10 @@ import (
 	"strings"
 	"time"
 
-	v1 "github.com/yubo/apiserver/pkg/api/core/v1"
-	"github.com/yubo/golib/staging/util/sets"
 	"github.com/yubo/apiserver/staging/cluster-bootstrap/token/api"
 	legacyutil "github.com/yubo/apiserver/staging/cluster-bootstrap/token/util"
+	gapi "github.com/yubo/golib/api"
+	"github.com/yubo/golib/staging/util/sets"
 	"k8s.io/klog/v2"
 )
 
@@ -34,7 +34,7 @@ var (
 
 // GetData returns the string value for the given key in the specified Secret
 // If there is an error or if the key doesn't exist, an empty string is returned.
-func GetData(secret *v1.Secret, key string) string {
+func GetData(secret *gapi.Secret, key string) string {
 	if secret.Data == nil {
 		return ""
 	}
@@ -45,7 +45,7 @@ func GetData(secret *v1.Secret, key string) string {
 }
 
 // HasExpired will identify whether the secret expires
-func HasExpired(secret *v1.Secret, currentTime time.Time) bool {
+func HasExpired(secret *gapi.Secret, currentTime time.Time) bool {
 	_, expired := GetExpiration(secret, currentTime)
 
 	return expired
@@ -56,7 +56,7 @@ func HasExpired(secret *v1.Secret, currentTime time.Time) bool {
 // timeRemaining indicates how long until it does expire.
 // if the secret has no expiration timestamp, returns 0, false.
 // if there is an error parsing the secret's expiration timestamp, returns 0, true.
-func GetExpiration(secret *v1.Secret, currentTime time.Time) (timeRemaining time.Duration, isExpired bool) {
+func GetExpiration(secret *gapi.Secret, currentTime time.Time) (timeRemaining time.Duration, isExpired bool) {
 	expiration := GetData(secret, api.BootstrapTokenExpirationKey)
 	if len(expiration) == 0 {
 		return 0, false
@@ -89,7 +89,7 @@ func ParseName(name string) (secretID string, ok bool) {
 // GetGroups loads and validates the bootstrapapi.BootstrapTokenExtraGroupsKey
 // key from the bootstrap token secret, returning a list of group names or an
 // error if any of the group names are invalid.
-func GetGroups(secret *v1.Secret) ([]string, error) {
+func GetGroups(secret *gapi.Secret) ([]string, error) {
 	// always include the default group
 	groups := sets.NewString(api.BootstrapDefaultGroup)
 

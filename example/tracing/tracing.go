@@ -10,8 +10,8 @@ import (
 	"github.com/emicklei/go-restful"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"github.com/yubo/apiserver/pkg/openapi"
 	"github.com/yubo/apiserver/pkg/options"
+	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/golib/net/rpc"
 	"k8s.io/klog/v2"
 )
@@ -53,14 +53,14 @@ func (p *Module) Start() error {
 }
 
 func (p *Module) installWs() {
-	openapi.SwaggerTagRegister("tracing", "tracing demo")
+	rest.SwaggerTagRegister("tracing", "tracing demo")
 
 	ws := new(restful.WebService)
 
-	openapi.WsRouteBuild(&openapi.WsOption{
+	rest.WsRouteBuild(&rest.WsOption{
 		Ws:   ws.Path("/tracing").Produces("*/*").Consumes("*/*"),
 		Tags: []string{"tracing"},
-	}, []openapi.WsRoute{{
+	}, []rest.WsRoute{{
 		Method: "GET", SubPath: "/a",
 		Desc:   "a -> a1",
 		Handle: p.a,
@@ -116,7 +116,7 @@ func (p *Module) b(w http.ResponseWriter, req *http.Request) error {
 	delay()
 
 	// call b1
-	_, _, err := openapi.HttpRequest(&openapi.RequestOptions{
+	_, _, err := rest.HttpRequest(&rest.RequestOptions{
 		Url:    fmt.Sprintf("http://%s/tracing/b1", req.Host),
 		Method: "GET",
 		Ctx:    ctx,

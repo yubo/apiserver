@@ -24,12 +24,11 @@ import (
 
 	"k8s.io/klog/v2"
 
+	"github.com/yubo/apiserver/pkg/api/rbac"
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	rbacregistryvalidation "github.com/yubo/apiserver/pkg/authorization/rbac/validation"
 	"github.com/yubo/apiserver/pkg/listers"
-	"github.com/yubo/apiserver/pkg/api/rbac"
-	rbacv1helpers "github.com/yubo/apiserver/pkg/api/rbac/v1"
 	"github.com/yubo/apiserver/staging/labels"
 	utilerrors "github.com/yubo/golib/staging/util/errors"
 )
@@ -177,13 +176,13 @@ func RuleAllows(requestAttributes authorizer.Attributes, rule *rbac.PolicyRule) 
 			combinedResource = requestAttributes.GetResource() + "/" + requestAttributes.GetSubresource()
 		}
 
-		return rbacv1helpers.VerbMatches(rule, requestAttributes.GetVerb()) &&
-			rbacv1helpers.ResourceMatches(rule, combinedResource, requestAttributes.GetSubresource()) &&
-			rbacv1helpers.ResourceNameMatches(rule, requestAttributes.GetName())
+		return rbac.VerbMatches(rule, requestAttributes.GetVerb()) &&
+			rbac.ResourceMatches(rule, combinedResource, requestAttributes.GetSubresource()) &&
+			rbac.ResourceNameMatches(rule, requestAttributes.GetName())
 	}
 
-	return rbacv1helpers.VerbMatches(rule, requestAttributes.GetVerb()) &&
-		rbacv1helpers.NonResourceURLMatches(rule, requestAttributes.GetPath())
+	return rbac.VerbMatches(rule, requestAttributes.GetVerb()) &&
+		rbac.NonResourceURLMatches(rule, requestAttributes.GetPath())
 }
 
 type RoleGetter struct {

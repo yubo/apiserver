@@ -19,8 +19,8 @@ package request
 import (
 	"testing"
 
-	metav1 "github.com/yubo/apiserver/pkg/api/meta/v1"
 	"github.com/yubo/apiserver/pkg/authentication/user"
+	"github.com/yubo/golib/api"
 )
 
 // TestNamespaceContext validates that a namespace can be get/set on a context object
@@ -30,8 +30,8 @@ func TestNamespaceContext(t *testing.T) {
 	if !ok {
 		t.Fatalf("Error getting namespace")
 	}
-	if metav1.NamespaceDefault != result {
-		t.Fatalf("Expected: %s, Actual: %s", metav1.NamespaceDefault, result)
+	if api.NamespaceDefault != result {
+		t.Fatalf("Expected: %s, Actual: %s", api.NamespaceDefault, result)
 	}
 
 	ctx = NewContext()

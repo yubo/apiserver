@@ -24,7 +24,7 @@ import (
 
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/responsewriters"
-	apierrors "github.com/yubo/golib/staging/api/errors"
+	apierrors "github.com/yubo/golib/api/errors"
 	utilclock "github.com/yubo/golib/staging/util/clock"
 	"k8s.io/klog/v2"
 )

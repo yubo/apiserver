@@ -26,7 +26,7 @@ import (
 	"sync"
 
 	apirequest "github.com/yubo/apiserver/pkg/request"
-	apierrors "github.com/yubo/golib/staging/api/errors"
+	apierrors "github.com/yubo/golib/api/errors"
 	utilruntime "github.com/yubo/golib/staging/util/runtime"
 )
 

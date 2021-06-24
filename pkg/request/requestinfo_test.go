@@ -23,12 +23,12 @@ import (
 	"strings"
 	"testing"
 
-	metav1 "github.com/yubo/apiserver/pkg/api/meta/v1"
+	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/staging/util/sets"
 )
 
 func TestGetAPIRequestInfo(t *testing.T) {
-	namespaceAll := metav1.NamespaceAll
+	namespaceAll := api.NamespaceAll
 	successCases := []struct {
 		method              string
 		url                 string

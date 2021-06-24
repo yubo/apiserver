@@ -1,3 +1,4 @@
+// k8s.io/kubernetes/pkg/apis/rbac
 /*
 Copyright 2016 The Kubernetes Authors.
 
@@ -17,7 +18,7 @@ limitations under the License.
 package rbac
 
 import (
-	metav1 "github.com/yubo/apiserver/pkg/api/meta/v1"
+	"github.com/yubo/golib/api"
 )
 
 // Authorization is calculated against
@@ -93,9 +94,9 @@ type RoleRef struct {
 
 // Role is a namespaced, logical grouping of PolicyRules that can be referenced as a unit by a RoleBinding.
 type Role struct {
-	metav1.TypeMeta
+	api.TypeMeta
 	// Standard object's metadata.
-	metav1.ObjectMeta
+	api.ObjectMeta
 
 	// Rules holds all the PolicyRules for this Role
 	Rules []PolicyRule
@@ -107,8 +108,8 @@ type Role struct {
 // It adds who information via Subjects and namespace information by which namespace it exists in.  RoleBindings in a given
 // namespace only have effect in that namespace.
 type RoleBinding struct {
-	metav1.TypeMeta
-	metav1.ObjectMeta
+	api.TypeMeta
+	api.ObjectMeta
 
 	// Subjects holds references to the objects the role applies to.
 	Subjects []Subject
@@ -122,9 +123,9 @@ type RoleBinding struct {
 
 // RoleBindingList is a collection of RoleBindings
 type RoleBindingList struct {
-	metav1.TypeMeta
+	api.TypeMeta
 	// Standard object's metadata.
-	metav1.ListMeta
+	api.ListMeta
 
 	// Items is a list of roleBindings
 	Items []RoleBinding
@@ -134,9 +135,9 @@ type RoleBindingList struct {
 
 // RoleList is a collection of Roles
 type RoleList struct {
-	metav1.TypeMeta
+	api.TypeMeta
 	// Standard object's metadata.
-	metav1.ListMeta
+	api.ListMeta
 
 	// Items is a list of roles
 	Items []Role
@@ -146,9 +147,9 @@ type RoleList struct {
 
 // ClusterRole is a cluster level, logical grouping of PolicyRules that can be referenced as a unit by a RoleBinding or ClusterRoleBinding.
 type ClusterRole struct {
-	metav1.TypeMeta
+	api.TypeMeta
 	// Standard object's metadata.
-	metav1.ObjectMeta
+	api.ObjectMeta
 
 	// Rules holds all the PolicyRules for this ClusterRole
 	Rules []PolicyRule
@@ -163,7 +164,7 @@ type ClusterRole struct {
 type AggregationRule struct {
 	// ClusterRoleSelectors holds a list of selectors which will be used to find ClusterRoles and create the rules.
 	// If any of the selectors match, then the ClusterRole's permissions will be added
-	ClusterRoleSelectors []metav1.LabelSelector
+	ClusterRoleSelectors []api.LabelSelector
 }
 
 // +k8s:deepcopy-gen:interfaces=github.com/yubo/apiserver/staging/runtime.Object
@@ -171,9 +172,9 @@ type AggregationRule struct {
 // ClusterRoleBinding references a ClusterRole, but not contain it.  It can reference a ClusterRole in the global namespace,
 // and adds who information via Subject.
 type ClusterRoleBinding struct {
-	metav1.TypeMeta
+	api.TypeMeta
 	// Standard object's metadata.
-	metav1.ObjectMeta
+	api.ObjectMeta
 
 	// Subjects holds references to the objects the role applies to.
 	Subjects []Subject
@@ -187,9 +188,9 @@ type ClusterRoleBinding struct {
 
 // ClusterRoleBindingList is a collection of ClusterRoleBindings
 type ClusterRoleBindingList struct {
-	metav1.TypeMeta
+	api.TypeMeta
 	// Standard object's metadata.
-	metav1.ListMeta
+	api.ListMeta
 
 	// Items is a list of ClusterRoleBindings
 	Items []ClusterRoleBinding
@@ -199,9 +200,9 @@ type ClusterRoleBindingList struct {
 
 // ClusterRoleList is a collection of ClusterRoles
 type ClusterRoleList struct {
-	metav1.TypeMeta
+	api.TypeMeta
 	// Standard object's metadata.
-	metav1.ListMeta
+	api.ListMeta
 
 	// Items is a list of ClusterRoles
 	Items []ClusterRole

@@ -20,22 +20,21 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/yubo/apiserver/pkg/api/core/v1"
-	metav1 "github.com/yubo/apiserver/pkg/api/meta/v1"
 	bootstrapapi "github.com/yubo/apiserver/staging/cluster-bootstrap/token/api"
+	"github.com/yubo/golib/api"
 )
 
 func TestGetSecretString(t *testing.T) {
 	var tests = []struct {
 		name        string
-		secret      *v1.Secret
+		secret      *api.Secret
 		key         string
 		expectedVal string
 	}{
 		{
 			name: "existing key",
-			secret: &v1.Secret{
-				ObjectMeta: metav1.ObjectMeta{Name: "foo"},
+			secret: &api.Secret{
+				ObjectMeta: api.ObjectMeta{Name: "foo"},
 				Data: map[string][]byte{
 					"foo": []byte("bar"),
 				},
@@ -45,8 +44,8 @@ func TestGetSecretString(t *testing.T) {
 		},
 		{
 			name: "non-existing key",
-			secret: &v1.Secret{
-				ObjectMeta: metav1.ObjectMeta{Name: "foo"},
+			secret: &api.Secret{
+				ObjectMeta: api.ObjectMeta{Name: "foo"},
 				Data: map[string][]byte{
 					"foo": []byte("bar"),
 				},
@@ -56,8 +55,8 @@ func TestGetSecretString(t *testing.T) {
 		},
 		{
 			name: "no data",
-			secret: &v1.Secret{
-				ObjectMeta: metav1.ObjectMeta{Name: "foo"},
+			secret: &api.Secret{
+				ObjectMeta: api.ObjectMeta{Name: "foo"},
 			},
 			key:         "foo",
 			expectedVal: "",
@@ -120,22 +119,22 @@ func TestParseSecretName(t *testing.T) {
 func TestGetGroups(t *testing.T) {
 	tests := []struct {
 		name         string
-		secret       *v1.Secret
+		secret       *api.Secret
 		expectResult []string
 		expectError  bool
 	}{
 		{
 			name: "not set",
-			secret: &v1.Secret{
-				ObjectMeta: metav1.ObjectMeta{Name: "test"},
+			secret: &api.Secret{
+				ObjectMeta: api.ObjectMeta{Name: "test"},
 				Data:       map[string][]byte{},
 			},
 			expectResult: []string{"system:bootstrappers"},
 		},
 		{
 			name: "set to empty value",
-			secret: &v1.Secret{
-				ObjectMeta: metav1.ObjectMeta{Name: "test"},
+			secret: &api.Secret{
+				ObjectMeta: api.ObjectMeta{Name: "test"},
 				Data: map[string][]byte{
 					bootstrapapi.BootstrapTokenExtraGroupsKey: []byte(""),
 				},
@@ -144,8 +143,8 @@ func TestGetGroups(t *testing.T) {
 		},
 		{
 			name: "invalid prefix",
-			secret: &v1.Secret{
-				ObjectMeta: metav1.ObjectMeta{Name: "test"},
+			secret: &api.Secret{
+				ObjectMeta: api.ObjectMeta{Name: "test"},
 				Data: map[string][]byte{
 					bootstrapapi.BootstrapTokenExtraGroupsKey: []byte("foo"),
 				},
@@ -154,8 +153,8 @@ func TestGetGroups(t *testing.T) {
 		},
 		{
 			name: "valid",
-			secret: &v1.Secret{
-				ObjectMeta: metav1.ObjectMeta{Name: "test"},
+			secret: &api.Secret{
+				ObjectMeta: api.ObjectMeta{Name: "test"},
 				Data: map[string][]byte{
 					bootstrapapi.BootstrapTokenExtraGroupsKey: []byte("system:bootstrappers:foo,system:bootstrappers:bar,system:bootstrappers:bar"),
 				},

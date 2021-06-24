@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/go-openapi/spec"
-	"github.com/yubo/apiserver/pkg/openapi"
 	"github.com/yubo/apiserver/pkg/options"
+	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/golib/proc"
 	pconfig "github.com/yubo/golib/proc/config"
 	"k8s.io/klog/v2"
@@ -79,7 +79,7 @@ func (p *apiserver) init(ops *proc.HookOps) (err error) {
 
 func (p *apiserver) start(ops *proc.HookOps) error {
 	ctx, _ := ops.ContextAndConfiger()
-	openapi.InstallApiDocs(
+	rest.InstallApiDocs(
 		p.server.Handler.GoRestfulContainer,
 		spec.InfoProps{Title: proc.NameFrom(ctx)},
 		APIPath,

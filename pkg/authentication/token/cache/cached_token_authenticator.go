@@ -33,7 +33,7 @@ import (
 	"golang.org/x/sync/singleflight"
 
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
-	apierrors "github.com/yubo/golib/staging/api/errors"
+	apierrors "github.com/yubo/golib/api/errors"
 	utilclock "github.com/yubo/golib/staging/util/clock"
 	"k8s.io/klog/v2"
 )

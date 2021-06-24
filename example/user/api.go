@@ -2,7 +2,7 @@
 package user
 
 import (
-	"github.com/yubo/apiserver/pkg/openapi"
+	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/golib/util"
 )
 
@@ -17,10 +17,10 @@ type CreateUserInput struct {
 	Phone *string `json:"phone"`
 }
 
-type CreateUserOutput openapi.RespID
+type CreateUserOutput rest.RespID
 
 type GetUsersInput struct {
-	openapi.Pagination
+	rest.Pagination
 	Query *string `param:"query" name:"query" description:"query user"`
 	Count bool    `param:"query" name:"count" description:"just response total count"`
 }
@@ -60,6 +60,6 @@ type DeleteUserInput struct {
 }
 
 type DeleteUserOutput struct {
-	openapi.RespStatus
+	rest.RespStatus
 	Data *User `json:"dat"`
 }

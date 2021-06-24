@@ -29,7 +29,7 @@ import (
 
 	"github.com/yubo/apiserver/staging/runtime"
 	runtimetesting "github.com/yubo/apiserver/staging/runtime/testing"
-	metav1 "github.com/yubo/apiserver/pkg/api/meta/v1"
+	"github.com/yubo/golib/api"
 	"github.com/yubo/apiserver/staging/conversion"
 	"github.com/yubo/golib/staging/util/diff"
 	utilruntime "github.com/yubo/golib/staging/util/runtime"
@@ -285,7 +285,7 @@ func GetDirectCodecTestScheme() *runtime.Scheme {
 	s.AddKnownTypes(internalGV, &runtimetesting.TestType1{})
 	s.AddKnownTypes(externalGV, &runtimetesting.ExternalTestType1{})
 
-	s.AddUnversionedTypes(externalGV, &metav1.Status{})
+	s.AddUnversionedTypes(externalGV, &api.Status{})
 
 	utilruntime.Must(runtimetesting.RegisterConversions(s))
 	return s

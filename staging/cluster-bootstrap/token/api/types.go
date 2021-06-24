@@ -17,7 +17,7 @@ limitations under the License.
 package api
 
 import (
-	"github.com/yubo/apiserver/pkg/api/core/v1"
+	"github.com/yubo/golib/api"
 )
 
 const (
@@ -30,7 +30,7 @@ const (
 	// SecretTypeBootstrapToken is used during the automated bootstrap process (first
 	// implemented by kubeadm). It stores tokens that are used to sign well known
 	// ConfigMaps. They may also eventually be used for authentication.
-	SecretTypeBootstrapToken v1.SecretType = "bootstrap.kubernetes.io/token"
+	SecretTypeBootstrapToken api.SecretType = "bootstrap.kubernetes.io/token"
 
 	// BootstrapTokenIDKey is the id of this token. This can be transmitted in the
 	// clear and encoded in the name of the secret. It must be a random 6 character

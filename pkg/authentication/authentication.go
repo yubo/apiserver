@@ -120,17 +120,18 @@ func (p *authentication) initAuthentication() (err error) {
 	c := p.config
 
 	var authenticators []authenticator.Request
-	var tokenAuthenticators []authenticator.Token
+	var tokenAuthenticators TokenAuthenticators
 
 	// token auth
-	sort.Sort(p.tokenAuthenticators)
 	for _, v := range p.tokenAuthenticators {
 		if !v.Available() {
+			klog.V(5).Infof("authn.token.%s is invalid, skipping", v.Name())
 			continue
 		}
 		tokenAuthenticators = append(tokenAuthenticators, v)
 		klog.V(6).Infof("add %s tokenAuthenticator pri %d", v.Name(), v.Priority())
 	}
+	sort.Sort(tokenAuthenticators)
 
 	// authn
 	authns := make(Authenticators, len(p.authenticators))
@@ -147,14 +148,15 @@ func (p *authentication) initAuthentication() (err error) {
 			websocket.NewProtocolAuthenticator(tokenAuth),
 		)
 	}
-
 	sort.Sort(authns)
+
 	for _, v := range authns {
 		if !v.Available() {
+			klog.V(5).Infof("authn.%s is invalid, skipping", v.Name())
 			continue
 		}
 		authenticators = append(authenticators, v)
-		klog.V(6).Infof("add %s tokenAuthenticator pri %d", v.Name(), v.Priority())
+		klog.V(5).Infof("add %s tokenAuthenticator pri %d", v.Name(), v.Priority())
 	}
 
 	if len(authenticators) == 0 {

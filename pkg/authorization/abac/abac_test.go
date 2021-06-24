@@ -23,9 +23,9 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/yubo/apiserver/pkg/abac/api"
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
-	"github.com/yubo/apiserver/pkg/api/abac"
 	"github.com/yubo/apiserver/staging/runtime"
 )
 
@@ -466,8 +466,8 @@ func TestSubjectMatches(t *testing.T) {
 	}{
 		"v1 empty policy does not match unauthed user": {
 			User: user.DefaultInfo{Name: "system:anonymous", Groups: []string{"system:unauthenticated"}},
-			Policy: &abac.Policy{
-				Spec: abac.PolicySpec{
+			Policy: &api.Policy{
+				Spec: api.PolicySpec{
 					User:  "",
 					Group: "",
 				},
@@ -476,8 +476,8 @@ func TestSubjectMatches(t *testing.T) {
 		},
 		"v1 * user policy does not match unauthed user": {
 			User: user.DefaultInfo{Name: "system:anonymous", Groups: []string{"system:unauthenticated"}},
-			Policy: &abac.Policy{
-				Spec: abac.PolicySpec{
+			Policy: &api.Policy{
+				Spec: api.PolicySpec{
 					User:  "*",
 					Group: "",
 				},
@@ -486,8 +486,8 @@ func TestSubjectMatches(t *testing.T) {
 		},
 		"v1 * group policy does not match unauthed user": {
 			User: user.DefaultInfo{Name: "system:anonymous", Groups: []string{"system:unauthenticated"}},
-			Policy: &abac.Policy{
-				Spec: abac.PolicySpec{
+			Policy: &api.Policy{
+				Spec: api.PolicySpec{
 					User:  "",
 					Group: "*",
 				},
@@ -496,8 +496,8 @@ func TestSubjectMatches(t *testing.T) {
 		},
 		"v1 empty policy does not match authed user": {
 			User: user.DefaultInfo{Name: "Foo", Groups: []string{user.AllAuthenticated}},
-			Policy: &abac.Policy{
-				Spec: abac.PolicySpec{
+			Policy: &api.Policy{
+				Spec: api.PolicySpec{
 					User:  "",
 					Group: "",
 				},
@@ -506,8 +506,8 @@ func TestSubjectMatches(t *testing.T) {
 		},
 		"v1 empty policy does not match authed user with groups": {
 			User: user.DefaultInfo{Name: "Foo", Groups: []string{"a", "b", user.AllAuthenticated}},
-			Policy: &abac.Policy{
-				Spec: abac.PolicySpec{
+			Policy: &api.Policy{
+				Spec: api.PolicySpec{
 					User:  "",
 					Group: "",
 				},
@@ -517,8 +517,8 @@ func TestSubjectMatches(t *testing.T) {
 
 		"v1 user policy does not match unauthed user": {
 			User: user.DefaultInfo{Name: "system:anonymous", Groups: []string{"system:unauthenticated"}},
-			Policy: &abac.Policy{
-				Spec: abac.PolicySpec{
+			Policy: &api.Policy{
+				Spec: api.PolicySpec{
 					User:  "Foo",
 					Group: "",
 				},
@@ -527,8 +527,8 @@ func TestSubjectMatches(t *testing.T) {
 		},
 		"v1 user policy does not match different user": {
 			User: user.DefaultInfo{Name: "Bar", Groups: []string{user.AllAuthenticated}},
-			Policy: &abac.Policy{
-				Spec: abac.PolicySpec{
+			Policy: &api.Policy{
+				Spec: api.PolicySpec{
 					User:  "Foo",
 					Group: "",
 				},
@@ -537,8 +537,8 @@ func TestSubjectMatches(t *testing.T) {
 		},
 		"v1 user policy is case-sensitive": {
 			User: user.DefaultInfo{Name: "foo", Groups: []string{user.AllAuthenticated}},
-			Policy: &abac.Policy{
-				Spec: abac.PolicySpec{
+			Policy: &api.Policy{
+				Spec: api.PolicySpec{
 					User:  "Foo",
 					Group: "",
 				},
@@ -547,8 +547,8 @@ func TestSubjectMatches(t *testing.T) {
 		},
 		"v1 user policy does not match substring": {
 			User: user.DefaultInfo{Name: "FooBar", Groups: []string{user.AllAuthenticated}},
-			Policy: &abac.Policy{
-				Spec: abac.PolicySpec{
+			Policy: &api.Policy{
+				Spec: api.PolicySpec{
 					User:  "Foo",
 					Group: "",
 				},
@@ -557,8 +557,8 @@ func TestSubjectMatches(t *testing.T) {
 		},
 		"v1 user policy matches username": {
 			User: user.DefaultInfo{Name: "Foo", Groups: []string{user.AllAuthenticated}},
-			Policy: &abac.Policy{
-				Spec: abac.PolicySpec{
+			Policy: &api.Policy{
+				Spec: api.PolicySpec{
 					User:  "Foo",
 					Group: "",
 				},
@@ -568,8 +568,8 @@ func TestSubjectMatches(t *testing.T) {
 
 		"v1 group policy does not match unauthed user": {
 			User: user.DefaultInfo{Name: "system:anonymous", Groups: []string{"system:unauthenticated"}},
-			Policy: &abac.Policy{
-				Spec: abac.PolicySpec{
+			Policy: &api.Policy{
+				Spec: api.PolicySpec{
 					User:  "",
 					Group: "Foo",
 				},
@@ -578,8 +578,8 @@ func TestSubjectMatches(t *testing.T) {
 		},
 		"v1 group policy does not match user in different group": {
 			User: user.DefaultInfo{Name: "FooBar", Groups: []string{"B", user.AllAuthenticated}},
-			Policy: &abac.Policy{
-				Spec: abac.PolicySpec{
+			Policy: &api.Policy{
+				Spec: api.PolicySpec{
 					User:  "",
 					Group: "A",
 				},
@@ -588,8 +588,8 @@ func TestSubjectMatches(t *testing.T) {
 		},
 		"v1 group policy is case-sensitive": {
 			User: user.DefaultInfo{Name: "Foo", Groups: []string{"A", "B", "C", user.AllAuthenticated}},
-			Policy: &abac.Policy{
-				Spec: abac.PolicySpec{
+			Policy: &api.Policy{
+				Spec: api.PolicySpec{
 					User:  "",
 					Group: "b",
 				},
@@ -598,8 +598,8 @@ func TestSubjectMatches(t *testing.T) {
 		},
 		"v1 group policy does not match substring": {
 			User: user.DefaultInfo{Name: "Foo", Groups: []string{"A", "BBB", "C", user.AllAuthenticated}},
-			Policy: &abac.Policy{
-				Spec: abac.PolicySpec{
+			Policy: &api.Policy{
+				Spec: api.PolicySpec{
 					User:  "",
 					Group: "B",
 				},
@@ -608,8 +608,8 @@ func TestSubjectMatches(t *testing.T) {
 		},
 		"v1 group policy matches user in group": {
 			User: user.DefaultInfo{Name: "Foo", Groups: []string{"A", "B", "C", user.AllAuthenticated}},
-			Policy: &abac.Policy{
-				Spec: abac.PolicySpec{
+			Policy: &api.Policy{
+				Spec: api.PolicySpec{
 					User:  "",
 					Group: "B",
 				},
@@ -619,8 +619,8 @@ func TestSubjectMatches(t *testing.T) {
 
 		"v1 user and group policy requires user match": {
 			User: user.DefaultInfo{Name: "Bar", Groups: []string{"A", "B", "C", user.AllAuthenticated}},
-			Policy: &abac.Policy{
-				Spec: abac.PolicySpec{
+			Policy: &api.Policy{
+				Spec: api.PolicySpec{
 					User:  "Foo",
 					Group: "B",
 				},
@@ -629,8 +629,8 @@ func TestSubjectMatches(t *testing.T) {
 		},
 		"v1 user and group policy requires group match": {
 			User: user.DefaultInfo{Name: "Foo", Groups: []string{"A", "B", "C", user.AllAuthenticated}},
-			Policy: &abac.Policy{
-				Spec: abac.PolicySpec{
+			Policy: &api.Policy{
+				Spec: api.PolicySpec{
 					User:  "Foo",
 					Group: "D",
 				},
@@ -639,8 +639,8 @@ func TestSubjectMatches(t *testing.T) {
 		},
 		"v1 user and group policy matches": {
 			User: user.DefaultInfo{Name: "Foo", Groups: []string{"A", "B", "C", user.AllAuthenticated}},
-			Policy: &abac.Policy{
-				Spec: abac.PolicySpec{
+			Policy: &api.Policy{
+				Spec: api.PolicySpec{
 					User:  "Foo",
 					Group: "B",
 				},
@@ -650,8 +650,8 @@ func TestSubjectMatches(t *testing.T) {
 	}
 
 	for k, tc := range testCases {
-		policy := &abac.Policy{}
-		if err := abac.Scheme.Convert(tc.Policy, policy, nil); err != nil {
+		policy := &api.Policy{}
+		if err := api.Scheme.Convert(tc.Policy, policy, nil); err != nil {
 			t.Errorf("%s: error converting: %v", k, err)
 			continue
 		}
@@ -809,7 +809,7 @@ func TestPolicy(t *testing.T) {
 
 		// v1 mismatches
 		{
-			policy: &abac.Policy{},
+			policy: &api.Policy{},
 			attr: authorizer.AttributesRecord{
 				User: &user.DefaultInfo{
 					Name:   "foo",
@@ -821,8 +821,8 @@ func TestPolicy(t *testing.T) {
 			name:    "v1 null",
 		},
 		{
-			policy: &abac.Policy{
-				Spec: abac.PolicySpec{
+			policy: &api.Policy{
+				Spec: api.PolicySpec{
 					User: "foo",
 				},
 			},
@@ -837,8 +837,8 @@ func TestPolicy(t *testing.T) {
 			name:    "v1 user name mis-match",
 		},
 		{
-			policy: &abac.Policy{
-				Spec: abac.PolicySpec{
+			policy: &api.Policy{
+				Spec: api.PolicySpec{
 					User:     "*",
 					Readonly: true,
 				},
@@ -854,8 +854,8 @@ func TestPolicy(t *testing.T) {
 			name:    "v1 read-only mismatch",
 		},
 		{
-			policy: &abac.Policy{
-				Spec: abac.PolicySpec{
+			policy: &api.Policy{
+				Spec: api.PolicySpec{
 					User:     "*",
 					Resource: "foo",
 				},
@@ -872,8 +872,8 @@ func TestPolicy(t *testing.T) {
 			name:    "v1 resource mis-match",
 		},
 		{
-			policy: &abac.Policy{
-				Spec: abac.PolicySpec{
+			policy: &api.Policy{
+				Spec: api.PolicySpec{
 					User:      "foo",
 					Namespace: "barr",
 					Resource:  "baz",
@@ -892,8 +892,8 @@ func TestPolicy(t *testing.T) {
 			name:    "v1 namespace mis-match",
 		},
 		{
-			policy: &abac.Policy{
-				Spec: abac.PolicySpec{
+			policy: &api.Policy{
+				Spec: api.PolicySpec{
 					User:            "*",
 					NonResourcePath: "/api",
 				},
@@ -910,8 +910,8 @@ func TestPolicy(t *testing.T) {
 			name:    "v1 non-resource mis-match",
 		},
 		{
-			policy: &abac.Policy{
-				Spec: abac.PolicySpec{
+			policy: &api.Policy{
+				Spec: api.PolicySpec{
 					User:            "*",
 					NonResourcePath: "/api/*",
 				},
@@ -930,8 +930,8 @@ func TestPolicy(t *testing.T) {
 
 		// v1 matches
 		{
-			policy: &abac.Policy{
-				Spec: abac.PolicySpec{
+			policy: &api.Policy{
+				Spec: api.PolicySpec{
 					User: "foo",
 				},
 			},
@@ -946,8 +946,8 @@ func TestPolicy(t *testing.T) {
 			name:    "v1 user match",
 		},
 		{
-			policy: &abac.Policy{
-				Spec: abac.PolicySpec{
+			policy: &api.Policy{
+				Spec: api.PolicySpec{
 					User: "*",
 				},
 			},
@@ -962,8 +962,8 @@ func TestPolicy(t *testing.T) {
 			name:    "v1 user wildcard match",
 		},
 		{
-			policy: &abac.Policy{
-				Spec: abac.PolicySpec{
+			policy: &api.Policy{
+				Spec: api.PolicySpec{
 					Group: "bar",
 				},
 			},
@@ -978,8 +978,8 @@ func TestPolicy(t *testing.T) {
 			name:    "v1 group match",
 		},
 		{
-			policy: &abac.Policy{
-				Spec: abac.PolicySpec{
+			policy: &api.Policy{
+				Spec: api.PolicySpec{
 					Group: "*",
 				},
 			},
@@ -994,8 +994,8 @@ func TestPolicy(t *testing.T) {
 			name:    "v1 group wildcard match",
 		},
 		{
-			policy: &abac.Policy{
-				Spec: abac.PolicySpec{
+			policy: &api.Policy{
+				Spec: api.PolicySpec{
 					User:     "*",
 					Readonly: true,
 				},
@@ -1012,8 +1012,8 @@ func TestPolicy(t *testing.T) {
 			name:    "v1 read-only match",
 		},
 		{
-			policy: &abac.Policy{
-				Spec: abac.PolicySpec{
+			policy: &api.Policy{
+				Spec: api.PolicySpec{
 					User:     "*",
 					Resource: "foo",
 				},
@@ -1030,8 +1030,8 @@ func TestPolicy(t *testing.T) {
 			name:    "v1 resource match",
 		},
 		{
-			policy: &abac.Policy{
-				Spec: abac.PolicySpec{
+			policy: &api.Policy{
+				Spec: api.PolicySpec{
 					User:      "foo",
 					Namespace: "bar",
 					Resource:  "baz",
@@ -1050,8 +1050,8 @@ func TestPolicy(t *testing.T) {
 			name:    "v1 namespace match",
 		},
 		{
-			policy: &abac.Policy{
-				Spec: abac.PolicySpec{
+			policy: &api.Policy{
+				Spec: api.PolicySpec{
 					User:            "*",
 					NonResourcePath: "/api",
 				},
@@ -1068,8 +1068,8 @@ func TestPolicy(t *testing.T) {
 			name:    "v1 non-resource match",
 		},
 		{
-			policy: &abac.Policy{
-				Spec: abac.PolicySpec{
+			policy: &api.Policy{
+				Spec: api.PolicySpec{
 					User:            "*",
 					NonResourcePath: "*",
 				},
@@ -1086,8 +1086,8 @@ func TestPolicy(t *testing.T) {
 			name:    "v1 non-resource wildcard match",
 		},
 		{
-			policy: &abac.Policy{
-				Spec: abac.PolicySpec{
+			policy: &api.Policy{
+				Spec: api.PolicySpec{
 					User:            "*",
 					NonResourcePath: "/api/*",
 				},
@@ -1105,8 +1105,8 @@ func TestPolicy(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		policy := &abac.Policy{}
-		if err := abac.Scheme.Convert(test.policy, policy, nil); err != nil {
+		policy := &api.Policy{}
+		if err := api.Scheme.Convert(test.policy, policy, nil); err != nil {
 			t.Errorf("%s: error converting: %v", test.name, err)
 			continue
 		}

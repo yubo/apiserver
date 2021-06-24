@@ -23,7 +23,7 @@ import (
 	"testing"
 	"time"
 
-	metav1 "github.com/yubo/apiserver/pkg/api/meta/v1"
+	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/staging/util/validation/field"
 )
 
@@ -36,7 +36,7 @@ const (
 // Ensure custom name functions are allowed
 func TestValidateObjectMetaCustomName(t *testing.T) {
 	errs := ValidateObjectMeta(
-		&metav1.ObjectMeta{Name: "test", GenerateName: "foo"},
+		&api.ObjectMeta{Name: "test", GenerateName: "foo"},
 		false,
 		func(s string, prefix bool) []string {
 			if s == "test" {
@@ -56,7 +56,7 @@ func TestValidateObjectMetaCustomName(t *testing.T) {
 // Ensure namespace names follow dns label format
 func TestValidateObjectMetaNamespaces(t *testing.T) {
 	errs := ValidateObjectMeta(
-		&metav1.ObjectMeta{Name: "test", Namespace: "foo.bar"},
+		&api.ObjectMeta{Name: "test", Namespace: "foo.bar"},
 		true,
 		func(s string, prefix bool) []string {
 			return nil
@@ -75,7 +75,7 @@ func TestValidateObjectMetaNamespaces(t *testing.T) {
 		b[i] = letters[rand.Intn(len(letters))]
 	}
 	errs = ValidateObjectMeta(
-		&metav1.ObjectMeta{Name: "test", Namespace: string(b)},
+		&api.ObjectMeta{Name: "test", Namespace: string(b)},
 		true,
 		func(s string, prefix bool) []string {
 			return nil
@@ -94,13 +94,13 @@ func TestValidateObjectMetaOwnerReferences(t *testing.T) {
 	falseVar := false
 	testCases := []struct {
 		description          string
-		ownerReferences      []metav1.OwnerReference
+		ownerReferences      []api.OwnerReference
 		expectError          bool
 		expectedErrorMessage string
 	}{
 		{
 			description: "simple success - third party extension.",
-			ownerReferences: []metav1.OwnerReference{
+			ownerReferences: []api.OwnerReference{
 				{
 					APIVersion: "customresourceVersion",
 					Kind:       "customresourceKind",
@@ -113,7 +113,7 @@ func TestValidateObjectMetaOwnerReferences(t *testing.T) {
 		},
 		{
 			description: "simple failures - event shouldn't be set as an owner",
-			ownerReferences: []metav1.OwnerReference{
+			ownerReferences: []api.OwnerReference{
 				{
 					APIVersion: "v1",
 					Kind:       "Event",
@@ -126,7 +126,7 @@ func TestValidateObjectMetaOwnerReferences(t *testing.T) {
 		},
 		{
 			description: "simple controller ref success - one reference with Controller set",
-			ownerReferences: []metav1.OwnerReference{
+			ownerReferences: []api.OwnerReference{
 				{
 					APIVersion: "customresourceVersion",
 					Kind:       "customresourceKind",
@@ -160,7 +160,7 @@ func TestValidateObjectMetaOwnerReferences(t *testing.T) {
 		},
 		{
 			description: "simple controller ref failure - two references with Controller set",
-			ownerReferences: []metav1.OwnerReference{
+			ownerReferences: []api.OwnerReference{
 				{
 					APIVersion: "customresourceVersion",
 					Kind:       "customresourceKind",
@@ -196,7 +196,7 @@ func TestValidateObjectMetaOwnerReferences(t *testing.T) {
 
 	for _, tc := range testCases {
 		errs := ValidateObjectMeta(
-			&metav1.ObjectMeta{Name: "test", Namespace: "test", OwnerReferences: tc.ownerReferences},
+			&api.ObjectMeta{Name: "test", Namespace: "test", OwnerReferences: tc.ownerReferences},
 			true,
 			func(s string, prefix bool) []string {
 				return nil
@@ -216,22 +216,22 @@ func TestValidateObjectMetaOwnerReferences(t *testing.T) {
 
 func TestValidateObjectMetaUpdateIgnoresCreationTimestamp(t *testing.T) {
 	if errs := ValidateObjectMetaUpdate(
-		&metav1.ObjectMeta{Name: "test", ResourceVersion: "1"},
-		&metav1.ObjectMeta{Name: "test", ResourceVersion: "1", CreationTimestamp: metav1.NewTime(time.Unix(10, 0))},
+		&api.ObjectMeta{Name: "test", ResourceVersion: "1"},
+		&api.ObjectMeta{Name: "test", ResourceVersion: "1", CreationTimestamp: api.NewTime(time.Unix(10, 0))},
 		field.NewPath("field"),
 	); len(errs) != 1 {
 		t.Fatalf("unexpected errors: %v", errs)
 	}
 	if errs := ValidateObjectMetaUpdate(
-		&metav1.ObjectMeta{Name: "test", ResourceVersion: "1", CreationTimestamp: metav1.NewTime(time.Unix(10, 0))},
-		&metav1.ObjectMeta{Name: "test", ResourceVersion: "1"},
+		&api.ObjectMeta{Name: "test", ResourceVersion: "1", CreationTimestamp: api.NewTime(time.Unix(10, 0))},
+		&api.ObjectMeta{Name: "test", ResourceVersion: "1"},
 		field.NewPath("field"),
 	); len(errs) != 1 {
 		t.Fatalf("unexpected errors: %v", errs)
 	}
 	if errs := ValidateObjectMetaUpdate(
-		&metav1.ObjectMeta{Name: "test", ResourceVersion: "1", CreationTimestamp: metav1.NewTime(time.Unix(10, 0))},
-		&metav1.ObjectMeta{Name: "test", ResourceVersion: "1", CreationTimestamp: metav1.NewTime(time.Unix(11, 0))},
+		&api.ObjectMeta{Name: "test", ResourceVersion: "1", CreationTimestamp: api.NewTime(time.Unix(10, 0))},
+		&api.ObjectMeta{Name: "test", ResourceVersion: "1", CreationTimestamp: api.NewTime(time.Unix(11, 0))},
 		field.NewPath("field"),
 	); len(errs) != 1 {
 		t.Fatalf("unexpected errors: %v", errs)
@@ -240,28 +240,28 @@ func TestValidateObjectMetaUpdateIgnoresCreationTimestamp(t *testing.T) {
 
 func TestValidateFinalizersUpdate(t *testing.T) {
 	testcases := map[string]struct {
-		Old         metav1.ObjectMeta
-		New         metav1.ObjectMeta
+		Old         api.ObjectMeta
+		New         api.ObjectMeta
 		ExpectedErr string
 	}{
 		"invalid adding finalizers": {
-			Old:         metav1.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionTimestamp: &metav1.Time{}, Finalizers: []string{"x/a"}},
-			New:         metav1.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionTimestamp: &metav1.Time{}, Finalizers: []string{"x/a", "y/b"}},
+			Old:         api.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionTimestamp: &api.Time{}, Finalizers: []string{"x/a"}},
+			New:         api.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionTimestamp: &api.Time{}, Finalizers: []string{"x/a", "y/b"}},
 			ExpectedErr: "y/b",
 		},
 		"invalid changing finalizers": {
-			Old:         metav1.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionTimestamp: &metav1.Time{}, Finalizers: []string{"x/a"}},
-			New:         metav1.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionTimestamp: &metav1.Time{}, Finalizers: []string{"x/b"}},
+			Old:         api.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionTimestamp: &api.Time{}, Finalizers: []string{"x/a"}},
+			New:         api.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionTimestamp: &api.Time{}, Finalizers: []string{"x/b"}},
 			ExpectedErr: "x/b",
 		},
 		"valid removing finalizers": {
-			Old:         metav1.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionTimestamp: &metav1.Time{}, Finalizers: []string{"x/a", "y/b"}},
-			New:         metav1.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionTimestamp: &metav1.Time{}, Finalizers: []string{"x/a"}},
+			Old:         api.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionTimestamp: &api.Time{}, Finalizers: []string{"x/a", "y/b"}},
+			New:         api.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionTimestamp: &api.Time{}, Finalizers: []string{"x/a"}},
 			ExpectedErr: "",
 		},
 		"valid adding finalizers for objects not being deleted": {
-			Old:         metav1.ObjectMeta{Name: "test", ResourceVersion: "1", Finalizers: []string{"x/a"}},
-			New:         metav1.ObjectMeta{Name: "test", ResourceVersion: "1", Finalizers: []string{"x/a", "y/b"}},
+			Old:         api.ObjectMeta{Name: "test", ResourceVersion: "1", Finalizers: []string{"x/a"}},
+			New:         api.ObjectMeta{Name: "test", ResourceVersion: "1", Finalizers: []string{"x/a", "y/b"}},
 			ExpectedErr: "",
 		},
 	}
@@ -279,11 +279,11 @@ func TestValidateFinalizersUpdate(t *testing.T) {
 
 func TestValidateFinalizersPreventConflictingFinalizers(t *testing.T) {
 	testcases := map[string]struct {
-		ObjectMeta  metav1.ObjectMeta
+		ObjectMeta  api.ObjectMeta
 		ExpectedErr string
 	}{
 		"conflicting finalizers": {
-			ObjectMeta:  metav1.ObjectMeta{Name: "test", ResourceVersion: "1", Finalizers: []string{metav1.FinalizerOrphanDependents, metav1.FinalizerDeleteDependents}},
+			ObjectMeta:  api.ObjectMeta{Name: "test", ResourceVersion: "1", Finalizers: []string{api.FinalizerOrphanDependents, api.FinalizerDeleteDependents}},
 			ExpectedErr: "cannot be both set",
 		},
 	}
@@ -300,65 +300,65 @@ func TestValidateFinalizersPreventConflictingFinalizers(t *testing.T) {
 }
 
 func TestValidateObjectMetaUpdatePreventsDeletionFieldMutation(t *testing.T) {
-	now := metav1.NewTime(time.Unix(1000, 0).UTC())
-	later := metav1.NewTime(time.Unix(2000, 0).UTC())
+	now := api.NewTime(time.Unix(1000, 0).UTC())
+	later := api.NewTime(time.Unix(2000, 0).UTC())
 	gracePeriodShort := int64(30)
 	gracePeriodLong := int64(40)
 
 	testcases := map[string]struct {
-		Old          metav1.ObjectMeta
-		New          metav1.ObjectMeta
-		ExpectedNew  metav1.ObjectMeta
+		Old          api.ObjectMeta
+		New          api.ObjectMeta
+		ExpectedNew  api.ObjectMeta
 		ExpectedErrs []string
 	}{
 		"valid without deletion fields": {
-			Old:          metav1.ObjectMeta{Name: "test", ResourceVersion: "1"},
-			New:          metav1.ObjectMeta{Name: "test", ResourceVersion: "1"},
-			ExpectedNew:  metav1.ObjectMeta{Name: "test", ResourceVersion: "1"},
+			Old:          api.ObjectMeta{Name: "test", ResourceVersion: "1"},
+			New:          api.ObjectMeta{Name: "test", ResourceVersion: "1"},
+			ExpectedNew:  api.ObjectMeta{Name: "test", ResourceVersion: "1"},
 			ExpectedErrs: []string{},
 		},
 		"valid with deletion fields": {
-			Old:          metav1.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionTimestamp: &now, DeletionGracePeriodSeconds: &gracePeriodShort},
-			New:          metav1.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionTimestamp: &now, DeletionGracePeriodSeconds: &gracePeriodShort},
-			ExpectedNew:  metav1.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionTimestamp: &now, DeletionGracePeriodSeconds: &gracePeriodShort},
+			Old:          api.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionTimestamp: &now, DeletionGracePeriodSeconds: &gracePeriodShort},
+			New:          api.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionTimestamp: &now, DeletionGracePeriodSeconds: &gracePeriodShort},
+			ExpectedNew:  api.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionTimestamp: &now, DeletionGracePeriodSeconds: &gracePeriodShort},
 			ExpectedErrs: []string{},
 		},
 
 		"invalid set deletionTimestamp": {
-			Old:          metav1.ObjectMeta{Name: "test", ResourceVersion: "1"},
-			New:          metav1.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionTimestamp: &now},
-			ExpectedNew:  metav1.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionTimestamp: &now},
+			Old:          api.ObjectMeta{Name: "test", ResourceVersion: "1"},
+			New:          api.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionTimestamp: &now},
+			ExpectedNew:  api.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionTimestamp: &now},
 			ExpectedErrs: []string{"field.deletionTimestamp: Invalid value: 1970-01-01 00:16:40 +0000 UTC: field is immutable"},
 		},
 		"invalid clear deletionTimestamp": {
-			Old:          metav1.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionTimestamp: &now},
-			New:          metav1.ObjectMeta{Name: "test", ResourceVersion: "1"},
-			ExpectedNew:  metav1.ObjectMeta{Name: "test", ResourceVersion: "1"},
+			Old:          api.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionTimestamp: &now},
+			New:          api.ObjectMeta{Name: "test", ResourceVersion: "1"},
+			ExpectedNew:  api.ObjectMeta{Name: "test", ResourceVersion: "1"},
 			ExpectedErrs: []string{"field.deletionTimestamp: Invalid value: \"null\": field is immutable"},
 		},
 		"invalid change deletionTimestamp": {
-			Old:          metav1.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionTimestamp: &now},
-			New:          metav1.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionTimestamp: &later},
-			ExpectedNew:  metav1.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionTimestamp: &later},
+			Old:          api.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionTimestamp: &now},
+			New:          api.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionTimestamp: &later},
+			ExpectedNew:  api.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionTimestamp: &later},
 			ExpectedErrs: []string{"field.deletionTimestamp: Invalid value: 1970-01-01 00:33:20 +0000 UTC: field is immutable"},
 		},
 
 		"invalid set deletionGracePeriodSeconds": {
-			Old:          metav1.ObjectMeta{Name: "test", ResourceVersion: "1"},
-			New:          metav1.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionGracePeriodSeconds: &gracePeriodShort},
-			ExpectedNew:  metav1.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionGracePeriodSeconds: &gracePeriodShort},
+			Old:          api.ObjectMeta{Name: "test", ResourceVersion: "1"},
+			New:          api.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionGracePeriodSeconds: &gracePeriodShort},
+			ExpectedNew:  api.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionGracePeriodSeconds: &gracePeriodShort},
 			ExpectedErrs: []string{"field.deletionGracePeriodSeconds: Invalid value: 30: field is immutable"},
 		},
 		"invalid clear deletionGracePeriodSeconds": {
-			Old:          metav1.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionGracePeriodSeconds: &gracePeriodShort},
-			New:          metav1.ObjectMeta{Name: "test", ResourceVersion: "1"},
-			ExpectedNew:  metav1.ObjectMeta{Name: "test", ResourceVersion: "1"},
+			Old:          api.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionGracePeriodSeconds: &gracePeriodShort},
+			New:          api.ObjectMeta{Name: "test", ResourceVersion: "1"},
+			ExpectedNew:  api.ObjectMeta{Name: "test", ResourceVersion: "1"},
 			ExpectedErrs: []string{"field.deletionGracePeriodSeconds: Invalid value: \"null\": field is immutable"},
 		},
 		"invalid change deletionGracePeriodSeconds": {
-			Old:          metav1.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionGracePeriodSeconds: &gracePeriodShort},
-			New:          metav1.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionGracePeriodSeconds: &gracePeriodLong},
-			ExpectedNew:  metav1.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionGracePeriodSeconds: &gracePeriodLong},
+			Old:          api.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionGracePeriodSeconds: &gracePeriodShort},
+			New:          api.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionGracePeriodSeconds: &gracePeriodLong},
+			ExpectedNew:  api.ObjectMeta{Name: "test", ResourceVersion: "1", DeletionGracePeriodSeconds: &gracePeriodLong},
 			ExpectedErrs: []string{"field.deletionGracePeriodSeconds: Invalid value: 40: field is immutable"},
 		},
 	}
@@ -384,23 +384,23 @@ func TestValidateObjectMetaUpdatePreventsDeletionFieldMutation(t *testing.T) {
 
 func TestObjectMetaGenerationUpdate(t *testing.T) {
 	testcases := map[string]struct {
-		Old          metav1.ObjectMeta
-		New          metav1.ObjectMeta
+		Old          api.ObjectMeta
+		New          api.ObjectMeta
 		ExpectedErrs []string
 	}{
 		"invalid generation change - decremented": {
-			Old:          metav1.ObjectMeta{Name: "test", ResourceVersion: "1", Generation: 5},
-			New:          metav1.ObjectMeta{Name: "test", ResourceVersion: "1", Generation: 4},
+			Old:          api.ObjectMeta{Name: "test", ResourceVersion: "1", Generation: 5},
+			New:          api.ObjectMeta{Name: "test", ResourceVersion: "1", Generation: 4},
 			ExpectedErrs: []string{"field.generation: Invalid value: 4: must not be decremented"},
 		},
 		"valid generation change - incremented by one": {
-			Old:          metav1.ObjectMeta{Name: "test", ResourceVersion: "1", Generation: 1},
-			New:          metav1.ObjectMeta{Name: "test", ResourceVersion: "1", Generation: 2},
+			Old:          api.ObjectMeta{Name: "test", ResourceVersion: "1", Generation: 1},
+			New:          api.ObjectMeta{Name: "test", ResourceVersion: "1", Generation: 2},
 			ExpectedErrs: []string{},
 		},
 		"valid generation field - not updated": {
-			Old:          metav1.ObjectMeta{Name: "test", ResourceVersion: "1", Generation: 5},
-			New:          metav1.ObjectMeta{Name: "test", ResourceVersion: "1", Generation: 5},
+			Old:          api.ObjectMeta{Name: "test", ResourceVersion: "1", Generation: 5},
+			New:          api.ObjectMeta{Name: "test", ResourceVersion: "1", Generation: 5},
 			ExpectedErrs: []string{},
 		},
 	}
@@ -428,7 +428,7 @@ func TestObjectMetaGenerationUpdate(t *testing.T) {
 // Ensure trailing slash is allowed in generate name
 func TestValidateObjectMetaTrimsTrailingSlash(t *testing.T) {
 	errs := ValidateObjectMeta(
-		&metav1.ObjectMeta{Name: "test", GenerateName: "foo-"},
+		&api.ObjectMeta{Name: "test", GenerateName: "foo-"},
 		false,
 		NameIsDNSSubdomain,
 		field.NewPath("field"))

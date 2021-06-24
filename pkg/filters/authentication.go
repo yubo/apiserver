@@ -23,7 +23,7 @@ import (
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	genericapirequest "github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/responsewriters"
-	apierrors "github.com/yubo/golib/staging/api/errors"
+	apierrors "github.com/yubo/golib/api/errors"
 	"k8s.io/klog/v2"
 )
 

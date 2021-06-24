@@ -7,10 +7,10 @@ import (
 	"net/http"
 
 	"github.com/emicklei/go-restful"
-	"github.com/yubo/apiserver/pkg/openapi"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/responsewriters"
+	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/golib/orm"
 	"k8s.io/klog/v2"
 )
@@ -47,17 +47,17 @@ func (p *Module) Start() error {
 }
 
 func (p *Module) installWs() {
-	openapi.SwaggerTagRegister("user", "user Api - for restful sample")
+	rest.SwaggerTagRegister("user", "user Api - for restful sample")
 
 	ws := new(restful.WebService)
 
-	openapi.WsRouteBuild(&openapi.WsOption{
+	rest.WsRouteBuild(&rest.WsOption{
 		Ws: ws.Path("/users").
-			Produces(openapi.MIME_JSON).
-			Consumes(openapi.MIME_JSON),
+			Produces(rest.MIME_JSON).
+			Consumes(rest.MIME_JSON),
 		Tags:      []string{"user"},
 		RespWrite: respWrite,
-	}, []openapi.WsRoute{{
+	}, []rest.WsRoute{{
 		Method: "POST", SubPath: "/",
 		Desc:   "create user",
 		Handle: p.createUser,
@@ -82,7 +82,7 @@ func (p *Module) installWs() {
 	p.http.Add(ws)
 }
 
-func (p *Module) createUser(w http.ResponseWriter, req *http.Request, _ *openapi.NoneParam, in *CreateUserInput) (*CreateUserOutput, error) {
+func (p *Module) createUser(w http.ResponseWriter, req *http.Request, _ *rest.NoneParam, in *CreateUserInput) (*CreateUserOutput, error) {
 	id, err := createUser(p.db, in)
 
 	return &CreateUserOutput{int64(id)}, err
@@ -111,7 +111,7 @@ func (p *Module) deleteUser(w http.ResponseWriter, req *http.Request, in *Delete
 }
 
 func addAuthScope() {
-	openapi.ScopeRegister("user:write", "user")
+	rest.ScopeRegister("user:write", "user")
 }
 
 func respWrite(resp *restful.Response, data interface{}, err error) {

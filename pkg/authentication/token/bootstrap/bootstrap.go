@@ -29,8 +29,8 @@ import (
 
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/pkg/authentication/user"
-	corev1 "github.com/yubo/apiserver/pkg/api/core/v1"
-	"github.com/yubo/golib/staging/api/errors"
+	"github.com/yubo/golib/api"
+	"github.com/yubo/golib/api/errors"
 	//corev1listers "k8s.io/client-go/listers/core/v1"
 	corev1listers "github.com/yubo/apiserver/pkg/listers"
 	bootstrapapi "github.com/yubo/apiserver/staging/cluster-bootstrap/token/api"
@@ -59,7 +59,7 @@ type TokenAuthenticator struct {
 //
 //    tokenErrorf(secret, "has invalid value for key %s", key)
 //
-func tokenErrorf(s *corev1.Secret, format string, i ...interface{}) {
+func tokenErrorf(s *api.Secret, format string, i ...interface{}) {
 	format = fmt.Sprintf("Bootstrap secret %s/%s matching bearer token ", s.Namespace, s.Name) + format
 	klog.V(3).Infof(format, i...)
 }

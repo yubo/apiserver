@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"strings"
 
-	metav1 "github.com/yubo/apiserver/pkg/api/meta/v1"
+	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/staging/util/sets"
 )
 
@@ -221,7 +221,7 @@ type ClusterRoleBindingBuilder struct {
 func NewClusterBinding(clusterRoleName string) *ClusterRoleBindingBuilder {
 	return &ClusterRoleBindingBuilder{
 		ClusterRoleBinding: ClusterRoleBinding{
-			ObjectMeta: metav1.ObjectMeta{Name: clusterRoleName},
+			ObjectMeta: api.ObjectMeta{Name: clusterRoleName},
 			RoleRef: RoleRef{
 				Kind: "ClusterRole",
 				Name: clusterRoleName,
@@ -287,7 +287,7 @@ type RoleBindingBuilder struct {
 func NewRoleBinding(roleName, namespace string) *RoleBindingBuilder {
 	return &RoleBindingBuilder{
 		RoleBinding: RoleBinding{
-			ObjectMeta: metav1.ObjectMeta{
+			ObjectMeta: api.ObjectMeta{
 				Name:      roleName,
 				Namespace: namespace,
 			},
@@ -306,7 +306,7 @@ func NewRoleBinding(roleName, namespace string) *RoleBindingBuilder {
 func NewRoleBindingForClusterRole(roleName, namespace string) *RoleBindingBuilder {
 	return &RoleBindingBuilder{
 		RoleBinding: RoleBinding{
-			ObjectMeta: metav1.ObjectMeta{
+			ObjectMeta: api.ObjectMeta{
 				Name:      roleName,
 				Namespace: namespace,
 			},
@@ -369,4 +369,79 @@ func (s SortableRuleSlice) Len() int      { return len(s) }
 func (s SortableRuleSlice) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
 func (s SortableRuleSlice) Less(i, j int) bool {
 	return strings.Compare(s[i].String(), s[j].String()) < 0
+}
+
+func ResourceNameMatches(rule *PolicyRule, requestedName string) bool {
+	if len(rule.ResourceNames) == 0 {
+		return true
+	}
+
+	for _, ruleName := range rule.ResourceNames {
+		if ruleName == requestedName {
+			return true
+		}
+	}
+
+	return false
+}
+
+func NonResourceURLMatches(rule *PolicyRule, requestedURL string) bool {
+	for _, ruleURL := range rule.NonResourceURLs {
+		if ruleURL == NonResourceAll {
+			return true
+		}
+		if ruleURL == requestedURL {
+			return true
+		}
+		if strings.HasSuffix(ruleURL, "*") && strings.HasPrefix(requestedURL, strings.TrimRight(ruleURL, "*")) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func String(r PolicyRule) string {
+	return "PolicyRule" + CompactString(r)
+}
+
+// CompactString exposes a compact string representation for use in escalation error messages
+func CompactString(r PolicyRule) string {
+	formatStringParts := []string{}
+	formatArgs := []interface{}{}
+	//if len(r.APIGroups) > 0 {
+	//	formatStringParts = append(formatStringParts, "APIGroups:%q")
+	//	formatArgs = append(formatArgs, r.APIGroups)
+	//}
+	if len(r.Resources) > 0 {
+		formatStringParts = append(formatStringParts, "Resources:%q")
+		formatArgs = append(formatArgs, r.Resources)
+	}
+	if len(r.NonResourceURLs) > 0 {
+		formatStringParts = append(formatStringParts, "NonResourceURLs:%q")
+		formatArgs = append(formatArgs, r.NonResourceURLs)
+	}
+	if len(r.ResourceNames) > 0 {
+		formatStringParts = append(formatStringParts, "ResourceNames:%q")
+		formatArgs = append(formatArgs, r.ResourceNames)
+	}
+	if len(r.Verbs) > 0 {
+		formatStringParts = append(formatStringParts, "Verbs:%q")
+		formatArgs = append(formatArgs, r.Verbs)
+	}
+	formatString := "{" + strings.Join(formatStringParts, ", ") + "}"
+	return fmt.Sprintf(formatString, formatArgs...)
+}
+
+func VerbMatches(rule *PolicyRule, requestedVerb string) bool {
+	for _, ruleVerb := range rule.Verbs {
+		if ruleVerb == VerbAll {
+			return true
+		}
+		if ruleVerb == requestedVerb {
+			return true
+		}
+	}
+
+	return false
 }

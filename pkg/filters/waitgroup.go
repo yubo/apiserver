@@ -23,8 +23,8 @@ import (
 
 	apirequest "github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/responsewriters"
-	apierrors "github.com/yubo/golib/staging/api/errors"
 	"github.com/yubo/apiserver/staging/runtime"
+	apierrors "github.com/yubo/golib/api/errors"
 	utilwaitgroup "github.com/yubo/golib/staging/util/waitgroup"
 )
 

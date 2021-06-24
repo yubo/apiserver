@@ -22,17 +22,16 @@ import (
 	"reflect"
 	"testing"
 
-	metav1 "github.com/yubo/apiserver/pkg/api/meta/v1"
+	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/staging/api/errors"
 )
 
 func TestBadStatusErrorToAPIStatus(t *testing.T) {
 	err := errors.StatusError{}
 	actual := ErrorToAPIStatus(&err)
-	expected := &metav1.Status{
-		TypeMeta: metav1.TypeMeta{Kind: "Status", APIVersion: "v1"},
-		Status:   metav1.StatusFailure,
-		Code:     500,
+	expected := &api.Status{
+		Status: api.StatusFailure,
+		Code:   500,
 	}
 	if !reflect.DeepEqual(actual, expected) {
 		t.Errorf("%s: Expected %#v, Got %#v", actual, expected, actual)
@@ -40,45 +39,28 @@ func TestBadStatusErrorToAPIStatus(t *testing.T) {
 }
 
 func TestAPIStatus(t *testing.T) {
-	cases := map[error]metav1.Status{
+	cases := map[error]api.Status{
 		errors.NewNotFound("bar"): {
-			Status:  metav1.StatusFailure,
+			Status:  api.StatusFailure,
 			Code:    http.StatusNotFound,
-			Reason:  metav1.StatusReasonNotFound,
+			Reason:  api.StatusReasonNotFound,
 			Message: "foos.legacy.kubernetes.io \"bar\" not found",
-			Details: &metav1.StatusDetails{
-				Group: "legacy.kubernetes.io",
-				Kind:  "foos",
-				Name:  "bar",
-			},
 		},
 		errors.NewAlreadyExists("bar"): {
-			Status:  metav1.StatusFailure,
+			Status:  api.StatusFailure,
 			Code:    http.StatusConflict,
 			Reason:  "AlreadyExists",
 			Message: "foos \"bar\" already exists",
-			Details: &metav1.StatusDetails{
-				Group: "",
-				Kind:  "foos",
-				Name:  "bar",
-			},
 		},
 		errors.NewConflict("bar", stderrs.New("failure")): {
-			Status:  metav1.StatusFailure,
+			Status:  api.StatusFailure,
 			Code:    http.StatusConflict,
 			Reason:  "Conflict",
 			Message: "Operation cannot be fulfilled on foos \"bar\": failure",
-			Details: &metav1.StatusDetails{
-				Group: "",
-				Kind:  "foos",
-				Name:  "bar",
-			},
 		},
 	}
 	for k, v := range cases {
 		actual := ErrorToAPIStatus(k)
-		v.APIVersion = "v1"
-		v.Kind = "Status"
 		if !reflect.DeepEqual(actual, &v) {
 			t.Errorf("%s: Expected %#v, Got %#v", k, v, actual)
 		}

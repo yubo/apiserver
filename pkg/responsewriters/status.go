@@ -20,29 +20,29 @@ import (
 	"fmt"
 	"net/http"
 
-	metav1 "github.com/yubo/golib/staging/api/meta/v1"
+	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/staging/util/runtime"
 )
 
-// statusError is an object that can be converted into an metav1.Status
+// statusError is an object that can be converted into an api.Status
 type statusError interface {
-	Status() metav1.Status
+	Status() api.Status
 }
 
-// ErrorToAPIStatus converts an error to an metav1.Status object.
-func ErrorToAPIStatus(err error) *metav1.Status {
+// ErrorToAPIStatus converts an error to an api.Status object.
+func ErrorToAPIStatus(err error) *api.Status {
 	switch t := err.(type) {
 	case statusError:
 		status := t.Status()
 		if len(status.Status) == 0 {
-			status.Status = metav1.StatusFailure
+			status.Status = api.StatusFailure
 		}
 		switch status.Status {
-		case metav1.StatusSuccess:
+		case api.StatusSuccess:
 			if status.Code == 0 {
 				status.Code = http.StatusOK
 			}
-		case metav1.StatusFailure:
+		case api.StatusFailure:
 			if status.Code == 0 {
 				status.Code = http.StatusInternalServerError
 			}
@@ -63,15 +63,11 @@ func ErrorToAPIStatus(err error) *metav1.Status {
 		// by REST storage - these typically indicate programmer
 		// error by not using pkg/api/errors, or unexpected failure
 		// cases.
-		runtime.HandleError(fmt.Errorf("apiserver received an error that is not an metav1.Status: %#+v: %v", err, err))
-		return &metav1.Status{
-			TypeMeta: metav1.TypeMeta{
-				Kind:       "Status",
-				APIVersion: "v1",
-			},
-			Status:  metav1.StatusFailure,
+		runtime.HandleError(fmt.Errorf("apiserver received an error that is not an api.Status: %#+v: %v", err, err))
+		return &api.Status{
+			Status:  api.StatusFailure,
 			Code:    int32(status),
-			Reason:  metav1.StatusReasonUnknown,
+			Reason:  api.StatusReasonUnknown,
 			Message: err.Error(),
 		}
 	}

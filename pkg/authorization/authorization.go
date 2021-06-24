@@ -182,6 +182,12 @@ func (p *authorization) initAuthorization() (err error) {
 		return fmt.Errorf("at least one authorization mode must be passed")
 	}
 
+	if klog.V(6).Enabled() {
+		for k, _ := range p.authzFactorys {
+			klog.Infof("authz %s is valid", k)
+		}
+	}
+
 	var authorizers []authorizer.Authorizer
 
 	for _, mode := range c.Modes {
@@ -200,6 +206,7 @@ func (p *authorization) initAuthorization() (err error) {
 			return err
 		}
 		authorizers = append(authorizers, authz)
+		klog.V(5).Infof("authz %s loaded", mode)
 	}
 	p.authorizer = union.New(authorizers...)
 

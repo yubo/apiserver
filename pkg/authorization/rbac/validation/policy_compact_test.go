@@ -20,7 +20,6 @@ import (
 	"testing"
 
 	"github.com/yubo/apiserver/pkg/api/rbac"
-	//rbacv1helpers "github.com/yubo/apiserver/pkg/api/rbac/v1"
 	//"k8s.io/component-helpers/auth/rbac/validation"
 )
 

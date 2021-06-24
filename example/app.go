@@ -31,8 +31,8 @@ import (
 	_ "github.com/yubo/apiserver/pkg/db/register"
 	_ "github.com/yubo/apiserver/pkg/debug/register"
 	_ "github.com/yubo/apiserver/pkg/grpcserver/register"
+	_ "github.com/yubo/apiserver/pkg/rest/swagger/register"
 	_ "github.com/yubo/apiserver/pkg/session/register"
-	_ "github.com/yubo/apiserver/pkg/swagger/register"
 	_ "github.com/yubo/apiserver/pkg/tracing/register"
 	_ "github.com/yubo/golib/orm/sqlite"
 )
