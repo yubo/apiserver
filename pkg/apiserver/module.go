@@ -6,8 +6,8 @@ import (
 	"github.com/go-openapi/spec"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/rest"
+	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/proc"
-	pconfig "github.com/yubo/golib/proc/config"
 	"k8s.io/klog/v2"
 )
 
@@ -57,12 +57,12 @@ type apiserver struct {
 }
 
 func (p *apiserver) init(ops *proc.HookOps) (err error) {
-	ctx, configer := ops.ContextAndConfiger()
+	ctx, c := ops.ContextAndConfiger()
 	p.ctx, p.cancel = context.WithCancel(ctx)
 
 	cf := newConfig()
-	if err := configer.ReadYaml(p.name, cf,
-		pconfig.WithOverride(_config.Changed())); err != nil {
+	if err := c.ReadYaml(p.name, cf,
+		configer.WithOverride(_config.Changed())); err != nil {
 		return err
 	}
 	p.config = cf

@@ -8,8 +8,8 @@ import (
 	"github.com/yubo/apiserver/pkg/authentication/token/bootstrap"
 	"github.com/yubo/apiserver/pkg/listers"
 	"github.com/yubo/apiserver/pkg/options"
+	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/proc"
-	pconfig "github.com/yubo/golib/proc/config"
 	"github.com/yubo/golib/util"
 	"k8s.io/klog/v2"
 )
@@ -63,11 +63,11 @@ func defaultConfig() *config {
 }
 
 func (p *authModule) init(ops *proc.HookOps) error {
-	ctx, configer := ops.ContextAndConfiger()
+	ctx, c := ops.ContextAndConfiger()
 
 	cf := defaultConfig()
-	if err := configer.ReadYaml(p.name, cf,
-		pconfig.WithOverride(_config.changed())); err != nil {
+	if err := c.ReadYaml(p.name, cf,
+		configer.WithOverride(_config.changed())); err != nil {
 		return err
 	}
 	p.config = cf

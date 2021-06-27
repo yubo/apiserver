@@ -8,8 +8,8 @@ import (
 	"github.com/yubo/apiserver/pkg/authorization"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	"github.com/yubo/apiserver/pkg/options"
+	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/proc"
-	pconfig "github.com/yubo/golib/proc/config"
 	utilerrors "github.com/yubo/golib/staging/util/errors"
 	"github.com/yubo/golib/staging/util/wait"
 	"github.com/yubo/golib/util"
@@ -118,11 +118,11 @@ func DefaultAuthWebhookRetryBackoff() *wait.Backoff {
 }
 
 func (p *authModule) init(ops *proc.HookOps) error {
-	configer := ops.Configer()
+	c := ops.Configer()
 
 	cf := defaultConfig()
-	if err := configer.ReadYaml(moduleName, cf,
-		pconfig.WithOverride(_config.changed())); err != nil {
+	if err := c.ReadYaml(moduleName, cf,
+		configer.WithOverride(_config.changed())); err != nil {
 		return err
 	}
 	p.config = cf

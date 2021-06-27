@@ -9,8 +9,8 @@ import (
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	"github.com/yubo/apiserver/pkg/authorization/union"
 	"github.com/yubo/apiserver/pkg/options"
+	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/proc"
-	pconfig "github.com/yubo/golib/proc/config"
 	utilerrors "github.com/yubo/golib/staging/util/errors"
 	"github.com/yubo/golib/staging/util/sets"
 	"github.com/yubo/golib/util"
@@ -136,12 +136,12 @@ func (p *authorization) Authorizer() authorizer.Authorizer {
 }
 
 func (p *authorization) init(ops *proc.HookOps) error {
-	ctx, configer := ops.ContextAndConfiger()
+	ctx, c := ops.ContextAndConfiger()
 	p.ctx, p.cancel = context.WithCancel(ctx)
 
 	cf := newConfig()
-	if err := configer.ReadYaml(p.name, cf,
-		pconfig.WithOverride(_config.Changed())); err != nil {
+	if err := c.ReadYaml(p.name, cf,
+		configer.WithOverride(_config.Changed())); err != nil {
 		return err
 	}
 	p.config = cf
