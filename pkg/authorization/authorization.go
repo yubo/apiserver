@@ -3,13 +3,10 @@ package authorization
 import (
 	"context"
 	"fmt"
-	"strings"
 
-	"github.com/spf13/pflag"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	"github.com/yubo/apiserver/pkg/authorization/union"
 	"github.com/yubo/apiserver/pkg/options"
-	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/proc"
 	utilerrors "github.com/yubo/golib/staging/util/errors"
 	"github.com/yubo/golib/staging/util/sets"
@@ -44,8 +41,7 @@ var (
 		Priority:    proc.PRI_SYS_START,
 		SubPriority: options.PRI_M_AUTHZ,
 	}}
-	_config *config
-	Config  *config
+	//Config *config
 
 	// AuthorizationModeChoices is the list of supported authorization modes
 	AuthorizationModeChoices = []string{}
@@ -57,20 +53,13 @@ func IsValidAuthorizationMode(authzMode string) bool {
 
 // config contains all build-in authorization options for API Server
 type config struct {
-	Modes []string `yaml:"modes"`
+	Modes []string `json:"modes" default:"AlwaysAllow" flag:"authorization-mode" description:"Ordered list of plug-ins to do authorization on secure port."`
 }
 
 // newConfig create a config with default value
 func newConfig() *config {
-	return &config{
-		Modes: []string{ModeAlwaysAllow},
+	return &config{ //Modes: []string{ModeAlwaysAllow},
 	}
-}
-func (o *config) Changed() interface{} {
-	if o == nil {
-		return nil
-	}
-	return util.Diff2Map(newConfig(), o)
 }
 func (o *config) String() string {
 	return util.Prettify(o)
@@ -102,11 +91,11 @@ func (o *config) Validate() error {
 }
 
 // addFlags returns flags of authorization for a API Server
-func (o *config) addFlags(fs *pflag.FlagSet) {
-	fs.StringSliceVar(&o.Modes, "authorization-mode", o.Modes, ""+
-		"Ordered list of plug-ins to do authorization on secure port. Comma-delimited list of: "+
-		strings.Join(AuthorizationModeChoices, ",")+".")
-}
+//func (o *config) addFlags(fs *pflag.FlagSet) {
+//	fs.StringSliceVar(&o.Modes, "authorization-mode", o.Modes, ""+
+//		"Ordered list of plug-ins to do authorization on secure port. Comma-delimited list of: "+
+//		strings.Join(AuthorizationModeChoices, ",")+".")
+//}
 
 type authorization struct {
 	name   string
@@ -140,8 +129,7 @@ func (p *authorization) init(ops *proc.HookOps) error {
 	p.ctx, p.cancel = context.WithCancel(ctx)
 
 	cf := newConfig()
-	if err := c.ReadYaml(p.name, cf,
-		configer.WithOverride(_config.Changed())); err != nil {
+	if err := c.ReadYaml(p.name, cf); err != nil {
 		return err
 	}
 	p.config = cf
@@ -169,9 +157,7 @@ func (p *authorization) stop(ops *proc.HookOps) error {
 
 func Register() {
 	proc.RegisterHooks(hookOps)
-	_config = newConfig()
-	_config.addFlags(proc.NamedFlagSets().FlagSet("authorization"))
-	Config = _config
+	proc.RegisterFlags(moduleName, moduleName, newConfig())
 }
 
 func (p *authorization) initAuthorization() (err error) {

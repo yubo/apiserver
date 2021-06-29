@@ -4,12 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/spf13/pflag"
 	"github.com/yubo/apiserver/pkg/options"
-	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/proc"
 	"github.com/yubo/golib/staging/util/wait"
-	"github.com/yubo/golib/util"
 )
 
 const (
@@ -30,34 +27,14 @@ var (
 )
 
 type config struct {
-	ConfigFile string
-	Version    string
-	CacheTTL   time.Duration
+	ConfigFile string        `json:"configFile" flag:"authentication-token-webhook-config-file" description:"File with webhook configuration for token authentication in kubeconfig format. The API server will query the remote service to determine authentication for bearer tokens."`
+	Version    string        `json:"version" default:"v1beta1" flag:"authentication-token-webhook-version" description:"The API version of the authentication.k8s.io TokenReview to send to and expect from the webhook."`
+	CacheTTL   time.Duration `json:"cacheTTL" default:"120s" flag:"authentication-token-webhook-cache-ttl" description:"The duration to cache responses from the webhook token authenticator."`
 
 	// RetryBackoff specifies the backoff parameters for the authentication webhook retry logic.
 	// This allows us to configure the sleep time at each iteration and the maximum number of retries allowed
 	// before we fail the webhook call in order to limit the fan out that ensues when the system is degraded.
-	RetryBackoff *wait.Backoff
-}
-
-func (o *config) addFlags(fs *pflag.FlagSet) {
-	fs.StringVar(&o.ConfigFile, "authentication-token-webhook-config-file", o.ConfigFile, ""+
-		"File with webhook configuration for token authentication in kubeconfig format. "+
-		"The API server will query the remote service to determine authentication for bearer tokens.")
-
-	fs.StringVar(&o.Version, "authentication-token-webhook-version", o.Version, ""+
-		"The API version of the authentication.k8s.io TokenReview to send to and expect from the webhook.")
-
-	fs.DurationVar(&o.CacheTTL, "authentication-token-webhook-cache-ttl", o.CacheTTL,
-		"The duration to cache responses from the webhook token authenticator.")
-
-}
-
-func (o *config) changed() interface{} {
-	if o == nil {
-		return nil
-	}
-	return util.Diff2Map(defaultConfig(), o)
+	RetryBackoff *wait.Backoff `json:"-"`
 }
 
 func (o *config) Validate() error {
@@ -73,10 +50,8 @@ type authModule struct {
 	config *config
 }
 
-func defaultConfig() *config {
+func newConfig() *config {
 	return &config{
-		Version:      "v1beta1",
-		CacheTTL:     2 * time.Minute,
 		RetryBackoff: DefaultAuthWebhookRetryBackoff(),
 	}
 }
@@ -84,9 +59,8 @@ func defaultConfig() *config {
 func (p *authModule) init(ops *proc.HookOps) error {
 	c := ops.Configer()
 
-	cf := defaultConfig()
-	if err := c.ReadYaml(p.name, cf,
-		configer.WithOverride(_config.changed())); err != nil {
+	cf := newConfig()
+	if err := c.ReadYaml(p.name, cf); err != nil {
 		return err
 	}
 	p.config = cf
@@ -108,6 +82,5 @@ func DefaultAuthWebhookRetryBackoff() *wait.Backoff {
 
 func init() {
 	proc.RegisterHooks(hookOps)
-	_config = defaultConfig()
-	_config.addFlags(proc.NamedFlagSets().FlagSet("authentication"))
+	proc.RegisterFlags(moduleName, "authentication", newConfig())
 }

@@ -6,7 +6,6 @@ import (
 	"github.com/go-openapi/spec"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/rest"
-	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/proc"
 	"k8s.io/klog/v2"
 )
@@ -19,12 +18,6 @@ const (
 var (
 	_module = &apiserver{name: moduleName}
 	hookOps = []proc.HookOps{{
-		Hook:        _module.init,
-		Owner:       moduleName,
-		HookNum:     proc.ACTION_TEST,
-		Priority:    proc.PRI_SYS_INIT,
-		SubPriority: options.PRI_M_HTTP,
-	}, {
 		Hook:        _module.init,
 		Owner:       moduleName,
 		HookNum:     proc.ACTION_START,
@@ -43,7 +36,6 @@ var (
 		Priority:    proc.PRI_SYS_START,
 		SubPriority: options.PRI_M_HTTP,
 	}}
-	_config *config
 )
 
 type apiserver struct {
@@ -61,8 +53,7 @@ func (p *apiserver) init(ops *proc.HookOps) (err error) {
 	p.ctx, p.cancel = context.WithCancel(ctx)
 
 	cf := newConfig()
-	if err := c.ReadYaml(p.name, cf,
-		configer.WithOverride(_config.Changed())); err != nil {
+	if err := c.ReadYaml(p.name, cf); err != nil {
 		return err
 	}
 	p.config = cf
@@ -107,6 +98,5 @@ func (p *apiserver) stop(ops *proc.HookOps) error {
 func Register() {
 	proc.RegisterHooks(hookOps)
 
-	_config = newConfig()
-	_config.Flags(proc.NamedFlagSets())
+	proc.RegisterFlags(moduleName, "apiserver", newConfig())
 }

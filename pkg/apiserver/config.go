@@ -25,25 +25,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/spf13/pflag"
-	cliflag "github.com/yubo/golib/staging/cli/flag"
 	"github.com/yubo/golib/staging/util/errors"
 	utilerrors "github.com/yubo/golib/staging/util/errors"
 	"github.com/yubo/golib/util"
 	"k8s.io/klog/v2"
 )
-
-func (s *config) Changed() interface{} {
-	if s == nil {
-		return nil
-	}
-	return util.Diff2Map(newConfig(), s)
-}
-
-// Flags returns flags for a specific APIServer by section name
-func (s *config) Flags(fss *cliflag.NamedFlagSets) {
-	s.AddUniversalFlags(fss.FlagSet(moduleName))
-}
 
 func (s *config) String() string {
 	return util.Prettify(s)
@@ -51,51 +37,54 @@ func (s *config) String() string {
 
 // config contains the config while running a generic api server.
 type config struct {
-	ExternalHost                string        `yaml:"externalHost"`
-	BindAddress                 net.IP        `yaml:"bindAddress"`
-	BindPort                    int           `yaml:"bindPort"`    // BindPort is ignored when Listener is set, will serve https even with 0.
-	BindNetwork                 string        `yaml:"bindNetwork"` // BindNetwork is the type of network to bind to - defaults to "tcp", accepts "tcp", "tcp4", and "tcp6".
-	CorsAllowedOriginList       []string      `yaml:"corsAllowedOriginList"`
-	HSTSDirectives              []string      `yaml:"hstsDirectives"`
-	MaxRequestsInFlight         int           `yaml:"maxRequestsInFlight"`
-	MaxMutatingRequestsInFlight int           `yaml:"maxMutatingRequestsInFlight"`
-	RequestTimeout              time.Duration `yaml:"requestTimeout"`
-	GoawayChance                float64       `yaml:"goawayChance"`
-	LivezGracePeriod            time.Duration `yaml:"livezGracePeriod"`
-	MinRequestTimeout           time.Duration `yaml:"minRequestTimeout"`
-	ShutdownTimeout             time.Duration `yaml:"shutdownTimeout"`
-	ShutdownDelayDuration       time.Duration `yaml:"shutdownDelayDuration"`
+	ExternalHost string `json:"externalHost" flag:"external-hostname" description:"The hostname to use when generating externalized URLs for this master (e.g. Swagger API Docs or OpenID Discovery)."`
+
+	BindAddress string/*net.IP*/ `json:"bindAddress" default:"0.0.0.0" flag:"bind-address" description:"The IP address on which to listen for the --bind-port port. The associated interface(s) must be reachable by the rest of the cluster, and by CLI/web clients. If blank or an unspecified address (0.0.0.0 or ::), all interfaces will be used."`
+
+	BindPort int `json:"bindPort" default:"8080" flag:"bind-port" description:"The port on which to serve HTTPS with authentication and authorization. It cannot be switched off with 0."` // BindPort is ignored when Listener is set, will serve https even with 0.
+
+	BindNetwork string `json:"bindNetwork" flag:"cors-allowed-origins" description:"List of allowed origins for CORS, comma separated.  An allowed origin can be a regular expression to support subdomain matching. If this list is empty CORS will not be enabled."` // BindNetwork is the type of network to bind to - defaults to "tcp", accepts "tcp", "tcp4", and "tcp6".
+
+	CorsAllowedOriginList []string `json:"corsAllowedOriginList"`
+
+	HSTSDirectives []string `json:"hstsDirectives" flag:"strict-transport-security-directives" description:"List of directives for HSTS, comma separated. If this list is empty, then HSTS directives will not be added. Example: 'max-age=31536000,includeSubDomains,preload'"`
+
+	MaxRequestsInFlight int `json:"maxRequestsInFlight" default:"400" flag:"max-requests-inflight" description:"The maximum number of non-mutating requests in flight at a given time. When the server exceeds this, it rejects requests. Zero for no limit."`
+
+	MaxMutatingRequestsInFlight int `json:"maxMutatingRequestsInFlight" default:"200" flag:"max-mutating-requests-inflight" description:"The maximum number of mutating requests in flight at a given time. When the server exceeds this, it rejects requests. Zero for no limit."`
+
+	RequestTimeout time.Duration `json:"requestTimeout" default:"60s" flag:"request-timeout" description:"An optional field indicating the duration a handler must keep a request open before timing it out. This is the default request timeout for requests but may be overridden by flags such as --min-request-timeout for specific types of requests."`
+
+	GoawayChance float64 `json:"goawayChance" flag:"goaway-chance" description:"To prevent HTTP/2 clients from getting stuck on a single apiserver, randomly close a connection (GOAWAY). The client's other in-flight requests won't be affected, and the client will reconnect, likely landing on a different apiserver after going through the load balancer again. This argument sets the fraction of requests that will be sent a GOAWAY. Clusters with single apiservers, or which don't use a load balancer, should NOT enable this. Min is 0 (off), Max is .02 (1/50 requests); .001 (1/1000) is a recommended starting point."`
+
+	LivezGracePeriod  time.Duration `json:"livezGracePeriod" flag:"livez-grace-period" description:"This option represents the maximum amount of time it should take for apiserver to complete its startup sequence and become live. From apiserver's start time to when this amount of time has elapsed, /livez will assume that unfinished post-start hooks will complete successfully and therefore return true."`
+	MinRequestTimeout time.Duration `json:"minRequestTimeout" default:"1800s" flag:"min-request-timeout" description:"An optional field indicating the minimum number of seconds a handler must keep a request open before timing it out. Currently only honored by the watch request handler, which picks a randomized value above this number as the connection timeout, to spread out load."`
+
+	ShutdownTimeout       time.Duration `json:"shutdownTimeout"`
+	ShutdownDelayDuration time.Duration `json:"shutdownDelayDuration" flag:"shutdown-delay-duration" description:"Time to delay the termination. During that time the server keeps serving requests normally. The endpoints /healthz and /livez will return success, but /readyz immediately returns failure. Graceful termination starts after this delay has elapsed. This can be used to allow load balancer to stop sending traffic to this server."`
+
 	// The limit on the request body size that would be accepted and
 	// decoded in a write request. 0 means no limit.
 	// We intentionally did not add a flag for this option. Users of the
 	// apiserver library can wire it to a flag.
-	MaxRequestBodyBytes       int64 `yaml:"maxRequestBodyBytes"`
-	EnablePriorityAndFairness bool  `yaml:"enablePriorityAndFairness"`
+	MaxRequestBodyBytes int64 `json:"maxRequestBodyBytes" default:"3145728"`
+
+	EnablePriorityAndFairness bool `json:"enablePriorityAndFairness" default:"true" flag:"enable-priority-and-fairness" description:"If true and the APIPriorityAndFairness feature gate is enabled, replace the max-in-flight handler with an enhanced one that queues and dispatches with priority and fairness"`
 
 	// ExternalAddress is the address advertised, even if BindAddress is a loopback. By default this
 	// is set to BindAddress if the later no loopback, or to the first host interface address.
-	ExternalAddress net.IP `yaml:""`
+	ExternalAddress net.IP `json:"-"`
 
 	// Listener is the secure server network listener.
 	// either Listener or BindAddress/BindPort/BindNetwork is set,
 	// if Listener is set, use it and omit BindAddress/BindPort/BindNetwork.
-	Listener net.Listener `yaml:"-"`
+	Listener net.Listener `json:"-"`
 }
 
 func newConfig() *config {
 	return &config{
-		MaxRequestsInFlight:         400,
-		MaxMutatingRequestsInFlight: 200,
-		RequestTimeout:              60 * time.Second,
-		LivezGracePeriod:            0,
-		MinRequestTimeout:           1800 * time.Second,
-		ShutdownTimeout:             60 * time.Second,
-		ShutdownDelayDuration:       0,
-		MaxRequestBodyBytes:         int64(3 * 1024 * 1024),
-		EnablePriorityAndFairness:   true,
-
-		BindAddress: net.ParseIP("0.0.0.0"),
-		BindPort:    8080,
+		ShutdownTimeout:     60 * time.Second,
+		MaxRequestBodyBytes: int64(3 * 1024 * 1024),
 	}
 }
 
@@ -171,77 +160,6 @@ func validateHSTSDirectives(hstsDirectives []string) error {
 		}
 	}
 	return errors.NewAggregate(allErrors)
-}
-
-// AddFlags adds flags for a specific APIServer to the specified FlagSet
-func (s *config) AddUniversalFlags(fs *pflag.FlagSet) {
-	// Note: the weird ""+ in below lines seems to be the only way to get gofmt to
-	// arrange these text blocks sensibly. Grrr.
-
-	fs.StringSliceVar(&s.CorsAllowedOriginList, "cors-allowed-origins", s.CorsAllowedOriginList, ""+
-		"List of allowed origins for CORS, comma separated.  An allowed origin can be a regular "+
-		"expression to support subdomain matching. If this list is empty CORS will not be enabled.")
-
-	fs.StringSliceVar(&s.HSTSDirectives, "strict-transport-security-directives", s.HSTSDirectives, ""+
-		"List of directives for HSTS, comma separated. If this list is empty, then HSTS directives will not "+
-		"be added. Example: 'max-age=31536000,includeSubDomains,preload'")
-
-	deprecatedTargetRAMMB := 0
-	fs.IntVar(&deprecatedTargetRAMMB, "target-ram-mb", deprecatedTargetRAMMB,
-		"DEPRECATED: Memory limit for apiserver in MB (used to configure sizes of caches, etc.)")
-	fs.MarkDeprecated("target-ram-mb", "This flag will be removed in v1.23")
-
-	fs.StringVar(&s.ExternalHost, "external-hostname", s.ExternalHost,
-		"The hostname to use when generating externalized URLs for this master (e.g. Swagger API Docs or OpenID Discovery).")
-
-	fs.IntVar(&s.MaxRequestsInFlight, "max-requests-inflight", s.MaxRequestsInFlight, ""+
-		"The maximum number of non-mutating requests in flight at a given time. When the server exceeds this, "+
-		"it rejects requests. Zero for no limit.")
-
-	fs.IntVar(&s.MaxMutatingRequestsInFlight, "max-mutating-requests-inflight", s.MaxMutatingRequestsInFlight, ""+
-		"The maximum number of mutating requests in flight at a given time. When the server exceeds this, "+
-		"it rejects requests. Zero for no limit.")
-
-	fs.DurationVar(&s.RequestTimeout, "request-timeout", s.RequestTimeout, ""+
-		"An optional field indicating the duration a handler must keep a request open before timing "+
-		"it out. This is the default request timeout for requests but may be overridden by flags such as "+
-		"--min-request-timeout for specific types of requests.")
-
-	fs.Float64Var(&s.GoawayChance, "goaway-chance", s.GoawayChance, ""+
-		"To prevent HTTP/2 clients from getting stuck on a single apiserver, randomly close a connection (GOAWAY). "+
-		"The client's other in-flight requests won't be affected, and the client will reconnect, likely landing on a different apiserver after going through the load balancer again. "+
-		"This argument sets the fraction of requests that will be sent a GOAWAY. Clusters with single apiservers, or which don't use a load balancer, should NOT enable this. "+
-		"Min is 0 (off), Max is .02 (1/50 requests); .001 (1/1000) is a recommended starting point.")
-
-	fs.DurationVar(&s.LivezGracePeriod, "livez-grace-period", s.LivezGracePeriod, ""+
-		"This option represents the maximum amount of time it should take for apiserver to complete its startup sequence "+
-		"and become live. From apiserver's start time to when this amount of time has elapsed, /livez will assume "+
-		"that unfinished post-start hooks will complete successfully and therefore return true.")
-
-	fs.DurationVar(&s.MinRequestTimeout, "min-request-timeout", s.MinRequestTimeout, ""+
-		"An optional field indicating the minimum number of seconds a handler must keep "+
-		"a request open before timing it out. Currently only honored by the watch request "+
-		"handler, which picks a randomized value above this number as the connection timeout, "+
-		"to spread out load.")
-
-	fs.BoolVar(&s.EnablePriorityAndFairness, "enable-priority-and-fairness", s.EnablePriorityAndFairness, ""+
-		"If true and the APIPriorityAndFairness feature gate is enabled, replace the max-in-flight handler with an enhanced one that queues and dispatches with priority and fairness")
-
-	fs.DurationVar(&s.ShutdownDelayDuration, "shutdown-delay-duration", s.ShutdownDelayDuration, ""+
-		"Time to delay the termination. During that time the server keeps serving requests normally. The endpoints /healthz and /livez "+
-		"will return success, but /readyz immediately returns failure. Graceful termination starts after this delay "+
-		"has elapsed. This can be used to allow load balancer to stop sending traffic to this server.")
-
-	fs.IPVar(&s.BindAddress, "bind-address", s.BindAddress, ""+
-		"The IP address on which to listen for the --bind-port port. The "+
-		"associated interface(s) must be reachable by the rest of the cluster, and by CLI/web "+
-		"clients. If blank or an unspecified address (0.0.0.0 or ::), all interfaces will be used.")
-
-	desc := "The port on which to serve HTTPS with authentication and authorization." +
-		" It cannot be switched off with 0."
-	fs.IntVar(&s.BindPort, "bind-port", s.BindPort, desc)
-
-	//utilfeature.DefaultMutableFeatureGate.AddFlag(fs)
 }
 
 func createListener(network, addr string, config net.ListenConfig) (net.Listener, int, error) {

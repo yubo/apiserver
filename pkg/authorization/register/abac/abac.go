@@ -1,14 +1,11 @@
 package abac
 
 import (
-	"github.com/spf13/pflag"
 	"github.com/yubo/apiserver/pkg/authorization"
 	"github.com/yubo/apiserver/pkg/authorization/abac"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	"github.com/yubo/apiserver/pkg/options"
-	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/proc"
-	"github.com/yubo/golib/util"
 )
 
 const (
@@ -30,19 +27,7 @@ var (
 )
 
 type config struct {
-	PolicyFile string `yaml:"policyFile"`
-}
-
-func (o *config) addFlags(fs *pflag.FlagSet) {
-	fs.StringVar(&o.PolicyFile, "authorization-policy-file", o.PolicyFile, ""+
-		"File with authorization policy in json line by line format, used with --authorization-mode=ABAC, on the secure port.")
-}
-
-func (o *config) changed() interface{} {
-	if o == nil {
-		return nil
-	}
-	return util.Diff2Map(defaultConfig(), o)
+	PolicyFile string `json:"policyFile" flag:"authorization-policy-file" description:"File with authorization policy in json line by line format, used with --authorization-mode=ABAC, on the secure port."`
 }
 
 func (o *config) Validate() error {
@@ -54,16 +39,15 @@ type authModule struct {
 	config *config
 }
 
-func defaultConfig() *config {
+func newConfig() *config {
 	return &config{}
 }
 
 func (p *authModule) init(ops *proc.HookOps) error {
 	c := ops.Configer()
 
-	cf := defaultConfig()
-	if err := c.ReadYaml(moduleName, cf,
-		configer.WithOverride(_config.changed())); err != nil {
+	cf := newConfig()
+	if err := c.ReadYaml(moduleName, cf); err != nil {
 		return err
 	}
 	p.config = cf
@@ -73,13 +57,11 @@ func (p *authModule) init(ops *proc.HookOps) error {
 
 func init() {
 	proc.RegisterHooks(hookOps)
-	_config = defaultConfig()
-	_config.addFlags(proc.NamedFlagSets().FlagSet("authorization"))
+	proc.RegisterFlags(moduleName, "authorization", newConfig())
 
 	factory := func() (authorizer.Authorizer, error) {
 		return abac.NewFromFile(_auth.config.PolicyFile)
 	}
 
 	authorization.RegisterAuthz(submoduleName, factory)
-
 }

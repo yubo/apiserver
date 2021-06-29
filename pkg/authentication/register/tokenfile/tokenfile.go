@@ -1,13 +1,10 @@
 package oidc
 
 import (
-	"github.com/spf13/pflag"
 	"github.com/yubo/apiserver/pkg/authentication"
 	"github.com/yubo/apiserver/pkg/authentication/token/tokenfile"
 	"github.com/yubo/apiserver/pkg/options"
-	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/proc"
-	"github.com/yubo/golib/util"
 	"k8s.io/klog/v2"
 )
 
@@ -26,25 +23,10 @@ var (
 		Priority:    proc.PRI_SYS_INIT,
 		SubPriority: options.PRI_M_AUTHN - 1,
 	}}
-	_config *config
 )
 
 type config struct {
-	TokenAuthFile string `yaml:"tokenAuthFile"`
-}
-
-func (o *config) addFlags(fs *pflag.FlagSet) {
-	fs.StringVar(&o.TokenAuthFile, "token-auth-file", o.TokenAuthFile, ""+
-		"If set, the file that will be used to secure the secure port of the API server "+
-		"via token authentication.")
-
-}
-
-func (o *config) changed() interface{} {
-	if o == nil {
-		return nil
-	}
-	return util.Diff2Map(defaultConfig(), o)
+	TokenAuthFile string `json:"tokenAuthFile" flag:"token-auth-file" description:"If set, the file that will be used to secure the secure port of the API server via token authentication."`
 }
 
 func (o *config) Validate() error {
@@ -56,16 +38,15 @@ type authModule struct {
 	config *config
 }
 
-func defaultConfig() *config {
+func newConfig() *config {
 	return &config{}
 }
 
 func (p *authModule) init(ops *proc.HookOps) error {
 	c := ops.Configer()
 
-	cf := defaultConfig()
-	if err := c.ReadYaml(moduleName, cf,
-		configer.WithOverride(_config.changed())); err != nil {
+	cf := newConfig()
+	if err := c.ReadYaml(moduleName, cf); err != nil {
 		return err
 	}
 	p.config = cf
@@ -85,6 +66,5 @@ func (p *authModule) init(ops *proc.HookOps) error {
 
 func init() {
 	proc.RegisterHooks(hookOps)
-	_config = defaultConfig()
-	_config.addFlags(proc.NamedFlagSets().FlagSet("authentication"))
+	proc.RegisterFlags(moduleName, "authentication", newConfig())
 }

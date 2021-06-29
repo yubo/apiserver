@@ -3,14 +3,11 @@ package oidc
 import (
 	"fmt"
 
-	"github.com/spf13/pflag"
 	"github.com/yubo/apiserver/pkg/authentication"
 	"github.com/yubo/apiserver/pkg/authentication/token/bootstrap"
 	"github.com/yubo/apiserver/pkg/listers"
 	"github.com/yubo/apiserver/pkg/options"
-	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/proc"
-	"github.com/yubo/golib/util"
 	"k8s.io/klog/v2"
 )
 
@@ -29,24 +26,10 @@ var (
 		Priority:    proc.PRI_SYS_INIT,
 		SubPriority: options.PRI_M_AUTHN - 1,
 	}}
-	_config *config
 )
 
 type config struct {
-	BootstrapToken bool `yaml:"bootstrapToken"`
-}
-
-func (o *config) addFlags(fs *pflag.FlagSet) {
-	fs.BoolVar(&o.BootstrapToken, "enable-bootstrap-token-auth", o.BootstrapToken, ""+
-		"Enable to allow secrets of type 'bootstrap.kubernetes.io/token' in the 'kube-system' "+
-		"namespace to be used for TLS bootstrapping authentication.")
-}
-
-func (o *config) changed() interface{} {
-	if o == nil {
-		return nil
-	}
-	return util.Diff2Map(defaultConfig(), o)
+	BootstrapToken bool `json:"bootstrapToken" default:"true" flag:"enable-bootstrap-token-auth" description:"Enable to allow secrets of type 'bootstrap.kubernetes.io/token' in the 'kube-system' namespace to be used for TLS bootstrapping authentication."`
 }
 
 func (o *config) Validate() error {
@@ -58,16 +41,13 @@ type authModule struct {
 	config *config
 }
 
-func defaultConfig() *config {
-	return &config{BootstrapToken: true}
-}
+func newConfig() *config { return &config{} }
 
 func (p *authModule) init(ops *proc.HookOps) error {
 	ctx, c := ops.ContextAndConfiger()
 
-	cf := defaultConfig()
-	if err := c.ReadYaml(p.name, cf,
-		configer.WithOverride(_config.changed())); err != nil {
+	cf := newConfig()
+	if err := c.ReadYaml(p.name, cf); err != nil {
 		return err
 	}
 	p.config = cf
@@ -88,6 +68,5 @@ func (p *authModule) init(ops *proc.HookOps) error {
 
 func init() {
 	proc.RegisterHooks(hookOps)
-	_config = defaultConfig()
-	_config.addFlags(proc.NamedFlagSets().FlagSet("authentication"))
+	proc.RegisterFlags(moduleName, "authentication", newConfig())
 }

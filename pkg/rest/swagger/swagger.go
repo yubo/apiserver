@@ -20,11 +20,6 @@ var (
 	hookOps = []proc.HookOps{{
 		Hook:     _module.init,
 		Owner:    moduleName,
-		HookNum:  proc.ACTION_TEST,
-		Priority: proc.PRI_MODULE,
-	}, {
-		Hook:     _module.init,
-		Owner:    moduleName,
 		HookNum:  proc.ACTION_START,
 		Priority: proc.PRI_MODULE,
 	}}

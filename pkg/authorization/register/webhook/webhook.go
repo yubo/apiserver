@@ -4,15 +4,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/spf13/pflag"
 	"github.com/yubo/apiserver/pkg/authorization"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	"github.com/yubo/apiserver/pkg/options"
-	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/proc"
 	utilerrors "github.com/yubo/golib/staging/util/errors"
 	"github.com/yubo/golib/staging/util/wait"
-	"github.com/yubo/golib/util"
 )
 
 const (
@@ -36,42 +33,21 @@ var (
 type config struct {
 
 	// Kubeconfig file for Webhook authorization plugin.
-	WebhookConfigFile string
+	WebhookConfigFile string `json:"webhookConfigFile" flag:"authorization-webhook-config-file" description:"File with webhook configuration in kubeconfig format, used with --authorization-mode=Webhook. "`
+
 	// API version of subject access reviews to send to the webhook (e.g. "v1", "v1beta1")
-	WebhookVersion string
+	WebhookVersion string `json:"webhookVersion" default:"v1beta1" flag:"authorization-webhook-version" description:"The API version of the authorization.k8s.io SubjectAccessReview to send to and expect from the webhook."`
+
 	// TTL for caching of authorized responses from the webhook server.
-	WebhookCacheAuthorizedTTL time.Duration
+	WebhookCacheAuthorizedTTL time.Duration `json:"webhookCacheAuthorizedTTL" default:"5m" flag:"authorization-webhook-cache-authorized-ttl" description:"The duration to cache 'authorized' responses from the webhook authorizer."`
+
 	// TTL for caching of unauthorized responses from the webhook server.
-	WebhookCacheUnauthorizedTTL time.Duration
+	WebhookCacheUnauthorizedTTL time.Duration `json:"webhookCacheUnauthorizedTTL" default:"30s" flag:"authorization-webhook-cache-unauthorized-ttl" description:"The duration to cache 'unauthorized' responses from the webhook authorizer."`
+
 	// WebhookRetryBackoff specifies the backoff parameters for the authorization webhook retry logic.
 	// This allows us to configure the sleep time at each iteration and the maximum number of retries allowed
 	// before we fail the webhook call in order to limit the fan out that ensues when the system is degraded.
-	WebhookRetryBackoff *wait.Backoff
-}
-
-func (o *config) addFlags(fs *pflag.FlagSet) {
-	fs.StringVar(&o.WebhookConfigFile, "authorization-webhook-config-file", o.WebhookConfigFile, ""+
-		"File with webhook configuration in kubeconfig format, used with --authorization-mode=Webhook. "+
-		"The API server will query the remote service to determine access on the API server's secure port.")
-
-	fs.StringVar(&o.WebhookVersion, "authorization-webhook-version", o.WebhookVersion, ""+
-		"The API version of the authorization.k8s.io SubjectAccessReview to send to and expect from the webhook.")
-
-	fs.DurationVar(&o.WebhookCacheAuthorizedTTL, "authorization-webhook-cache-authorized-ttl",
-		o.WebhookCacheAuthorizedTTL,
-		"The duration to cache 'authorized' responses from the webhook authorizer.")
-
-	fs.DurationVar(&o.WebhookCacheUnauthorizedTTL,
-		"authorization-webhook-cache-unauthorized-ttl", o.WebhookCacheUnauthorizedTTL,
-		"The duration to cache 'unauthorized' responses from the webhook authorizer.")
-
-}
-
-func (o *config) changed() interface{} {
-	if o == nil {
-		return nil
-	}
-	return util.Diff2Map(defaultConfig(), o)
+	WebhookRetryBackoff *wait.Backoff `json:"webhookRetryBackoff"`
 }
 
 func (o *config) Validate() error {
@@ -97,13 +73,8 @@ type authModule struct {
 	config *config
 }
 
-func defaultConfig() *config {
-	return &config{
-		WebhookVersion:              "v1beta1",
-		WebhookCacheAuthorizedTTL:   5 * time.Minute,
-		WebhookCacheUnauthorizedTTL: 30 * time.Second,
-		WebhookRetryBackoff:         DefaultAuthWebhookRetryBackoff(),
-	}
+func newConfig() *config {
+	return &config{WebhookRetryBackoff: DefaultAuthWebhookRetryBackoff()}
 }
 
 // DefaultAuthWebhookRetryBackoff is the default backoff parameters for
@@ -120,9 +91,8 @@ func DefaultAuthWebhookRetryBackoff() *wait.Backoff {
 func (p *authModule) init(ops *proc.HookOps) error {
 	c := ops.Configer()
 
-	cf := defaultConfig()
-	if err := c.ReadYaml(moduleName, cf,
-		configer.WithOverride(_config.changed())); err != nil {
+	cf := newConfig()
+	if err := c.ReadYaml(moduleName, cf); err != nil {
 		return err
 	}
 	p.config = cf
@@ -132,8 +102,7 @@ func (p *authModule) init(ops *proc.HookOps) error {
 
 func init() {
 	proc.RegisterHooks(hookOps)
-	_config = defaultConfig()
-	_config.addFlags(proc.NamedFlagSets().FlagSet("authorization"))
+	proc.RegisterFlags(moduleName, "authorization", newConfig())
 
 	factory := func() (authorizer.Authorizer, error) {
 		//cf := _auth.config

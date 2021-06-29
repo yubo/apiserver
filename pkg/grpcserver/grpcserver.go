@@ -38,12 +38,6 @@ var (
 	hookOps = []proc.HookOps{{
 		Hook:        _module.init,
 		Owner:       moduleName,
-		HookNum:     proc.ACTION_TEST,
-		Priority:    proc.PRI_SYS_INIT,
-		SubPriority: options.PRI_M_GRPC,
-	}, {
-		Hook:        _module.init,
-		Owner:       moduleName,
 		HookNum:     proc.ACTION_START,
 		Priority:    proc.PRI_SYS_INIT,
 		SubPriority: options.PRI_M_GRPC,

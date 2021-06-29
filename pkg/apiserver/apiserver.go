@@ -84,11 +84,11 @@ func (p *apiserver) serverInit() error {
 	c.MinRequestTimeout = cf.MinRequestTimeout
 	c.ShutdownDelayDuration = cf.ShutdownDelayDuration
 	c.MaxRequestBodyBytes = cf.MaxRequestBodyBytes
-	c.PublicAddress = cf.BindAddress
+	c.PublicAddress = net.ParseIP(cf.BindAddress)
 
 	if cf.Listener == nil {
 		var err error
-		addr := net.JoinHostPort(cf.BindAddress.String(), strconv.Itoa(cf.BindPort))
+		addr := net.JoinHostPort(cf.BindAddress, strconv.Itoa(cf.BindPort))
 
 		cf.Listener, cf.BindPort, err = createListener(cf.BindNetwork, addr, net.ListenConfig{})
 		if err != nil {
@@ -99,7 +99,7 @@ func (p *apiserver) serverInit() error {
 			return fmt.Errorf("failed to parse ip and port from listener")
 		}
 		cf.BindPort = cf.Listener.Addr().(*net.TCPAddr).Port
-		cf.BindAddress = cf.Listener.Addr().(*net.TCPAddr).IP
+		cf.BindAddress = cf.Listener.Addr().(*net.TCPAddr).IP.String()
 	}
 
 	c.Listener = cf.Listener

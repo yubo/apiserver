@@ -5,7 +5,6 @@ import (
 	"sort"
 	"time"
 
-	"github.com/spf13/pflag"
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/pkg/authentication/group"
 	"github.com/yubo/apiserver/pkg/authentication/request/anonymous"
@@ -16,10 +15,8 @@ import (
 	"github.com/yubo/apiserver/pkg/authentication/token/tokenfile"
 	tokenunion "github.com/yubo/apiserver/pkg/authentication/token/union"
 	"github.com/yubo/apiserver/pkg/options"
-	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/proc"
 	"github.com/yubo/golib/staging/util/wait"
-	"github.com/yubo/golib/util"
 	"k8s.io/klog/v2"
 )
 
@@ -29,10 +26,10 @@ const (
 
 // config contains all authentication options for API Server
 type config struct {
-	//APIAudiences         []string      `yaml:"apiAudiences"`
-	TokenSuccessCacheTTL time.Duration `yaml:"tokenSuccessCacheTTL"`
-	TokenFailureCacheTTL time.Duration `yaml:"tokenFailureCacheTTL"`
-	Anonymous            bool          `yaml:"anonymous"`
+	//APIAudiences         []string      `json:"apiAudiences"`
+	TokenSuccessCacheTTL time.Duration `json:"tokenSuccessCacheTTL" flag:"token-success-cache-ttl" default:"10s" description:"The duration to cache success token."`
+	TokenFailureCacheTTL time.Duration `json:"tokenFailureCacheTTL" flag:"token-failure-cache-ttl" description:"The duration to cache failure token."`
+	Anonymous            bool          `json:"anonymous" flag:"anonymous-auth" default:"true" description:"Enables anonymous requests to the secure port of the API server. Requests that are not rejected by another authentication method are treated as anonymous requests. Anonymous requests have a username of system:anonymous, and a group name of system:unauthenticated."`
 }
 
 // TokenFileAuthenticationOptions contains token file authentication options for API Server
@@ -54,38 +51,12 @@ type WebHookAuthenticationOptions struct {
 
 // newConfig create a new BuiltInAuthenticationOptions, just set default token cache TTL
 func newConfig() *config {
-	return &config{
-		TokenSuccessCacheTTL: 10 * time.Second,
-		TokenFailureCacheTTL: 0 * time.Second,
-		Anonymous:            true,
-	}
-}
-
-func defaultConfig() *config {
-	return newConfig()
-}
-
-func (o *config) changed() interface{} {
-	if o == nil {
-		return nil
-	}
-	return util.Diff2Map(defaultConfig(), o)
+	return &config{}
 }
 
 // Validate checks invalid config combination
 func (o *config) Validate() error {
 	return nil
-}
-
-// addFlags returns flags of authentication for a API Server
-func (o *config) addFlags(fs *pflag.FlagSet) {
-	fs.DurationVar(&o.TokenSuccessCacheTTL, "token-success-cache-ttl", o.TokenSuccessCacheTTL, "The duration to cache success token.")
-	fs.DurationVar(&o.TokenFailureCacheTTL, "token-failure-cache-ttl", o.TokenFailureCacheTTL, "The duration to cache failure token.")
-
-	fs.BoolVar(&o.Anonymous, "anonymous-auth", o.Anonymous, ""+
-		"Enables anonymous requests to the secure port of the API server. "+
-		"Requests that are not rejected by another authentication method are treated as anonymous requests. "+
-		"Anonymous requests have a username of system:anonymous, and a group name of system:unauthenticated.")
 }
 
 type Authenticators []authenticator.Request
@@ -196,12 +167,6 @@ var (
 	hookOps = []proc.HookOps{{
 		Hook:        _authn.init,
 		Owner:       moduleName,
-		HookNum:     proc.ACTION_TEST,
-		Priority:    proc.PRI_SYS_INIT,
-		SubPriority: options.PRI_M_AUTHN,
-	}, {
-		Hook:        _authn.init,
-		Owner:       moduleName,
 		HookNum:     proc.ACTION_START,
 		Priority:    proc.PRI_SYS_INIT,
 		SubPriority: options.PRI_M_AUTHN,
@@ -212,7 +177,6 @@ var (
 		Priority:    proc.PRI_SYS_START,
 		SubPriority: options.PRI_M_AUTHN,
 	}}
-	_config *config
 )
 
 func RegisterAuthn(auth authenticator.Request) error {
@@ -244,9 +208,8 @@ func (p *authentication) init(ops *proc.HookOps) (err error) {
 	ctx, c := ops.ContextAndConfiger()
 	p.ctx, p.cancel = context.WithCancel(ctx)
 
-	cf := defaultConfig()
-	if err := c.ReadYaml(p.name, cf,
-		configer.WithOverride(_config.changed())); err != nil {
+	cf := &config{}
+	if err := c.ReadYaml(moduleName, cf); err != nil {
 		return err
 	}
 	p.config = cf
@@ -274,6 +237,5 @@ func (p *authentication) stop(ops *proc.HookOps) error {
 func Register() {
 	proc.RegisterHooks(hookOps)
 
-	_config = defaultConfig()
-	_config.addFlags(proc.NamedFlagSets().FlagSet("authentication"))
+	proc.RegisterFlags(moduleName, "authentication", &config{})
 }
