@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/yubo/apiserver/pkg/openapi"
+	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/golib/staging/util/term"
 	"github.com/yubo/golib/util"
 	"k8s.io/klog/v2"
@@ -61,12 +61,12 @@ func (p *Client) Error() error {
 	return nil
 }
 
-func RshRequest(opt *openapi.RequestOptions) error {
+func RshRequest(opt *rest.RequestOptions) error {
 	opt.Method = "GET"
 	opt.Url = strings.NewReplacer("http://", "ws://",
 		"https://", "wss://").Replace(opt.Url)
 
-	req, err := openapi.NewRequest(opt)
+	req, err := rest.NewRequest(opt)
 	if err != nil {
 		klog.Infof("[debug] payload error %s", err.Error())
 		return err

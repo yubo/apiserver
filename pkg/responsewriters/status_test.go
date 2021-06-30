@@ -23,7 +23,7 @@ import (
 	"testing"
 
 	"github.com/yubo/golib/api"
-	"github.com/yubo/golib/staging/api/errors"
+	"github.com/yubo/golib/api/errors"
 )
 
 func TestBadStatusErrorToAPIStatus(t *testing.T) {

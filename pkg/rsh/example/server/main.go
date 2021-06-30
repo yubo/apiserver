@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	restful "github.com/emicklei/go-restful"
-	"github.com/yubo/apiserver/pkg/openapi"
+	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/apiserver/pkg/rsh"
 	"github.com/yubo/golib/util"
 	"k8s.io/klog/v2"
@@ -33,7 +33,7 @@ func (p *ttyserver) WebService() *restful.WebService {
 
 func (p *ttyserver) exec(req *restful.Request, resp *restful.Response) {
 	in := &ExecOption{}
-	if err := openapi.ReadEntity(req, in, nil); err != nil {
+	if err := rest.ReadEntity(req, in, nil); err != nil {
 		resp.WriteError(http.StatusInternalServerError, err)
 		klog.V(3).Info(err)
 		return

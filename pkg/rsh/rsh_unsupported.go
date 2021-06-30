@@ -7,7 +7,7 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/yubo/apiserver/pkg/openapi"
+	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/golib/util"
 )
 
@@ -16,7 +16,7 @@ func (p *Rsh) Run(remote io.ReadWriteCloser, cmds []string, env []string) error 
 
 }
 
-func RshRequest(opt *openapi.RequestOption) error {
+func RshRequest(opt *rest.RequestOption) error {
 	return util.ErrUnsupported
 }
 

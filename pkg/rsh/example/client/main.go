@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/yubo/apiserver/pkg/openapi"
+	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/apiserver/pkg/rsh"
 	"github.com/yubo/golib/util"
 	"k8s.io/klog/v2"
@@ -23,7 +23,7 @@ func main() {
 	flag.Set("v", "3")
 	flag.Parse()
 
-	opt := &openapi.RequestOptions{
+	opt := &rest.RequestOptions{
 		Url:    "http://localhost:18080/exec",
 		Bearer: util.String("1"),
 		InputParam: &ExecOption{

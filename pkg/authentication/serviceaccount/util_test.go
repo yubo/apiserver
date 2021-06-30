@@ -19,7 +19,7 @@ package serviceaccount
 import (
 	"testing"
 
-	"github.com/yubo/golib/pkg/api"
+	"github.com/yubo/golib/api"
 )
 
 func TestMakeUsername(t *testing.T) {

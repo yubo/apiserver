@@ -9,10 +9,8 @@ require (
 	github.com/emicklei/go-restful-openapi v1.4.1
 	github.com/fortytw2/leaktest v1.3.0
 	github.com/go-openapi/spec v0.20.3
-	github.com/gogo/protobuf v1.3.2
 	github.com/golang/protobuf v1.5.2
 	github.com/google/go-cmp v0.5.5
-	github.com/google/gofuzz v1.1.0
 	github.com/google/uuid v1.1.2
 	github.com/gorilla/websocket v1.4.2
 	github.com/json-iterator/go v1.1.10
@@ -33,13 +31,13 @@ require (
 	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
 	google.golang.org/grpc v1.27.1
 	google.golang.org/protobuf v1.26.0
-	gopkg.in/inf.v0 v0.9.1
 	gopkg.in/square/go-jose.v2 v2.2.2
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/klog/v2 v2.9.0
 	sigs.k8s.io/yaml v1.2.0
 )
+
 replace (
-	github.com/yubo/golib  => ../golib
-	github.com/yubo/goswagger  => ../goswagger
+	github.com/yubo/golib => ../golib
+	github.com/yubo/goswagger => ../goswagger
 )
