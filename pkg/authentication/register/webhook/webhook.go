@@ -60,7 +60,7 @@ func (p *authModule) init(ops *proc.HookOps) error {
 	c := ops.Configer()
 
 	cf := newConfig()
-	if err := c.ReadYaml(p.name, cf); err != nil {
+	if err := c.Read(p.name, cf); err != nil {
 		return err
 	}
 	p.config = cf

@@ -80,9 +80,9 @@ func (p *apiserver) serverInit() error {
 	c.ExternalAddress = cf.ExternalHost
 	c.MaxRequestsInFlight = cf.MaxRequestsInFlight
 	c.MaxMutatingRequestsInFlight = cf.MaxMutatingRequestsInFlight
-	c.RequestTimeout = cf.RequestTimeout
-	c.MinRequestTimeout = cf.MinRequestTimeout
-	c.ShutdownDelayDuration = cf.ShutdownDelayDuration
+	c.RequestTimeout = cf.requestTimeout
+	c.MinRequestTimeout = cf.minRequestTimeout
+	c.ShutdownDelayDuration = cf.shutdownDelayDuration
 	c.MaxRequestBodyBytes = cf.MaxRequestBodyBytes
 	c.PublicAddress = net.ParseIP(cf.BindAddress)
 

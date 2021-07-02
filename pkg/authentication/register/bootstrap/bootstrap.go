@@ -47,7 +47,7 @@ func (p *authModule) init(ops *proc.HookOps) error {
 	ctx, c := ops.ContextAndConfiger()
 
 	cf := newConfig()
-	if err := c.ReadYaml(p.name, cf); err != nil {
+	if err := c.Read(p.name, cf); err != nil {
 		return err
 	}
 	p.config = cf

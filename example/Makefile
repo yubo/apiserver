@@ -22,7 +22,7 @@ $(APP_NAME): $(DEP_OBJS)
 .PHONY: devrun run dev
 devrun:
 	@echo "./$(APP_NAME) \
-		--config ./$(APP_NAME).yml \
+		-f ./$(APP_NAME).yml \
 		--token-auth-file=./run/tokens.cvs \
 		-v 10 \
 		--anonymous-auth \
@@ -33,7 +33,7 @@ devrun:
 
 run:
 	./$(APP_NAME) \
-		--config ./$(APP_NAME).yml \
+		-f ./$(APP_NAME).yml \
 		--token-auth-file=./run/tokens.cvs \
 		-v 10 \
 		--anonymous-auth \

@@ -52,8 +52,10 @@ func (p *apiserver) init(ops *proc.HookOps) (err error) {
 	ctx, c := ops.ContextAndConfiger()
 	p.ctx, p.cancel = context.WithCancel(ctx)
 
+	//c1 := c.GetConfiger(moduleName)
+
 	cf := newConfig()
-	if err := c.ReadYaml(p.name, cf); err != nil {
+	if err := c.Read(moduleName, cf); err != nil {
 		return err
 	}
 	p.config = cf

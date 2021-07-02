@@ -129,7 +129,7 @@ func (p *authorization) init(ops *proc.HookOps) error {
 	p.ctx, p.cancel = context.WithCancel(ctx)
 
 	cf := newConfig()
-	if err := c.ReadYaml(p.name, cf); err != nil {
+	if err := c.Read(p.name, cf); err != nil {
 		return err
 	}
 	p.config = cf

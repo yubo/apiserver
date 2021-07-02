@@ -3,7 +3,6 @@ package register
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/golib/net/session"
@@ -34,8 +33,8 @@ func newConfig() *session.Config {
 	return &session.Config{
 		SidLength:      24,
 		HttpOnly:       true,
-		GcInterval:     60 * time.Second,
-		CookieLifetime: 16 * time.Hour,
+		GcInterval:     60,
+		CookieLifetime: 16 * 3600,
 	}
 }
 
@@ -58,7 +57,7 @@ func (p *module) init(ops *proc.HookOps) error {
 	ctx, configer := ops.ContextAndConfiger()
 
 	cf := newConfig()
-	if err := configer.ReadYaml(p.name, cf); err != nil {
+	if err := configer.Read(p.name, cf); err != nil {
 		return err
 	}
 	p.config = cf

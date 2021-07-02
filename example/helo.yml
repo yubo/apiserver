@@ -30,11 +30,11 @@ apiserver:
   hstsDirectives:
   maxRequestsInFlight: 400
   maxMutatingRequestsInFlight: 200
-  requestTimeout: 60s
-  livezGracePeriod: 0s
-  minRequestTimeout: 1800s
+  requestTimeout: 60
+  livezGracePeriod: 0
+  minRequestTimeout: 1800
   #shutdownTimeout: 60s
-  shutdownDelayDuration: 0s
+  shutdownDelayDuration: 0
   maxRequestBodyBytes: 3145728
   enablePriorityAndFairness: true
 
@@ -49,8 +49,8 @@ session:
   sidLength: 24
   httpOnly: true
   domain:
-  gcInterval: "60s"
-  cookieLifetime: 16h
+  gcInterval: 60
+  cookieLifetime: 57600 # 16 * 3600
 
 swagger: # depend http
   enabled: true

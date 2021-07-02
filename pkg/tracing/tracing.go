@@ -106,7 +106,7 @@ func (p *tracing) init(ops *proc.HookOps) (err error) {
 	p.ctx, p.cancel = context.WithCancel(ctx)
 
 	cf := newConfig()
-	if err := configer.ReadYaml(p.name, cf); err != nil {
+	if err := configer.Read(p.name, cf); err != nil {
 		klog.ErrorS(err, "readYaml", "name", p.name)
 		return nil
 	}

@@ -44,7 +44,7 @@ func (p *debugModule) start(ops *proc.HookOps) error {
 	ctx, configer := ops.ContextAndConfiger()
 
 	cf := &config{}
-	if err := configer.ReadYaml(p.name, cf); err != nil {
+	if err := configer.Read(p.name, cf); err != nil {
 		return err
 	}
 	p.config = cf

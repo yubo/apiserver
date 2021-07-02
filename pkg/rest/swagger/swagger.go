@@ -29,7 +29,7 @@ func (p *Module) init(ops *proc.HookOps) (err error) {
 	ctx, configer := ops.ContextAndConfiger()
 
 	cf := &goswagger.Config{}
-	if err := configer.ReadYaml(p.name, cf); err != nil {
+	if err := configer.Read(p.name, cf); err != nil {
 		return err
 	}
 	p.config = cf
