@@ -38,7 +38,6 @@ import (
 	"github.com/yubo/apiserver/pkg/options"
 	apirequest "github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/responsewriters"
-	"github.com/yubo/apiserver/pkg/session"
 	apierrors "github.com/yubo/golib/api/errors"
 	"github.com/yubo/golib/proc"
 	utilsnet "github.com/yubo/golib/staging/util/net"
@@ -322,7 +321,7 @@ func DefaultBuildHandlerChain(ctx context.Context, apiHandler http.Handler, c *S
 	}
 
 	if sm, ok := options.SessionManagerFrom(ctx); ok {
-		handler = session.WithSession(handler, sm)
+		handler = filters.WithSession(handler, sm)
 	}
 
 	handler = filters.WithCORS(handler, c.CorsAllowedOriginList, nil, nil, nil, "true")

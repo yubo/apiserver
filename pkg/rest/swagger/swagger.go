@@ -1,6 +1,8 @@
 package swagger
 
 import (
+	"context"
+
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/golib/proc"
 	"github.com/yubo/goswagger"
@@ -25,17 +27,17 @@ var (
 	}}
 )
 
-func (p *Module) init(ops *proc.HookOps) (err error) {
-	ctx, configer := ops.ContextAndConfiger()
+func (p *Module) init(ctx context.Context) (err error) {
+	c := proc.ConfigerFrom(ctx)
 
 	cf := &goswagger.Config{}
-	if err := configer.Read(p.name, cf); err != nil {
+	if err := c.Read(p.name, cf); err != nil {
 		return err
 	}
 	p.config = cf
 	// klog.Infof("config %s", c)
 
-	goswagger.New(cf).Install(options.GenericServerMustFrom(ctx))
+	goswagger.New(cf).Install(options.ApiServerMustFrom(ctx))
 
 	return
 }

@@ -25,7 +25,7 @@ tracing:
 apiserver:
   externalHost:
   bindAddress: 0.0.0.0
-  bindPort: 18080
+  bindPort: 8080
   corsAllowedOriginList:
   hstsDirectives:
   maxRequestsInFlight: 400
@@ -39,8 +39,9 @@ apiserver:
   enablePriorityAndFairness: true
 
 authentication:
+  session: true
+  bootstrapToken: true
 authorization:
-
   
 session:
   enabled: true
@@ -79,16 +80,6 @@ db:
   dsn: "file:helo.db?cache=shared&mode=memory"
   #driver: "mysql"
   #dsn: "root:1234@tcp(localhost:3306)/test?loc=Local&parseTime=true"
-  #
-
-mail:
-  from: ["norelay-sso@example.com", "SSO"]
-  host: "smtp.example.com"
-  port: 25
-  username: ""
-  password: ""
-  tmpDir: "/tmp"
-# include ./global.yml
 
 auth:
   name: "helo.auth"

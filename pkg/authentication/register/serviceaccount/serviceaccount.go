@@ -1,6 +1,7 @@
-package oidc
+package serviceaccount
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/url"
@@ -38,9 +39,11 @@ type config struct {
 
 	JWKSURI string `json:"jwksUri" flags:"service-account-jwks-uri" description:"Overrides the URI for the JSON Web Key Set in the discovery doc served at /.well-known/openid-configuration. This flag is useful if the discovery doc and key set are served to relying parties from a URL other than the API server's external (as auto-detected or overridden with external-hostname). Only valid if the ServiceAccountIssuerDiscovery feature gate is enabled."`
 
-	MaxExpiration time.Duration `json:"maxExpiration" flags:"service-account-max-token-expiration" description:"The maximum validity duration of a token created by the service account token issuer. If an otherwise valid TokenRequest with a validity duration larger than this value is requested, a token will be issued with a validity duration of this value."`
+	MaxExpiration int `json:"maxExpiration" flags:"service-account-max-token-expiration" description:"The maximum validity duration of a token created by the service account token issuer. If an otherwise valid TokenRequest with a validity duration larger than this value is requested, a token will be issued with a validity duration of this value."`
 
 	ExtendExpiration bool `json:"extendExpiration" default:"true" flags:"service-account-extend-token-expiration" description:"Turns on projected service account expiration extension during token generation, which helps safe transition from legacy token to bound service account token feature. If this flag is enabled, admission injected tokens would be extended up to 1 year to prevent unexpected failure during transition, ignoring value of service-account-max-token-expiration."`
+
+	maxExpiration time.Duration
 }
 
 func (o *config) Validate() error {
@@ -49,6 +52,8 @@ func (o *config) Validate() error {
 	if len(o.Issuer) == 0 {
 		return nil
 	}
+
+	o.maxExpiration = time.Duration(o.MaxExpiration) * time.Second
 
 	if len(o.Issuer) > 0 && strings.Contains(o.Issuer, ":") {
 		if _, err := url.Parse(o.Issuer); err != nil {
@@ -85,8 +90,8 @@ func newConfig() *config {
 	return &config{}
 }
 
-func (p *authModule) init(ops *proc.HookOps) error {
-	c := ops.Configer()
+func (p *authModule) init(ctx context.Context) error {
+	c := proc.ConfigerFrom(ctx)
 
 	cf := newConfig()
 	if err := c.Read(moduleName, cf); err != nil {

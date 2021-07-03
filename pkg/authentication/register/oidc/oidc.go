@@ -1,6 +1,7 @@
 package oidc
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/spf13/pflag"
@@ -122,8 +123,8 @@ func defaultConfig() *config {
 	return &config{}
 }
 
-func (p *authModule) init(ops *proc.HookOps) error {
-	c := ops.Configer()
+func (p *authModule) init(ctx context.Context) error {
+	c := proc.ConfigerFrom(ctx)
 
 	cf := defaultConfig()
 	if err := c.Read(p.name, cf); err != nil {

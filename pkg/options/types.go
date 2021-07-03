@@ -7,8 +7,6 @@ import (
 	"github.com/emicklei/go-restful"
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
-	//genericoptions "github.com/yubo/apiserver/pkg/apiserver/options"
-	//"github.com/yubo/apiserver/pkg/apiserver/server"
 )
 
 type Client interface {
@@ -17,17 +15,7 @@ type Client interface {
 	GetRedirectUri() string
 }
 
-type HttpServer interface {
-	// http
-	Handle(pattern string, handler http.Handler)
-	HandleFunc(pattern string, handler func(http.ResponseWriter, *http.Request))
-
-	// restful.Container
-	Add(service *restful.WebService) *restful.Container
-	Filter(filter restful.FilterFunction)
-}
-
-type GenericServer interface {
+type ApiServer interface {
 	Handle(string, http.Handler)
 	HandleFunc(string, func(http.ResponseWriter, *http.Request))
 	UnlistedHandle(string, http.Handler)
@@ -41,13 +29,7 @@ type Executer interface {
 	Execute(wr io.Writer, data interface{}) error
 }
 
-type SecureServing interface {
-	//SecureServingInfo() *server.SecureServingInfo
-	//Config() *genericoptions.SecureServingOptions
-}
-
 type Authn interface {
-	//APIAudiences() authenticator.Audiences
 	Authenticator() authenticator.Request
 }
 

@@ -1,6 +1,8 @@
-package oidc
+package tokenfile
 
 import (
+	"context"
+
 	"github.com/yubo/apiserver/pkg/authentication"
 	"github.com/yubo/apiserver/pkg/authentication/token/tokenfile"
 	"github.com/yubo/apiserver/pkg/options"
@@ -42,8 +44,8 @@ func newConfig() *config {
 	return &config{}
 }
 
-func (p *authModule) init(ops *proc.HookOps) error {
-	c := ops.Configer()
+func (p *authModule) init(ctx context.Context) error {
+	c := proc.ConfigerFrom(ctx)
 
 	cf := newConfig()
 	if err := c.Read(moduleName, cf); err != nil {

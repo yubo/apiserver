@@ -56,15 +56,12 @@ var (
 	}}
 )
 
-func (p *grpcServer) init(ops *proc.HookOps) (err error) {
-	if p.cancel != nil {
-		p.cancel()
-	}
-	ctx, configer := ops.ContextAndConfiger()
+func (p *grpcServer) init(ctx context.Context) (err error) {
+	c := proc.ConfigerFrom(ctx)
 	p.ctx, p.cancel = context.WithCancel(ctx)
 
 	cf := &config{}
-	if err := configer.Read(p.name, cf); err != nil {
+	if err := c.Read(p.name, cf); err != nil {
 		return err
 	}
 	p.config = cf
@@ -73,11 +70,11 @@ func (p *grpcServer) init(ops *proc.HookOps) (err error) {
 	p.grpc = newServer(cf, grpc.UnaryInterceptor(interceptor))
 	// TODO: lookup authn & authz
 
-	ops.SetContext(options.WithGrpcServer(ctx, p.grpc))
+	options.WithGrpcServer(ctx, p.grpc)
 	return nil
 }
 
-func (p *grpcServer) start(ops *proc.HookOps) error {
+func (p *grpcServer) start(ctx context.Context) error {
 	cf := p.config
 	server := p.grpc
 
@@ -112,7 +109,7 @@ func (p *grpcServer) start(ops *proc.HookOps) error {
 
 }
 
-func (p *grpcServer) stop(ops *proc.HookOps) error {
+func (p *grpcServer) stop(ctx context.Context) error {
 	p.cancel()
 	return nil
 }

@@ -22,7 +22,7 @@ const (
 
 type Module struct {
 	Name string
-	http options.HttpServer
+	http options.ApiServer
 	ctx  context.Context
 }
 
@@ -34,7 +34,7 @@ func New(ctx context.Context) *Module {
 
 func (p *Module) Start() error {
 	var ok bool
-	if p.http, ok = options.GenericServerFrom(p.ctx); !ok {
+	if p.http, ok = options.ApiServerFrom(p.ctx); !ok {
 		return fmt.Errorf("unable to get http server from the context")
 	}
 

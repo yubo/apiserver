@@ -101,12 +101,12 @@ var (
 	}}
 )
 
-func (p *tracing) init(ops *proc.HookOps) (err error) {
-	ctx, configer := ops.ContextAndConfiger()
+func (p *tracing) init(ctx context.Context) (err error) {
+	c := proc.ConfigerFrom(ctx)
 	p.ctx, p.cancel = context.WithCancel(ctx)
 
 	cf := newConfig()
-	if err := configer.Read(p.name, cf); err != nil {
+	if err := c.Read(p.name, cf); err != nil {
 		klog.ErrorS(err, "readYaml", "name", p.name)
 		return nil
 	}
@@ -118,8 +118,8 @@ func (p *tracing) init(ops *proc.HookOps) (err error) {
 	return
 }
 
-func (p *tracing) start(ops *proc.HookOps) (err error) {
-	if err := p.init(ops); err != nil {
+func (p *tracing) start(ctx context.Context) (err error) {
+	if err := p.init(ctx); err != nil {
 		return err
 	}
 
@@ -142,7 +142,7 @@ func (p *tracing) start(ops *proc.HookOps) (err error) {
 	}()
 
 	// add tracer filter
-	http, ok := options.GenericServerFrom(p.ctx)
+	http, ok := options.ApiServerFrom(p.ctx)
 	if !ok {
 		return fmt.Errorf("unable to get http server")
 	}
@@ -155,7 +155,7 @@ func (p *tracing) start(ops *proc.HookOps) (err error) {
 	return nil
 }
 
-func (p *tracing) stop(ops *proc.HookOps) error {
+func (p *tracing) stop(ctx context.Context) error {
 	if p.cancel != nil {
 		p.cancel()
 	}

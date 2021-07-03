@@ -48,11 +48,10 @@ type apiserver struct {
 	stoppedCh chan struct{}
 }
 
-func (p *apiserver) init(ops *proc.HookOps) (err error) {
-	ctx, c := ops.ContextAndConfiger()
-	p.ctx, p.cancel = context.WithCancel(ctx)
+func (p *apiserver) init(ctx context.Context) (err error) {
+	c := proc.ConfigerFrom(ctx)
 
-	//c1 := c.GetConfiger(moduleName)
+	p.ctx, p.cancel = context.WithCancel(ctx)
 
 	cf := newConfig()
 	if err := c.Read(moduleName, cf); err != nil {
@@ -65,13 +64,12 @@ func (p *apiserver) init(ops *proc.HookOps) (err error) {
 		return err
 	}
 
-	ops.SetContext(options.WithGenericServer(ctx, p))
+	options.WithApiServer(ctx, p)
 
 	return nil
 }
 
-func (p *apiserver) start(ops *proc.HookOps) error {
-	ctx, _ := ops.ContextAndConfiger()
+func (p *apiserver) start(ctx context.Context) error {
 	rest.InstallApiDocs(
 		p.server.Handler.GoRestfulContainer,
 		spec.InfoProps{Title: proc.NameFrom(ctx)},
@@ -85,7 +83,7 @@ func (p *apiserver) start(ops *proc.HookOps) error {
 	return nil
 }
 
-func (p *apiserver) stop(ops *proc.HookOps) error {
+func (p *apiserver) stop(ctx context.Context) error {
 	if p.cancel == nil {
 		return nil
 	}

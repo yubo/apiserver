@@ -51,7 +51,7 @@ func (a *Authenticator) Name() string {
 }
 
 func (a *Authenticator) Priority() int {
-	return authenticator.PRI_TOKEN_OIDC
+	return authenticator.PRI_AUTH_ANONYMOUS
 }
 
 func (a *Authenticator) Available() bool {

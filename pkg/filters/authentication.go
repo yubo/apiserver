@@ -45,6 +45,9 @@ func WithAuthentication(handler http.Handler, auth authenticator.Request, failed
 		//}
 		resp, ok, err := auth.AuthenticateRequest(req)
 		klog.V(8).Infof("authn resp %+v ok %v err %v", resp, ok, err)
+		if resp.User != nil {
+			klog.V(8).Infof("authn resp.user %s ", resp.User.GetName())
+		}
 		defer recordAuthMetrics(req.Context(), resp, ok, err /*apiAuds,*/, authenticationStart)
 		if err != nil || !ok {
 			if err != nil {

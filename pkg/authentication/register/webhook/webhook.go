@@ -1,6 +1,7 @@
-package oidc
+package webhook
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -27,9 +28,10 @@ var (
 )
 
 type config struct {
-	ConfigFile string        `json:"configFile" flag:"authentication-token-webhook-config-file" description:"File with webhook configuration for token authentication in kubeconfig format. The API server will query the remote service to determine authentication for bearer tokens."`
-	Version    string        `json:"version" default:"v1beta1" flag:"authentication-token-webhook-version" description:"The API version of the authentication.k8s.io TokenReview to send to and expect from the webhook."`
-	CacheTTL   time.Duration `json:"cacheTTL" default:"120s" flag:"authentication-token-webhook-cache-ttl" description:"The duration to cache responses from the webhook token authenticator."`
+	ConfigFile string `json:"configFile" flag:"authentication-token-webhook-config-file" description:"File with webhook configuration for token authentication in kubeconfig format. The API server will query the remote service to determine authentication for bearer tokens."`
+	Version    string `json:"version" default:"v1beta1" flag:"authentication-token-webhook-version" description:"The API version of the authentication.k8s.io TokenReview to send to and expect from the webhook."`
+	CacheTTL   int    `json:"cacheTTL" default:"120s" flag:"authentication-token-webhook-cache-ttl" description:"The duration to cache responses from the webhook token authenticator."`
+	cacheTTL   time.Duration
 
 	// RetryBackoff specifies the backoff parameters for the authentication webhook retry logic.
 	// This allows us to configure the sleep time at each iteration and the maximum number of retries allowed
@@ -42,6 +44,9 @@ func (o *config) Validate() error {
 	if retryBackoff != nil && retryBackoff.Steps <= 0 {
 		return fmt.Errorf("number of webhook retry attempts must be greater than 1, but is: %d", retryBackoff.Steps)
 	}
+
+	o.cacheTTL = time.Duration(o.CacheTTL) * time.Second
+
 	return nil
 }
 
@@ -56,8 +61,8 @@ func newConfig() *config {
 	}
 }
 
-func (p *authModule) init(ops *proc.HookOps) error {
-	c := ops.Configer()
+func (p *authModule) init(ctx context.Context) error {
+	c := proc.ConfigerFrom(ctx)
 
 	cf := newConfig()
 	if err := c.Read(p.name, cf); err != nil {

@@ -48,8 +48,8 @@ func newConfig() *config {
 	return &config{}
 }
 
-func (p *authModule) init(ops *proc.HookOps) error {
-	ctx, c := ops.ContextAndConfiger()
+func (p *authModule) init(ctx context.Context) error {
+	c := proc.ConfigerFrom(ctx)
 
 	cf := newConfig()
 	if err := c.Read(moduleName, cf); err != nil {

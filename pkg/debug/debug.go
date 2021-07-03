@@ -40,11 +40,11 @@ var (
 	}}
 )
 
-func (p *debugModule) start(ops *proc.HookOps) error {
-	ctx, configer := ops.ContextAndConfiger()
+func (p *debugModule) start(ctx context.Context) error {
+	c := proc.ConfigerFrom(ctx)
 
 	cf := &config{}
-	if err := configer.Read(p.name, cf); err != nil {
+	if err := c.Read(p.name, cf); err != nil {
 		return err
 	}
 	p.config = cf
@@ -70,7 +70,7 @@ func (p *debugModule) start(ops *proc.HookOps) error {
 	return nil
 }
 
-func (p *debugModule) stop(ops *proc.HookOps) error {
+func (p *debugModule) stop(ctx context.Context) error {
 	if p.cancel == nil {
 		return nil
 	}

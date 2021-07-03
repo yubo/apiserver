@@ -1,6 +1,8 @@
 package abac
 
 import (
+	"context"
+
 	"github.com/yubo/apiserver/pkg/authorization"
 	"github.com/yubo/apiserver/pkg/authorization/abac"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
@@ -43,8 +45,8 @@ func newConfig() *config {
 	return &config{}
 }
 
-func (p *authModule) init(ops *proc.HookOps) error {
-	c := ops.Configer()
+func (p *authModule) init(ctx context.Context) error {
+	c := proc.ConfigerFrom(ctx)
 
 	cf := newConfig()
 	if err := c.Read(moduleName, cf); err != nil {

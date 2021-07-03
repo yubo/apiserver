@@ -38,6 +38,25 @@ func newConfig() *session.Config {
 	}
 }
 
+func (p *module) init(ctx context.Context) error {
+	c := proc.ConfigerFrom(ctx)
+
+	cf := newConfig()
+	if err := c.Read(p.name, cf); err != nil {
+		return err
+	}
+	p.config = cf
+
+	sm, err := startSession(cf, ctx)
+	if err != nil {
+		return err
+	}
+
+	options.WithSessionManager(ctx, sm)
+
+	return nil
+}
+
 func startSession(cf *session.Config, ctx context.Context) (session.SessionManager, error) {
 	opts := []session.Option{session.WithCtx(ctx)}
 	if cf.Storage == "db" && cf.Dsn == "" {
@@ -51,23 +70,4 @@ func startSession(cf *session.Config, ctx context.Context) (session.SessionManag
 		cf.CookieName = fmt.Sprintf("%s-sid", proc.NameFrom(ctx))
 	}
 	return session.StartSession(cf, opts...)
-}
-
-func (p *module) init(ops *proc.HookOps) error {
-	ctx, configer := ops.ContextAndConfiger()
-
-	cf := newConfig()
-	if err := configer.Read(p.name, cf); err != nil {
-		return err
-	}
-	p.config = cf
-
-	sm, err := startSession(cf, ctx)
-	if err != nil {
-		return err
-	}
-
-	ops.SetContext(options.WithSessionManager(ctx, sm))
-
-	return nil
 }

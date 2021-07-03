@@ -1,6 +1,7 @@
 package webhook
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -39,10 +40,12 @@ type config struct {
 	WebhookVersion string `json:"webhookVersion" default:"v1beta1" flag:"authorization-webhook-version" description:"The API version of the authorization.k8s.io SubjectAccessReview to send to and expect from the webhook."`
 
 	// TTL for caching of authorized responses from the webhook server.
-	WebhookCacheAuthorizedTTL time.Duration `json:"webhookCacheAuthorizedTTL" default:"5m" flag:"authorization-webhook-cache-authorized-ttl" description:"The duration to cache 'authorized' responses from the webhook authorizer."`
+	WebhookCacheAuthorizedTTL int `json:"webhookCacheAuthorizedTTL" default:"5m" flag:"authorization-webhook-cache-authorized-ttl" description:"The duration to cache 'authorized' responses from the webhook authorizer."`
+	webhookCacheAuthorizedTTL time.Duration
 
 	// TTL for caching of unauthorized responses from the webhook server.
-	WebhookCacheUnauthorizedTTL time.Duration `json:"webhookCacheUnauthorizedTTL" default:"30s" flag:"authorization-webhook-cache-unauthorized-ttl" description:"The duration to cache 'unauthorized' responses from the webhook authorizer."`
+	WebhookCacheUnauthorizedTTL int `json:"webhookCacheUnauthorizedTTL" default:"30s" flag:"authorization-webhook-cache-unauthorized-ttl" description:"The duration to cache 'unauthorized' responses from the webhook authorizer."`
+	webhookCacheUnauthorizedTTL time.Duration
 
 	// WebhookRetryBackoff specifies the backoff parameters for the authorization webhook retry logic.
 	// This allows us to configure the sleep time at each iteration and the maximum number of retries allowed
@@ -64,6 +67,8 @@ func (o *config) Validate() error {
 	if o.WebhookRetryBackoff != nil && o.WebhookRetryBackoff.Steps <= 0 {
 		allErrors = append(allErrors, fmt.Errorf("number of webhook retry attempts must be greater than 1, but is: %d", o.WebhookRetryBackoff.Steps))
 	}
+	o.webhookCacheAuthorizedTTL = time.Duration(o.WebhookCacheAuthorizedTTL) * time.Second
+	o.webhookCacheUnauthorizedTTL = time.Duration(o.WebhookCacheUnauthorizedTTL) * time.Second
 
 	return utilerrors.NewAggregate(allErrors)
 }
@@ -88,8 +93,8 @@ func DefaultAuthWebhookRetryBackoff() *wait.Backoff {
 	}
 }
 
-func (p *authModule) init(ops *proc.HookOps) error {
-	c := ops.Configer()
+func (p *authModule) init(ctx context.Context) error {
+	c := proc.ConfigerFrom(ctx)
 
 	cf := newConfig()
 	if err := c.Read(moduleName, cf); err != nil {

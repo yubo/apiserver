@@ -38,7 +38,7 @@ run:
 		-v 10 \
 		--anonymous-auth \
 		--authorization-mode=AlwaysAllow \
-		--logtostderr
+		--logtostderr 2>&1
 		#--authorization-mode=RBAC \
 		#--tls-cert-file=./run/pki/apiserver.crt \
 		#--tls-private-key-file=./run/pki/apiserver.key \

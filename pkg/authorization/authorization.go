@@ -124,8 +124,8 @@ func (p *authorization) Authorizer() authorizer.Authorizer {
 	return p.authorizer
 }
 
-func (p *authorization) init(ops *proc.HookOps) error {
-	ctx, c := ops.ContextAndConfiger()
+func (p *authorization) init(ctx context.Context) error {
+	c := proc.ConfigerFrom(ctx)
 	p.ctx, p.cancel = context.WithCancel(ctx)
 
 	cf := newConfig()
@@ -138,12 +138,12 @@ func (p *authorization) init(ops *proc.HookOps) error {
 		return err
 	}
 
-	ops.SetContext(options.WithAuthz(ctx, p))
+	options.WithAuthz(ctx, p)
 
 	return nil
 }
 
-func (p *authorization) stop(ops *proc.HookOps) error {
+func (p *authorization) stop(ctx context.Context) error {
 	if p.cancel == nil {
 		return nil
 	}

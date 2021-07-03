@@ -27,9 +27,11 @@ const (
 // config contains all authentication options for API Server
 type config struct {
 	//APIAudiences         []string      `json:"apiAudiences"`
-	TokenSuccessCacheTTL time.Duration `json:"tokenSuccessCacheTTL" flag:"token-success-cache-ttl" default:"10s" description:"The duration to cache success token."`
-	TokenFailureCacheTTL time.Duration `json:"tokenFailureCacheTTL" flag:"token-failure-cache-ttl" description:"The duration to cache failure token."`
-	Anonymous            bool          `json:"anonymous" flag:"anonymous-auth" default:"true" description:"Enables anonymous requests to the secure port of the API server. Requests that are not rejected by another authentication method are treated as anonymous requests. Anonymous requests have a username of system:anonymous, and a group name of system:unauthenticated."`
+	TokenSuccessCacheTTL int  `json:"tokenSuccessCacheTTL" flag:"token-success-cache-ttl" default:"10" description:"The duration to cache success token."`
+	TokenFailureCacheTTL int  `json:"tokenFailureCacheTTL" flag:"token-failure-cache-ttl" description:"The duration to cache failure token."`
+	Anonymous            bool `json:"anonymous" flag:"anonymous-auth" default:"true" description:"Enables anonymous requests to the secure port of the API server. Requests that are not rejected by another authentication method are treated as anonymous requests. Anonymous requests have a username of system:anonymous, and a group name of system:unauthenticated."`
+	tokenSuccessCacheTTL time.Duration
+	tokenFailureCacheTTL time.Duration
 }
 
 // TokenFileAuthenticationOptions contains token file authentication options for API Server
@@ -55,7 +57,9 @@ func newConfig() *config {
 }
 
 // Validate checks invalid config combination
-func (o *config) Validate() error {
+func (p *config) Validate() error {
+	p.tokenSuccessCacheTTL = time.Duration(p.TokenSuccessCacheTTL) * time.Second
+	p.tokenFailureCacheTTL = time.Duration(p.TokenFailureCacheTTL) * time.Second
 	return nil
 }
 
@@ -96,11 +100,11 @@ func (p *authentication) initAuthentication() (err error) {
 	// token auth
 	for _, v := range p.tokenAuthenticators {
 		if !v.Available() {
-			klog.V(5).Infof("authn.token.%s is invalid, skipping", v.Name())
+			klog.V(5).InfoS("token authenticator is invalid, skipping", "name", v.Name())
 			continue
 		}
 		tokenAuthenticators = append(tokenAuthenticators, v)
-		klog.V(6).Infof("add %s tokenAuthenticator pri %d", v.Name(), v.Priority())
+		klog.V(5).InfoS("add token authenticator", "name", v.Name(), "priority", v.Priority())
 	}
 	sort.Sort(tokenAuthenticators)
 
@@ -112,7 +116,7 @@ func (p *authentication) initAuthentication() (err error) {
 		tokenAuth := tokenunion.New(tokenAuthenticators...)
 		if c.TokenSuccessCacheTTL > 0 || c.TokenFailureCacheTTL > 0 {
 			tokenAuth = tokencache.New(tokenAuth, true,
-				c.TokenSuccessCacheTTL, c.TokenFailureCacheTTL)
+				c.tokenSuccessCacheTTL, c.tokenFailureCacheTTL)
 		}
 		authns = append(authns,
 			bearertoken.New(tokenAuth),
@@ -123,17 +127,18 @@ func (p *authentication) initAuthentication() (err error) {
 
 	for _, v := range authns {
 		if !v.Available() {
-			klog.V(5).Infof("authn.%s is invalid, skipping", v.Name())
+			klog.V(5).InfoS("authn is invalid, skipping", "name", v.Name())
 			continue
 		}
 		authenticators = append(authenticators, v)
-		klog.V(5).Infof("add %s tokenAuthenticator pri %d", v.Name(), v.Priority())
+		klog.V(5).InfoS("add authenticator", "name", v.Name(), "priority", v.Priority())
 	}
 
 	if len(authenticators) == 0 {
 		if c.Anonymous {
-			p.authenticator = anonymous.NewAuthenticator()
-			klog.Infof("add anonymous authenticator")
+			auth := anonymous.NewAuthenticator()
+			klog.InfoS("add authenticator", "name", auth.Name(), "priority", auth.Priority())
+			p.authenticator = auth
 			return nil
 		}
 		return nil
@@ -145,8 +150,9 @@ func (p *authentication) initAuthentication() (err error) {
 	if c.Anonymous {
 		// If the authenticator chain returns an error, return an error (don't consider a bad bearer token
 		// or invalid username/password combination anonymous).
-		authenticator = union.NewFailOnError(authenticator, anonymous.NewAuthenticator())
-		klog.Infof("add anonymous authenticator")
+		auth := anonymous.NewAuthenticator()
+		klog.InfoS("add authenticator", "name", auth.Name(), "priority", auth.Priority())
+		authenticator = union.NewFailOnError(authenticator, auth)
 	}
 	p.authenticator = authenticator
 	return nil
@@ -180,11 +186,13 @@ var (
 )
 
 func RegisterAuthn(auth authenticator.Request) error {
+	klog.V(5).Infof("register authn %s", auth.Name())
 	_authn.authenticators = append(_authn.authenticators, auth)
 	return nil
 }
 
 func RegisterTokenAuthn(auth authenticator.Token) error {
+	klog.V(5).Infof("register tokenAuthn %s", auth.Name())
 	_authn.tokenAuthenticators = append(_authn.tokenAuthenticators, auth)
 	return nil
 }
@@ -204,8 +212,8 @@ func (p *authentication) Authenticator() authenticator.Request {
 	return p.authenticator
 }
 
-func (p *authentication) init(ops *proc.HookOps) (err error) {
-	ctx, c := ops.ContextAndConfiger()
+func (p *authentication) init(ctx context.Context) (err error) {
+	c := proc.ConfigerFrom(ctx)
 	p.ctx, p.cancel = context.WithCancel(ctx)
 
 	cf := &config{}
@@ -218,11 +226,11 @@ func (p *authentication) init(ops *proc.HookOps) (err error) {
 		return err
 	}
 
-	ops.SetContext(options.WithAuthn(ctx, p))
+	options.WithAuthn(ctx, p)
 	return nil
 }
 
-func (p *authentication) stop(ops *proc.HookOps) error {
+func (p *authentication) stop(ctx context.Context) error {
 	if p.cancel == nil {
 		return nil
 	}

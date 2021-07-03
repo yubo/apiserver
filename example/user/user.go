@@ -17,7 +17,7 @@ import (
 
 type Module struct {
 	Name string
-	http options.HttpServer
+	http options.ApiServer
 	db   *orm.DB
 	ctx  context.Context
 }
@@ -30,7 +30,7 @@ func New(ctx context.Context) *Module {
 
 func (p *Module) Start() error {
 	var ok bool
-	p.http, ok = options.GenericServerFrom(p.ctx)
+	p.http, ok = options.ApiServerFrom(p.ctx)
 	if !ok {
 		return fmt.Errorf("unable to get http server from the context")
 	}
@@ -38,6 +38,11 @@ func (p *Module) Start() error {
 	p.db, ok = options.DBFrom(p.ctx)
 	if !ok {
 		return fmt.Errorf("unable to get db from the context")
+	}
+
+	// init database
+	if err := p.db.ExecRows([]byte(CREATE_TABLE_SQLITE)); err != nil {
+		return err
 	}
 
 	p.installWs()

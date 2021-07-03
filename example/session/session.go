@@ -8,15 +8,15 @@ import (
 	"strconv"
 
 	"github.com/emicklei/go-restful"
-	"github.com/yubo/apiserver/example/user"
 	"github.com/yubo/apiserver/pkg/options"
+	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/golib/net/session"
 )
 
 type module struct {
 	Name    string
-	http    options.GenericServer
+	http    options.ApiServer
 	session session.SessionManager
 	ctx     context.Context
 }
@@ -30,7 +30,7 @@ func New(ctx context.Context) *module {
 func (p *module) Start() error {
 	var ok bool
 
-	p.http, ok = options.GenericServerFrom(p.ctx)
+	p.http, ok = options.ApiServerFrom(p.ctx)
 	if !ok {
 		return fmt.Errorf("unable to get http server from the context")
 	}
@@ -40,16 +40,15 @@ func (p *module) Start() error {
 		return fmt.Errorf("unable to get session manager from the context")
 	}
 
-	db, ok := options.DBFrom(p.ctx)
-	if !ok {
-		return fmt.Errorf("unable to get db")
-	}
-
-	if err := db.ExecRows([]byte(session.CREATE_TABLE_SQLITE)); err != nil {
-		return err
-	}
-	if err := db.ExecRows([]byte(user.CREATE_TABLE_SQLITE)); err != nil {
-		return err
+	// init database
+	{
+		db, ok := options.DBFrom(p.ctx)
+		if !ok {
+			return fmt.Errorf("unable to get db")
+		}
+		if err := db.ExecRows([]byte(session.CREATE_TABLE_SQLITE)); err != nil {
+			return err
+		}
 	}
 
 	p.installWs()
@@ -63,9 +62,11 @@ func (p *module) installWs() {
 	ws := new(restful.WebService)
 
 	rest.WsRouteBuild(&rest.WsOption{
-		Ws:     ws.Path("/session").Produces(rest.MIME_JSON).Consumes("*/*"),
-		Filter: Filter(p.session),
-		Tags:   []string{"session"},
+		Ws: ws.Path("/session").Produces(rest.MIME_JSON).Consumes("*/*"),
+		// << set filter >>
+		// has been added filters.session at apiserver.DefaultBuildHandlerChain
+		// Filter: filters.Session(p.session),
+		Tags: []string{"session"},
 	}, []rest.WsRoute{{
 		Method: "GET", SubPath: "/",
 		Desc:   "get session info",
@@ -85,7 +86,7 @@ func (p *module) installWs() {
 
 // show session information
 func (p *module) info(w http.ResponseWriter, req *http.Request) (string, error) {
-	sess, ok := session.SessionFrom(req.Context())
+	sess, ok := request.SessionFrom(req.Context())
 	if !ok {
 		return "can't get session info", nil
 	}
@@ -102,39 +103,24 @@ func (p *module) info(w http.ResponseWriter, req *http.Request) (string, error) 
 
 	cnt++
 	sess.Set("info.cnt", strconv.Itoa(cnt))
-	return fmt.Sprintf("%s %d", userName, cnt), nil
+	return fmt.Sprintf("%d hi, %s", cnt, userName), nil
 }
 
 // set session
 func (p *module) set(w http.ResponseWriter, req *http.Request) (string, error) {
-	sess, ok := session.SessionFrom(req.Context())
+	sess, ok := request.SessionFrom(req.Context())
 	if ok {
 		sess.Set("userName", "tom")
+		return "set username successfully", nil
 	}
-	return "set username successfully", nil
+	return "can't get session", nil
 }
 
 // reset session
 func (p *module) reset(w http.ResponseWriter, req *http.Request) (string, error) {
-	sess, ok := session.SessionFrom(req.Context())
+	sess, ok := request.SessionFrom(req.Context())
 	if ok {
 		sess.Reset()
 	}
 	return "reset successfully", nil
-}
-
-func Filter(manager session.SessionManager) restful.FilterFunction {
-	return func(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
-		sess, err := manager.Start(resp, req.Request)
-		if err != nil {
-			rest.HttpWriteErr(resp, fmt.Errorf("session start err %s", err))
-			return
-		}
-		ctx := session.WithSession(req.Request.Context(), sess)
-		req.Request.WithContext(ctx)
-
-		chain.ProcessFilter(req, resp)
-
-		sess.Update(resp)
-	}
 }

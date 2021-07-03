@@ -8,6 +8,7 @@ import (
 	"github.com/yubo/apiserver/example/tracing"
 	"github.com/yubo/apiserver/example/user"
 	"github.com/yubo/apiserver/pkg/options"
+	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/proc"
 	"k8s.io/klog/v2"
 
@@ -22,6 +23,7 @@ import (
 	_ "github.com/yubo/apiserver/pkg/authentication/register/bootstrap"
 	_ "github.com/yubo/apiserver/pkg/authentication/register/oidc"
 	_ "github.com/yubo/apiserver/pkg/authentication/register/serviceaccount"
+	_ "github.com/yubo/apiserver/pkg/authentication/register/session"
 	_ "github.com/yubo/apiserver/pkg/authentication/register/tokenfile"
 	_ "github.com/yubo/apiserver/pkg/authentication/register/webhook"
 
@@ -62,6 +64,7 @@ func newServerCmd() *cobra.Command {
 
 	ctx := context.Background()
 	ctx = proc.WithName(ctx, AppName)
+	ctx = proc.WithConfigOps(ctx, configer.WithFlagOptions(true, false, 5))
 
 	cmd := proc.NewRootCmd(ctx)
 	cmd.AddCommand(options.NewVersionCmd())
@@ -69,9 +72,8 @@ func newServerCmd() *cobra.Command {
 	return cmd
 }
 
-func start(ops *proc.HookOps) error {
+func start(ctx context.Context) error {
 	klog.Info("start")
-	ctx := ops.Context()
 
 	if err := session.New(ctx).Start(); err != nil {
 		return err
@@ -86,7 +88,7 @@ func start(ops *proc.HookOps) error {
 	return nil
 }
 
-func stop(ops *proc.HookOps) error {
+func stop(ctx context.Context) error {
 	klog.Info("stop")
 	return nil
 }

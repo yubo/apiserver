@@ -59,8 +59,8 @@ var (
 
 // Because some configuration may be stored in the database,
 // set the db.connect into sys.db.prestart
-func (p *dbModule) init(ops *proc.HookOps) (err error) {
-	ctx, configer := ops.ContextAndConfiger()
+func (p *dbModule) init(ctx context.Context) (err error) {
+	configer := proc.ConfigerFrom(ctx)
 	p.ctx, p.cancel = context.WithCancel(ctx)
 
 	cf := &Config{}
@@ -75,13 +75,13 @@ func (p *dbModule) init(ops *proc.HookOps) (err error) {
 		if p.db, err = orm.DbOpenWithCtx(cf.Driver, cf.Dsn, p.ctx); err != nil {
 			return err
 		}
-		ops.SetContext(options.WithDB(ctx, p.db))
+		options.WithDB(ctx, p.db)
 	}
 
 	return nil
 }
 
-func (p *dbModule) stop(ops *proc.HookOps) error {
+func (p *dbModule) stop(ctx context.Context) error {
 	p.cancel()
 	return nil
 }

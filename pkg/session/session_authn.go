@@ -16,24 +16,27 @@ func NewAuthenticator() authenticator.Request {
 }
 
 func (a *Authenticator) AuthenticateRequest(req *http.Request) (*authenticator.Response, bool, error) {
-	if sess, ok := request.SessionFrom(req.Context()); ok {
-		return &authenticator.Response{
-			User: &user.DefaultInfo{
-				Name:   sess.Get("username"),
-				Groups: append(strings.Split(sess.Get("groups"), ","), user.AllAuthenticated),
-			},
-		}, true, nil
+	sess, ok := request.SessionFrom(req.Context())
+	if !ok {
+		return nil, false, nil
+	}
+	userName := sess.Get("userName")
+	if userName == "" {
+		return nil, false, nil
 	}
 
-	return nil, false, nil
-
+	return &authenticator.Response{User: &user.DefaultInfo{
+		Name:   userName,
+		Groups: append(strings.Split(sess.Get("groups"), ","), user.AllAuthenticated),
+	}}, true, nil
 }
+
 func (a *Authenticator) Name() string {
 	return "session authenticator"
 }
 
 func (a *Authenticator) Priority() int {
-	return authenticator.PRI_TOKEN_OIDC
+	return authenticator.PRI_AUTH_SESSION
 }
 
 func (a *Authenticator) Available() bool {
