@@ -1,0 +1,3 @@
+{"kind": "Policy", "spec": {"group":"system:authenticated",  "nonResourcePath": "*", "readonly": true}}
+{"kind": "Policy", "spec": {"group":"system:unauthenticated",  "nonResourcePath": "*", "readonly": true}}
+
