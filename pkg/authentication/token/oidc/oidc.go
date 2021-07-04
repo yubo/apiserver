@@ -215,7 +215,7 @@ func (a *Authenticator) Close() {
 }
 
 func (a *Authenticator) Name() string {
-	return "bearer OIDC authenticator"
+	return "OIDC token authenticator"
 }
 
 func (a *Authenticator) Priority() int {

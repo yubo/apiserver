@@ -79,7 +79,8 @@ func (o *config) Validate() error {
 	modes := sets.NewString(o.Modes...)
 	for _, mode := range o.Modes {
 		if !IsValidAuthorizationMode(mode) {
-			allErrors = append(allErrors, fmt.Errorf("authorization-mode %q is not a valid mode", mode))
+			allErrors = append(allErrors,
+				fmt.Errorf("authorization-mode %q is not a valid mode, modes %+v", mode, AuthorizationModeChoices))
 		}
 	}
 
@@ -112,7 +113,7 @@ type authorization struct {
 
 func RegisterAuthz(name string, factory authorizer.AuthorizerFactory) error {
 	if _, ok := _authz.authzFactorys[name]; ok {
-		return fmt.Errorf("authorizer %q is already registered", name)
+		return fmt.Errorf("authz %q is already registered", name)
 	}
 	_authz.authzFactorys[name] = factory
 
@@ -144,13 +145,7 @@ func (p *authorization) init(ctx context.Context) error {
 }
 
 func (p *authorization) stop(ctx context.Context) error {
-	if p.cancel == nil {
-		return nil
-	}
-
 	p.cancel()
-
-	//<-p.stoppedCh
 
 	return nil
 }
@@ -165,7 +160,7 @@ func (p *authorization) initAuthorization() (err error) {
 
 	klog.V(5).Infof("authz %+v", c.Modes)
 	if len(c.Modes) == 0 {
-		return fmt.Errorf("at least one authorization mode must be passed")
+		return fmt.Errorf("at least one authz mode must be passed")
 	}
 
 	if klog.V(6).Enabled() {
@@ -179,11 +174,11 @@ func (p *authorization) initAuthorization() (err error) {
 	for _, mode := range c.Modes {
 		factory, ok := p.authzFactorys[mode]
 		if !ok {
-			return fmt.Errorf("unknown authorization mode %s specified", mode)
+			return fmt.Errorf("unknown authz mode %s specified", mode)
 		}
 
 		if factory == nil {
-			klog.V(5).Infof("authorizer factory %q is nil, skip", mode)
+			klog.V(5).Infof("authz factory %q is nil, skip", mode)
 			continue
 		}
 

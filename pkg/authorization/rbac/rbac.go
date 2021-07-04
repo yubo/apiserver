@@ -72,6 +72,18 @@ func (v *authorizingVisitor) visit(source fmt.Stringer, rule *rbac.PolicyRule, e
 }
 
 func (r *RBACAuthorizer) Authorize(ctx context.Context, requestAttributes authorizer.Attributes) (authorizer.Decision, string, error) {
+	klog.V(5).InfoS("authz.rbac",
+		"user", requestAttributes.GetUser(),
+		"verb", requestAttributes.GetVerb(),
+		"isReadOnly", requestAttributes.IsReadOnly(),
+		"namespace", requestAttributes.GetNamespace(),
+		"resource", requestAttributes.GetResource(),
+		"subResource", requestAttributes.GetSubresource(),
+		"name", requestAttributes.GetName(),
+		"isResourceRequest", requestAttributes.IsResourceRequest(),
+		"path", requestAttributes.GetPath(),
+	)
+
 	ruleCheckingVisitor := &authorizingVisitor{requestAttributes: requestAttributes}
 
 	r.authorizationRuleResolver.VisitRulesFor(requestAttributes.GetUser(), requestAttributes.GetNamespace(), ruleCheckingVisitor.visit)

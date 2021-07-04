@@ -23,8 +23,6 @@ import (
 	"net/url"
 	"strings"
 
-	"k8s.io/klog/v2"
-
 	"github.com/yubo/apiserver/pkg/apiserver/httplog"
 	"github.com/yubo/apiserver/pkg/authentication/serviceaccount"
 	"github.com/yubo/apiserver/pkg/authentication/user"
@@ -32,6 +30,7 @@ import (
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/responsewriters"
 	"github.com/yubo/golib/api"
+	"k8s.io/klog/v2"
 )
 
 // WithImpersonation is a filter that will inspect and check requests that attempt to change the user.Info for their requests

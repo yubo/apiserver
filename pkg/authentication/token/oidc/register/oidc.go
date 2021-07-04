@@ -1,4 +1,4 @@
-package oidc
+package register
 
 import (
 	"context"
@@ -81,15 +81,16 @@ func (p *authModule) init(ctx context.Context) error {
 	c := proc.ConfigerFrom(ctx)
 
 	cf := newConfig()
-	if err := c.Read(p.name, cf); err != nil {
+	if err := c.Read(moduleName, cf); err != nil {
 		return err
 	}
 	p.config = cf
 
 	if len(cf.IssuerURL) == 0 {
-		klog.Infof("%s is not set, skip", p.name)
+		klog.Infof("%s.issuerURL is not set, skip", moduleName)
 		return nil
 	}
+	klog.V(5).InfoS("authmodule init", "name", p.name, "IssuerURL", cf.IssuerURL)
 
 	auth, err := oidc.New(oidc.Options{
 		IssuerURL:            cf.IssuerURL,

@@ -99,7 +99,7 @@ func (a *TokenAuthenticator) AuthenticateToken(ctx context.Context, value string
 }
 
 func (a *TokenAuthenticator) Name() string {
-	return "token file authenticator"
+	return "token file token authenticator"
 }
 
 func (a *TokenAuthenticator) Priority() int {

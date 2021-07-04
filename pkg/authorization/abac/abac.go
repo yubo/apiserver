@@ -20,6 +20,7 @@ package abac
 import (
 	"bufio"
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -62,8 +63,6 @@ func NewFromFile(path string) (PolicyList, error) {
 	scanner := bufio.NewScanner(file)
 	pl := make(PolicyList, 0)
 
-	decoder := api.Codecs.UniversalDecoder()
-
 	i := 0
 	unversionedLines := 0
 	for scanner.Scan() {
@@ -77,10 +76,11 @@ func NewFromFile(path string) (PolicyList, error) {
 		}
 
 		decodedPolicy := &api.Policy{}
-		err := decoder.Decode(b, decodedPolicy)
+		err := json.Unmarshal(b, decodedPolicy)
 		if err != nil {
 			return nil, policyLoadError{path, i, b, err}
 		}
+		klog.V(5).InfoS("authz.abac.readfile", "i", i, "line", string(b), "policy", decodedPolicy)
 
 		pl = append(pl, decodedPolicy)
 	}
@@ -201,11 +201,26 @@ func resourceMatches(p api.Policy, a authorizer.Attributes) bool {
 
 // Authorize implements authorizer.Authorize
 func (pl PolicyList) Authorize(ctx context.Context, a authorizer.Attributes) (authorizer.Decision, string, error) {
+	klog.V(5).InfoS("authz.abac",
+		"user", a.GetUser(),
+		"verb", a.GetVerb(),
+		"isReadOnly", a.IsReadOnly(),
+		"namespace", a.GetNamespace(),
+		"resource", a.GetResource(),
+		"subResource", a.GetSubresource(),
+		"name", a.GetName(),
+		"isResourceRequest", a.IsResourceRequest(),
+		"path", a.GetPath(),
+	)
+
 	for _, p := range pl {
 		if matches(*p, a) {
+			klog.V(5).InfoS("authz.abac allow", "policy", *p)
 			return authorizer.DecisionAllow, "", nil
 		}
+		klog.V(5).InfoS("authz.abac miss match", "policy", *p)
 	}
+	klog.V(5).Infof("authz.abac no policy matched")
 	return authorizer.DecisionNoOpinion, "No policy matched.", nil
 	// TODO: Benchmark how much time policy matching takes with a medium size
 	// policy file, compared to other steps such as encoding/decoding.

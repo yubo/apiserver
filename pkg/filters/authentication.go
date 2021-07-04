@@ -37,17 +37,14 @@ func WithAuthentication(handler http.Handler, auth authenticator.Request, failed
 		return handler
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		klog.V(8).Infof("entering authn filter")
+		klog.V(5).Infof("entering filters.WithAuthentication")
+		defer klog.V(5).Infof("leaving filters.WithAuthentication")
 		authenticationStart := time.Now()
 
 		//if len(apiAuds) > 0 {
 		//	req = req.WithContext(authenticator.WithAudiences(req.Context(), apiAuds))
 		//}
 		resp, ok, err := auth.AuthenticateRequest(req)
-		klog.V(8).Infof("authn resp %+v ok %v err %v", resp, ok, err)
-		if resp.User != nil {
-			klog.V(8).Infof("authn resp.user %s ", resp.User.GetName())
-		}
 		defer recordAuthMetrics(req.Context(), resp, ok, err /*apiAuds,*/, authenticationStart)
 		if err != nil || !ok {
 			if err != nil {
@@ -68,7 +65,7 @@ func WithAuthentication(handler http.Handler, auth authenticator.Request, failed
 		req.Header.Del("Authorization")
 
 		req = req.WithContext(genericapirequest.WithUser(req.Context(), resp.User))
-		klog.V(8).Infof("leaving authn filter")
+		klog.V(8).InfoS("leaving authn filter", "user", resp.User.GetName(), "groups", resp.User.GetGroups())
 		handler.ServeHTTP(w, req)
 	})
 }

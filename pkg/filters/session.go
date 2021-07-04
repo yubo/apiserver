@@ -15,7 +15,8 @@ import (
 // http filter
 func WithSession(handler http.Handler, sm session.SessionManager) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		klog.V(8).Infof("entering session filter")
+		klog.V(8).Infof("entering filters.WithSession")
+		defer klog.V(8).Infof("leaving filters.WithSession")
 
 		s, err := sm.Start(w, req)
 		if err != nil {
@@ -26,9 +27,7 @@ func WithSession(handler http.Handler, sm session.SessionManager) http.Handler {
 
 		req = req.WithContext(request.WithSession(req.Context(), s))
 
-		klog.V(8).Infof("leaving authn filter")
 		handler.ServeHTTP(w, req)
-
 	})
 }
 

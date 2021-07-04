@@ -62,7 +62,7 @@ func WithAuthz(ctx context.Context, authz Authz) {
 
 // AuthzFrom returns the value of the authorizationInfo key on the ctx
 func AuthzFrom(ctx context.Context) (Authz, bool) {
-	authz, ok := ctx.Value(authzKey).(Authz)
+	authz, ok := proc.AttrFrom(ctx)[authzKey].(Authz)
 	return authz, ok
 }
 

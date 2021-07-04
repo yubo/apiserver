@@ -4,6 +4,8 @@ import (
 	"context"
 
 	"github.com/spf13/cobra"
+	"github.com/yubo/apiserver/example/authn"
+	"github.com/yubo/apiserver/example/authz"
 	"github.com/yubo/apiserver/example/session"
 	"github.com/yubo/apiserver/example/tracing"
 	"github.com/yubo/apiserver/example/user"
@@ -13,23 +15,29 @@ import (
 	"k8s.io/klog/v2"
 
 	// authz's submodule, should be loaded before the authz module
-	_ "github.com/yubo/apiserver/pkg/authorization/register/abac"
-	_ "github.com/yubo/apiserver/pkg/authorization/register/alwaysallow"
-	_ "github.com/yubo/apiserver/pkg/authorization/register/alwaysdeny"
-	_ "github.com/yubo/apiserver/pkg/authorization/register/rbac"
-	_ "github.com/yubo/apiserver/pkg/authorization/register/webhook"
+	_ "github.com/yubo/apiserver/pkg/authorization/abac/register"
+	_ "github.com/yubo/apiserver/pkg/authorization/alwaysallow/register"
+	_ "github.com/yubo/apiserver/pkg/authorization/alwaysdeny/register"
+	_ "github.com/yubo/apiserver/pkg/authorization/register"
+
+	// TODO
+	//_ "github.com/yubo/apiserver/pkg/authorization/rbac/register"
+	// TODO
+	//_ "github.com/yubo/apiserver/pkg/authorization/webhook/register"
 
 	// authn
-	_ "github.com/yubo/apiserver/pkg/authentication/register/bootstrap"
-	_ "github.com/yubo/apiserver/pkg/authentication/register/oidc"
-	_ "github.com/yubo/apiserver/pkg/authentication/register/serviceaccount"
-	_ "github.com/yubo/apiserver/pkg/authentication/register/session"
-	_ "github.com/yubo/apiserver/pkg/authentication/register/tokenfile"
-	_ "github.com/yubo/apiserver/pkg/authentication/register/webhook"
+	_ "github.com/yubo/apiserver/pkg/authentication/register"
+	_ "github.com/yubo/apiserver/pkg/authentication/session/register"
+	_ "github.com/yubo/apiserver/pkg/authentication/token/bootstrap/register"
+	_ "github.com/yubo/apiserver/pkg/authentication/token/oidc/register"
+	_ "github.com/yubo/apiserver/pkg/authentication/token/tokenfile/register"
+
+	// TODO
+	//_ "github.com/yubo/apiserver/pkg/authentication/serviceaccount/register"
+	// TODO
+	//_ "github.com/yubo/apiserver/pkg/authentication/webhook/register"
 
 	_ "github.com/yubo/apiserver/pkg/apiserver/register"
-	_ "github.com/yubo/apiserver/pkg/authentication/register"
-	_ "github.com/yubo/apiserver/pkg/authorization/register"
 	_ "github.com/yubo/apiserver/pkg/db/register"
 	_ "github.com/yubo/apiserver/pkg/debug/register"
 	_ "github.com/yubo/apiserver/pkg/grpcserver/register"
@@ -82,6 +90,12 @@ func start(ctx context.Context) error {
 		return err
 	}
 	if err := user.New(ctx).Start(); err != nil {
+		return err
+	}
+	if err := authn.New(ctx).Start(); err != nil {
+		return err
+	}
+	if err := authz.New(ctx).Start(); err != nil {
 		return err
 	}
 

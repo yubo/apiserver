@@ -154,7 +154,7 @@ func (t *TokenAuthenticator) AuthenticateToken(ctx context.Context, token string
 }
 
 func (a *TokenAuthenticator) Name() string {
-	return "bearer OIDC authenticator"
+	return "bootstrap token authenticator"
 }
 
 func (a *TokenAuthenticator) Priority() int {

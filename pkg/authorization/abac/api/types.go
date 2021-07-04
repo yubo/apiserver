@@ -16,22 +16,16 @@ limitations under the License.
 
 package api
 
-import (
-	"github.com/yubo/apiserver/staging/runtime/serializer"
-)
-
-var Codecs = serializer.NewCodecFactory()
-
 // +k8s:deepcopy-gen:interfaces=github.com/yubo/apiserver/staging/runtime.Object
 
 // Policy contains a single ABAC policy rule
 type Policy struct {
 	//metav1.TypeMeta
 	// Kind is a string value representing the REST resource this object represents.
-	Kind string `json:"kind,omitempty" protobuf:"bytes,1,opt,name=kind"`
+	Kind string `json:"kind,omitempty"`
 
 	// Spec describes the policy rule
-	Spec PolicySpec
+	Spec PolicySpec `json:"spec,omitempty"`
 }
 
 // PolicySpec contains the attributes for a policy rule
@@ -40,15 +34,15 @@ type PolicySpec struct {
 	// User is the username this rule applies to.
 	// Either user or group is required to match the request.
 	// "*" matches all users.
-	User string
+	User string `json:"user,omitempty"`
 
 	// Group is the group this rule applies to.
 	// Either user or group is required to match the request.
 	// "*" matches all groups.
-	Group string
+	Group string `json:"group,omitempty"`
 
 	// Readonly matches readonly requests when true, and all requests when false
-	Readonly bool
+	Readonly bool `json:"readonly,omitempty"`
 
 	// APIGroup is the name of an API group. APIGroup, Resource, and Namespace are required to match resource requests.
 	// "*" matches all API groups
@@ -56,7 +50,7 @@ type PolicySpec struct {
 
 	// Resource is the name of a resource. APIGroup, Resource, and Namespace are required to match resource requests.
 	// "*" matches all resources
-	Resource string
+	Resource string `json:"resource,omitempty"`
 
 	// Namespace is the name of a namespace. APIGroup, Resource, and Namespace are required to match resource requests.
 	// "*" matches all namespaces (including unnamespaced requests)
@@ -65,7 +59,7 @@ type PolicySpec struct {
 	// NonResourcePath matches non-resource request paths.
 	// "*" matches all paths
 	// "/foo/*" matches all subpaths of foo
-	NonResourcePath string
+	NonResourcePath string `json:"nonResourcePath,omitempty"`
 
 	// TODO: "expires" string in RFC3339 format.
 

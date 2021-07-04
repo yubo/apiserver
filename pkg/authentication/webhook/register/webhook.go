@@ -24,7 +24,6 @@ var (
 		Priority:    proc.PRI_SYS_INIT,
 		SubPriority: options.PRI_M_AUTHN - 1,
 	}}
-	_config *config
 )
 
 type config struct {

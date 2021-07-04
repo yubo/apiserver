@@ -1,4 +1,4 @@
-package webhook
+package register
 
 import (
 	"context"
@@ -14,13 +14,12 @@ import (
 )
 
 const (
-	moduleName       = "authorization"
-	submoduleName    = "Webhook"
+	moduleName       = "authorization.webhook"
 	noUsernamePrefix = "-"
 )
 
 var (
-	_auth   = &authModule{name: moduleName + "." + submoduleName}
+	_auth   = &authModule{name: moduleName}
 	hookOps = []proc.HookOps{{
 		Hook:        _auth.init,
 		Owner:       moduleName,
@@ -115,6 +114,5 @@ func init() {
 
 	}
 
-	authorization.RegisterAuthz(submoduleName, factory)
-
+	authorization.RegisterAuthz(moduleName, factory)
 }

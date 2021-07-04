@@ -11,13 +11,13 @@ import (
 )
 
 const (
-	moduleName       = "authentication"
-	submoduleName    = "session"
+	moduleName       = "authentication.session"
+	modulePath       = "authentication"
 	noUsernamePrefix = "-"
 )
 
 var (
-	_auth   = &authModule{name: moduleName + ":" + submoduleName}
+	_auth   = &authModule{name: moduleName}
 	hookOps = []proc.HookOps{{
 		Hook:        _auth.init,
 		Owner:       moduleName,
@@ -46,20 +46,21 @@ func (p *authModule) init(ctx context.Context) error {
 	c := proc.ConfigerFrom(ctx)
 
 	cf := newConfig()
-	if err := c.Read(moduleName, cf); err != nil {
+	if err := c.Read(modulePath, cf); err != nil {
 		return err
 	}
 	p.config = cf
 
 	if !cf.Session {
-		klog.Infof("%s is disabled, skip", p.name)
+		klog.InfoS("skip authModule", "name", p.name, "reason", "disabled")
 		return nil
 	}
+	klog.V(5).InfoS("authmodule init", "name", p.name)
 
 	return authentication.RegisterAuthn(session.NewAuthenticator())
 }
 
 func init() {
 	proc.RegisterHooks(hookOps)
-	proc.RegisterFlags(moduleName, "authentication", newConfig())
+	proc.RegisterFlags(modulePath, "authentication", newConfig())
 }

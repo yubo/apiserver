@@ -26,8 +26,8 @@ devrun:
 		--token-auth-file=./run/tokens.cvs \
 		-v 10 \
 		--anonymous-auth \
-		--authorization-mode=AlwaysAllow \
 		--logtostderr"
+		#--authorization-mode=AlwaysAllow \
 		#--tls-cert-file=./run/pki/apiserver.crt \
 		#--tls-private-key-file=./run/pki/apiserver.key \
 
@@ -37,8 +37,8 @@ run:
 		--token-auth-file=./run/tokens.cvs \
 		-v 10 \
 		--anonymous-auth \
-		--authorization-mode=AlwaysAllow \
 		--logtostderr 2>&1
+		## --authorization-mode=AlwaysAllow \
 		#--authorization-mode=RBAC \
 		#--tls-cert-file=./run/pki/apiserver.crt \
 		#--tls-private-key-file=./run/pki/apiserver.key \

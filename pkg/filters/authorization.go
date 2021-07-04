@@ -23,6 +23,7 @@ import (
 
 	"k8s.io/klog/v2"
 
+	"github.com/emicklei/go-restful"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/responsewriters"
@@ -46,6 +47,8 @@ func WithAuthorization(handler http.Handler, a authorizer.Authorizer) http.Handl
 		return handler
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		klog.V(10).Infof("entering filters.WithAuthorization")
+		defer klog.V(10).Infof("leaving filters.WithAuthorization")
 		ctx := req.Context()
 		//ae := request.AuditEventFrom(ctx)
 
@@ -73,6 +76,44 @@ func WithAuthorization(handler http.Handler, a authorizer.Authorizer) http.Handl
 		//audit.LogAnnotation(ae, reasonAnnotationKey, reason)
 		responsewriters.Forbidden(ctx, attributes, w, req, reason)
 	})
+}
+
+func Authz(a authorizer.Authorizer) restful.FilterFunction {
+	if a == nil {
+		return nil
+	}
+	return func(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
+		klog.V(10).Infof("entering filters.Authz")
+		defer klog.V(10).Infof("leaving filters.Authz")
+
+		ctx := req.Request.Context()
+
+		attributes, err := GetAuthorizerAttributes(ctx)
+		if err != nil {
+			responsewriters.InternalError(resp, req.Request, err)
+			return
+		}
+		authorized, reason, err := a.Authorize(ctx, attributes)
+		// an authorizer like RBAC could encounter evaluation errors and still allow the request, so authorizer decision is checked before error here.
+		if authorized == authorizer.DecisionAllow {
+			//audit.LogAnnotation(ae, decisionAnnotationKey, decisionAllow)
+			//audit.LogAnnotation(ae, reasonAnnotationKey, reason)
+			//handler.ServeHTTP(w, req)
+			chain.ProcessFilter(req, resp)
+
+			return
+		}
+		if err != nil {
+			//audit.LogAnnotation(ae, reasonAnnotationKey, reasonError)
+			responsewriters.InternalError(resp, req.Request, err)
+			return
+		}
+
+		klog.V(4).InfoS("Forbidden", "URI", req.Request.RequestURI, "Reason", reason)
+		//audit.LogAnnotation(ae, decisionAnnotationKey, decisionForbid)
+		//audit.LogAnnotation(ae, reasonAnnotationKey, reason)
+		responsewriters.Forbidden(ctx, attributes, resp, req.Request, reason)
+	}
 }
 
 func GetAuthorizerAttributes(ctx context.Context) (authorizer.Attributes, error) {

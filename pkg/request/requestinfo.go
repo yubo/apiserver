@@ -18,9 +18,11 @@ package request
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 
+	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/staging/util/sets"
 )
 
@@ -41,10 +43,10 @@ type RequestInfo struct {
 	// for non-resource requests, this is the lowercase http verb
 	Verb string
 
-	APIPrefix string
-	//APIGroup   string
-	//APIVersion string
-	Namespace string
+	APIPrefix  string
+	APIGroup   string
+	APIVersion string
+	Namespace  string
 	// Resource is the name of the resource being requested.  This is not the kind.  For example: pods
 	Resource string
 	// Subresource is the name of the subresource being requested.  This is a different resource, scoped to the parent resource, but it may have a different kind.
@@ -78,13 +80,150 @@ type RequestInfoFactory struct {
 	GrouplessAPIPrefixes sets.String // without leading and trailing slashes
 }
 
+// TODO write an integration test against the swagger doc to test the RequestInfo and match up behavior to responses
+// NewRequestInfo returns the information from the http request.  If error is not nil, RequestInfo holds the information as best it is known before the failure
+// It handles both resource and non-resource requests and fills in all the pertinent information for each.
+// Valid Inputs:
+// Resource paths
+// /apis/{api-group}/{version}/namespaces
+// /api/{version}/namespaces
+// /api/{version}/namespaces/{namespace}
+// /api/{version}/namespaces/{namespace}/{resource}
+// /api/{version}/namespaces/{namespace}/{resource}/{resourceName}
+// /api/{version}/{resource}
+// /api/{version}/{resource}/{resourceName}
+//
+// Special verbs without subresources:
+// /api/{version}/proxy/{resource}/{resourceName}
+// /api/{version}/proxy/namespaces/{namespace}/{resource}/{resourceName}
+//
+// Special verbs with subresources:
+// /api/{version}/watch/{resource}
+// /api/{version}/watch/namespaces/{namespace}/{resource}
+//
+// NonResource paths
+// /apis/{api-group}/{version}
+// /apis/{api-group}
+// /apis
+// /api/{version}
+// /api
+// /healthz
+// /
 func (r *RequestInfoFactory) NewRequestInfo(req *http.Request) (*RequestInfo, error) {
 	// start with a non-resource request until proven otherwise
-	return &RequestInfo{
+	requestInfo := RequestInfo{
 		IsResourceRequest: false,
 		Path:              req.URL.Path,
 		Verb:              strings.ToLower(req.Method),
-	}, nil
+	}
+
+	currentParts := splitPath(req.URL.Path)
+	if len(currentParts) < 3 {
+		// return a non-resource request
+		return &requestInfo, nil
+	}
+
+	if !r.APIPrefixes.Has(currentParts[0]) {
+		// return a non-resource request
+		return &requestInfo, nil
+	}
+	requestInfo.APIPrefix = currentParts[0]
+	currentParts = currentParts[1:]
+
+	if !r.GrouplessAPIPrefixes.Has(requestInfo.APIPrefix) {
+		// one part (APIPrefix) has already been consumed, so this is actually "do we have four parts?"
+		if len(currentParts) < 3 {
+			// return a non-resource request
+			return &requestInfo, nil
+		}
+
+		requestInfo.APIGroup = currentParts[0]
+		currentParts = currentParts[1:]
+	}
+
+	requestInfo.IsResourceRequest = true
+	requestInfo.APIVersion = currentParts[0]
+	currentParts = currentParts[1:]
+
+	// handle input of form /{specialVerb}/*
+	if specialVerbs.Has(currentParts[0]) {
+		if len(currentParts) < 2 {
+			return &requestInfo, fmt.Errorf("unable to determine kind and namespace from url, %v", req.URL)
+		}
+
+		requestInfo.Verb = currentParts[0]
+		currentParts = currentParts[1:]
+
+	} else {
+		switch req.Method {
+		case "POST":
+			requestInfo.Verb = "create"
+		case "GET", "HEAD":
+			requestInfo.Verb = "get"
+		case "PUT":
+			requestInfo.Verb = "update"
+		case "PATCH":
+			requestInfo.Verb = "patch"
+		case "DELETE":
+			requestInfo.Verb = "delete"
+		default:
+			requestInfo.Verb = ""
+		}
+	}
+
+	// URL forms: /namespaces/{namespace}/{kind}/*, where parts are adjusted to be relative to kind
+	if currentParts[0] == "namespaces" {
+		if len(currentParts) > 1 {
+			requestInfo.Namespace = currentParts[1]
+
+			// if there is another step after the namespace name and it is not a known namespace subresource
+			// move currentParts to include it as a resource in its own right
+			if len(currentParts) > 2 && !namespaceSubresources.Has(currentParts[2]) {
+				currentParts = currentParts[2:]
+			}
+		}
+	} else {
+		requestInfo.Namespace = api.NamespaceNone
+	}
+
+	// parsing successful, so we now know the proper value for .Parts
+	requestInfo.Parts = currentParts
+
+	// parts look like: resource/resourceName/subresource/other/stuff/we/don't/interpret
+	switch {
+	case len(requestInfo.Parts) >= 3 && !specialVerbsNoSubresources.Has(requestInfo.Verb):
+		requestInfo.Subresource = requestInfo.Parts[2]
+		fallthrough
+	case len(requestInfo.Parts) >= 2:
+		requestInfo.Name = requestInfo.Parts[1]
+		fallthrough
+	case len(requestInfo.Parts) >= 1:
+		requestInfo.Resource = requestInfo.Parts[0]
+	}
+
+	// if there's no name on the request and we thought it was a get before, then the actual verb is a list or a watch
+	if len(requestInfo.Name) == 0 && requestInfo.Verb == "get" {
+		opts := api.ListOptions{}
+		if values := req.URL.Query()["watch"]; len(values) > 0 {
+			switch strings.ToLower(values[0]) {
+			case "false", "0":
+			default:
+				opts.Watch = true
+			}
+		}
+
+		if opts.Watch {
+			requestInfo.Verb = "watch"
+		} else {
+			requestInfo.Verb = "list"
+		}
+	}
+	// if there's no name on the request and we thought it was a delete before, then the actual verb is deletecollection
+	//if len(requestInfo.Name) == 0 && requestInfo.Verb == "delete" {
+	//	requestInfo.Verb = "deletecollection"
+	//}
+
+	return &requestInfo, nil
 }
 
 type requestInfoKeyType int

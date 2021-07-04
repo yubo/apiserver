@@ -1,4 +1,4 @@
-package serviceaccount
+package register
 
 import (
 	"context"

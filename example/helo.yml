@@ -41,7 +41,17 @@ apiserver:
 authentication:
   session: true
   bootstrapToken: true
+  tokenAuthFile:
+  oidc:
+    issuerURL:
+    clientID:
+
 authorization:
+  policyFile: ./run/abac.json
+  modes:
+    - ABAC
+    #- AlwaysAllow
+
   
 session:
   enabled: true

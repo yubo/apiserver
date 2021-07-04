@@ -298,9 +298,10 @@ func (c *Server) init(ctx context.Context) error {
 }
 
 func DefaultBuildHandlerChain(ctx context.Context, apiHandler http.Handler, c *Server) http.Handler {
-	handler := filters.TrackCompleted(apiHandler)
+	handler := apiHandler
 
 	if authz, ok := options.AuthzFrom(ctx); ok {
+		handler = filters.TrackCompleted(apiHandler)
 		handler = filters.WithAuthorization(handler, authz.Authorizer())
 		handler = filters.TrackStarted(handler, "authorization")
 
@@ -316,7 +317,7 @@ func DefaultBuildHandlerChain(ctx context.Context, apiHandler http.Handler, c *S
 
 	if authn, ok := options.AuthnFrom(ctx); ok {
 		handler = filters.TrackCompleted(handler)
-		handler = filters.WithAuthentication(handler, authn.Authenticator(), failedHandler /*, authn.APIAudiences()*/)
+		handler = filters.WithAuthentication(handler, authn.Authenticator(), failedHandler)
 		handler = filters.TrackStarted(handler, "authentication")
 	}
 
