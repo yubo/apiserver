@@ -18,26 +18,36 @@ limitations under the License.
 package apiserver
 
 import (
-	"context"
 	"fmt"
 	"net"
 	"os"
 	"strings"
 	"time"
 
+	apirequest "github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/golib/staging/util/errors"
 	utilerrors "github.com/yubo/golib/staging/util/errors"
+	"github.com/yubo/golib/staging/util/sets"
 	"github.com/yubo/golib/util"
 	"k8s.io/klog/v2"
 )
 
-func (s *config) String() string {
-	return util.Prettify(s)
+func newConfig() *config {
+	return &config{
+		ShutdownTimeout: 60,
+		EnableIndex:     true,
+		EnableProfiling: true,
+		EnableMetrics:   true,
+	}
 }
 
 // config contains the config while running a generic api server.
 type config struct {
 	ExternalHost string `json:"externalHost" flag:"external-hostname" description:"The hostname to use when generating externalized URLs for this master (e.g. Swagger API Docs or OpenID Discovery)."`
+
+	// ExternalAddress is the address advertised, even if BindAddress is a loopback. By default this
+	// is set to BindAddress if the later no loopback, or to the first host interface address.
+	ExternalAddress net.IP `json:"-"`
 
 	BindAddress string/*net.IP*/ `json:"bindAddress" default:"0.0.0.0" flag:"bind-address" description:"The IP address on which to listen for the --bind-port port. The associated interface(s) must be reachable by the rest of the cluster, and by CLI/web clients. If blank or an unspecified address (0.0.0.0 or ::), all interfaces will be used."`
 
@@ -58,22 +68,22 @@ type config struct {
 	GoawayChance float64 `json:"goawayChance" flag:"goaway-chance" description:"To prevent HTTP/2 clients from getting stuck on a single apiserver, randomly close a connection (GOAWAY). The client's other in-flight requests won't be affected, and the client will reconnect, likely landing on a different apiserver after going through the load balancer again. This argument sets the fraction of requests that will be sent a GOAWAY. Clusters with single apiservers, or which don't use a load balancer, should NOT enable this. Min is 0 (off), Max is .02 (1/50 requests); .001 (1/1000) is a recommended starting point."`
 
 	LivezGracePeriod  int `json:"livezGracePeriod" flag:"livez-grace-period" description:"This option represents the maximum amount of time it should take for apiserver to complete its startup sequence and become live. From apiserver's start time to when this amount of time has elapsed, /livez will assume that unfinished post-start hooks will complete successfully and therefore return true."`
-	MinRequestTimeout int `json:"minRequestTimeout" default:"1800s" flag:"min-request-timeout" description:"An optional field indicating the minimum number of seconds a handler must keep a request open before timing it out. Currently only honored by the watch request handler, which picks a randomized value above this number as the connection timeout, to spread out load."`
+	MinRequestTimeout int `json:"minRequestTimeout" default:"1800" flag:"min-request-timeout" description:"An optional field indicating the minimum number of seconds a handler must keep a request open before timing it out. Currently only honored by the watch request handler, which picks a randomized value above this number as the connection timeout, to spread out load."`
 
-	ShutdownTimeout       int `json:"shutdownTimeout"`
+	ShutdownTimeout       int `json:"shutdownTimeout" description:"ShutdownTimeout is the timeout used for server shutdown. This specifies the timeout before server gracefully shutdown returns."`
 	ShutdownDelayDuration int `json:"shutdownDelayDuration" flag:"shutdown-delay-duration" description:"Time to delay the termination. During that time the server keeps serving requests normally. The endpoints /healthz and /livez will return success, but /readyz immediately returns failure. Graceful termination starts after this delay has elapsed. This can be used to allow load balancer to stop sending traffic to this server."`
 
 	// The limit on the request body size that would be accepted and
 	// decoded in a write request. 0 means no limit.
 	// We intentionally did not add a flag for this option. Users of the
 	// apiserver library can wire it to a flag.
-	MaxRequestBodyBytes int64 `json:"maxRequestBodyBytes" default:"3145728"`
+	MaxRequestBodyBytes int64 `json:"maxRequestBodyBytes" default:"3145728" flag:"max-resource-write-bytes" description:"The limit on the request body size that would be accepted and decoded in a write request."`
 
 	EnablePriorityAndFairness bool `json:"enablePriorityAndFairness" default:"true" flag:"enable-priority-and-fairness" description:"If true and the APIPriorityAndFairness feature gate is enabled, replace the max-in-flight handler with an enhanced one that queues and dispatches with priority and fairness"`
 
-	// ExternalAddress is the address advertised, even if BindAddress is a loopback. By default this
-	// is set to BindAddress if the later no loopback, or to the first host interface address.
-	ExternalAddress net.IP `json:"-"`
+	// ExternalAddress is the host name to use for external (public internet) facing URLs (e.g. Swagger)
+	// Will default to a value based on secure serving info and available ipv4 IPs.
+	//ExternalAddress net.IP `json:"-"`
 
 	// Listener is the secure server network listener.
 	// either Listener or BindAddress/BindPort/BindNetwork is set,
@@ -85,74 +95,96 @@ type config struct {
 	minRequestTimeout     time.Duration
 	shutdownTimeout       time.Duration
 	shutdownDelayDuration time.Duration
+
+	// EgressSelector provides a lookup mechanism for dialing outbound connections.
+	// It does so based on a EgressSelectorConfiguration which was read at startup.
+	// EgressSelector *egressselector.EgressSelector
+
+	//CorsAllowedOriginList []string
+	//HSTSDirectives        []string
+	// FlowControl, if not nil, gives priority and fairness to request handling
+	// FlowControl utilflowcontrol.Interface
+
+	EnableIndex     bool `json:"-"`
+	EnableProfiling bool `json:"-"`
+	// EnableDiscovery bool
+	// Requires generic profiling enabled
+	EnableContentionProfiling bool `json:"-"`
+	EnableMetrics             bool `json:"-"`
 }
 
-func newConfig() *config {
-	return &config{
-		ShutdownTimeout:     60,
-		MaxRequestBodyBytes: int64(3 * 1024 * 1024),
-	}
+func (s *config) String() string {
+	return util.Prettify(s)
 }
 
 // Validate will be called by config reader
-func (s *config) Validate() error {
-	if len(s.ExternalHost) == 0 {
+func (c *config) Validate() error {
+	if len(c.ExternalHost) == 0 {
 		if hostname, err := os.Hostname(); err == nil {
-			s.ExternalHost = hostname
+			c.ExternalHost = hostname
 		} else {
 			return fmt.Errorf("error finding host name: %v", err)
 		}
-		klog.Infof("external host was not specified, using %v", s.ExternalHost)
+		klog.Infof("external host was not specified, using %v", c.ExternalHost)
 	}
 
 	errors := []error{}
 
-	if s.LivezGracePeriod < 0 {
+	if c.LivezGracePeriod < 0 {
 		errors = append(errors, fmt.Errorf("--livez-grace-period can not be a negative value"))
 	}
 
-	if s.MaxRequestsInFlight < 0 {
+	if c.MaxRequestsInFlight < 0 {
 		errors = append(errors, fmt.Errorf("--max-requests-inflight can not be negative value"))
 	}
-	if s.MaxMutatingRequestsInFlight < 0 {
+	if c.MaxMutatingRequestsInFlight < 0 {
 		errors = append(errors, fmt.Errorf("--max-mutating-requests-inflight can not be negative value"))
 	}
 
-	if s.RequestTimeout < 0 {
+	if c.RequestTimeout < 0 {
 		errors = append(errors, fmt.Errorf("--request-timeout can not be negative value"))
 	}
 
-	if s.GoawayChance < 0 || s.GoawayChance > 0.02 {
+	if c.GoawayChance < 0 || c.GoawayChance > 0.02 {
 		errors = append(errors, fmt.Errorf("--goaway-chance can not be less than 0 or greater than 0.02"))
 	}
 
-	if s.MinRequestTimeout < 0 {
+	if c.MinRequestTimeout < 0 {
 		errors = append(errors, fmt.Errorf("--min-request-timeout can not be negative value"))
 	}
 
-	if s.ShutdownDelayDuration < 0 {
+	if c.ShutdownDelayDuration < 0 {
 		errors = append(errors, fmt.Errorf("--shutdown-delay-duration can not be negative value"))
 	}
 
-	if s.MaxRequestBodyBytes < 0 {
+	if c.MaxRequestBodyBytes < 0 {
 		errors = append(errors, fmt.Errorf("--max-resource-write-bytes can not be negative value"))
 	}
 
-	if err := validateHSTSDirectives(s.HSTSDirectives); err != nil {
+	if err := validateHSTSDirectives(c.HSTSDirectives); err != nil {
 		errors = append(errors, err)
 	}
 
-	if s.BindPort < 1 || s.BindPort > 65535 {
-		errors = append(errors, fmt.Errorf("--bind-port %v must be between 1 and 65535, inclusive. It cannot be turned off with 0", s.BindPort))
+	if c.BindPort < 1 || c.BindPort > 65535 {
+		errors = append(errors, fmt.Errorf("--bind-port %v must be between 1 and 65535, inclusive. It cannot be turned off with 0", c.BindPort))
 	}
 
-	s.requestTimeout = duration(s.RequestTimeout)
-	s.livezGracePeriod = duration(s.LivezGracePeriod)
-	s.minRequestTimeout = duration(s.MinRequestTimeout)
-	s.shutdownTimeout = duration(s.ShutdownTimeout)
-	s.shutdownDelayDuration = duration(s.ShutdownDelayDuration)
+	c.requestTimeout = duration(c.RequestTimeout)
+	c.livezGracePeriod = duration(c.LivezGracePeriod)
+	c.minRequestTimeout = duration(c.MinRequestTimeout)
+	c.shutdownTimeout = duration(c.ShutdownTimeout)
+	c.shutdownDelayDuration = duration(c.ShutdownDelayDuration)
+
+	c.ExternalAddress = net.ParseIP(c.BindAddress)
 
 	return utilerrors.NewAggregate(errors)
+}
+
+func NewRequestInfoResolver(c *config) *apirequest.RequestInfoFactory {
+	return &apirequest.RequestInfoFactory{
+		APIPrefixes:          sets.NewString("api", "apis"),
+		GrouplessAPIPrefixes: sets.NewString("api"),
+	}
 }
 
 func validateHSTSDirectives(hstsDirectives []string) error {
@@ -172,26 +204,6 @@ func validateHSTSDirectives(hstsDirectives []string) error {
 		}
 	}
 	return errors.NewAggregate(allErrors)
-}
-
-func createListener(network, addr string, config net.ListenConfig) (net.Listener, int, error) {
-	if len(network) == 0 {
-		network = "tcp"
-	}
-
-	ln, err := config.Listen(context.TODO(), network, addr)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to listen on %v: %v", addr, err)
-	}
-
-	// get port
-	tcpAddr, ok := ln.Addr().(*net.TCPAddr)
-	if !ok {
-		ln.Close()
-		return nil, 0, fmt.Errorf("invalid listen address: %q", ln.Addr().String())
-	}
-
-	return ln, tcpAddr.Port, nil
 }
 
 func duration(second int) time.Duration {

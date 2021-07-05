@@ -190,10 +190,12 @@ func nonResourceMatches(p api.Policy, a authorizer.Attributes) bool {
 func resourceMatches(p api.Policy, a authorizer.Attributes) bool {
 	// A resource policy cannot match a non-resource request
 	if a.IsResourceRequest() {
-		if p.Spec.Resource == "*" || p.Spec.Resource == a.GetResource() {
-			//if p.Spec.APIGroup == "*" || p.Spec.APIGroup == a.GetAPIGroup() {
-			return true
-			//}
+		if p.Spec.Namespace == "*" || p.Spec.Namespace == a.GetNamespace() {
+			if p.Spec.Resource == "*" || p.Spec.Resource == a.GetResource() {
+				if p.Spec.APIGroup == "*" || p.Spec.APIGroup == a.GetAPIGroup() {
+					return true
+				}
+			}
 		}
 	}
 	return false
@@ -236,21 +238,24 @@ func (pl PolicyList) RulesFor(user user.Info, namespace string) ([]authorizer.Re
 
 	for _, p := range pl {
 		if subjectMatches(*p, user) {
-			if len(p.Spec.Resource) > 0 {
-				r := authorizer.DefaultResourceRuleInfo{
-					Verbs:     getVerbs(p.Spec.Readonly),
-					Resources: []string{p.Spec.Resource},
+			if p.Spec.Namespace == "*" || p.Spec.Namespace == namespace {
+				if len(p.Spec.Resource) > 0 {
+					r := authorizer.DefaultResourceRuleInfo{
+						Verbs:     getVerbs(p.Spec.Readonly),
+						APIGroups: []string{p.Spec.APIGroup},
+						Resources: []string{p.Spec.Resource},
+					}
+					var resourceRule authorizer.ResourceRuleInfo = &r
+					resourceRules = append(resourceRules, resourceRule)
 				}
-				var resourceRule authorizer.ResourceRuleInfo = &r
-				resourceRules = append(resourceRules, resourceRule)
-			}
-			if len(p.Spec.NonResourcePath) > 0 {
-				r := authorizer.DefaultNonResourceRuleInfo{
-					Verbs:           getVerbs(p.Spec.Readonly),
-					NonResourceURLs: []string{p.Spec.NonResourcePath},
+				if len(p.Spec.NonResourcePath) > 0 {
+					r := authorizer.DefaultNonResourceRuleInfo{
+						Verbs:           getVerbs(p.Spec.Readonly),
+						NonResourceURLs: []string{p.Spec.NonResourcePath},
+					}
+					var nonResourceRule authorizer.NonResourceRuleInfo = &r
+					nonResourceRules = append(nonResourceRules, nonResourceRule)
 				}
-				var nonResourceRule authorizer.NonResourceRuleInfo = &r
-				nonResourceRules = append(nonResourceRules, nonResourceRule)
 			}
 		}
 	}

@@ -51,10 +51,10 @@ type Attributes interface {
 	GetName() string
 
 	// The group of the resource, if a request is for a REST object.
-	//GetAPIGroup() string
+	GetAPIGroup() string
 
 	// GetAPIVersion returns the version of the group requested, if a request is for a REST object.
-	//GetAPIVersion() string
+	GetAPIVersion() string
 
 	// IsResourceRequest returns true for requests to API resources, like /api/v1/nodes,
 	// and false for non-resource endpoints like /api, /healthz
@@ -94,11 +94,11 @@ type RequestAttributesGetter interface {
 
 // AttributesRecord implements Attributes interface.
 type AttributesRecord struct {
-	User      user.Info
-	Verb      string
-	Namespace string
-	//APIGroup        string
-	//APIVersion      string
+	User            user.Info
+	Verb            string
+	Namespace       string
+	APIGroup        string
+	APIVersion      string
 	Resource        string
 	Subresource     string
 	Name            string
@@ -134,13 +134,13 @@ func (a AttributesRecord) GetName() string {
 	return a.Name
 }
 
-//func (a AttributesRecord) GetAPIGroup() string {
-//	return a.APIGroup
-//}
-//
-//func (a AttributesRecord) GetAPIVersion() string {
-//	return a.APIVersion
-//}
+func (a AttributesRecord) GetAPIGroup() string {
+	return a.APIGroup
+}
+
+func (a AttributesRecord) GetAPIVersion() string {
+	return a.APIVersion
+}
 
 func (a AttributesRecord) IsResourceRequest() bool {
 	return a.ResourceRequest

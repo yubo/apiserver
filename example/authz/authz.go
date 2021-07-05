@@ -33,7 +33,7 @@ func (p *authz) Start() error {
 
 type AuthzInput struct {
 	Namespace string `param:"path" name:"namespace"`
-	Name      string `param:"path" name:"authz-name"`
+	Name      string `param:"path" name:"name"`
 }
 type AuthzBodyInput struct {
 	Msg string `json:"msg"`
@@ -45,25 +45,25 @@ func (p *authz) installWs(http options.ApiServer) {
 	ws := new(restful.WebService)
 
 	rest.WsRouteBuild(&rest.WsOption{
-		Ws: ws.Path("/api/v1/namespaces/{namespace}/authz").
+		Ws: ws.Path("/api/v1/namespaces/{namespace}/pods").
 			Produces(rest.MIME_JSON).
 			Consumes(rest.MIME_JSON),
 		Tags: []string{"authorization"},
 	}, []rest.WsRoute{{
-		Method: "GET", SubPath: "/{authz-name}",
-		Desc:   "get namespace info",
+		Method: "GET", SubPath: "/{name}",
+		Desc:   "get pod info",
 		Handle: p.ns,
 	}, {
-		Method: "POST", SubPath: "/{authz-name}",
-		Desc:   "create namespace",
+		Method: "POST", SubPath: "/{name}",
+		Desc:   "create pod",
 		Handle: p.nsbody,
 	}, {
-		Method: "DELETE", SubPath: "/{authz-name}",
-		Desc:   "delete namespace info",
+		Method: "DELETE", SubPath: "/{name}",
+		Desc:   "delete pod",
 		Handle: p.ns,
 	}, {
-		Method: "PUT", SubPath: "/{authz-name}",
-		Desc:   "update namespace",
+		Method: "PUT", SubPath: "/{name}",
+		Desc:   "update pod",
 		Handle: p.nsbody,
 	}})
 

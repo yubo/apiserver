@@ -46,7 +46,7 @@ type PolicySpec struct {
 
 	// APIGroup is the name of an API group. APIGroup, Resource, and Namespace are required to match resource requests.
 	// "*" matches all API groups
-	//APIGroup string
+	APIGroup string
 
 	// Resource is the name of a resource. APIGroup, Resource, and Namespace are required to match resource requests.
 	// "*" matches all resources
@@ -54,7 +54,7 @@ type PolicySpec struct {
 
 	// Namespace is the name of a namespace. APIGroup, Resource, and Namespace are required to match resource requests.
 	// "*" matches all namespaces (including unnamespaced requests)
-	//Namespace string
+	Namespace string `json:"namespace,omitempty"`
 
 	// NonResourcePath matches non-resource request paths.
 	// "*" matches all paths

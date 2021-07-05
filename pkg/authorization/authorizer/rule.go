@@ -32,7 +32,7 @@ type DefaultResourceRuleInfo struct {
 	Verbs         []string
 	Resources     []string
 	ResourceNames []string
-	//APIGroups     []string
+	APIGroups     []string
 }
 
 func (i *DefaultResourceRuleInfo) GetVerbs() []string {

@@ -5,8 +5,10 @@ import (
 
 	"github.com/go-openapi/spec"
 	"github.com/yubo/apiserver/pkg/options"
+	apirequest "github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/golib/proc"
+	utilwaitgroup "github.com/yubo/golib/staging/util/waitgroup"
 	"k8s.io/klog/v2"
 )
 
@@ -41,7 +43,22 @@ var (
 type apiserver struct {
 	name   string
 	config *config
-	server *Server
+
+	// handlerChainWaitGroup allows you to wait for all chain handlers exit after the server shutdown.
+	handlerChainWaitGroup *utilwaitgroup.SafeWaitGroup
+
+	// Predicate which is true for paths of long-running http requests
+	longRunningFunc apirequest.LongRunningRequestCheck
+
+	// handler holds the handlers being used by this API server
+	handler *APIServerHandler
+
+	// apiServerID is the ID of this API server
+	apiServerID string
+
+	// requestInfoResolver is used to assign attributes (used by admission and authorization) based on a request URL.
+	// Use-cases that are like kubelets may need to customize this.
+	requestInfoResolver apirequest.RequestInfoResolver
 
 	ctx       context.Context
 	cancel    context.CancelFunc
@@ -71,12 +88,12 @@ func (p *apiserver) init(ctx context.Context) (err error) {
 
 func (p *apiserver) start(ctx context.Context) error {
 	rest.InstallApiDocs(
-		p.server.Handler.GoRestfulContainer,
+		p.handler.GoRestfulContainer,
 		spec.InfoProps{Title: proc.NameFrom(ctx)},
 		APIPath,
 	)
 
-	if err := p.server.Start(p.ctx.Done(), p.stoppedCh); err != nil {
+	if err := p.Start(p.ctx.Done(), p.stoppedCh); err != nil {
 		return err
 	}
 

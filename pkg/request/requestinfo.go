@@ -24,6 +24,7 @@ import (
 
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/staging/util/sets"
+	"k8s.io/klog"
 )
 
 // LongRunningRequestCheck is a predicate which is true for long-running http requests.
@@ -120,6 +121,7 @@ func (r *RequestInfoFactory) NewRequestInfo(req *http.Request) (*RequestInfo, er
 	currentParts := splitPath(req.URL.Path)
 	if len(currentParts) < 3 {
 		// return a non-resource request
+		klog.V(5).Infof("path parts < 3")
 		return &requestInfo, nil
 	}
 
@@ -219,9 +221,11 @@ func (r *RequestInfoFactory) NewRequestInfo(req *http.Request) (*RequestInfo, er
 		}
 	}
 	// if there's no name on the request and we thought it was a delete before, then the actual verb is deletecollection
-	//if len(requestInfo.Name) == 0 && requestInfo.Verb == "delete" {
-	//	requestInfo.Verb = "deletecollection"
-	//}
+	if len(requestInfo.Name) == 0 && requestInfo.Verb == "delete" {
+		requestInfo.Verb = "deletecollection"
+	}
+
+	klog.V(5).Infof("----requestinfo %+v", requestInfo)
 
 	return &requestInfo, nil
 }
