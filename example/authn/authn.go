@@ -46,6 +46,8 @@ func (p *authn) installWs(http options.ApiServer) {
 		Method: "GET", SubPath: "/",
 		Desc:   "get authentication info",
 		Handle: p.getAuthn,
+		Acl:    "read",
+		Scope:  "read",
 	}})
 
 	http.Add(ws)
@@ -59,6 +61,8 @@ func (p *authn) getAuthn(w http.ResponseWriter, req *http.Request) (*user.Defaul
 
 	return &user.DefaultInfo{
 		Name:   u.GetName(),
+		UID:    u.GetUID(),
 		Groups: u.GetGroups(),
+		Extra:  u.GetExtra(),
 	}, nil
 }

@@ -39,16 +39,17 @@ apiserver:
   enablePriorityAndFairness: true
 
 authentication:
-  session: true
-  bootstrapToken: true
-  tokenAuthFile:
+  session: true                   # --enable-session-auth
+  bootstrapToken: true            # --enable-bootstrap-token-auth
+  anonymous: true                 # --anonymous-auth
+  tokenAuthFile: ./run/tokens.cvs # --token-auth-file={file-path}
   oidc:
-    issuerURL:
-    clientID:
+    issuerURL:                    # --oidc-issuer-url
+    clientID:                     # --oidc-client-id
 
 authorization:
-  policyFile: ./run/abac.json
-  modes:
+  policyFile: ./run/abac.json     # --authorization-policy-file={file-path}
+  modes:                          # --modes=ABAC,AlwaysAllow
     - ABAC
     #- AlwaysAllow
 
@@ -70,9 +71,9 @@ swagger: # depend http
   clientId: "1234"
   clientSecret: "1234"
   schemes:
-    - name: "Token"
+    - name: "BearerToken"
       type: "apiKey"
-      fieldName: "Bearer"
+      fieldName: "authorization"
       valueSource: "header" # can be "header", "query" or "cookie"
 #    - name: "OAuth2"
 #      type: "accessCode"

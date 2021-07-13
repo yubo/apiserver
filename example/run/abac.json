@@ -1,4 +1,5 @@
 {"kind": "Policy", "spec": {"group":"system:authenticated",     "nonResourcePath": "*", "readonly": true}}
+{"kind": "Policy", "spec": {"group":"system:unauthenticated",   "nonResourcePath": "*", "readonly": true}}
 {"kind": "Policy", "spec": {"group":"system:unauthenticated",   "namespace": "*",       "readonly": true}}
 {"kind": "Policy", "spec": {"group":"system:unauthenticated",   "namespace": "*",       "nonResourcePath": "/session/*"}}
 {"kind": "Policy", "spec": {"group":"system:unauthenticated",   "namespace": "default", "resource": "pods"}}

@@ -34,10 +34,10 @@ devrun:
 run:
 	./$(APP_NAME) \
 		-f ./$(APP_NAME).yml \
-		--token-auth-file=./run/tokens.cvs \
 		-v 10 \
 		--anonymous-auth \
 		--logtostderr 2>&1
+		#--token-auth-file=./run/tokens.cvs \
 		## --authorization-mode=AlwaysAllow \
 		#--authorization-mode=RBAC \
 		#--tls-cert-file=./run/pki/apiserver.crt \
