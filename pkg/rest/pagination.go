@@ -34,14 +34,20 @@ func SetLimitPage(def, max int) {
 }
 
 type Pagination struct {
-	PageSize    *int    `param:"query" flags:"-" description:"page size"`
-	CurrentPage *int    `param:"query" flags:"-" description:"current page number, start at 1(defualt)"`
+	Offset      int     `param:"query,hidden" flags:"-" description:"offset, priority is more than currentPage"`
+	Limit       int     `param:"query,hidden" flags:"-" description:"limit", priority is more than pageSize`
+	PageSize    int     `param:"query" flags:"-" description:"page size"`
+	CurrentPage int     `param:"query" flags:"-" description:"current page number, start at 1(defualt)"`
 	Sorter      *string `param:"query" flags:"-" description:"column name"`
 	Order       *string `param:"query" flags:"-" description:"asc(default)/desc"`
 }
 
-func (p *Pagination) OffsetLimit() (int, int) {
-	limit := util.IntValue(p.PageSize)
+func (p *Pagination) OffsetLimit() (offset, limit int) {
+	limit = p.Limit
+
+	if limit == 0 {
+		limit = p.PageSize
+	}
 
 	if limit == 0 {
 		limit = defLimitPage
@@ -51,12 +57,17 @@ func (p *Pagination) OffsetLimit() (int, int) {
 		limit = maxLimitPage
 	}
 
-	currentPage := util.IntValue(p.CurrentPage)
-	if currentPage <= 1 {
-		return 0, limit
+	offset = p.Offset
+
+	if offset <= 0 {
+		offset = (p.CurrentPage - 1) * limit
 	}
 
-	return (currentPage - 1) * limit, limit
+	if offset < 0 {
+		offset = 0
+	}
+
+	return
 }
 
 func (p Pagination) SqlExtra(orders ...string) string {

@@ -13,7 +13,7 @@ import (
 var fieldCache sync.Map // map[reflect.Type]structFields
 
 // A field represents a single field found in a struct.
-// `param:"query,required" format:"password" description:"aaa"`
+// `param:"query,required,hidden" format:"password" description:"aaa"`
 type field struct {
 	tagOpt
 	typ   reflect.Type
@@ -30,13 +30,14 @@ type tagOpt struct {
 	paramType   string
 	format      string
 	skip        bool
+	hidden      bool
 	required    bool
 	description string
 }
 
 func (p tagOpt) String() string {
-	return fmt.Sprintf("name %s key %v paramType %s skip %v required %v format %s description %s",
-		p.name, p.key, p.paramType, p.skip, p.required, p.format, p.description)
+	return fmt.Sprintf("name %s key %v paramType %s skip %v required %v hidden %v format %s description %s",
+		p.name, p.key, p.paramType, p.skip, p.required, p.hidden, p.format, p.description)
 }
 
 type structFields struct {
@@ -219,7 +220,7 @@ func (o tagOptions) Contains(optionName string) bool {
 	return false
 }
 
-// `param:"(path|header|param|data)?(,required)?"`
+// `param:"(path|header|param|data)?(,required|hidden)?"`
 // `name:"keyName"`
 // `json:"keyName"`
 // `format:"password"`
@@ -239,6 +240,9 @@ func getTagOpt(sf reflect.StructField) (opt tagOpt) {
 	typ, opts := parseTag(tag)
 	if opts.Contains("required") {
 		opt.required = true
+	}
+	if opts.Contains("hidden") {
+		opt.hidden = true
 	}
 
 	opt.paramType = typ

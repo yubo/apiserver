@@ -23,11 +23,11 @@ type RequestOptions struct {
 	ApiKey             *string
 	InputParam         interface{}
 	InputContent       []byte
-	InputFile          *string // Priority InputFile > InputContent > InputBody
-	InputBody          interface{}
-	OutputFile         *string // Priority OutputFile > Output
-	Output             interface{}
-	Mime               string
+	InputFile          *string     // Priority InputFile > InputContent > InputBody
+	InputBody          interface{} //
+	OutputFile         *string     // Priority OutputFile > Output
+	Output             interface{} //
+	Mime               string      // default: application/json
 	Ctx                context.Context
 	header             http.Header
 	CertFile           string

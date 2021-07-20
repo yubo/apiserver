@@ -387,9 +387,17 @@ func (p *RouteBuilder) setParam(f *field) error {
 	case PathType:
 		parameter = restful.PathParameter(f.key, f.description)
 	case QueryType:
+		if f.hidden {
+			return nil
+		}
 		parameter = restful.QueryParameter(f.key, f.description)
+		parameter.Required(f.required)
 	case HeaderType:
+		if f.hidden {
+			return nil
+		}
 		parameter = restful.HeaderParameter(f.key, f.description)
+		parameter.Required(f.required)
 	default:
 		panicType(f.typ, "setParam")
 	}
