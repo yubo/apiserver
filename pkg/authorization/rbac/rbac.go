@@ -29,7 +29,7 @@ import (
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	rbacregistryvalidation "github.com/yubo/apiserver/pkg/authorization/rbac/validation"
 	"github.com/yubo/apiserver/pkg/listers"
-	"github.com/yubo/apiserver/staging/labels"
+	"github.com/yubo/golib/staging/labels"
 	utilerrors "github.com/yubo/golib/staging/util/errors"
 )
 

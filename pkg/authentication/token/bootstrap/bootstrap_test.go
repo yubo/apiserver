@@ -23,7 +23,7 @@ import (
 
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	bootstrapapi "github.com/yubo/apiserver/staging/cluster-bootstrap/token/api"
-	"github.com/yubo/apiserver/staging/labels"
+	"github.com/yubo/golib/staging/labels"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/api/errors"
 )
