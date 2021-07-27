@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/emicklei/go-restful"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/rest"
@@ -58,30 +57,28 @@ func (p *module) Start() error {
 
 func (p *module) installWs() {
 	rest.SwaggerTagRegister("session", "demo session")
-
-	ws := new(restful.WebService)
-
 	rest.WsRouteBuild(&rest.WsOption{
-		Ws: ws.Path("/session").Produces(rest.MIME_JSON).Consumes("*/*"),
 		// << set filter >>
 		// has been added filters.session at apiserver.DefaultBuildHandlerChain
 		// Filter: filters.Session(p.session),
-		Tags: []string{"session"},
-	}, []rest.WsRoute{{
-		Method: "GET", SubPath: "/",
-		Desc:   "get session info",
-		Handle: p.info,
-	}, {
-		Method: "GET", SubPath: "/set",
-		Desc:   "set session info",
-		Handle: p.set,
-	}, {
-		Method: "GET", SubPath: "/reset",
-		Desc:   "reset session info",
-		Handle: p.reset,
-	}})
-
-	p.http.Add(ws)
+		Path:               "/session",
+		Consumes:           []string{"*/*"},
+		Tags:               []string{"session"},
+		GoRestfulContainer: p.http,
+		Routes: []rest.WsRoute{{
+			Method: "GET", SubPath: "/",
+			Desc:   "get session info",
+			Handle: p.info,
+		}, {
+			Method: "GET", SubPath: "/set",
+			Desc:   "set session info",
+			Handle: p.set,
+		}, {
+			Method: "GET", SubPath: "/reset",
+			Desc:   "reset session info",
+			Handle: p.reset,
+		}},
+	})
 }
 
 // show session information

@@ -54,37 +54,35 @@ func (p *Module) Start() error {
 func (p *Module) installWs() {
 	rest.SwaggerTagRegister("user", "user Api - for restful sample")
 
-	ws := new(restful.WebService)
-
 	rest.WsRouteBuild(&rest.WsOption{
-		Ws: ws.Path("/users").
-			Produces(rest.MIME_JSON).
-			Consumes(rest.MIME_JSON),
-		Tags:      []string{"user"},
-		RespWrite: respWrite,
-	}, []rest.WsRoute{{
-		Method: "POST", SubPath: "/",
-		Desc:   "create user",
-		Handle: p.createUser,
-	}, {
-		Method: "GET", SubPath: "/",
-		Desc:   "search/list users",
-		Handle: p.getUsers,
-	}, {
-		Method: "GET", SubPath: "/{user-name}",
-		Desc:   "get user",
-		Handle: p.getUser,
-	}, {
-		Method: "PUT", SubPath: "/{user-name}",
-		Desc:   "update user",
-		Handle: p.updateUser,
-	}, {
-		Method: "DELETE", SubPath: "/{user-name}",
-		Desc:   "delete user",
-		Handle: p.deleteUser,
-	}})
-
-	p.http.Add(ws)
+		Path:               "/users",
+		Produces:           []string{rest.MIME_JSON},
+		Consumes:           []string{rest.MIME_JSON},
+		Tags:               []string{"user"},
+		RespWrite:          respWrite,
+		GoRestfulContainer: p.http,
+		Routes: []rest.WsRoute{{
+			Method: "POST", SubPath: "/",
+			Desc:   "create user",
+			Handle: p.createUser,
+		}, {
+			Method: "GET", SubPath: "/",
+			Desc:   "search/list users",
+			Handle: p.getUsers,
+		}, {
+			Method: "GET", SubPath: "/{user-name}",
+			Desc:   "get user",
+			Handle: p.getUser,
+		}, {
+			Method: "PUT", SubPath: "/{user-name}",
+			Desc:   "update user",
+			Handle: p.updateUser,
+		}, {
+			Method: "DELETE", SubPath: "/{user-name}",
+			Desc:   "delete user",
+			Handle: p.deleteUser,
+		}},
+	})
 }
 
 func (p *Module) createUser(w http.ResponseWriter, req *http.Request, _ *rest.NoneParam, in *CreateUserInput) (*CreateUserOutput, error) {

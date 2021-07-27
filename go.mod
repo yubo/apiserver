@@ -3,6 +3,7 @@ module github.com/yubo/apiserver
 go 1.13
 
 require (
+	github.com/buger/goterm v1.0.1
 	github.com/coreos/go-oidc v2.1.0+incompatible
 	github.com/creack/pty v1.1.11
 	github.com/emicklei/go-restful v2.15.0+incompatible
@@ -19,6 +20,7 @@ require (
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/prometheus/client_golang v1.9.0
 	github.com/spf13/cobra v1.1.1
+	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.6.1
 	github.com/uber-go/tally v3.3.17+incompatible
 	github.com/uber/jaeger-client-go v2.25.0+incompatible

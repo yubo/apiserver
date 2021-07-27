@@ -72,8 +72,8 @@ func (p *apiserver) Filter(filter restful.FilterFunction) {
 func (p *apiserver) serverInit() (err error) {
 	c := p.config
 
-	addr := net.JoinHostPort(c.BindAddress, strconv.Itoa(c.BindPort))
-	c.Listener, c.BindPort, err = createListener(c.BindNetwork, addr, net.ListenConfig{})
+	addr := net.JoinHostPort(c.Address, strconv.Itoa(c.Port))
+	c.Listener, c.Port, err = createListener(c.Network, addr, net.ListenConfig{})
 	if err != nil {
 		return fmt.Errorf("failed to create listener: %v", err)
 	}

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/emicklei/go-restful"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/rest"
 	"k8s.io/klog/v2"
@@ -39,35 +38,31 @@ type AuthzBodyInput struct {
 	Msg string `json:"msg"`
 }
 
-func (p *authz) installWs(http options.ApiServer) {
+func (p *authz) installWs(http rest.GoRestfulContainer) {
 	rest.SwaggerTagRegister("authorization", "authorization sample")
 
-	ws := new(restful.WebService)
-
 	rest.WsRouteBuild(&rest.WsOption{
-		Ws: ws.Path("/api/v1/namespaces/{namespace}/pods").
-			Produces(rest.MIME_JSON).
-			Consumes(rest.MIME_JSON),
-		Tags: []string{"authorization"},
-	}, []rest.WsRoute{{
-		Method: "GET", SubPath: "/{name}",
-		Desc:   "get pod info",
-		Handle: p.ns,
-	}, {
-		Method: "POST", SubPath: "/{name}",
-		Desc:   "create pod",
-		Handle: p.nsbody,
-	}, {
-		Method: "DELETE", SubPath: "/{name}",
-		Desc:   "delete pod",
-		Handle: p.ns,
-	}, {
-		Method: "PUT", SubPath: "/{name}",
-		Desc:   "update pod",
-		Handle: p.nsbody,
-	}})
-
-	http.Add(ws)
+		Path:               "/api/v1/namespaces/{namespace}/pods",
+		Tags:               []string{"authorization"},
+		GoRestfulContainer: http,
+		Routes: []rest.WsRoute{{
+			Method: "GET", SubPath: "/{name}",
+			Desc:   "get pod info",
+			Handle: p.ns,
+		}, {
+			Method: "POST", SubPath: "/{name}",
+			Desc:   "create pod",
+			Handle: p.nsbody,
+		}, {
+			Method: "DELETE", SubPath: "/{name}",
+			Desc:   "delete pod",
+			Handle: p.ns,
+		}, {
+			Method: "PUT", SubPath: "/{name}",
+			Desc:   "update pod",
+			Handle: p.nsbody,
+		}},
+	})
 }
 
 func (p *authz) ns(w http.ResponseWriter, req *http.Request, in *AuthzInput) (string, error) {

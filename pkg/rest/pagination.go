@@ -40,6 +40,7 @@ type Pagination struct {
 	CurrentPage int     `param:"query" flags:"-" description:"current page number, start at 1(defualt)"`
 	Sorter      *string `param:"query" flags:"-" description:"column name"`
 	Order       *string `param:"query" flags:"-" description:"asc(default)/desc"`
+	Dump        bool    `param:"query,hidden" flags:"-" description:""`
 }
 
 func (p *Pagination) OffsetLimit() (offset, limit int) {

@@ -15,39 +15,68 @@ var (
 	DefualtRespWriter = RespWrite
 )
 
-func WsRouteBuild(opt *WsOption, in []WsRoute) {
-	opt.Routes = in
-	NewWsBuilder().Build(opt)
+func WsRouteBuild(opt *WsOption) {
+	if err := opt.build(); err != nil {
+		panic(err)
+	}
+
+	if opt.GoRestfulContainer != nil {
+		opt.GoRestfulContainer.Add(opt.Ws)
+	}
+}
+
+type GoRestfulContainer interface {
+	Add(*restful.WebService) *restful.Container
 }
 
 // sys.Filters > opt.Filter > opt.Filters > route.acl > route.filter > route.filters
 type WsOption struct {
-	Ws         *restful.WebService
-	Acl        func(aclName string) (restful.FilterFunction, string, error)
-	Filter     restful.FilterFunction
-	Filters    []restful.FilterFunction
-	PrefixPath string
-	Tags       []string
-	Routes     []WsRoute
-	RespWrite  func(resp *restful.Response, data interface{}, err error)
+	Ws                 *restful.WebService
+	Path               string
+	Acl                func(aclName string) (restful.FilterFunction, string, error)
+	Filter             restful.FilterFunction
+	Filters            []restful.FilterFunction
+	Produces           []string
+	Consumes           []string
+	PrefixPath         string
+	Tags               []string
+	Routes             []WsRoute
+	RespWrite          func(resp *restful.Response, data interface{}, err error)
+	GoRestfulContainer GoRestfulContainer
 }
 
-type NoneParam struct{}
-
-type WsBuilder struct{}
-
-func NewWsBuilder() *WsBuilder {
-	return &WsBuilder{}
+func (p *WsOption) Validate() error {
+	if p.Ws == nil {
+		p.Ws = &restful.WebService{}
+	}
+	if p.Path != "" {
+		p.Ws = p.Ws.Path(p.Path)
+	}
+	if len(p.Produces) > 0 {
+		p.Ws.Produces(p.Produces...)
+	} else {
+		p.Ws.Produces(MIME_JSON)
+	}
+	if len(p.Consumes) > 0 {
+		p.Ws.Consumes(p.Consumes...)
+	} else {
+		p.Ws.Consumes(MIME_JSON)
+	}
+	return nil
 }
 
-func (p *WsBuilder) Build(opt *WsOption) (err error) {
-	rb := NewRouteBuilder(opt.Ws)
+func (p *WsOption) build() error {
+	if err := p.Validate(); err != nil {
+		return err
+	}
 
-	for i, _ := range opt.Routes {
-		route := &opt.Routes[i]
+	rb := NewRouteBuilder(p.Ws)
 
-		route.SubPath = opt.PrefixPath + route.SubPath
-		route.Filters = routeFilters(route, opt)
+	for i := range p.Routes {
+		route := &p.Routes[i]
+
+		route.SubPath = p.PrefixPath + route.SubPath
+		route.Filters = routeFilters(route, p)
 
 		if route.Acl != "" {
 			route.Desc += " acl(" + route.Acl + ")"
@@ -57,13 +86,13 @@ func (p *WsBuilder) Build(opt *WsOption) (err error) {
 			route.Desc += " scope(" + route.Scope + ")"
 		}
 
-		if route.Tags == nil && opt.Tags != nil {
-			route.Tags = opt.Tags
+		if route.Tags == nil && p.Tags != nil {
+			route.Tags = p.Tags
 		}
 
 		if route.RespWrite == nil {
-			if opt.RespWrite != nil {
-				route.RespWrite = opt.RespWrite
+			if p.RespWrite != nil {
+				route.RespWrite = p.RespWrite
 			} else {
 				route.RespWrite = RespWrite
 			}
@@ -72,7 +101,10 @@ func (p *WsBuilder) Build(opt *WsOption) (err error) {
 		rb.Build(route)
 	}
 	return nil
+
 }
+
+type NoneParam struct{}
 
 // opt.Filter > opt.Filters > route.acl > route.filter > route.filters
 func routeFilters(route *WsRoute, opt *WsOption) (filters []restful.FilterFunction) {
@@ -279,11 +311,7 @@ func (p *RouteBuilder) registerHandle(b *restful.RouteBuilder, wr *WsRoute) erro
 	}
 
 	b.To(func(req *restful.Request, resp *restful.Response) {
-		var (
-			ret  []reflect.Value
-			data interface{}
-			err  error
-		)
+		var ret []reflect.Value
 
 		if numIn == 4 {
 			// with param & body
@@ -329,18 +357,12 @@ func (p *RouteBuilder) registerHandle(b *restful.RouteBuilder, wr *WsRoute) erro
 		}
 
 		if numOut == 2 {
-			if ret[0].CanInterface() {
-				data = ret[0].Interface()
-			}
-			if !ret[1].IsNil() {
-				err = ret[1].Interface().(error)
-			}
-			wr.RespWrite(resp, data, err)
-		} else if numOut == 1 {
-			if !ret[0].IsNil() {
-				err = ret[0].Interface().(error)
-			}
-			wr.RespWrite(resp, nil, err)
+			wr.RespWrite(resp, vtoi(ret[0]), vtoe(ret[1]))
+			return
+		}
+
+		if numOut == 1 {
+			wr.RespWrite(resp, nil, vtoe(ret[0]))
 		}
 	})
 	return nil
@@ -422,6 +444,23 @@ func (p *RouteBuilder) setParam(f *field) error {
 	}
 
 	p.rb.Param(parameter)
+
+	return nil
+}
+
+func vtoi(v reflect.Value) interface{} {
+	if v.CanInterface() {
+		return v.Interface()
+	}
+
+	return nil
+}
+
+func vtoe(v reflect.Value) error {
+	if v.CanInterface() {
+		e, _ := v.Interface().(error)
+		return e
+	}
 
 	return nil
 }

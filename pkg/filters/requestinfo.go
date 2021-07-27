@@ -20,8 +20,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/yubo/apiserver/pkg/responsewriters"
 	"github.com/yubo/apiserver/pkg/request"
+	"github.com/yubo/apiserver/pkg/responsewriters"
+	"k8s.io/klog/v2"
 )
 
 // WithRequestInfo attaches a RequestInfo to the context.
@@ -33,6 +34,7 @@ func WithRequestInfo(handler http.Handler, resolver request.RequestInfoResolver)
 			responsewriters.InternalError(w, req, fmt.Errorf("failed to create RequestInfo: %v", err))
 			return
 		}
+		klog.V(10).Infof("requestInfo %+v", info)
 
 		req = req.WithContext(request.WithRequestInfo(ctx, info))
 

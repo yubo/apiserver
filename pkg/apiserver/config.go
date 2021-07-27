@@ -49,11 +49,11 @@ type config struct {
 	// is set to BindAddress if the later no loopback, or to the first host interface address.
 	ExternalAddress net.IP `json:"-"`
 
-	BindAddress string/*net.IP*/ `json:"bindAddress" default:"0.0.0.0" flag:"bind-address" description:"The IP address on which to listen for the --bind-port port. The associated interface(s) must be reachable by the rest of the cluster, and by CLI/web clients. If blank or an unspecified address (0.0.0.0 or ::), all interfaces will be used."`
+	Address string/*net.IP*/ `json:"address" default:"0.0.0.0" flag:"apiserver-address" description:"The IP address on which to listen for the --bind-port port. The associated interface(s) must be reachable by the rest of the cluster, and by CLI/web clients. If blank or an unspecified address (0.0.0.0 or ::), all interfaces will be used."` // BindAddress
 
-	BindPort int `json:"bindPort" default:"8080" flag:"bind-port" description:"The port on which to serve HTTPS with authentication and authorization. It cannot be switched off with 0."` // BindPort is ignored when Listener is set, will serve https even with 0.
+	Port int `json:"port" default:"8080" flag:"apiserver-port" description:"The port on which to serve HTTPS with authentication and authorization. It cannot be switched off with 0."` // BindPort is ignored when Listener is set, will serve https even with 0.
 
-	BindNetwork string `json:"bindNetwork" flag:"cors-allowed-origins" description:"List of allowed origins for CORS, comma separated.  An allowed origin can be a regular expression to support subdomain matching. If this list is empty CORS will not be enabled."` // BindNetwork is the type of network to bind to - defaults to "tcp", accepts "tcp", "tcp4", and "tcp6".
+	Network string `json:"bindNetwork" flag:"cors-allowed-origins" description:"List of allowed origins for CORS, comma separated.  An allowed origin can be a regular expression to support subdomain matching. If this list is empty CORS will not be enabled."` // BindNetwork is the type of network to bind to - defaults to "tcp", accepts "tcp", "tcp4", and "tcp6".
 
 	CorsAllowedOriginList []string `json:"corsAllowedOriginList"`
 
@@ -165,8 +165,8 @@ func (c *config) Validate() error {
 		errors = append(errors, err)
 	}
 
-	if c.BindPort < 1 || c.BindPort > 65535 {
-		errors = append(errors, fmt.Errorf("--bind-port %v must be between 1 and 65535, inclusive. It cannot be turned off with 0", c.BindPort))
+	if c.Port < 1 || c.Port > 65535 {
+		errors = append(errors, fmt.Errorf("--bind-port %v must be between 1 and 65535, inclusive. It cannot be turned off with 0", c.Port))
 	}
 
 	c.requestTimeout = duration(c.RequestTimeout)
@@ -175,7 +175,7 @@ func (c *config) Validate() error {
 	c.shutdownTimeout = duration(c.ShutdownTimeout)
 	c.shutdownDelayDuration = duration(c.ShutdownDelayDuration)
 
-	c.ExternalAddress = net.ParseIP(c.BindAddress)
+	c.ExternalAddress = net.ParseIP(c.Address)
 
 	return utilerrors.NewAggregate(errors)
 }

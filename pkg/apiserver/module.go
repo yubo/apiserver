@@ -75,7 +75,6 @@ func (p *apiserver) init(ctx context.Context) (err error) {
 		return err
 	}
 	p.config = cf
-	klog.V(10).Infof("%s config: %s\n", p.name, cf)
 
 	if err := p.serverInit(); err != nil {
 		return err
@@ -97,6 +96,8 @@ func (p *apiserver) start(ctx context.Context) error {
 		return err
 	}
 
+	p.Info()
+
 	return nil
 }
 
@@ -110,6 +111,15 @@ func (p *apiserver) stop(ctx context.Context) error {
 	<-p.stoppedCh
 
 	return nil
+}
+
+func (p *apiserver) Info() {
+	if !klog.V(10).Enabled() {
+		return
+	}
+	for _, path := range p.handler.ListedPaths() {
+		klog.Infof("apiserver path %s", path)
+	}
 }
 
 func Register() {

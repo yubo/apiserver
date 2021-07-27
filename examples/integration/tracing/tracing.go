@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/emicklei/go-restful"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/yubo/apiserver/pkg/options"
@@ -55,30 +54,29 @@ func (p *Module) Start() error {
 func (p *Module) installWs() {
 	rest.SwaggerTagRegister("tracing", "tracing demo")
 
-	ws := new(restful.WebService)
-
 	rest.WsRouteBuild(&rest.WsOption{
-		Ws:   ws.Path("/tracing").Produces("*/*").Consumes("*/*"),
-		Tags: []string{"tracing"},
-	}, []rest.WsRoute{{
-		Method: "GET", SubPath: "/a",
-		Desc:   "a -> a1",
-		Handle: p.a,
-	}, {
-		Method: "GET", SubPath: "/b",
-		Desc:   "b -> b1",
-		Handle: p.b,
-	}, {
-		Method: "GET", SubPath: "/b1",
-		Desc:   "b1",
-		Handle: p.b1,
-	}, {
-		Method: "GET", SubPath: "/c",
-		Desc:   "c -> C1(grpc)",
-		Handle: p.c,
-	}})
-
-	p.http.Add(ws)
+		Path:     "/tracing",
+		Produces: []string{"*/*"},
+		Consumes: []string{"*/*"},
+		Tags:     []string{"tracing"},
+		Routes: []rest.WsRoute{{
+			Method: "GET", SubPath: "/a",
+			Desc:   "a -> a1",
+			Handle: p.a,
+		}, {
+			Method: "GET", SubPath: "/b",
+			Desc:   "b -> b1",
+			Handle: p.b,
+		}, {
+			Method: "GET", SubPath: "/b1",
+			Desc:   "b1",
+			Handle: p.b1,
+		}, {
+			Method: "GET", SubPath: "/c",
+			Desc:   "c -> C1(grpc)",
+			Handle: p.c,
+		}},
+	})
 }
 
 func delay() {

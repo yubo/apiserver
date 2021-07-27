@@ -30,8 +30,8 @@ var (
 func (p *Module) init(ctx context.Context) (err error) {
 	c := proc.ConfigerFrom(ctx)
 
-	cf := &goswagger.Config{}
-	if err := c.Read(p.name, cf); err != nil {
+	cf := newConfig()
+	if err := c.Read(moduleName, cf); err != nil {
 		return err
 	}
 	p.config = cf
@@ -42,6 +42,12 @@ func (p *Module) init(ctx context.Context) (err error) {
 	return
 }
 
+func newConfig() *goswagger.Config {
+	return &goswagger.Config{}
+}
+
 func Register() {
 	proc.RegisterHooks(hookOps)
+
+	proc.RegisterFlags(moduleName, "swagger", newConfig())
 }
