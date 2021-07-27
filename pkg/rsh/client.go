@@ -10,7 +10,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/golib/staging/util/interrupt"
-	"github.com/yubo/golib/staging/util/term"
+	"github.com/yubo/golib/util/term"
 	"k8s.io/klog/v2"
 )
 

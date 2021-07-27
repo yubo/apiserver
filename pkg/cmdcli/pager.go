@@ -13,7 +13,7 @@ import (
 	"github.com/buger/goterm"
 	"github.com/yubo/apiserver/pkg/rest"
 	apierrors "github.com/yubo/golib/api/errors"
-	"github.com/yubo/golib/staging/util/term"
+	"github.com/yubo/golib/util/term"
 	"github.com/yubo/golib/util"
 )
 

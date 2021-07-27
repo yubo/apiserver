@@ -9,7 +9,7 @@ import (
 	"os/exec"
 	"syscall"
 
-	"github.com/yubo/golib/staging/util/term"
+	"github.com/yubo/golib/util/term"
 	"k8s.io/klog/v2"
 )
 

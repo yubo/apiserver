@@ -19,6 +19,7 @@ require (
 	github.com/opentracing-contrib/go-stdlib v1.0.0
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/prometheus/client_golang v1.9.0
+	github.com/prometheus/procfs v0.7.1 // indirect
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.6.1
@@ -29,7 +30,7 @@ require (
 	github.com/yubo/goswagger v0.0.0-20210530151208-4cd1816f5cf6
 	go.uber.org/zap v1.13.0
 	golang.org/x/net v0.0.0-20210525063256-abc453219eb5
-	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
+	golang.org/x/sync v0.0.0-20201207232520-09787c993a3a
 	google.golang.org/grpc v1.27.1
 	google.golang.org/protobuf v1.26.0
 	gopkg.in/square/go-jose.v2 v2.2.2

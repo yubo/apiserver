@@ -11,7 +11,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/yubo/golib/staging/util/term"
+	"github.com/yubo/golib/util/term"
 	"github.com/yubo/golib/util"
 	"k8s.io/klog/v2"
 )

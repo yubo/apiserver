@@ -13,7 +13,7 @@ import (
 	"os"
 
 	"github.com/yubo/apiserver/pkg/rsh"
-	"github.com/yubo/golib/staging/util/term"
+	"github.com/yubo/golib/util/term"
 )
 
 type Duration float64

@@ -26,20 +26,31 @@ import (
 // go run ./apiserver-authorization.go --token-auth-file=./tokens.cvs --authorization-mode=ABAC  --authorization-policy-file=./abac.json
 //
 // This example shows the minimal code needed to get a restful.WebService working.
-//
+
 // curl -XGET -H 'Authorization: bearer token-777' http://localhost:8080/ro -I
 // HTTP/1.1 200 OK
 // Cache-Control: no-cache, private
 // Date: Tue, 27 Jul 2021 11:33:54 GMT
 // Content-Length: 0
-//
-// curl -XGET  http://localhost:8080/ro -I
+
+// curl -XGET  -Ss -i http://localhost:8080/ro
 // HTTP/1.1 403 Forbidden
 // Cache-Control: no-cache, private
 // Content-Type: application/json
 // X-Content-Type-Options: nosniff
-// Date: Tue, 27 Jul 2021 11:34:34 GMT
+// Date: Tue, 27 Jul 2021 13:41:45 GMT
 // Content-Length: 239
+//
+// {
+//   "kind": "Status",
+//   "apiVersion": "v1",
+//   "metadata": {},
+//   "status": "Failure",
+//   "message": "forbidden: User \"system:anonymous\" cannot get path \"/ro\": No policy matched.",
+//   "reason": "Forbidden",
+//   "details": {},
+//   "code": 403
+// }
 
 const (
 	moduleName = "apiserver.authentication"
