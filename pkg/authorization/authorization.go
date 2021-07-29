@@ -150,9 +150,17 @@ func (p *authorization) stop(ctx context.Context) error {
 	return nil
 }
 
-func Register() {
+func RegisterHooks() {
 	proc.RegisterHooks(hookOps)
+}
+
+func RegisterFlags() {
 	proc.RegisterFlags(moduleName, moduleName, newConfig())
+}
+
+func Register() {
+	RegisterHooks()
+	RegisterFlags()
 }
 
 func (p *authorization) initAuthorization() (err error) {
