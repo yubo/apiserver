@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/yubo/apiserver/pkg/options"
+	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/golib/proc"
 	"github.com/yubo/goswagger"
 )
@@ -37,7 +38,7 @@ func (p *Module) init(ctx context.Context) (err error) {
 	p.config = cf
 	// klog.Infof("config %s", c)
 
-	goswagger.New(cf).Install(options.ApiServerMustFrom(ctx))
+	goswagger.New(cf).Install(options.ApiServerMustFrom(ctx), rest.SecuritySchemeRegister)
 
 	return
 }

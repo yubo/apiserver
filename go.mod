@@ -18,6 +18,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.1
 	github.com/opentracing-contrib/go-stdlib v1.0.0
 	github.com/opentracing/opentracing-go v1.2.0
+	github.com/pquerna/cachecontrol v0.1.0 // indirect
 	github.com/prometheus/client_golang v1.9.0
 	github.com/prometheus/procfs v0.7.1 // indirect
 	github.com/spf13/cobra v1.1.1
@@ -26,8 +27,8 @@ require (
 	github.com/uber-go/tally v3.3.17+incompatible
 	github.com/uber/jaeger-client-go v2.25.0+incompatible
 	github.com/uber/jaeger-lib v2.2.0+incompatible
-	github.com/yubo/golib v0.0.0-20210530151551-3c17bab5028d
-	github.com/yubo/goswagger v0.0.0-20210530151208-4cd1816f5cf6
+	github.com/yubo/golib v0.0.0-20210729083123-4040286093c6
+	github.com/yubo/goswagger v0.0.0-20210729084640-1f6e710ffaaf
 	go.uber.org/zap v1.13.0
 	golang.org/x/net v0.0.0-20210525063256-abc453219eb5
 	golang.org/x/sync v0.0.0-20201207232520-09787c993a3a
