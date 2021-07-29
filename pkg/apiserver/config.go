@@ -33,23 +33,20 @@ import (
 )
 
 func newConfig() *config {
-	return &config{
-		ShutdownTimeout: 60,
-		EnableIndex:     true,
-		EnableProfiling: true,
-		EnableMetrics:   true,
-	}
+	return &config{}
 }
 
 // config contains the config while running a generic api server.
 type config struct {
+	Enabled bool `json:"enabled" default:"true" flag:"apiserver-enable" description:"api server enable"`
+
 	ExternalHost string `json:"externalHost" flag:"external-hostname" description:"The hostname to use when generating externalized URLs for this master (e.g. Swagger API Docs or OpenID Discovery)."`
 
 	// ExternalAddress is the address advertised, even if BindAddress is a loopback. By default this
 	// is set to BindAddress if the later no loopback, or to the first host interface address.
 	ExternalAddress net.IP `json:"-"`
 
-	Address string/*net.IP*/ `json:"address" default:"0.0.0.0" flag:"apiserver-address" description:"The IP address on which to listen for the --bind-port port. The associated interface(s) must be reachable by the rest of the cluster, and by CLI/web clients. If blank or an unspecified address (0.0.0.0 or ::), all interfaces will be used."` // BindAddress
+	Address string/*net.IP*/ `json:"address" default:"0.0.0.0" flag:"apiserver-address" description:"The IP address on which to listen for the --apiserver-port port. The associated interface(s) must be reachable by the rest of the cluster, and by CLI/web clients. If blank or an unspecified address (0.0.0.0 or ::), all interfaces will be used."` // BindAddress
 
 	Port int `json:"port" default:"8080" flag:"apiserver-port" description:"The port on which to serve HTTPS with authentication and authorization. It cannot be switched off with 0."` // BindPort is ignored when Listener is set, will serve https even with 0.
 
@@ -70,7 +67,7 @@ type config struct {
 	LivezGracePeriod  int `json:"livezGracePeriod" flag:"livez-grace-period" description:"This option represents the maximum amount of time it should take for apiserver to complete its startup sequence and become live. From apiserver's start time to when this amount of time has elapsed, /livez will assume that unfinished post-start hooks will complete successfully and therefore return true."`
 	MinRequestTimeout int `json:"minRequestTimeout" default:"1800" flag:"min-request-timeout" description:"An optional field indicating the minimum number of seconds a handler must keep a request open before timing it out. Currently only honored by the watch request handler, which picks a randomized value above this number as the connection timeout, to spread out load."`
 
-	ShutdownTimeout       int `json:"shutdownTimeout" description:"ShutdownTimeout is the timeout used for server shutdown. This specifies the timeout before server gracefully shutdown returns."`
+	ShutdownTimeout       int `json:"shutdownTimeout" default:"60" description:"ShutdownTimeout is the timeout used for server shutdown. This specifies the timeout before server gracefully shutdown returns."`
 	ShutdownDelayDuration int `json:"shutdownDelayDuration" flag:"shutdown-delay-duration" description:"Time to delay the termination. During that time the server keeps serving requests normally. The endpoints /healthz and /livez will return success, but /readyz immediately returns failure. Graceful termination starts after this delay has elapsed. This can be used to allow load balancer to stop sending traffic to this server."`
 
 	// The limit on the request body size that would be accepted and
@@ -105,12 +102,12 @@ type config struct {
 	// FlowControl, if not nil, gives priority and fairness to request handling
 	// FlowControl utilflowcontrol.Interface
 
-	EnableIndex     bool `json:"-"`
-	EnableProfiling bool `json:"-"`
+	EnableIndex     bool `json:"enableIndex" default:"true"`
+	EnableProfiling bool `json:"enableProfiling" default:"false"`
 	// EnableDiscovery bool
 	// Requires generic profiling enabled
-	EnableContentionProfiling bool `json:"-"`
-	EnableMetrics             bool `json:"-"`
+	EnableContentionProfiling bool `json:"enableContentionProfiling" default:"true"`
+	EnableMetrics             bool `json:"enableMetrics" default:"true"`
 }
 
 func (s *config) String() string {

@@ -22,6 +22,7 @@ type ApiServer interface {
 	UnlistedHandleFunc(string, func(http.ResponseWriter, *http.Request))
 	Add(*restful.WebService) *restful.Container
 	Filter(restful.FilterFunction)
+	Address() string
 	//Server() *server.GenericAPIServer
 }
 

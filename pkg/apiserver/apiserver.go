@@ -36,6 +36,7 @@ import (
 	"github.com/yubo/apiserver/pkg/apiserver/mux"
 	"github.com/yubo/apiserver/pkg/filters"
 	"github.com/yubo/apiserver/pkg/options"
+	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/responsewriters"
 	apierrors "github.com/yubo/golib/api/errors"
 	"github.com/yubo/golib/proc"
@@ -62,9 +63,11 @@ func (p *apiserver) UnlistedHandle(pattern string, handler http.Handler) {
 func (p *apiserver) UnlistedHandleFunc(pattern string, handler func(http.ResponseWriter, *http.Request)) {
 	p.UnlistedHandle(pattern, http.HandlerFunc(handler))
 }
+
 func (p *apiserver) Add(service *restful.WebService) *restful.Container {
 	return p.handler.GoRestfulContainer.Add(service)
 }
+
 func (p *apiserver) Filter(filter restful.FilterFunction) {
 	p.handler.GoRestfulContainer.Filter(filter)
 }
@@ -72,10 +75,12 @@ func (p *apiserver) Filter(filter restful.FilterFunction) {
 func (p *apiserver) serverInit() (err error) {
 	c := p.config
 
-	addr := net.JoinHostPort(c.Address, strconv.Itoa(c.Port))
-	c.Listener, c.Port, err = createListener(c.Network, addr, net.ListenConfig{})
-	if err != nil {
-		return fmt.Errorf("failed to create listener: %v", err)
+	if c.Enabled {
+		addr := net.JoinHostPort(c.Address, strconv.Itoa(c.Port))
+		c.Listener, c.Port, err = createListener(c.Network, addr, net.ListenConfig{})
+		if err != nil {
+			return fmt.Errorf("failed to create listener: %v", err)
+		}
 	}
 
 	p.stoppedCh = make(chan struct{})
@@ -225,6 +230,11 @@ func logStackOnRecover(panicReason interface{}, w http.ResponseWriter) {
 		w, &http.Request{Header: headers})
 }
 func (s *apiserver) Start(stopCh <-chan struct{}, done chan struct{}) error {
+	if !s.config.Enabled {
+		close(done)
+		return nil
+	}
+
 	delayedStopCh := make(chan struct{})
 
 	// close socket after delayed stopCh
@@ -268,6 +278,10 @@ func (s *apiserver) Serve(handler http.Handler, shutdownTimeout time.Duration, s
 		Handler:        handler,
 		MaxHeaderBytes: 1 << 20,
 		//TLSConfig:      tlsConfig,
+		ConnContext: func(ctx context.Context, c net.Conn) context.Context {
+			// Store the connection in the context so requests can reference it if needed
+			return request.WithConn(ctx, c)
+		},
 	}
 
 	klog.Infof("Serving securely on %s", secureServer.Addr)

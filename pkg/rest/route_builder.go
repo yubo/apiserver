@@ -11,10 +11,6 @@ import (
 	"k8s.io/klog/v2"
 )
 
-var (
-	DefualtRespWriter = RespWrite
-)
-
 func WsRouteBuild(opt *WsOption) {
 	if err := opt.build(); err != nil {
 		panic(err)
@@ -262,7 +258,7 @@ func (p *RouteBuilder) registerHandle(b *restful.RouteBuilder, wr *WsRoute) erro
 
 	var paramType reflect.Type
 	var bodyType reflect.Type
-	var isSlice bool
+	var useElem bool
 
 	// 3, 4
 	if numIn > 2 {
@@ -292,8 +288,8 @@ func (p *RouteBuilder) registerHandle(b *restful.RouteBuilder, wr *WsRoute) erro
 			if bodyType.Kind() != reflect.Struct {
 				return fmt.Errorf("must ptr to struct, got ptr -> %s", bodyType.Kind())
 			}
-		case reflect.Slice:
-			isSlice = true
+		case reflect.Slice, reflect.Map:
+			useElem = true
 		default:
 			return fmt.Errorf("just support slice and ptr to struct")
 		}
@@ -324,7 +320,7 @@ func (p *RouteBuilder) registerHandle(b *restful.RouteBuilder, wr *WsRoute) erro
 			}
 
 			bodyValue := reflect.ValueOf(body)
-			if isSlice {
+			if useElem {
 				bodyValue = bodyValue.Elem()
 			}
 

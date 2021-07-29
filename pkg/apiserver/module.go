@@ -2,6 +2,7 @@ package apiserver
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/go-openapi/spec"
 	"github.com/yubo/apiserver/pkg/options"
@@ -85,6 +86,10 @@ func (p *apiserver) init(ctx context.Context) (err error) {
 	return nil
 }
 
+func (p *apiserver) Address() string {
+	return fmt.Sprintf("%s:%d", p.config.Address, p.config.Port)
+}
+
 func (p *apiserver) start(ctx context.Context) error {
 	rest.InstallApiDocs(
 		p.handler.GoRestfulContainer,
@@ -122,8 +127,15 @@ func (p *apiserver) Info() {
 	}
 }
 
-func Register() {
+func RegisterHooks() {
 	proc.RegisterHooks(hookOps)
+}
 
+func RegisterFlags() {
 	proc.RegisterFlags(moduleName, "apiserver", newConfig())
+}
+
+func Register() {
+	RegisterHooks()
+	RegisterFlags()
 }

@@ -18,6 +18,7 @@ package request
 
 import (
 	"context"
+	"net"
 
 	"github.com/emicklei/go-restful"
 	"github.com/opentracing/opentracing-go"
@@ -49,7 +50,10 @@ const (
 	bodyKey
 
 	// paramKey is the context key for the request param
-	paramKey key = iota
+	paramKey
+
+	// connection
+	connKey
 )
 
 // NewContext instantiates a base context object for request flows.
@@ -146,4 +150,15 @@ func WithParam(parent context.Context, param interface{}) context.Context {
 // ParamFrom returns the value of the param key on the ctx
 func ParamFrom(ctx context.Context) interface{} {
 	return ctx.Value(paramKey)
+}
+
+// WithConn returns a copy of parent in which the param value is set
+func WithConn(parent context.Context, conn net.Conn) context.Context {
+	return WithValue(parent, connKey, conn)
+}
+
+// ConnFrom returns the value of the param key on the ctx
+func ConnFrom(ctx context.Context) (net.Conn, bool) {
+	conn, ok := ctx.Value(connKey).(net.Conn)
+	return conn, ok
 }

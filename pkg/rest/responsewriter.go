@@ -49,7 +49,12 @@ func RespWrite(resp *restful.Response, data interface{}, err error) {
 		return
 	}
 
-	resp.WriteEntity(data)
+	if b, ok := data.([]byte); ok {
+		resp.Write(b)
+	} else {
+		resp.WriteEntity(data)
+	}
+
 }
 
 // wrapper data and error
