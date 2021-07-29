@@ -16,7 +16,7 @@ func (p *Rsh) Run(remote io.ReadWriteCloser, cmds []string, env []string) error 
 
 }
 
-func RshRequest(opt *rest.RequestOption) error {
+func RshRequest(opt *rest.RequestOptions) error {
 	return util.ErrUnsupported
 }
 
