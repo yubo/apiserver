@@ -137,7 +137,7 @@ func (p *authentication) initAuthentication() (err error) {
 	if len(authenticators) == 0 {
 		if c.Anonymous {
 			auth := anonymous.NewAuthenticator()
-			klog.InfoS("add authn", "name", auth.Name(), "priority", auth.Priority())
+			klog.V(1).InfoS("add authn", "name", auth.Name(), "priority", auth.Priority())
 			p.authenticator = auth
 			return nil
 		}
@@ -151,7 +151,7 @@ func (p *authentication) initAuthentication() (err error) {
 		// If the authenticator chain returns an error, return an error (don't consider a bad bearer token
 		// or invalid username/password combination anonymous).
 		auth := anonymous.NewAuthenticator()
-		klog.InfoS("add authn", "name", auth.Name(), "priority", auth.Priority())
+		klog.V(1).InfoS("add authn", "name", auth.Name(), "priority", auth.Priority())
 		authenticator = union.NewFailOnError(authenticator, auth)
 	}
 	p.authenticator = authenticator

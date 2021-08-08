@@ -87,7 +87,7 @@ func (p *apiserver) init(ctx context.Context) (err error) {
 }
 
 func (p *apiserver) Address() string {
-	return fmt.Sprintf("%s:%d", p.config.Address, p.config.Port)
+	return fmt.Sprintf("%s:%d", p.config.Host, p.config.Port)
 }
 
 func (p *apiserver) start(ctx context.Context) error {

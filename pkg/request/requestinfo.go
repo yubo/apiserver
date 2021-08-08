@@ -225,7 +225,7 @@ func (r *RequestInfoFactory) NewRequestInfo(req *http.Request) (*RequestInfo, er
 		requestInfo.Verb = "deletecollection"
 	}
 
-	klog.V(5).Infof("----requestinfo %+v", requestInfo)
+	klog.V(6).Infof("requestinfo %+v", requestInfo)
 
 	return &requestInfo, nil
 }

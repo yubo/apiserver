@@ -46,9 +46,9 @@ type config struct {
 	// is set to BindAddress if the later no loopback, or to the first host interface address.
 	ExternalAddress net.IP `json:"-"`
 
-	Address string/*net.IP*/ `json:"address" default:"0.0.0.0" flag:"apiserver-address" description:"The IP address on which to listen for the --apiserver-port port. The associated interface(s) must be reachable by the rest of the cluster, and by CLI/web clients. If blank or an unspecified address (0.0.0.0 or ::), all interfaces will be used."` // BindAddress
+	Host string `json:"host" default:"0.0.0.0" flag:"bind-host" description:"The IP address on which to listen for the --bind-port port. The associated interface(s) must be reachable by the rest of the cluster, and by CLI/web clients. If blank or an unspecified address (0.0.0.0 or ::), all interfaces will be used."` // BindAddress
 
-	Port int `json:"port" default:"8080" flag:"apiserver-port" description:"The port on which to serve HTTPS with authentication and authorization. It cannot be switched off with 0."` // BindPort is ignored when Listener is set, will serve https even with 0.
+	Port int `json:"port" default:"8080" flag:"bind-port" description:"The port on which to serve HTTPS with authentication and authorization. It cannot be switched off with 0."` // BindPort is ignored when Listener is set, will serve https even with 0.
 
 	Network string `json:"bindNetwork" flag:"cors-allowed-origins" description:"List of allowed origins for CORS, comma separated.  An allowed origin can be a regular expression to support subdomain matching. If this list is empty CORS will not be enabled."` // BindNetwork is the type of network to bind to - defaults to "tcp", accepts "tcp", "tcp4", and "tcp6".
 
@@ -122,7 +122,7 @@ func (c *config) Validate() error {
 		} else {
 			return fmt.Errorf("error finding host name: %v", err)
 		}
-		klog.Infof("external host was not specified, using %v", c.ExternalHost)
+		klog.V(1).Infof("external host was not specified, using %v", c.ExternalHost)
 	}
 
 	errors := []error{}
@@ -172,7 +172,7 @@ func (c *config) Validate() error {
 	c.shutdownTimeout = duration(c.ShutdownTimeout)
 	c.shutdownDelayDuration = duration(c.ShutdownDelayDuration)
 
-	c.ExternalAddress = net.ParseIP(c.Address)
+	c.ExternalAddress = net.ParseIP(c.Host)
 
 	return utilerrors.NewAggregate(errors)
 }
