@@ -117,7 +117,7 @@ func addAuthScope() {
 	rest.ScopeRegister("user:write", "user")
 }
 
-func respWrite(resp *restful.Response, data interface{}, err error) {
+func respWrite(resp *restful.Response, req *http.Request, data interface{}, err error) {
 	var eMsg string
 	code := int32(http.StatusOK)
 

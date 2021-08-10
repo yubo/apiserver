@@ -120,7 +120,7 @@ func identifier(encoder runtime.Encoder) runtime.Identifier {
 // Decode attempts a decode of the object, then tries to convert it to the internal version. If into is provided and the decoding is
 // successful, the returned runtime.Object will be the value passed as into. Note that this may bypass conversion if you pass an
 // into that matches the serialized version.
-func (c *codec) Decode(data []byte, into runtime.Object) error {
+func (c *codec) Decode(data []byte, into runtime.Object) (runtime.Object, error) {
 	// If the into object is unstructured and expresses an opinion about its group/version,
 	// create a new instance of the type so we always exercise the conversion path (skips short-circuiting on `into == obj`)
 	decodeInto := into
@@ -130,15 +130,15 @@ func (c *codec) Decode(data []byte, into runtime.Object) error {
 	//	}
 	//}
 
-	err := c.decoder.Decode(data, decodeInto)
+	out, err := c.decoder.Decode(data, decodeInto)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	obj := decodeInto
 
 	if d, ok := obj.(runtime.NestedObjectDecoder); ok {
 		if err := d.DecodeNestedObjects(runtime.WithoutVersionDecoder{c.decoder}); err != nil {
-			return err
+			return nil, err
 		}
 	}
 
@@ -166,7 +166,7 @@ func (c *codec) Decode(data []byte, into runtime.Object) error {
 		c.defaulter.Default(obj)
 	}
 
-	return err
+	return out, err
 
 	//out, err := c.convertor.ConvertToVersion(obj, c.decodeVersion)
 	//if err != nil {

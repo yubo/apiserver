@@ -234,7 +234,7 @@ type WithoutVersionDecoder struct {
 }
 
 // Decode does not do conversion. It removes the gvk during deserialization.
-func (d WithoutVersionDecoder) Decode(data []byte, into Object) error {
+func (d WithoutVersionDecoder) Decode(data []byte, into Object) (Object, error) {
 	return d.Decoder.Decode(data, into)
 }
 

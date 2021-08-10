@@ -39,21 +39,23 @@ func NewRespTotal(total int64) RespTotal {
 	return RespTotal{Total: total}
 }
 
-func RespWrite(resp *restful.Response, data interface{}, err error) {
+func RespWrite(resp *restful.Response, req *http.Request, data interface{}, err error) {
 	if err != nil {
-		status := responsewriters.ErrorToAPIStatus(err)
-		code := int(status.Code)
-		resp.WriteError(code, err)
-
+		code := responsewriters.Error(err, resp, req)
 		klog.V(3).Infof("response %d %s", code, err.Error())
+		return
+	}
+
+	if _, ok := data.(NoneParam); ok {
 		return
 	}
 
 	if b, ok := data.([]byte); ok {
 		resp.Write(b)
-	} else {
-		resp.WriteEntity(data)
+		return
 	}
+
+	resp.WriteEntity(data)
 
 }
 

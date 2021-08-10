@@ -37,7 +37,7 @@ type WsOption struct {
 	PrefixPath         string
 	Tags               []string
 	Routes             []WsRoute
-	RespWrite          func(resp *restful.Response, data interface{}, err error)
+	RespWrite          func(resp *restful.Response, req *http.Request, data interface{}, err error)
 	GoRestfulContainer GoRestfulContainer
 }
 
@@ -148,7 +148,7 @@ type WsRoute struct {
 	Filters     []restful.FilterFunction
 	ExtraOutput []ApiOutput
 	Tags        []string
-	RespWrite   func(resp *restful.Response, data interface{}, err error)
+	RespWrite   func(resp *restful.Response, req *http.Request, data interface{}, err error)
 	// Input       interface{}
 	// Output      interface{}
 	// Handle      restful.RouteFunction
@@ -353,12 +353,12 @@ func (p *RouteBuilder) registerHandle(b *restful.RouteBuilder, wr *WsRoute) erro
 		}
 
 		if numOut == 2 {
-			wr.RespWrite(resp, vtoi(ret[0]), vtoe(ret[1]))
+			wr.RespWrite(resp, req.Request, vtoi(ret[0]), vtoe(ret[1]))
 			return
 		}
 
 		if numOut == 1 {
-			wr.RespWrite(resp, nil, vtoe(ret[0]))
+			wr.RespWrite(resp, req.Request, NoneParam{}, vtoe(ret[0]))
 		}
 	})
 	return nil

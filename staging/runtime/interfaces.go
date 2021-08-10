@@ -76,7 +76,7 @@ type Decoder interface {
 	// guaranteed to be populated. The returned object is not guaranteed to match into. If defaults are
 	// provided, they are applied to the data by default. If no defaults or partial defaults are provided, the
 	// type of the into may be used to guide conversion decisions.
-	Decode(data []byte, into Object) error
+	Decode(data []byte, into Object) (Object, error)
 }
 
 // Serializer is the core interface for transforming objects into a serialized format and back.

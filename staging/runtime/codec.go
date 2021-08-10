@@ -49,13 +49,20 @@ func Encode(e Encoder, obj Object) ([]byte, error) {
 }
 
 // Decode is a convenience wrapper for decoding data into an Object.
-func Decode(d Decoder, data []byte, into Object) error {
+func Decode(d Decoder, data []byte, into Object) (Object, error) {
 	return d.Decode(data, into)
 }
 
 // DecodeInto performs a Decode into the provided object.
 func DecodeInto(d Decoder, data []byte, into Object) error {
-	return d.Decode(data, into)
+	out, err := d.Decode(data, into)
+	if err != nil {
+		return err
+	}
+	if out != into {
+		return fmt.Errorf("unable to decode into %v", reflect.TypeOf(into))
+	}
+	return nil
 }
 
 // EncodeOrDie is a version of Encode which will panic instead of returning an error. For tests.
@@ -111,8 +118,8 @@ type NoopDecoder struct {
 
 var _ Serializer = NoopDecoder{}
 
-func (n NoopDecoder) Decode(data []byte, into Object) error {
-	return fmt.Errorf("decoding is not allowed for this codec: %v", reflect.TypeOf(n.Encoder))
+func (n NoopDecoder) Decode(data []byte, into Object) (Object, error) {
+	return nil, fmt.Errorf("decoding is not allowed for this codec: %v", reflect.TypeOf(n.Encoder))
 }
 
 // NewParameterCodec creates a ParameterCodec capable of transforming url values into versioned objects and back.
@@ -203,11 +210,11 @@ func (s base64Serializer) Identifier() Identifier {
 	return s.identifier
 }
 
-func (s base64Serializer) Decode(data []byte, into Object) error {
+func (s base64Serializer) Decode(data []byte, into Object) (Object, error) {
 	out := make([]byte, base64.StdEncoding.DecodedLen(len(data)))
 	n, err := base64.StdEncoding.Decode(out, data)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	return s.Decoder.Decode(out[:n], into)
 }

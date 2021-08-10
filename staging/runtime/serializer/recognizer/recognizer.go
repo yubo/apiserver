@@ -76,7 +76,7 @@ func (d *decoder) RecognizesData(data []byte) (bool, bool, error) {
 	return false, anyUnknown, lastErr
 }
 
-func (d *decoder) Decode(data []byte, into runtime.Object) error {
+func (d *decoder) Decode(data []byte, into runtime.Object) (runtime.Object, error) {
 	var (
 		lastErr error
 		skipped []runtime.Decoder
@@ -106,16 +106,16 @@ func (d *decoder) Decode(data []byte, into runtime.Object) error {
 
 	// try recognizers that returned unknown or didn't recognize their data
 	for _, r := range skipped {
-		err := r.Decode(data, into)
+		out, err := r.Decode(data, into)
 		if err != nil {
 			lastErr = err
 			continue
 		}
-		return nil
+		return out, nil
 	}
 
 	if lastErr == nil {
 		lastErr = fmt.Errorf("no serialization format matched the provided data")
 	}
-	return lastErr
+	return nil, lastErr
 }

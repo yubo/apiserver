@@ -76,7 +76,7 @@ func (d *decoder) Decode(into runtime.Object) (runtime.Object, error) {
 		n, err := d.reader.Read(d.buf[base:])
 		if err == io.ErrShortBuffer {
 			if n == 0 {
-				return nil, nil, fmt.Errorf("got short buffer with n=0, base=%d, cap=%d", base, cap(d.buf))
+				return nil, fmt.Errorf("got short buffer with n=0, base=%d, cap=%d", base, cap(d.buf))
 			}
 			if d.resetRead {
 				continue
@@ -90,10 +90,10 @@ func (d *decoder) Decode(into runtime.Object) (runtime.Object, error) {
 			// must read the rest of the frame (until we stop getting ErrShortBuffer)
 			d.resetRead = true
 			base = 0
-			return nil, nil, ErrObjectTooLarge
+			return nil, ErrObjectTooLarge
 		}
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 		if d.resetRead {
 			// now that we have drained the large read, continue
@@ -103,7 +103,7 @@ func (d *decoder) Decode(into runtime.Object) (runtime.Object, error) {
 		base += n
 		break
 	}
-	return d.decoder.Decode(d.buf[:base], defaults, into)
+	return d.decoder.Decode(d.buf[:base], into)
 }
 
 func (d *decoder) Close() error {

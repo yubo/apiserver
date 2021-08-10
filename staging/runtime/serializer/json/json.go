@@ -207,16 +207,20 @@ var strictCaseSensitiveJSONIterator = StrictCaseSensitiveJSONIterator()
 // If into is nil or data's gvk different from into's gvk, it will generate a new Object with ObjectCreater.New(gvk)
 // On success or most errors, the method will return the calculated schema kind.
 // The gvk calculate priority will be originalData > default gvk > into
-func (s *Serializer) Decode(originalData []byte, into runtime.Object) error {
+func (s *Serializer) Decode(originalData []byte, into runtime.Object) (runtime.Object, error) {
 	data := originalData
 	if s.options.Yaml {
 		altered, err := yaml.YAMLToJSON(data)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		data = altered
 	}
-	return caseSensitiveJSONIterator.Unmarshal(data, into)
+	if err := caseSensitiveJSONIterator.Unmarshal(data, into); err != nil {
+		return nil, err
+	}
+
+	return into, nil
 }
 
 // Encode serializes the provided object to the given writer.
