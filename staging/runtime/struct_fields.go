@@ -1,4 +1,4 @@
-package rest
+package runtime
 
 import (
 	"fmt"
@@ -24,6 +24,14 @@ func (p field) String() string {
 	return fmt.Sprintf("key %s index %v %s", p.key, p.index, p.tagOpt)
 }
 
+func (p field) Key() string {
+	if p.name != "" {
+		return p.name
+	}
+
+	return p.key
+}
+
 type tagOpt struct {
 	name        string
 	key         string
@@ -36,7 +44,7 @@ type tagOpt struct {
 }
 
 func (p tagOpt) String() string {
-	return fmt.Sprintf("name %s key %v paramType %s skip %v required %v hidden %v format %s description %s",
+	return fmt.Sprintf("name=%s key=%v paramType=%s skip=%v required=%v hidden=%v format=%s description=%s",
 		p.name, p.key, p.paramType, p.skip, p.required, p.hidden, p.format, p.description)
 }
 
@@ -232,7 +240,7 @@ func getTagOpt(sf reflect.StructField) (opt tagOpt) {
 	}
 
 	tag := sf.Tag.Get("param")
-	if tag == "-" {
+	if tag == "-" || tag == "" {
 		opt.skip = true
 		return
 	}
@@ -258,7 +266,7 @@ func getTagOpt(sf reflect.StructField) (opt tagOpt) {
 	case QueryType:
 		opt.key = util.LowerCamelCasedName(sf.Name)
 	default:
-		panicType(sf.Type, "unknown param type")
+		panicType(sf.Type, fmt.Sprintf("unknown param type=%s", typ))
 	}
 
 	if opt.name != "" {

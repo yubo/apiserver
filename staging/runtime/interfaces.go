@@ -18,7 +18,8 @@ package runtime
 
 import (
 	"io"
-	"net/url"
+
+	"github.com/emicklei/go-restful"
 )
 
 const (
@@ -97,9 +98,11 @@ type Codec Serializer
 type ParameterCodec interface {
 	// DecodeParameters takes the given url.Values in the specified group version and decodes them
 	// into the provided object, or returns an error.
-	DecodeParameters(parameters url.Values, into Object) error
+	DecodeParameters(parameter *Parameters, into Object) error
 	// EncodeParameters encodes the provided object as query parameters or returns an error.
-	EncodeParameters(obj Object) (url.Values, error)
+	EncodeParameters(obj Object) (*Parameters, error)
+
+	RouteBuilderParameters(rb *restful.RouteBuilder, obj Object)
 }
 
 // Framer is a factory for creating readers and writers that obey a particular framing pattern.

@@ -33,7 +33,7 @@ type Decoder interface {
 	// Decode should return the type of event, the decoded object, or an error.
 	// An error will cause StreamWatcher to call Close(). Decode should block until
 	// it has data or an error occurs.
-	Decode() (action EventType, object runtime.Object, err error)
+	Decode() (action EventType, obj runtime.Object, err error)
 
 	// Close should close the underlying io.Reader, signalling to the source of
 	// the stream that it is no longer being watched. Close() must cause any
@@ -45,7 +45,7 @@ type Decoder interface {
 // reporting on a watch stream since this package may not import a higher level report.
 type Reporter interface {
 	// AsObject must convert err into a valid runtime.Object for the watch stream.
-	AsObject(err error) runtime.Object
+	AsObject(err error) interface{}
 }
 
 // StreamWatcher turns any stream for which you can write a Decoder interface
@@ -68,6 +68,7 @@ func NewStreamWatcher(d Decoder, r Reporter) *StreamWatcher {
 		// so nonbuffered is better.
 		result: make(chan Event),
 	}
+
 	go sw.receive()
 	return sw
 }
@@ -101,6 +102,7 @@ func (sw *StreamWatcher) receive() {
 	defer close(sw.result)
 	defer sw.Stop()
 	for {
+		// just for &struct{}
 		action, obj, err := sw.source.Decode()
 		if err != nil {
 			// Ignore expected error.

@@ -2,8 +2,6 @@ module github.com/yubo/apiserver
 
 go 1.13
 
-replace github.com/yubo/golib => ../golib
-
 require (
 	github.com/buger/goterm v1.0.1
 	github.com/coreos/go-oidc v2.1.0+incompatible
@@ -14,6 +12,7 @@ require (
 	github.com/go-openapi/spec v0.20.3
 	github.com/golang/protobuf v1.5.2
 	github.com/google/go-cmp v0.5.5
+	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/uuid v1.1.2
 	github.com/gorilla/websocket v1.4.2
 	github.com/json-iterator/go v1.1.11
@@ -35,7 +34,7 @@ require (
 	go.uber.org/zap v1.13.0
 	golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83 // indirect
 	golang.org/x/net v0.0.0-20210525063256-abc453219eb5
-	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d // indirect
+	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/sync v0.0.0-20201207232520-09787c993a3a
 	google.golang.org/appengine v1.6.5 // indirect
 	google.golang.org/grpc v1.27.1
@@ -45,3 +44,5 @@ require (
 	k8s.io/klog/v2 v2.9.0
 	sigs.k8s.io/yaml v1.2.0
 )
+
+replace github.com/yubo/golib => ../golib

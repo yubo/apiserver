@@ -66,6 +66,7 @@ type Event struct {
 	//    nor miss any events.
 	//  * If Type is Error: *api.Status is recommended; other types may make sense
 	//    depending on context.
+	//Object runtime.Object
 	Object runtime.Object
 }
 

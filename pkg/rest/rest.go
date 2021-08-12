@@ -13,4 +13,19 @@ const (
 	HeaderType = "header"
 
 	MaxFormSize = int64(1<<63 - 1)
+
+	SecurityDefinitionKey = "OAPI_SECURITY_DEFINITION"
+	NativeClientID        = "native-client-id"
+	NativeClientSecret    = "native-client-secret"
+)
+
+type SecurityType string
+
+const (
+	SecurityTypeBase        SecurityType = "base"
+	SecurityTypeApiKey      SecurityType = "apiKey"
+	SecurityTypeImplicit    SecurityType = "implicity"
+	SecurityTypePassword    SecurityType = "password"
+	SecurityTypeApplication SecurityType = "application"
+	SecurityTypeAccessCode  SecurityType = "accessCode" // same as oauth2
 )

@@ -130,7 +130,8 @@ func (e *encoder) Encode(obj runtime.Object) error {
 	if err := e.encoder.Encode(obj, e.buf); err != nil {
 		return err
 	}
-	_, err := e.writer.Write(e.buf.Bytes())
+	buf := e.buf.Bytes()
+	_, err := e.writer.Write(buf)
 	e.buf.Reset()
 	return err
 }
