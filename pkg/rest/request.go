@@ -1125,7 +1125,9 @@ func (r *Request) transformResponse(resp *http.Response, req *http.Request) Resu
 			case resp.StatusCode == http.StatusSwitchingProtocols:
 				// no-op, we've been upgraded
 			case resp.StatusCode < http.StatusOK || resp.StatusCode > http.StatusPartialContent:
-				return Result{err: r.transformUnstructuredResponseError(resp, req, body)}
+				return Result{err: r.transformUnstructuredResponseError(
+					resp, req, body,
+				)}
 			}
 			return Result{
 				body:        body,
@@ -1143,7 +1145,13 @@ func (r *Request) transformResponse(resp *http.Response, req *http.Request) Resu
 		// calculate an unstructured error from the response which the Result object may use if the caller
 		// did not return a structured error.
 		retryAfter, _ := retryAfterSeconds(resp)
-		err := r.newUnstructuredResponseError(body, isTextResponse(resp), resp.StatusCode, req.Method, retryAfter)
+		err := r.newUnstructuredResponseError(
+			body,
+			isTextResponse(resp),
+			resp.StatusCode,
+			req.Method,
+			retryAfter,
+		)
 		return Result{
 			body:        body,
 			contentType: contentType,
