@@ -16,7 +16,7 @@ limitations under the License.
 
 package api
 
-// +k8s:deepcopy-gen:interfaces=github.com/yubo/apiserver/staging/runtime.Object
+// +k8s:deepcopy-gen:interfaces=github.com/yubo/golib/runtime.Object
 
 // Policy contains a single ABAC policy rule
 type Policy struct {

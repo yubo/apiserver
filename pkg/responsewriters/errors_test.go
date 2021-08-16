@@ -23,8 +23,8 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/yubo/apiserver/staging/runtime"
-	"github.com/yubo/apiserver/staging/runtime/serializer"
+	"github.com/yubo/golib/runtime"
+	"github.com/yubo/golib/runtime/serializer"
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	"github.com/yubo/apiserver/pkg/request"

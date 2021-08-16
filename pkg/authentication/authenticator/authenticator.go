@@ -10,6 +10,7 @@ const (
 
 const (
 	_ = iota << 8
+	PRI_TOKEN_TEST
 	PRI_TOKEN_FILE
 	PRI_TOKEN_BOOTSTRAP
 	PRI_TOKEN_OIDC

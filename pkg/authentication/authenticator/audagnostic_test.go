@@ -23,7 +23,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/yubo/golib/staging/util/diff"
+	"github.com/yubo/golib/util/diff"
 	"github.com/yubo/apiserver/pkg/authentication/user"
 )
 

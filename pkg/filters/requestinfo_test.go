@@ -17,7 +17,7 @@ limitations under the License.
 package filters
 
 import (
-	"github.com/yubo/golib/staging/util/sets"
+	"github.com/yubo/golib/util/sets"
 	"github.com/yubo/apiserver/pkg/request"
 )
 

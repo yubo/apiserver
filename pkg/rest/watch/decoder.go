@@ -21,9 +21,9 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/yubo/apiserver/staging/runtime"
-	"github.com/yubo/apiserver/staging/runtime/serializer/streaming"
-	"github.com/yubo/apiserver/staging/watch"
+	"github.com/yubo/golib/runtime"
+	"github.com/yubo/golib/runtime/serializer/streaming"
+	"github.com/yubo/apiserver/pkg/watch"
 )
 
 // Decoder implements the watch.Decoder interface for io.ReadClosers that

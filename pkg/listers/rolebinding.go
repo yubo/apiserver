@@ -3,7 +3,7 @@ package listers
 import (
 	"github.com/yubo/apiserver/pkg/storage"
 	"github.com/yubo/apiserver/pkg/api/rbac"
-	"github.com/yubo/golib/staging/labels"
+	"github.com/yubo/golib/labels"
 	"github.com/yubo/golib/orm"
 )
 

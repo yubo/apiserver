@@ -24,11 +24,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/yubo/golib/staging/util/connrotation"
-	"github.com/yubo/golib/staging/util/net"
-	"github.com/yubo/golib/staging/util/runtime"
-	"github.com/yubo/golib/staging/util/wait"
-	"github.com/yubo/golib/staging/util/workqueue"
+	"github.com/yubo/golib/util/connrotation"
+	"github.com/yubo/golib/util/net"
+	"github.com/yubo/golib/util/runtime"
+	"github.com/yubo/golib/util/wait"
+	"github.com/yubo/golib/util/workqueue"
 	"k8s.io/klog/v2"
 )
 

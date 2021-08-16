@@ -24,8 +24,8 @@ import (
 	"sync"
 	"time"
 
-	utilnet "github.com/yubo/golib/staging/util/net"
-	"github.com/yubo/golib/staging/util/wait"
+	utilnet "github.com/yubo/golib/util/net"
+	"github.com/yubo/golib/util/wait"
 )
 
 // TlsTransportCache caches TLS http.RoundTrippers different configurations. The

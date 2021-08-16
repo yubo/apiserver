@@ -22,12 +22,12 @@ import (
 	"sync"
 	"unicode/utf8"
 
-	"github.com/yubo/golib/staging/util/net"
-	utilruntime "github.com/yubo/golib/staging/util/runtime"
-	"github.com/yubo/apiserver/staging/warning"
+	"github.com/yubo/golib/util/net"
+	utilruntime "github.com/yubo/golib/util/runtime"
+	"github.com/yubo/apiserver/pkg/warning"
 )
 
-// WithWarningRecorder attaches a deduplicating github.com/yubo/apiserver/staging/warning#WarningRecorder to the request context.
+// WithWarningRecorder attaches a deduplicating github.com/yubo/apiserver/pkg/warning#WarningRecorder to the request context.
 func WithWarningRecorder(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		recorder := &recorder{writer: w}

@@ -20,7 +20,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/yubo/golib/staging/util/sets"
+	"github.com/yubo/golib/util/sets"
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/pkg/authentication/user"
 )

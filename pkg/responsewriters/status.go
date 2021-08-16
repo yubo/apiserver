@@ -21,7 +21,7 @@ import (
 	"net/http"
 
 	"github.com/yubo/golib/api"
-	"github.com/yubo/golib/staging/util/runtime"
+	"github.com/yubo/golib/util/runtime"
 )
 
 // statusError is an object that can be converted into an api.Status

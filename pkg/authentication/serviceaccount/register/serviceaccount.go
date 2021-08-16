@@ -10,7 +10,7 @@ import (
 
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/golib/proc"
-	utilerrors "github.com/yubo/golib/staging/util/errors"
+	utilerrors "github.com/yubo/golib/util/errors"
 )
 
 const (

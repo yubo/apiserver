@@ -11,7 +11,7 @@ import (
 	"github.com/emicklei/go-restful"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/yubo/apiserver/pkg/rest/scheme"
+	"github.com/yubo/golib/scheme"
 	"github.com/yubo/golib/util"
 	"k8s.io/klog/v2"
 )

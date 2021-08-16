@@ -22,7 +22,7 @@ import (
 	"runtime/debug"
 	"sort"
 
-	utilruntime "github.com/yubo/golib/staging/util/runtime"
+	utilruntime "github.com/yubo/golib/util/runtime"
 )
 
 // PathRecorderMux wraps a mux object and records the registered exposedPaths.

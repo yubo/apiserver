@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/yubo/golib/staging/logs"
+	"github.com/yubo/golib/logs"
 	"k8s.io/klog/v2"
 )
 

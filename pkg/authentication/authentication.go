@@ -16,7 +16,7 @@ import (
 	tokenunion "github.com/yubo/apiserver/pkg/authentication/token/union"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/golib/proc"
-	"github.com/yubo/golib/staging/util/wait"
+	"github.com/yubo/golib/util/wait"
 	"k8s.io/klog/v2"
 )
 

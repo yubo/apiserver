@@ -7,7 +7,7 @@ import (
 
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/golib/proc"
-	"github.com/yubo/golib/staging/util/wait"
+	"github.com/yubo/golib/util/wait"
 )
 
 const (

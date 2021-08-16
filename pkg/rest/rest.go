@@ -2,6 +2,7 @@ package rest
 
 const (
 	// Accept or Content-Type used in Consumes() and/or Produces()
+	MIME_ALL         = "*/*"
 	MIME_JSON        = "application/json"
 	MIME_XML         = "application/xml"
 	MIME_TXT         = "text/plain"

@@ -21,7 +21,7 @@ import (
 	"strings"
 
 	"github.com/yubo/golib/api"
-	"github.com/yubo/golib/staging/util/sets"
+	"github.com/yubo/golib/util/sets"
 )
 
 // ResourceMatches returns the result of the rule.Resources matching.

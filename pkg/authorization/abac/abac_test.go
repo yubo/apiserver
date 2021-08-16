@@ -26,7 +26,7 @@ import (
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/authorization/abac/api"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
-	"github.com/yubo/apiserver/staging/runtime"
+	"github.com/yubo/golib/runtime"
 )
 
 func TestEmptyFile(t *testing.T) {

@@ -32,9 +32,9 @@ import (
 
 	"github.com/yubo/apiserver/pkg/rest/transport"
 	"github.com/yubo/apiserver/pkg/version"
-	"github.com/yubo/apiserver/staging/runtime"
+	"github.com/yubo/golib/runtime"
 	"github.com/yubo/golib/api"
-	"github.com/yubo/golib/staging/util/flowcontrol"
+	"github.com/yubo/golib/util/flowcontrol"
 )
 
 const (

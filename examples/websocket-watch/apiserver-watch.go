@@ -11,16 +11,19 @@ import (
 	"github.com/yubo/apiserver/pkg/handlers"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/rest"
-	"github.com/yubo/apiserver/staging/watch"
+	"github.com/yubo/apiserver/pkg/watch"
 	"github.com/yubo/golib/proc"
-	"github.com/yubo/golib/staging/logs"
+	"github.com/yubo/golib/logs"
+	"k8s.io/klog/v2"
 
 	_ "github.com/yubo/apiserver/pkg/apiserver/register"
 )
 
 // This example shows the minimal code needed to get a restful.WebService working.
 //
-// GET http://localhost:8080/hello
+// curl -X GET http://localhost:8080/hello
+//
+// go run ./apiserver-watch.go --request-timeout=10
 
 const (
 	moduleName = "apiserver.hello"
@@ -70,7 +73,7 @@ func watchHandle(w http.ResponseWriter, req *http.Request) error {
 	watcher := watch.NewFakeWithChanSize(2, false)
 
 	go func() {
-		ticker := time.NewTicker(time.Second / 2)
+		ticker := time.NewTicker(time.Second)
 		defer ticker.Stop()
 		for {
 			t := <-ticker.C
@@ -81,7 +84,9 @@ func watchHandle(w http.ResponseWriter, req *http.Request) error {
 		}
 	}()
 
-	return handlers.ServeWatch(watcher, req, w, 0)
+	err := handlers.ServeWatch(watcher, req, w, 0)
+	klog.V(10).Infof("exit with err %v", err)
+	return err
 }
 
 func init() {

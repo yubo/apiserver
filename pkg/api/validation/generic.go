@@ -19,8 +19,8 @@ package validation
 import (
 	"strings"
 
-	"github.com/yubo/golib/staging/util/validation"
-	"github.com/yubo/golib/staging/util/validation/field"
+	"github.com/yubo/golib/util/validation"
+	"github.com/yubo/golib/util/validation/field"
 )
 
 // IsNegativeErrorMsg is a error message for value must be greater than or equal to 0.

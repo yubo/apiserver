@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"runtime"
 
-	"github.com/yubo/golib/staging/version"
+	"github.com/yubo/golib/version"
 )
 
 // Get returns the overall codebase version. It's for detecting

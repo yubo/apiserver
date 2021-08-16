@@ -34,7 +34,7 @@ import (
 
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	apierrors "github.com/yubo/golib/api/errors"
-	utilclock "github.com/yubo/golib/staging/util/clock"
+	utilclock "github.com/yubo/golib/util/clock"
 	"k8s.io/klog/v2"
 )
 

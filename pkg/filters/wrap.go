@@ -23,7 +23,7 @@ import (
 	"github.com/yubo/apiserver/pkg/apiserver/httplog"
 	"github.com/yubo/apiserver/pkg/metrics"
 	"github.com/yubo/apiserver/pkg/request"
-	"github.com/yubo/golib/staging/util/runtime"
+	"github.com/yubo/golib/util/runtime"
 	"k8s.io/klog/v2"
 )
 

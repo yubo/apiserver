@@ -9,8 +9,8 @@ import (
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/golib/proc"
-	utilerrors "github.com/yubo/golib/staging/util/errors"
-	"github.com/yubo/golib/staging/util/wait"
+	utilerrors "github.com/yubo/golib/util/errors"
+	"github.com/yubo/golib/util/wait"
 )
 
 const (

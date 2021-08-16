@@ -19,9 +19,9 @@ package versioned
 import (
 	"encoding/json"
 
-	"github.com/yubo/apiserver/staging/runtime"
-	"github.com/yubo/apiserver/staging/runtime/serializer/streaming"
-	"github.com/yubo/apiserver/staging/watch"
+	"github.com/yubo/golib/runtime"
+	"github.com/yubo/golib/runtime/serializer/streaming"
+	"github.com/yubo/apiserver/pkg/watch"
 )
 
 // Encoder serializes watch.Events into io.Writer. The internal objects

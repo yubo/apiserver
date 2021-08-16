@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/yubo/golib/staging/labels"
+	"github.com/yubo/golib/labels"
 	"github.com/yubo/golib/orm"
 )
 

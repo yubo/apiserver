@@ -24,7 +24,7 @@ import (
 	"testing"
 
 	"github.com/yubo/golib/api"
-	"github.com/yubo/golib/staging/util/sets"
+	"github.com/yubo/golib/util/sets"
 )
 
 func TestGetAPIRequestInfo(t *testing.T) {

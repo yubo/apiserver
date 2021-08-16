@@ -24,7 +24,7 @@ import (
 	"time"
 
 	"github.com/yubo/golib/api"
-	"github.com/yubo/golib/staging/util/validation/field"
+	"github.com/yubo/golib/util/validation/field"
 )
 
 const (

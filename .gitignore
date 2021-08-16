@@ -1,6 +1,7 @@
 run/
 example/helo
 tmp/
+vendor/
 
 *.bak
 *.log

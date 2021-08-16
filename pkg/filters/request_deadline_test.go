@@ -27,9 +27,9 @@ import (
 	"time"
 
 	"github.com/yubo/apiserver/pkg/request"
-	"github.com/yubo/apiserver/staging/runtime"
-	"github.com/yubo/apiserver/staging/runtime/serializer"
-	utilclock "github.com/yubo/golib/staging/util/clock"
+	"github.com/yubo/golib/runtime"
+	"github.com/yubo/golib/runtime/serializer"
+	utilclock "github.com/yubo/golib/util/clock"
 )
 
 func TestParseTimeout(t *testing.T) {

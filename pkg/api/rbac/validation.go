@@ -19,7 +19,7 @@ package rbac
 
 import (
 	path "github.com/yubo/apiserver/pkg/api/validation"
-	"github.com/yubo/golib/staging/util/validation/field"
+	"github.com/yubo/golib/util/validation/field"
 )
 
 // ValidateRBACName is exported to allow types outside of the RBAC API group to reuse this validation logic

@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"github.com/yubo/apiserver/pkg/metrics"
-	utilclock "github.com/yubo/golib/staging/util/clock"
+	utilclock "github.com/yubo/golib/util/clock"
 	apirequest "github.com/yubo/apiserver/pkg/request"
 )
 

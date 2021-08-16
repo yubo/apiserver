@@ -8,12 +8,12 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/yubo/apiserver/pkg/rest/scheme"
+	"github.com/yubo/golib/scheme"
 	utiltesting "github.com/yubo/apiserver/pkg/rest/testing"
-	"github.com/yubo/apiserver/staging/runtime"
+	"github.com/yubo/golib/runtime"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/api/errors"
-	"github.com/yubo/golib/staging/util/diff"
+	"github.com/yubo/golib/util/diff"
 	"k8s.io/klog/v2"
 )
 

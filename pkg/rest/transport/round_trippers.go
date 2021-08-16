@@ -24,7 +24,7 @@ import (
 
 	"golang.org/x/oauth2"
 
-	utilnet "github.com/yubo/golib/staging/util/net"
+	utilnet "github.com/yubo/golib/util/net"
 	"k8s.io/klog/v2"
 )
 

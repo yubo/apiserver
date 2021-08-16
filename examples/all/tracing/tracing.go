@@ -11,6 +11,7 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/rest"
+	"github.com/yubo/golib/scheme"
 	"github.com/yubo/golib/net/rpc"
 	"k8s.io/klog/v2"
 )
@@ -20,9 +21,10 @@ const (
 )
 
 type Module struct {
-	Name string
-	http options.ApiServer
-	ctx  context.Context
+	Name   string
+	http   options.ApiServer
+	ctx    context.Context
+	client *rest.RESTClient
 }
 
 func New(ctx context.Context) *Module {
@@ -55,10 +57,11 @@ func (p *Module) installWs() {
 	rest.SwaggerTagRegister("tracing", "tracing demo")
 
 	rest.WsRouteBuild(&rest.WsOption{
-		Path:     "/tracing",
-		Produces: []string{"*/*"},
-		Consumes: []string{"*/*"},
-		Tags:     []string{"tracing"},
+		Path:               "/tracing",
+		Produces:           []string{"*/*"},
+		Consumes:           []string{"*/*"},
+		Tags:               []string{"tracing"},
+		GoRestfulContainer: p.http,
 		Routes: []rest.WsRoute{{
 			Method: "GET", SubPath: "/a",
 			Desc:   "a -> a1",
@@ -114,11 +117,15 @@ func (p *Module) b(w http.ResponseWriter, req *http.Request) error {
 	delay()
 
 	// call b1
-	_, _, err := rest.HttpRequest(&rest.RequestOptions{
-		Url:    fmt.Sprintf("http://%s/tracing/b1", req.Host),
-		Method: "GET",
-		Ctx:    ctx,
+	c, err := rest.RESTClientFor(&rest.Config{
+		Host:          req.Host,
+		ContentConfig: rest.ContentConfig{NegotiatedSerializer: scheme.Codecs},
 	})
+	if err != nil {
+		return err
+	}
+
+	err = c.Get().Prefix("traceing", "b1").Do(ctx).Error()
 	klog.Infof("b leaving err %v", err)
 
 	return err

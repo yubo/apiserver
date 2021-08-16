@@ -22,8 +22,8 @@ import (
 	"testing"
 
 	"github.com/yubo/apiserver/pkg/authentication/user"
-	bootstrapapi "github.com/yubo/apiserver/staging/cluster-bootstrap/token/api"
-	"github.com/yubo/golib/staging/labels"
+	bootstrapapi "github.com/yubo/apiserver/pkg/cluster-bootstrap/token/api"
+	"github.com/yubo/golib/labels"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/api/errors"
 )

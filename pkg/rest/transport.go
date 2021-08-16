@@ -17,6 +17,7 @@ limitations under the License.
 package rest
 
 import (
+	"crypto/tls"
 	"net/http"
 
 	"github.com/yubo/apiserver/pkg/rest/transport"
@@ -24,13 +25,13 @@ import (
 
 // TLSConfigFor returns a tls.Config that will provide the transport level security defined
 // by the provided Config. Will return nil if no transport level security is requested.
-//func TLSConfigFor(config *Config) (*tls.Config, error) {
-//	cfg, err := config.TransportConfig()
-//	if err != nil {
-//		return nil, err
-//	}
-//	return transport.TLSConfigFor(cfg)
-//}
+func TLSConfigFor(config *Config) (*tls.Config, error) {
+	cfg, err := config.TransportConfig()
+	if err != nil {
+		return nil, err
+	}
+	return transport.TLSConfigFor(cfg)
+}
 
 // TransportFor returns an http.RoundTripper that will provide the authentication
 // or transport level security defined by the provided Config. Will return the

@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/yubo/golib/staging/util/sets"
+	"github.com/yubo/golib/util/sets"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 )
 

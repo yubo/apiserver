@@ -9,16 +9,17 @@ import (
 	"github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/go-openapi/spec"
-	"github.com/yubo/apiserver/pkg/rest/scheme"
-	"github.com/yubo/apiserver/staging/runtime"
 	"github.com/yubo/golib/encoding/urlencoded"
+	"github.com/yubo/golib/runtime"
+	"github.com/yubo/golib/scheme"
 	"k8s.io/klog/v2"
 )
 
 var (
-	Scopes          = map[string]string{}
-	securitySchemes = map[string]*spec.SecurityScheme{}
-	swaggerTags     = []spec.Tag{}
+	Scopes              = map[string]string{}
+	securitySchemes     = map[string]*spec.SecurityScheme{}
+	swaggerTags         = []spec.Tag{}
+	DefaultContentTypes = []string{MIME_ALL, MIME_JSON}
 )
 
 func WsRouteBuild(opt *WsOption) {
@@ -28,6 +29,8 @@ func WsRouteBuild(opt *WsOption) {
 
 	if opt.GoRestfulContainer != nil {
 		opt.GoRestfulContainer.Add(opt.Ws)
+	} else {
+		klog.Warningf("unable to get restful.Container, routebuild %s skiped", opt.Path)
 	}
 }
 
@@ -61,12 +64,12 @@ func (p *WsOption) Validate() error {
 	if len(p.Produces) > 0 {
 		p.Ws.Produces(p.Produces...)
 	} else {
-		p.Ws.Produces(MIME_JSON)
+		p.Ws.Produces(DefaultContentTypes...)
 	}
 	if len(p.Consumes) > 0 {
 		p.Ws.Consumes(p.Consumes...)
 	} else {
-		p.Ws.Consumes(MIME_JSON)
+		p.Ws.Consumes(DefaultContentTypes...)
 	}
 	return nil
 }

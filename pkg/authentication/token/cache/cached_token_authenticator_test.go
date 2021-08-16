@@ -33,8 +33,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/pkg/authentication/user"
-	utilclock "github.com/yubo/golib/staging/util/clock"
-	"github.com/yubo/golib/staging/util/uuid"
+	utilclock "github.com/yubo/golib/util/clock"
+	"github.com/yubo/golib/util/uuid"
 )
 
 func TestCachedTokenAuthenticator(t *testing.T) {

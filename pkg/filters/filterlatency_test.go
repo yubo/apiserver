@@ -23,7 +23,7 @@ import (
 	"testing"
 	"time"
 
-	utilclock "github.com/yubo/golib/staging/util/clock"
+	utilclock "github.com/yubo/golib/util/clock"
 )
 
 func TestTrackStartedWithContextAlreadyHasFilterRecord(t *testing.T) {

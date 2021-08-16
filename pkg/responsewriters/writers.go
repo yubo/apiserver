@@ -30,10 +30,10 @@ import (
 
 	//"k8s.io/apiserver/pkg/features"
 
-	"github.com/yubo/apiserver/staging/runtime"
-	utilruntime "github.com/yubo/golib/staging/util/runtime"
-	//utilfeature "github.com/yubo/golib/staging/util/feature"
-	utiltrace "github.com/yubo/golib/staging/util/trace"
+	"github.com/yubo/golib/runtime"
+	utilruntime "github.com/yubo/golib/util/runtime"
+	//utilfeature "github.com/yubo/golib/util/feature"
+	utiltrace "github.com/yubo/golib/util/trace"
 )
 
 // SerializeObject renders an object in the content type negotiated by the client using the provided encoder.

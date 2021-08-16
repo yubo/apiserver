@@ -21,7 +21,7 @@ import (
 	"strings"
 
 	apirequest "github.com/yubo/apiserver/pkg/request"
-	"github.com/yubo/golib/staging/util/sets"
+	"github.com/yubo/golib/util/sets"
 )
 
 // BasicLongRunningRequestCheck returns true if the given request has one of the specified verbs or one of the specified subresources, or is a profiler request.

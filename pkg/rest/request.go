@@ -35,16 +35,16 @@ import (
 
 	"github.com/emicklei/go-restful"
 	"github.com/yubo/apiserver/pkg/request"
-	"github.com/yubo/apiserver/pkg/rest/scheme"
+	"github.com/yubo/golib/scheme"
 	restclientwatch "github.com/yubo/apiserver/pkg/rest/watch"
-	"github.com/yubo/apiserver/staging/runtime"
-	"github.com/yubo/apiserver/staging/runtime/serializer/streaming"
-	"github.com/yubo/apiserver/staging/watch"
+	"github.com/yubo/golib/runtime"
+	"github.com/yubo/golib/runtime/serializer/streaming"
+	"github.com/yubo/apiserver/pkg/watch"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/api/errors"
-	utilclock "github.com/yubo/golib/staging/util/clock"
-	"github.com/yubo/golib/staging/util/flowcontrol"
-	"github.com/yubo/golib/staging/util/net"
+	utilclock "github.com/yubo/golib/util/clock"
+	"github.com/yubo/golib/util/flowcontrol"
+	"github.com/yubo/golib/util/net"
 	"github.com/yubo/golib/util"
 	"golang.org/x/net/http2"
 
@@ -747,13 +747,13 @@ func (r *Request) Watch(ctx context.Context, obj interface{}) (watch.Interface, 
 	// We specifically don't want to rate limit watches, so we
 	// don't use r.rateLimiter here.
 	if r.err != nil {
-		return nil, r.err
+		return nil, fmt.Errorf("request has an err %v", r.err)
 	}
 
 	url := r.URL().String()
 	req, err := http.NewRequest(r.verb, url, r.body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("http.NewRequest err %v", err)
 	}
 	req = req.WithContext(ctx)
 	req.Header = r.headers
@@ -777,7 +777,7 @@ func (r *Request) Watch(ctx context.Context, obj interface{}) (watch.Interface, 
 		if net.IsProbableEOF(err) || net.IsTimeout(err) {
 			return watch.NewEmptyWatch(), nil
 		}
-		return nil, err
+		return nil, fmt.Errorf("client.Do err %v", err)
 	}
 	if resp.StatusCode != http.StatusOK {
 		defer resp.Body.Close()
@@ -794,7 +794,7 @@ func (r *Request) Watch(ctx context.Context, obj interface{}) (watch.Interface, 
 	}
 	objectDecoder, streamingSerializer, framer, err := r.c.content.Negotiator.StreamDecoder(mediaType, params)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to get streamDecoder for %s err %v", mediaType, err)
 	}
 
 	handleWarnings(resp.Header, r.warningHandler)

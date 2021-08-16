@@ -30,7 +30,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/azure"
 	"k8s.io/klog/v2"
 
-	"k8s.io/apimachinery/pkg/util/net"
+	"github.com/yubo/golib/util/net"
 	restclient "k8s.io/client-go/rest"
 )
 

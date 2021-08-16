@@ -40,9 +40,9 @@ import (
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/metrics"
 	apirequest "github.com/yubo/apiserver/pkg/request"
-	"github.com/yubo/golib/staging/util/sets"
-	"github.com/yubo/golib/staging/util/wait"
-	fcmetrics "github.com/yubo/golib/staging/util/flowcontrol/metrics"
+	"github.com/yubo/golib/util/sets"
+	"github.com/yubo/golib/util/wait"
+	fcmetrics "github.com/yubo/golib/util/flowcontrol/metrics"
 
 	"k8s.io/klog/v2"
 )

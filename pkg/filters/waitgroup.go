@@ -23,9 +23,9 @@ import (
 
 	apirequest "github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/responsewriters"
-	"github.com/yubo/apiserver/staging/runtime"
+	"github.com/yubo/golib/runtime"
 	apierrors "github.com/yubo/golib/api/errors"
-	utilwaitgroup "github.com/yubo/golib/staging/util/waitgroup"
+	utilwaitgroup "github.com/yubo/golib/util/waitgroup"
 )
 
 // WithWaitGroup adds all non long-running requests to wait group, which is used for graceful shutdown.

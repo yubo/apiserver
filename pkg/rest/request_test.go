@@ -37,18 +37,18 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/yubo/apiserver/pkg/rest/scheme"
+	"github.com/yubo/golib/scheme"
 	utiltesting "github.com/yubo/apiserver/pkg/rest/testing"
 	restclientwatch "github.com/yubo/apiserver/pkg/rest/watch"
-	"github.com/yubo/apiserver/staging/runtime"
-	"github.com/yubo/apiserver/staging/runtime/serializer/streaming"
-	"github.com/yubo/apiserver/staging/watch"
+	"github.com/yubo/golib/runtime"
+	"github.com/yubo/golib/runtime/serializer/streaming"
+	"github.com/yubo/apiserver/pkg/watch"
 	"github.com/yubo/golib/api"
 	apierrors "github.com/yubo/golib/api/errors"
-	"github.com/yubo/golib/staging/util/clock"
-	"github.com/yubo/golib/staging/util/diff"
-	"github.com/yubo/golib/staging/util/flowcontrol"
-	"github.com/yubo/golib/staging/util/httpstream"
+	"github.com/yubo/golib/util/clock"
+	"github.com/yubo/golib/util/diff"
+	"github.com/yubo/golib/util/flowcontrol"
+	"github.com/yubo/golib/util/httpstream"
 	"k8s.io/klog/v2"
 )
 
@@ -626,12 +626,6 @@ func TestTransformResponse(t *testing.T) {
 			assert.Equalf(t, test.Data, response, "cast-%d", i)
 		}
 		assert.Equalf(t, test.Created, created, "case-create-%d", i)
-		//if !(test.Data == nil && response == nil) && !apiequality.Semantic.DeepDerivative(test.Data, response) {
-		//	t.Errorf("%d: unexpected response: %#v %#v", i, test.Data, response)
-		//}
-		//if test.Created != created {
-		//	t.Errorf("%d: expected created %t, got %t", i, test.Created, created)
-		//}
 	}
 }
 

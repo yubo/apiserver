@@ -30,7 +30,7 @@ import (
 
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
-	utilerrors "github.com/yubo/golib/staging/util/errors"
+	utilerrors "github.com/yubo/golib/util/errors"
 )
 
 // unionAuthzHandler authorizer against a chain of authorizer.Authorizer

@@ -9,7 +9,7 @@ import (
 	apirequest "github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/golib/proc"
-	utilwaitgroup "github.com/yubo/golib/staging/util/waitgroup"
+	utilwaitgroup "github.com/yubo/golib/util/waitgroup"
 	"k8s.io/klog/v2"
 )
 

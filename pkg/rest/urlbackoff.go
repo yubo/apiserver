@@ -20,8 +20,8 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/yubo/golib/staging/util/flowcontrol"
-	"github.com/yubo/golib/staging/util/sets"
+	"github.com/yubo/golib/util/flowcontrol"
+	"github.com/yubo/golib/util/sets"
 	"k8s.io/klog/v2"
 )
 

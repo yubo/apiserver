@@ -3,7 +3,7 @@ package filters
 import (
 	"github.com/emicklei/go-restful"
 	"github.com/yubo/apiserver/pkg/request"
-	"github.com/yubo/apiserver/staging/runtime/serializer"
+	"github.com/yubo/golib/runtime/serializer"
 )
 
 func HttpFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {

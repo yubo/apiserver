@@ -7,13 +7,14 @@ import (
 	"time"
 
 	"github.com/yubo/apiserver/pkg/apiserver/httplog"
-	"github.com/yubo/apiserver/staging/runtime"
-	"github.com/yubo/apiserver/staging/runtime/serializer/json"
-	"github.com/yubo/apiserver/staging/runtime/serializer/streaming"
-	"github.com/yubo/apiserver/staging/watch"
+	"github.com/yubo/apiserver/pkg/handlers/negotiation"
+	"github.com/yubo/golib/scheme"
+	"github.com/yubo/golib/runtime"
+	"github.com/yubo/golib/runtime/serializer/streaming"
+	"github.com/yubo/apiserver/pkg/watch"
 	"github.com/yubo/golib/api/errors"
-	utilruntime "github.com/yubo/golib/staging/util/runtime"
-	"github.com/yubo/golib/staging/util/wsstream"
+	utilruntime "github.com/yubo/golib/util/runtime"
+	"github.com/yubo/golib/util/wsstream"
 	"golang.org/x/net/websocket"
 	"k8s.io/klog/v2"
 )
@@ -46,15 +47,35 @@ func (w *realTimeoutFactory) TimeoutCh() (<-chan time.Time, func() bool) {
 func ServeWatch(watcher watch.Interface, req *http.Request, w http.ResponseWriter, timeout time.Duration) error {
 	defer watcher.Stop()
 
-	jsonSerializer := json.NewSerializer(false)
+	codecs := scheme.Codecs
+
+	serializer, err := negotiation.NegotiateOutputMediaTypeStream(req, codecs)
+	if err != nil {
+		return err
+	}
+	framer := serializer.StreamSerializer.Framer
+	streamSerializer := serializer.StreamSerializer.Serializer
+	encoder := codecs.EncoderForVersion(streamSerializer)
+	useTextFraming := serializer.EncodesAsText
+	if framer == nil {
+		return fmt.Errorf("no framer defined for %q available for embedded encoding", serializer.MediaType)
+	}
+	// TODO: next step, get back mediaTypeOptions from negotiate and return the exact value here
+	mediaType := serializer.MediaType
+	if mediaType != runtime.ContentTypeJSON {
+		mediaType += ";stream=watch"
+	}
+
+	//embeddedEncoder := codecs.EncoderForVersion(serializer.Serializer)
 
 	server := &WatchServer{
 		Watching: watcher,
 
-		UseTextFraming: true,
-		MediaType:      runtime.ContentTypeJSON,
-		Framer:         json.Framer,
-		Encoder:        jsonSerializer,
+		UseTextFraming: useTextFraming,
+		MediaType:      mediaType,
+		Framer:         framer,
+		Encoder:        encoder,
+		//EmbeddedEncoder: embeddedEncoder,
 
 		TimeoutFactory: &realTimeoutFactory{timeout},
 	}
@@ -74,6 +95,8 @@ type WatchServer struct {
 	Framer runtime.Framer
 	// used to encode the watch stream event itself
 	Encoder runtime.Encoder
+	// used to encode the nested object in the watch stream
+	//EmbeddedEncoder runtime.Encoder
 
 	TimeoutFactory TimeoutFactory
 }

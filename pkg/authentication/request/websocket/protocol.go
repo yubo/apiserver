@@ -25,7 +25,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
-	"github.com/yubo/golib/staging/util/wsstream"
+	"github.com/yubo/golib/util/wsstream"
 )
 
 const bearerProtocolPrefix = "base64url.bearer.authorization.k8s.io."

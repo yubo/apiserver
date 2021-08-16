@@ -40,3 +40,15 @@ func (a *TokenAuthenticator) AuthenticateToken(ctx context.Context, value string
 	}
 	return &authenticator.Response{User: user}, true, nil
 }
+
+func (a *TokenAuthenticator) Name() string {
+	return "token test token authenticator"
+}
+
+func (a *TokenAuthenticator) Priority() int {
+	return authenticator.PRI_TOKEN_FILE
+}
+
+func (a *TokenAuthenticator) Available() bool {
+	return true
+}

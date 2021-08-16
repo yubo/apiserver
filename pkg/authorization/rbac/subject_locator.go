@@ -22,7 +22,7 @@ import (
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	rbacregistryvalidation "github.com/yubo/apiserver/pkg/authorization/rbac/validation"
 	"github.com/yubo/apiserver/pkg/api/rbac"
-	utilerrors "github.com/yubo/golib/staging/util/errors"
+	utilerrors "github.com/yubo/golib/util/errors"
 )
 
 type RoleToRuleMapper interface {

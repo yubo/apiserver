@@ -19,8 +19,8 @@ package cache
 import (
 	"time"
 
-	utilcache "github.com/yubo/golib/staging/util/cache"
-	"github.com/yubo/golib/staging/util/clock"
+	utilcache "github.com/yubo/golib/util/cache"
+	"github.com/yubo/golib/util/clock"
 )
 
 type simpleCache struct {

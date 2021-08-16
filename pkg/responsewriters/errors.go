@@ -24,7 +24,7 @@ import (
 
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	apierrors "github.com/yubo/golib/api/errors"
-	utilruntime "github.com/yubo/golib/staging/util/runtime"
+	utilruntime "github.com/yubo/golib/util/runtime"
 )
 
 // Avoid emitting errors that look like valid HTML. Quotes are okay.

@@ -10,7 +10,7 @@ import (
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/golib/proc"
-	"github.com/yubo/golib/staging/logs"
+	"github.com/yubo/golib/logs"
 
 	// http
 	_ "github.com/yubo/apiserver/pkg/apiserver/register"

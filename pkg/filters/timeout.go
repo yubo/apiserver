@@ -27,7 +27,7 @@ import (
 
 	apirequest "github.com/yubo/apiserver/pkg/request"
 	apierrors "github.com/yubo/golib/api/errors"
-	utilruntime "github.com/yubo/golib/staging/util/runtime"
+	utilruntime "github.com/yubo/golib/util/runtime"
 )
 
 // WithTimeoutForNonLongRunningRequests times out non-long-running requests after the time given by timeout.

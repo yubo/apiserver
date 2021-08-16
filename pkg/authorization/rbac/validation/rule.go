@@ -23,7 +23,7 @@ import (
 	"github.com/yubo/apiserver/pkg/authentication/serviceaccount"
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/api/rbac"
-	utilerrors "github.com/yubo/golib/staging/util/errors"
+	utilerrors "github.com/yubo/golib/util/errors"
 	//"k8s.io/component-helpers/auth/rbac/validation"
 )
 

@@ -19,7 +19,7 @@ package filters
 import (
 	"net/http"
 
-	utilclock "github.com/yubo/golib/staging/util/clock"
+	utilclock "github.com/yubo/golib/util/clock"
 	"github.com/yubo/apiserver/pkg/request"
 )
 

@@ -21,7 +21,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/yubo/golib/staging/util/flowcontrol"
+	"github.com/yubo/golib/util/flowcontrol"
 )
 
 func parse(raw string) *url.URL {

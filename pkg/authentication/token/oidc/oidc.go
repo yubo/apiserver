@@ -47,9 +47,9 @@ import (
 
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/pkg/authentication/user"
-	certutil "github.com/yubo/golib/staging/util/cert"
-	"github.com/yubo/golib/staging/util/net"
-	"github.com/yubo/golib/staging/util/wait"
+	certutil "github.com/yubo/golib/util/cert"
+	"github.com/yubo/golib/util/net"
+	"github.com/yubo/golib/util/wait"
 )
 
 var (

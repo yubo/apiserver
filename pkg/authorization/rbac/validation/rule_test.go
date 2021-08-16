@@ -26,7 +26,7 @@ import (
 	"github.com/yubo/apiserver/pkg/api/rbac"
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/golib/api"
-	"github.com/yubo/golib/staging/util/diff"
+	"github.com/yubo/golib/util/diff"
 )
 
 // compute a hash of a policy rule so we can sort in a deterministic order

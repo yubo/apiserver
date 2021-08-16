@@ -29,8 +29,8 @@ import (
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	rbacregistryvalidation "github.com/yubo/apiserver/pkg/authorization/rbac/validation"
 	"github.com/yubo/apiserver/pkg/listers"
-	"github.com/yubo/golib/staging/labels"
-	utilerrors "github.com/yubo/golib/staging/util/errors"
+	"github.com/yubo/golib/labels"
+	utilerrors "github.com/yubo/golib/util/errors"
 )
 
 type RequestToRuleMapper interface {

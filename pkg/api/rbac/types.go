@@ -90,7 +90,7 @@ type RoleRef struct {
 	Name string
 }
 
-// +k8s:deepcopy-gen:interfaces=github.com/yubo/apiserver/staging/runtime.Object
+// +k8s:deepcopy-gen:interfaces=github.com/yubo/golib/runtime.Object
 
 // Role is a namespaced, logical grouping of PolicyRules that can be referenced as a unit by a RoleBinding.
 type Role struct {
@@ -102,7 +102,7 @@ type Role struct {
 	Rules []PolicyRule
 }
 
-// +k8s:deepcopy-gen:interfaces=github.com/yubo/apiserver/staging/runtime.Object
+// +k8s:deepcopy-gen:interfaces=github.com/yubo/golib/runtime.Object
 
 // RoleBinding references a role, but does not contain it.  It can reference a Role in the same namespace or a ClusterRole in the global namespace.
 // It adds who information via Subjects and namespace information by which namespace it exists in.  RoleBindings in a given
@@ -119,7 +119,7 @@ type RoleBinding struct {
 	RoleRef RoleRef
 }
 
-// +k8s:deepcopy-gen:interfaces=github.com/yubo/apiserver/staging/runtime.Object
+// +k8s:deepcopy-gen:interfaces=github.com/yubo/golib/runtime.Object
 
 // RoleBindingList is a collection of RoleBindings
 type RoleBindingList struct {
@@ -131,7 +131,7 @@ type RoleBindingList struct {
 	Items []RoleBinding
 }
 
-// +k8s:deepcopy-gen:interfaces=github.com/yubo/apiserver/staging/runtime.Object
+// +k8s:deepcopy-gen:interfaces=github.com/yubo/golib/runtime.Object
 
 // RoleList is a collection of Roles
 type RoleList struct {
@@ -143,7 +143,7 @@ type RoleList struct {
 	Items []Role
 }
 
-// +k8s:deepcopy-gen:interfaces=github.com/yubo/apiserver/staging/runtime.Object
+// +k8s:deepcopy-gen:interfaces=github.com/yubo/golib/runtime.Object
 
 // ClusterRole is a cluster level, logical grouping of PolicyRules that can be referenced as a unit by a RoleBinding or ClusterRoleBinding.
 type ClusterRole struct {
@@ -167,7 +167,7 @@ type AggregationRule struct {
 	ClusterRoleSelectors []api.LabelSelector
 }
 
-// +k8s:deepcopy-gen:interfaces=github.com/yubo/apiserver/staging/runtime.Object
+// +k8s:deepcopy-gen:interfaces=github.com/yubo/golib/runtime.Object
 
 // ClusterRoleBinding references a ClusterRole, but not contain it.  It can reference a ClusterRole in the global namespace,
 // and adds who information via Subject.
@@ -184,7 +184,7 @@ type ClusterRoleBinding struct {
 	RoleRef RoleRef
 }
 
-// +k8s:deepcopy-gen:interfaces=github.com/yubo/apiserver/staging/runtime.Object
+// +k8s:deepcopy-gen:interfaces=github.com/yubo/golib/runtime.Object
 
 // ClusterRoleBindingList is a collection of ClusterRoleBindings
 type ClusterRoleBindingList struct {
@@ -196,7 +196,7 @@ type ClusterRoleBindingList struct {
 	Items []ClusterRoleBinding
 }
 
-// +k8s:deepcopy-gen:interfaces=github.com/yubo/apiserver/staging/runtime.Object
+// +k8s:deepcopy-gen:interfaces=github.com/yubo/golib/runtime.Object
 
 // ClusterRoleList is a collection of ClusterRoles
 type ClusterRoleList struct {

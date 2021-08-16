@@ -22,7 +22,7 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/yubo/golib/staging/util/net"
+	"github.com/yubo/golib/util/net"
 	"k8s.io/klog/v2"
 )
 

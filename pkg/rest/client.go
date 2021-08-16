@@ -6,10 +6,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/yubo/apiserver/staging/runtime"
-	"github.com/yubo/apiserver/staging/types"
+	"github.com/yubo/golib/runtime"
+	"github.com/yubo/apiserver/pkg/types"
 	"github.com/yubo/golib/api"
-	"github.com/yubo/golib/staging/util/flowcontrol"
+	"github.com/yubo/golib/util/flowcontrol"
 )
 
 // Interface captures the set of operations for generically interacting with Kubernetes REST apis.

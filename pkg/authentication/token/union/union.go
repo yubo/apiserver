@@ -20,7 +20,7 @@ import (
 	"context"
 
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
-	utilerrors "github.com/yubo/golib/staging/util/errors"
+	utilerrors "github.com/yubo/golib/util/errors"
 )
 
 // unionAuthTokenHandler authenticates tokens using a chain of authenticator.Token objects

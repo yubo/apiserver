@@ -23,7 +23,7 @@ import (
 	"strings"
 
 	"github.com/yubo/golib/api"
-	"github.com/yubo/golib/staging/util/sets"
+	"github.com/yubo/golib/util/sets"
 	"k8s.io/klog/v2"
 )
 
@@ -121,7 +121,7 @@ func (r *RequestInfoFactory) NewRequestInfo(req *http.Request) (*RequestInfo, er
 	currentParts := splitPath(req.URL.Path)
 	if len(currentParts) < 3 {
 		// return a non-resource request
-		klog.V(5).Infof("path parts < 3")
+		//klog.V(5).Infof("path parts < 3")
 		return &requestInfo, nil
 	}
 
