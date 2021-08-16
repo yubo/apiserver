@@ -2,6 +2,7 @@ package cmdcli
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -97,7 +98,7 @@ func (p *Pager) FootBarRender(format string, a ...interface{}) {
 			goterm.GREEN), extra)
 }
 
-func (p *Pager) Render(page int, rerend bool) (err error) {
+func (p *Pager) Render(ctx context.Context, page int, rerend bool) (err error) {
 	defer func() {
 		if err == nil {
 			p.buff = []byte(fmt.Sprintf("%d", page))
@@ -115,7 +116,7 @@ func (p *Pager) Render(page int, rerend bool) (err error) {
 		page = p.pageTotal
 	}
 	p.CurrentPage = page
-	if err = r.Do(); err != nil {
+	if err = r.Do(ctx); err != nil {
 		return
 	}
 
@@ -137,14 +138,14 @@ func (p *Pager) Render(page int, rerend bool) (err error) {
 	return
 }
 
-func (p *Pager) Dump() (err error) {
+func (p *Pager) Dump(ctx context.Context) (err error) {
 	pageTotal := 1
 	p.PageSize = 100
 	r := p.r
 
 	for i := 0; i < pageTotal; i++ {
 		p.CurrentPage = i
-		if err = p.r.Do(); err != nil {
+		if err = p.r.Do(ctx); err != nil {
 			return
 		}
 		total, list := getListFrom(r.output)
@@ -161,9 +162,9 @@ func (p *Pager) Dump() (err error) {
 	return nil
 }
 
-func (p *Pager) Run() error {
+func (p *Pager) Do(ctx context.Context) error {
 	if p.PageSize == 0 {
-		return p.Dump()
+		return p.Dump(ctx)
 	}
 
 	defer func() {
@@ -171,7 +172,7 @@ func (p *Pager) Run() error {
 		fmt.Fprintf(p.stdout, "\033[?25h\n")
 	}()
 
-	if err := p.Render(p.CurrentPage, false); err != nil {
+	if err := p.Render(ctx, p.CurrentPage, false); err != nil {
 		return err
 	}
 
@@ -187,10 +188,10 @@ func (p *Pager) Run() error {
 		case 'q', byte(3), byte(27):
 			return nil
 		case 'n', 'f', ' ':
-			p.Render(p.CurrentPage+1, true)
+			p.Render(ctx, p.CurrentPage+1, true)
 			continue
 		case 'p', 'b':
-			p.Render(p.CurrentPage-1, true)
+			p.Render(ctx, p.CurrentPage-1, true)
 			continue
 		case '0':
 			if len(p.buff) == 0 {
@@ -208,21 +209,16 @@ func (p *Pager) Run() error {
 			}
 			continue
 		case byte(13): // backspace
-			p.Render(util.Atoi(string(p.buff)), true)
+			p.Render(ctx, util.Atoi(string(p.buff)), true)
 			continue
-			/*
-				default:
-					p.FootBarRender("ascii %d", ascii)
-			*/
-
 		}
 
 		switch keyCode {
 		case term.TERM_CODE_DOWN, term.TERM_CODE_RIGHT:
-			p.Render(p.CurrentPage+1, true)
+			p.Render(ctx, p.CurrentPage+1, true)
 			continue
 		case term.TERM_CODE_UP, term.TERM_CODE_LEFT:
-			p.Render(p.CurrentPage-1, true)
+			p.Render(ctx, p.CurrentPage-1, true)
 			continue
 		}
 	}

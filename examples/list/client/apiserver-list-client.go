@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"os"
 
 	"github.com/yubo/apiserver/pkg/cmdcli"
@@ -23,7 +24,7 @@ type ListOutput struct {
 }
 
 func run() error {
-	req, err := cmdcli.NewRequest("127.0.0.1:18080",
+	req, err := cmdcli.NewRequest("127.0.0.1:8080",
 		cmdcli.WithInput(&ListInput{
 			Pagination: rest.Pagination{
 				PageSize: 10,
@@ -34,7 +35,7 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	return req.Pager(os.Stdout, false).Run()
+	return req.Pager(os.Stdout, false).Do(context.Background())
 }
 
 func main() {
