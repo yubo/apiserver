@@ -6,119 +6,177 @@ import (
 	"fmt"
 	"io"
 	"math"
-	"os"
 	"reflect"
 	"strings"
 
 	"github.com/buger/goterm"
 	"github.com/yubo/apiserver/pkg/rest"
-	apierrors "github.com/yubo/golib/api/errors"
-	"github.com/yubo/golib/util/term"
 	"github.com/yubo/golib/util"
+	"github.com/yubo/golib/util/term"
 )
 
-type TermPager struct {
-	pagination *rest.Pagination
-	disable    bool
-	buff       []byte
-	out        io.Writer
-	pageTotal  int // start from 1
-	total      int
-	method     string
-	uri        string
-	input      interface{}
-	output     interface{}
-	cb         []func(interface{})
-	handle     func(method, uri string, input, output interface{},
-		cb ...func(interface{})) error
+type Pager struct {
+	r *Request
+
+	// term Pager
+	*rest.Pagination
+	disablePage bool
+	total       int
+	pageTotal   int
+
+	//render
+	buff   []byte
+	stdout io.Writer
 }
 
-func (p *TermPager) FootBarRender(format string, a ...interface{}) {
+// pageSize == 0 : no limit
+func NewPager(r *Request, stdout io.Writer, disablePage bool) (*Pager, error) {
+	p := &Pager{
+		r:           r,
+		disablePage: disablePage,
+		stdout:      stdout,
+	}
+
+	if pagination, err := getPaginationFrom(r.input); err != nil {
+		return nil, err
+	} else {
+		p.Pagination = pagination
+	}
+
+	if err := outputValidete(r.output); err != nil {
+		return nil, err
+	}
+
+	return p, nil
+}
+
+func getPaginationFrom(input interface{}) (*rest.Pagination, error) {
+	rv := reflect.Indirect(reflect.ValueOf(input))
+	if rv.Kind() != reflect.Struct {
+		return nil, errors.New("request.input must be a pointer to a struct")
+	}
+
+	pagination, ok := rv.FieldByName("Pagination").Addr().Interface().(*rest.Pagination)
+	if !ok {
+		return nil, errors.New("expected Pagination field with input struct")
+	}
+
+	return pagination, nil
+}
+
+func getListFrom(output interface{}) (int, interface{}) {
+	rv := reflect.Indirect(reflect.ValueOf(output))
+
+	return rv.FieldByName("Total").Interface().(int),
+		rv.FieldByName("List").Interface()
+}
+
+func outputValidete(output interface{}) error {
+	rv := reflect.Indirect(reflect.ValueOf(output))
+	if rv.Kind() != reflect.Struct {
+		return fmt.Errorf("request.output must be a pointer to a struct")
+	}
+
+	if _, ok := rv.FieldByName("Total").Interface().(int); !ok {
+		return fmt.Errorf("request.output.Total must be an integer %s", rv.FieldByName("Total").Type().Kind())
+	}
+
+	v := reflect.Indirect(reflect.ValueOf(rv.FieldByName("List").Interface()))
+	if !(v.Kind() == reflect.Slice || v.Kind() == reflect.Array) {
+		return fmt.Errorf("request.output.List must be a slice or arrray")
+	}
+
+	return nil
+}
+
+func (p *Pager) FootBarRender(format string, a ...interface{}) {
 	extra := fmt.Sprintf(format, a...)
 
-	fmt.Fprintf(p.out, "\r%s %s\033[K",
+	fmt.Fprintf(p.stdout, "\r%s %s\033[K",
 		goterm.Color(fmt.Sprintf("%s/%d", string(p.buff), p.pageTotal),
 			goterm.GREEN), extra)
 }
 
-func (p *TermPager) Render(page int, rerend bool) (err error) {
+func (p *Pager) Render(page int, rerend bool) (err error) {
 	defer func() {
 		if err == nil {
 			p.buff = []byte(fmt.Sprintf("%d", page))
 			p.FootBarRender("")
-		} else {
-			p.FootBarRender(goterm.Color(err.Error(), goterm.RED))
 		}
 	}()
 
-	if page > p.pageTotal || page < 1 {
-		err = fmt.Errorf("page valid range [1,%d], got %d",
-			p.pageTotal, page)
-		return
-	}
-
-	p.pagination.CurrentPage = page
+	r := p.r
 
 	// send query
-	if err = p.handle("GET", p.uri, p.input, p.output, p.cb...); err != nil {
+	if page <= 0 {
+		page = 1
+	}
+	if page >= p.pageTotal {
+		page = p.pageTotal
+	}
+	p.CurrentPage = page
+	if err = r.Do(); err != nil {
 		return
 	}
 
-	pageSize := p.pagination.PageSize
 	if rerend {
-		fmt.Fprintf(p.out, "\033[%dA\r", pageSize+1)
+		fmt.Fprintf(p.stdout, "\033[%dA\r", p.PageSize+1)
 	}
 
-	fmt.Fprintf(p.out, strings.Replace(string(Table(p.output)),
-		"\n", "\033[K\n", -1))
+	total, list := getListFrom(r.output)
+	p.total = total
+	p.pageTotal = int(math.Ceil(float64(total) / float64(p.PageSize)))
 
-	if v := reflect.Indirect(reflect.ValueOf(p.output)); v.Kind() ==
-		reflect.Slice || v.Kind() == reflect.Array {
-		if n := pageSize - v.Len(); n > 0 {
-			fmt.Fprintf(p.out, strings.Repeat("\033[K\n", n))
-		}
+	fmt.Fprintf(p.stdout, strings.Replace(string(Table(list)), "\n", "\033[K\n", -1))
+
+	v := reflect.ValueOf(list)
+	if n := p.PageSize - v.Len(); n > 0 {
+		fmt.Fprintf(p.stdout, strings.Repeat("\033[K\n", n))
 	}
 
 	return
 }
 
-func (p *TermPager) Dump() (err error) {
-	totalPage := p.total / p.pagination.PageSize
+func (p *Pager) Dump() (err error) {
+	pageTotal := 1
+	p.PageSize = 100
+	r := p.r
 
-	for i := 0; i < totalPage; i++ {
-		p.pagination.CurrentPage = i
-		if err = p.handle("GET", p.uri, p.input, p.output,
-			p.cb...); err != nil {
+	for i := 0; i < pageTotal; i++ {
+		p.CurrentPage = i
+		if err = p.r.Do(); err != nil {
 			return
 		}
-		output := Table(p.output)
+		total, list := getListFrom(r.output)
+		pageTotal = int(math.Ceil(float64(total) / float64(p.PageSize)))
+
+		output := Table(list)
 		if i > 0 {
 			if i := bytes.IndexByte(output, '\n'); i > 0 {
 				output = output[i+1:]
 			}
 		}
-		p.out.Write(output)
+		p.stdout.Write(output)
 	}
 	return nil
 }
 
-func (p *TermPager) Run() error {
-	if p.pagination.Dump {
+func (p *Pager) Run() error {
+	if p.PageSize == 0 {
 		return p.Dump()
 	}
 
 	defer func() {
 		// Show cursor.
-		fmt.Fprintf(p.out, "\033[?25h\n")
+		fmt.Fprintf(p.stdout, "\033[?25h\n")
 	}()
 
-	pageSize := p.pagination.PageSize
-	p.pageTotal = int(math.Ceil(float64(p.total) / float64(pageSize)))
-
-	p.Render(p.pagination.CurrentPage, false)
+	if err := p.Render(p.CurrentPage, false); err != nil {
+		return err
+	}
 
 	// Hide cursor.
-	fmt.Fprintf(p.out, "\033[?25l")
+	fmt.Fprintf(p.stdout, "\033[?25l")
 
 	for {
 		ascii, keyCode, err := term.Getch()
@@ -129,10 +187,10 @@ func (p *TermPager) Run() error {
 		case 'q', byte(3), byte(27):
 			return nil
 		case 'n', 'f', ' ':
-			p.Render(p.pagination.CurrentPage+1, true)
+			p.Render(p.CurrentPage+1, true)
 			continue
 		case 'p', 'b':
-			p.Render(p.pagination.CurrentPage-1, true)
+			p.Render(p.CurrentPage-1, true)
 			continue
 		case '0':
 			if len(p.buff) == 0 {
@@ -161,89 +219,11 @@ func (p *TermPager) Run() error {
 
 		switch keyCode {
 		case term.TERM_CODE_DOWN, term.TERM_CODE_RIGHT:
-			p.Render(p.pagination.CurrentPage+1, true)
+			p.Render(p.CurrentPage+1, true)
 			continue
 		case term.TERM_CODE_UP, term.TERM_CODE_LEFT:
-			p.Render(p.pagination.CurrentPage-1, true)
+			p.Render(p.CurrentPage-1, true)
 			continue
 		}
-
 	}
-}
-
-// TermPager Pagination display when the number of results is greater than the limit
-// the input struct must has
-// Offset int
-// Limit  int
-// Pager  bool
-func TermPaging(pageSize int, disablePage bool, out io.Writer, uri string, input, output interface{}, handle func(string, string, interface{}, interface{}, ...func(interface{})) error, cb ...func(interface{})) error {
-	var (
-		ok   bool
-		err  error
-		rv   reflect.Value
-		resp = rest.RespTotal{}
-	)
-	p := &TermPager{
-		out:    out,
-		uri:    uri,
-		input:  input,
-		output: output,
-		handle: handle,
-		cb:     cb,
-	}
-
-	rv = reflect.Indirect(reflect.ValueOf(input))
-	if rv.Kind() != reflect.Struct {
-		return errors.New("expected a pointer to a struct")
-	}
-
-	if p.pagination, ok = rv.FieldByName("Pagination").Addr().Interface().(*rest.Pagination); !ok {
-		return errors.New("expected Pagination field with input struct")
-	}
-
-	if p.pagination.CurrentPage == 0 {
-		p.pagination.CurrentPage = 1
-	}
-
-	if pageSize == 0 {
-		return errors.New("pageSize must > 0")
-	} else {
-		p.pagination.PageSize = pageSize
-	}
-
-	// get total
-	if err := handle("GET", uri+"/cnt", input, &resp); err != nil {
-		return err
-	}
-	p.total = int(resp.Total)
-
-	if p.total == 0 {
-		p.out.Write([]byte("No Data\n"))
-		return nil
-	}
-
-	if p.total <= p.pagination.PageSize {
-		goto once
-	}
-
-	if p.pagination.Dump {
-		return p.Run()
-	}
-
-	if !term.IsTerminal(os.Stdout) || disablePage {
-		goto once
-	}
-
-	return p.Run()
-
-once:
-	if err = p.handle("GET", p.uri, p.input, p.output, p.cb...); err != nil {
-		if apierrors.IsNotFound(err) {
-			p.out.Write([]byte("No Data\n"))
-			return nil
-		}
-		return err
-	}
-	p.out.Write(Table(p.output))
-	return nil
 }

@@ -35,17 +35,17 @@ import (
 
 	"github.com/emicklei/go-restful"
 	"github.com/yubo/apiserver/pkg/request"
-	"github.com/yubo/golib/scheme"
 	restclientwatch "github.com/yubo/apiserver/pkg/rest/watch"
-	"github.com/yubo/golib/runtime"
-	"github.com/yubo/golib/runtime/serializer/streaming"
 	"github.com/yubo/apiserver/pkg/watch"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/api/errors"
+	"github.com/yubo/golib/runtime"
+	"github.com/yubo/golib/runtime/serializer/streaming"
+	"github.com/yubo/golib/scheme"
+	"github.com/yubo/golib/util"
 	utilclock "github.com/yubo/golib/util/clock"
 	"github.com/yubo/golib/util/flowcontrol"
 	"github.com/yubo/golib/util/net"
-	"github.com/yubo/golib/util"
 	"golang.org/x/net/http2"
 
 	//"k8s.io/client-go/tools/metrics"
@@ -1352,10 +1352,11 @@ func (r Result) StatusCode(statusCode *int) Result {
 // If the returned object is of type Status and has .Status != StatusSuccess, the
 // additional information in Status will be used to enrich the error.
 func (r Result) Into(obj runtime.Object) error {
-	if r.err != nil {
+	if r.err != nil || obj == nil {
 		// Check whether the result has a Status object in the body and prefer that.
 		return r.Error()
 	}
+
 	if r.decoder == nil {
 		return fmt.Errorf("serializer for %s doesn't exist", r.contentType)
 	}

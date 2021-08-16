@@ -43,6 +43,20 @@ type Pagination struct {
 	Dump        bool    `param:"query,hidden" flags:"-" description:""`
 }
 
+func (p *Pagination) GetPageSize() int {
+	if p.PageSize == 0 {
+		p.PageSize = defLimitPage
+	}
+	return p.PageSize
+}
+
+func (p *Pagination) GetCurPage() int {
+	if p.CurrentPage == 0 {
+		p.CurrentPage = 1
+	}
+	return p.CurrentPage
+}
+
 func (p *Pagination) OffsetLimit() (offset, limit int) {
 	limit = p.Limit
 
