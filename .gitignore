@@ -2,6 +2,7 @@ run/
 example/helo
 tmp/
 vendor/
+shell/
 
 *.bak
 *.log
