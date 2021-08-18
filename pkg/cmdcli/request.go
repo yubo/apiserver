@@ -60,7 +60,7 @@ func (p *Request) Do(ctx context.Context) error {
 
 	if p.timeout > 0 {
 		var cancel context.CancelFunc
-		ctx, cancel = context.WithTimeout(ctx, time.Duration(p.timeout)*time.Second)
+		ctx, cancel = context.WithTimeout(ctx, p.timeout)
 		defer cancel()
 	}
 
@@ -93,7 +93,7 @@ func (p *Request) Do(ctx context.Context) error {
 type RequestOptions struct {
 	method  string
 	prefix  string
-	timeout int // second
+	timeout time.Duration // second
 	input   interface{}
 	output  interface{}
 	cb      []func(interface{})
@@ -142,7 +142,7 @@ func WithCallback(cb ...func(interface{})) RequestOption {
 		o.cb = cb
 	})
 }
-func WithTimeout(timeout int) RequestOption {
+func WithTimeout(timeout time.Duration) RequestOption {
 	return newFuncRequestOption(func(o *RequestOptions) {
 		o.timeout = timeout
 	})
