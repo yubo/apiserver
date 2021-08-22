@@ -149,9 +149,8 @@ func run() error {
 			Host:          "127.0.0.1:8080",
 			ContentConfig: rest.ContentConfig{NegotiatedSerializer: scheme.Codecs},
 		},
-		Command: []string{"sh"},
+		Command: []string{"bash"},
 	}
-	containerName := "c08e76de8395"
 
 	// ensure we can recover the terminal while attached
 	t := p.SetupTTY()
@@ -176,12 +175,12 @@ func run() error {
 		req := restClient.Post().
 			SubResource("exec")
 		req.VersionedParams(&api.ExecRequest{
-			ContainerId: containerName,
-			Cmd:         p.Command,
-			Stdin:       p.Stdin,
-			Stdout:      p.Out != nil,
-			Stderr:      p.ErrOut != nil,
-			Tty:         t.Raw,
+			//ContainerId: containerName,
+			Cmd:    p.Command,
+			Stdin:  p.Stdin,
+			Stdout: p.Out != nil,
+			Stderr: p.ErrOut != nil,
+			Tty:    t.Raw,
 		}, scheme.ParameterCodec)
 
 		return p.Executor.Execute(

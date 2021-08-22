@@ -6,6 +6,7 @@ require (
 	github.com/Azure/go-autorest/autorest v0.11.19
 	github.com/Azure/go-autorest/autorest/adal v0.9.14
 	github.com/buger/goterm v1.0.1
+	github.com/containerd/console v1.0.3 // indirect
 	github.com/containerd/containerd v1.5.5 // indirect
 	github.com/coreos/go-oidc v2.1.0+incompatible
 	github.com/creack/pty v1.1.11
@@ -58,5 +59,6 @@ replace (
 	github.com/docker/go-connections => github.com/docker/go-connections v0.4.0
 	github.com/docker/go-units => github.com/docker/go-units v0.4.0
 	github.com/docker/spdystream => github.com/docker/spdystream v0.0.0-20160310174837-449fdfce4d96
+	github.com/yubo/golib => ../golib
 	google.golang.org/grpc => google.golang.org/grpc v1.27.1
 )

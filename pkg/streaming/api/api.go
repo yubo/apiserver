@@ -40,7 +40,7 @@ const (
 
 type ExecRequest struct {
 	// ID of the container in which to execute the command.
-	ContainerId string `protobuf:"bytes,1,opt,name=container_id,json=containerId,proto3" json:"container_id,omitempty" param:"query"`
+	ContainerId string `protobuf:"bytes,1,opt,name=container_id,json=containerId,proto3" json:"container_id,omitempty" param:"query" description:"container id / session id"`
 	// Command to execute.
 	Cmd []string `protobuf:"bytes,2,rep,name=cmd,proto3" json:"cmd,omitempty" param:"query"`
 	// Whether to exec the command in a TTY.

@@ -72,7 +72,6 @@ func newServerCmd() *cobra.Command {
 
 	ctx := context.Background()
 	ctx = proc.WithName(ctx, AppName)
-	ctx = proc.WithConfigOps(ctx, configer.WithFlagOptions(true, false, 5))
 
 	cmd := proc.NewRootCmd(ctx)
 	cmd.AddCommand(options.NewVersionCmd())
