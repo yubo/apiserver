@@ -88,6 +88,7 @@ func (p *server) installWs(http rest.GoRestfulContainer) {
 
 func (p *server) exec(w http.ResponseWriter, req *http.Request, in *api.ExecRequest) error {
 	klog.Info("entering exec")
+	defer klog.Info("leaving exec")
 	streamOpts := &remotecommandserver.Options{
 		Stdin:  in.Stdin,
 		Stdout: in.Stdout,

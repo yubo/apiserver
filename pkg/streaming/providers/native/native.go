@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/containerd/console"
 	"github.com/yubo/apiserver/pkg/streaming"
 )
 
@@ -67,9 +66,10 @@ type execResponse struct {
 	stdin   io.Writer
 	session *Session
 
-	console console.Console
-	slave   *os.File
-	cmd     *exec.Cmd
+	ptmx *os.File
+	//console console.Console
+	//slave   *os.File
+	cmd *exec.Cmd
 
 	//Conn   net.Conn
 	//Reader *bufio.Reader
@@ -77,11 +77,8 @@ type execResponse struct {
 
 // TODO
 func (p *execResponse) Close() error {
-	if p.slave != nil {
-		p.slave.Close()
-	}
-	if p.console != nil {
-		p.console.Close()
+	if p.ptmx != nil {
+		p.ptmx.Close()
 	}
 	return nil
 }

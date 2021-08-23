@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/golib/util/interrupt"
 	"github.com/yubo/golib/util/term"
 	"k8s.io/klog/v2"
@@ -61,7 +60,7 @@ func (c *Conn) ReadMessage() (messageType int, p []byte, err error) {
 
 type Client struct {
 	IOStreams
-	Opt             *rest.RequestOptions
+	//Opt             *rest.RequestOptions
 	Stdin           bool
 	TTY             bool
 	Quiet           bool               // minimize unnecessary output

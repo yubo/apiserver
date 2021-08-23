@@ -3,13 +3,13 @@ package native
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
-	"os"
 	"os/exec"
 	"sync"
 	"time"
 
-	"github.com/containerd/console"
+	"github.com/creack/pty"
 	"github.com/yubo/golib/util/term"
 	"k8s.io/klog/v2"
 )
@@ -48,11 +48,14 @@ func (p *Session) Status() *SessionStatus {
 
 // TODO: check min size
 func (p *Session) resizeTTY(height, width uint16) error {
-	if p.resp != nil && p.resp.console != nil {
-		return p.resp.console.Resize(console.WinSize{
-			Height: height,
-			Width:  width,
-		})
+	if p.resp != nil && p.resp.ptmx != nil {
+		klog.V(10).InfoS("resize", "h", height, "w", width)
+
+		if err := pty.Setsize(p.resp.ptmx, &pty.Winsize{Rows: height, Cols: width}); err != nil {
+			return fmt.Errorf("error resizing pty: %s", err)
+		}
+
+		return nil
 	}
 	return nil
 }
@@ -230,24 +233,8 @@ func (p *Session) exec() (*execResponse, error) {
 	cmd := exec.CommandContext(p.ctx, cf.Cmd[0], cf.Cmd[1:]...)
 	cmd.Env = cf.Env
 
-	console, slavePath, err := console.NewPty()
+	ptmx, err := pty.Start(cmd)
 	if err != nil {
-		return nil, err
-	}
-
-	slave, err := os.OpenFile(slavePath, os.O_RDWR, 0)
-	if err != nil {
-		console.Close()
-		return nil, err
-	}
-
-	cmd.Stdin = slave
-	cmd.Stdout = slave
-	cmd.Stderr = slave
-
-	if err := cmd.Start(); err != nil {
-		slave.Close()
-		console.Close()
 		return nil, err
 	}
 
@@ -257,21 +244,20 @@ func (p *Session) exec() (*execResponse, error) {
 	klog.V(10).InfoS("started", "cmd", cmd, "pid", p.pid)
 	go func() {
 		if err := p.wait(); err != nil {
-			klog.Error("session %s wait err %s", p.pid, err)
+			klog.Errorf("session %s wait err %s", p.pid, err)
 		}
 
 		p.Close()
 	}()
 
 	resp := &execResponse{
-		stdin:   console,
-		stdout:  console,
-		stderr:  console,
+		stdin:   ptmx,
+		stdout:  ptmx,
+		stderr:  ptmx,
 		session: p,
 
-		console: console,
-		slave:   slave,
-		cmd:     cmd,
+		ptmx: ptmx,
+		cmd:  cmd,
 	}
 
 	p.resp = resp
