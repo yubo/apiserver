@@ -79,7 +79,6 @@ func (p *server) installWs(http rest.GoRestfulContainer) {
 		GoRestfulContainer: http,
 		Routes: []rest.WsRoute{
 			{Method: "POST", SubPath: "/exec", Handle: p.exec},
-			{Method: "GET", SubPath: "/exec", Handle: p.exec},
 			{Method: "POST", SubPath: "/attach", Handle: p.attach},
 			{Method: "POST", SubPath: "/portforward", Handle: p.portForward},
 		},

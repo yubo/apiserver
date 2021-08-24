@@ -80,7 +80,6 @@ func (p *server) installWs(http rest.GoRestfulContainer) {
 		GoRestfulContainer: http,
 		Routes: []rest.WsRoute{
 			{Method: "POST", SubPath: "/exec", Handle: p.exec},
-			{Method: "GET", SubPath: "/exec", Handle: p.exec},
 			{Method: "POST", SubPath: "/attach", Handle: p.attach},
 			{Method: "POST", SubPath: "/portforward", Handle: p.portForward},
 		},
@@ -88,7 +87,7 @@ func (p *server) installWs(http rest.GoRestfulContainer) {
 }
 
 func (p *server) exec(w http.ResponseWriter, req *http.Request, in *api.ExecRequest) error {
-	klog.Info("entering exec")
+	klog.Infof("entering exec %#v", in)
 	streamOpts := &remotecommandserver.Options{
 		Stdin:  in.Stdin,
 		Stdout: in.Stdout,

@@ -18,31 +18,33 @@ func main() {
 }
 
 func run() error {
-	name, args, err := getArgs()
-	if err != nil {
-		return err
-	}
-
 	config := &rest.Config{
 		Host:          "127.0.0.1:8080",
 		ContentConfig: rest.ContentConfig{NegotiatedSerializer: scheme.Codecs},
 	}
 
+	containerId, name, args, err := getArgs()
+	if err != nil {
+		return err
+	}
+
 	return cmdcli.NewExecClient(config, "POST", "/exec").
 		Command(name, args...).
+		Container(containerId).
 		Run()
 }
 
-func getArgs() (name string, args []string, err error) {
-	if len(os.Args) < 2 {
-		err = fmt.Errorf("Usage: %s <name> <args> ...", os.Args[0])
+func getArgs() (containerId, name string, arg []string, err error) {
+	if len(os.Args) < 3 {
+		err = fmt.Errorf("Usage: %s <container id> <name> <args> ...", os.Args[0])
 		return
 	}
 
-	name = os.Args[1]
+	containerId = os.Args[1]
+	name = os.Args[2]
 
-	if len(os.Args) > 2 {
-		args = os.Args[2:]
+	if len(os.Args) > 3 {
+		arg = os.Args[3:]
 	}
 
 	return

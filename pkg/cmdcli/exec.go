@@ -16,38 +16,76 @@ import (
 )
 
 type ExecClient struct {
-	verb string
-	host string
-	path string
+	config *rest.Config
+	verb   string
+	path   string
 }
 
-func NewExecClient(verb, host, path string) *ExecClient {
+type execRequest struct {
+	config      *rest.Config
+	verb        string
+	path        string
+	cmd         []string
+	containerId string
+	ioStreams   *IOStreams
+}
+
+func NewExecClient(config *rest.Config, verb, path string) *ExecClient {
 	return &ExecClient{
-		verb: verb,
-		host: host,
-		path: path,
+		config: config,
+		verb:   verb,
+		path:   path,
 	}
 }
 
-func (p *ExecClient) Exec(cmd string, args ...string) error {
-	config := &rest.Config{
-		Host:          p.host,
-		ContentConfig: rest.ContentConfig{NegotiatedSerializer: scheme.Codecs},
+func (p *ExecClient) Attach(id string) *execRequest {
+	return &execRequest{
+		config:      p.config,
+		verb:        p.verb,
+		path:        p.path,
+		containerId: id,
+		ioStreams: &IOStreams{
+			In:     os.Stdin,
+			Out:    os.Stdout,
+			ErrOut: os.Stderr,
+		},
 	}
+}
 
-	client, err := rest.RESTClientFor(config)
+func (p *ExecClient) Command(cmd string, args ...string) *execRequest {
+	return &execRequest{
+		config: p.config,
+		verb:   p.verb,
+		path:   p.path,
+		cmd:    append([]string{cmd}, args...),
+		ioStreams: &IOStreams{
+			In:     os.Stdin,
+			Out:    os.Stdout,
+			ErrOut: os.Stderr,
+		},
+	}
+}
+
+func (p *execRequest) Container(id string) *execRequest {
+	p.containerId = id
+	return p
+}
+
+func (p *execRequest) IO(ioStreams *IOStreams) *execRequest {
+	p.ioStreams = ioStreams
+	return p
+}
+
+func (p *execRequest) Run() error {
+	client, err := rest.RESTClientFor(p.config)
 	if err != nil {
 		return err
 	}
 
 	o := &StreamOptions{
-		IOStreams: IOStreams{
-			In:     os.Stdin,
-			Out:    os.Stdout,
-			ErrOut: os.Stderr,
-		},
-		Stdin: true,
-		TTY:   true,
+		IOStreams: p.ioStreams,
+		Stdin:     true,
+		TTY:       true,
 	}
 	// ensure we can recover the terminal while attached
 	t := o.SetupTTY()
@@ -66,18 +104,19 @@ func (p *ExecClient) Exec(cmd string, args ...string) error {
 		Verb(p.verb).
 		Prefix(p.path).
 		VersionedParams(&api.ExecRequest{
-			Cmd:    append([]string{cmd}, args...),
-			Stdin:  o.Stdin,
-			Stdout: o.Out != nil,
-			Stderr: o.ErrOut != nil,
-			Tty:    t.Raw,
+			ContainerId: p.containerId,
+			Cmd:         p.cmd,
+			Tty:         t.Raw,
+			Stdin:       o.Stdin,
+			Stdout:      o.Out != nil,
+			Stderr:      o.ErrOut != nil,
 		}, scheme.ParameterCodec)
 
 	return t.Safe(func() error {
 		return RemoteExecute(
 			p.verb,
 			req.URL(),
-			config,
+			p.config,
 			o.In,
 			o.Out,
 			o.ErrOut,
@@ -88,7 +127,7 @@ func (p *ExecClient) Exec(cmd string, args ...string) error {
 }
 
 type StreamOptions struct {
-	IOStreams
+	*IOStreams
 
 	Stdin bool
 	TTY   bool

@@ -40,75 +40,65 @@ const (
 
 type ExecRequest struct {
 	// ID of the container in which to execute the command.
-	ContainerId string `protobuf:"bytes,1,opt,name=container_id,json=containerId,proto3" json:"container_id,omitempty" param:"query" description:"container id / session id"`
+	ContainerId string `json:"container_id" param:"query" description:"container id"`
 	// Command to execute.
-	Cmd []string `protobuf:"bytes,2,rep,name=cmd,proto3" json:"cmd,omitempty" param:"query"`
+	Cmd []string `json:"cmd,omitempty" param:"query"`
 	// Whether to exec the command in a TTY.
-	Tty bool `protobuf:"varint,3,opt,name=tty,proto3" json:"tty,omitempty" param:"query"`
+	Tty bool `json:"tty,omitempty" param:"query"`
 	// Whether to stream stdin.
 	// One of `stdin`, `stdout`, and `stderr` MUST be true.
-	Stdin bool `protobuf:"varint,4,opt,name=stdin,proto3" json:"stdin,omitempty" param:"query"`
+	Stdin bool `json:"stdin,omitempty" param:"query"`
 	// Whether to stream stdout.
 	// One of `stdin`, `stdout`, and `stderr` MUST be true.
-	Stdout bool `protobuf:"varint,5,opt,name=stdout,proto3" json:"stdout,omitempty" param:"query"`
+	Stdout bool `json:"stdout,omitempty" param:"query"`
 	// Whether to stream stderr.
 	// One of `stdin`, `stdout`, and `stderr` MUST be true.
 	// If `tty` is true, `stderr` MUST be false. Multiplexing is not supported
 	// in this case. The output of stdout and stderr will be combined to a
 	// single stream.
-	Stderr bool `protobuf:"varint,6,opt,name=stderr,proto3" json:"stderr,omitempty" param:"query"`
+	Stderr bool `json:"stderr,omitempty" param:"query"`
 }
 
 type ExecResponse struct {
 	// Fully qualified URL of the exec streaming server.
-	Url                  string   `protobuf:"bytes,1,opt,name=url,proto3" json:"url,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Url string `json:"url,omitempty"`
 }
 
 type AttachRequest struct {
 	// ID of the container to which to attach.
-	ContainerId string `protobuf:"bytes,1,opt,name=container_id,json=containerId,proto3" json:"container_id,omitempty"`
+	ContainerId string `json:"container_id,omitempty"`
 	// Whether to stream stdin.
 	// One of `stdin`, `stdout`, and `stderr` MUST be true.
-	Stdin bool `protobuf:"varint,2,opt,name=stdin,proto3" json:"stdin,omitempty"`
+	Stdin bool `json:"stdin,omitempty"`
 	// Whether the process being attached is running in a TTY.
 	// This must match the TTY setting in the ContainerConfig.
-	Tty bool `protobuf:"varint,3,opt,name=tty,proto3" json:"tty,omitempty"`
+	Tty bool `json:"tty,omitempty"`
 	// Whether to stream stdout.
 	// One of `stdin`, `stdout`, and `stderr` MUST be true.
-	Stdout bool `protobuf:"varint,4,opt,name=stdout,proto3" json:"stdout,omitempty"`
+	Stdout bool `json:"stdout,omitempty"`
 	// Whether to stream stderr.
 	// One of `stdin`, `stdout`, and `stderr` MUST be true.
 	// If `tty` is true, `stderr` MUST be false. Multiplexing is not supported
 	// in this case. The output of stdout and stderr will be combined to a
 	// single stream.
-	Stderr               bool     `protobuf:"varint,5,opt,name=stderr,proto3" json:"stderr,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Stderr bool `json:"stderr,omitempty"`
 }
 
 type AttachResponse struct {
 	// Fully qualified URL of the attach streaming server.
-	Url                  string   `protobuf:"bytes,1,opt,name=url,proto3" json:"url,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Url string `protobuf:"bytes,1,opt,name=url,proto3" json:"url,omitempty"`
 }
 
 type PortForwardRequest struct {
 	// ID of the container to which to forward the port.
-	PodSandboxId string `protobuf:"bytes,1,opt,name=pod_sandbox_id,json=podSandboxId,proto3" json:"pod_sandbox_id,omitempty"`
+	PodSandboxId string `json:"pod_sandbox_id,omitempty"`
 	// Port to forward.
-	Port                 []int32  `protobuf:"varint,2,rep,packed,name=port,proto3" json:"port,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Port []int32 `json:"port,omitempty"`
 }
 
 type PortForwardResponse struct {
 	// Fully qualified URL of the port-forward streaming server.
-	Url                  string   `protobuf:"bytes,1,opt,name=url,proto3" json:"url,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Url string `json:"url,omitempty"`
 }
 
 type ExecSyncRequest struct {
