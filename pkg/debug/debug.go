@@ -41,7 +41,7 @@ var (
 )
 
 func (p *debugModule) start(ctx context.Context) error {
-	c := proc.ConfigerFrom(ctx)
+	c := proc.ConfigerMustFrom(ctx)
 
 	cf := &config{}
 	if err := c.Read(p.name, cf); err != nil {

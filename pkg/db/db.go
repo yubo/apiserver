@@ -60,7 +60,7 @@ var (
 // Because some configuration may be stored in the database,
 // set the db.connect into sys.db.prestart
 func (p *dbModule) init(ctx context.Context) (err error) {
-	configer := proc.ConfigerFrom(ctx)
+	configer := proc.ConfigerMustFrom(ctx)
 	p.ctx, p.cancel = context.WithCancel(ctx)
 
 	cf := &Config{}

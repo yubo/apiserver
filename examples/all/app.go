@@ -10,7 +10,6 @@ import (
 	"github.com/yubo/apiserver/examples/all/tracing"
 	"github.com/yubo/apiserver/examples/all/user"
 	"github.com/yubo/apiserver/pkg/options"
-	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/proc"
 	"k8s.io/klog/v2"
 

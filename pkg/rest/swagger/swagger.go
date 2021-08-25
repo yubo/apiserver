@@ -29,7 +29,7 @@ var (
 )
 
 func (p *Module) init(ctx context.Context) (err error) {
-	c := proc.ConfigerFrom(ctx)
+	c := proc.ConfigerMustFrom(ctx)
 
 	cf := newConfig()
 	if err := c.Read(moduleName, cf); err != nil {

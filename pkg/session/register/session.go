@@ -39,7 +39,7 @@ func newConfig() *session.Config {
 }
 
 func (p *module) init(ctx context.Context) error {
-	c := proc.ConfigerFrom(ctx)
+	c := proc.ConfigerMustFrom(ctx)
 
 	cf := newConfig()
 	if err := c.Read(p.name, cf); err != nil {
