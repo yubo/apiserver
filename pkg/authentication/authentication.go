@@ -213,7 +213,7 @@ func (p *authentication) Authenticator() authenticator.Request {
 }
 
 func (p *authentication) init(ctx context.Context) (err error) {
-	c := proc.ConfigerFrom(ctx)
+	c := proc.ConfigerMustFrom(ctx)
 	p.ctx, p.cancel = context.WithCancel(ctx)
 
 	cf := &config{}

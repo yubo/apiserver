@@ -61,4 +61,6 @@ replace (
 	github.com/docker/spdystream => github.com/docker/spdystream v0.0.0-20160310174837-449fdfce4d96
 	github.com/yubo/golib => ../golib
 	google.golang.org/grpc => google.golang.org/grpc v1.27.1
+
+	github.com/yubo/golib => ../golib
 )

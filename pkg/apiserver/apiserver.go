@@ -231,6 +231,7 @@ func logStackOnRecover(panicReason interface{}, w http.ResponseWriter) {
 }
 func (s *apiserver) Start(stopCh <-chan struct{}, done chan struct{}) error {
 	if !s.config.Enabled {
+		klog.Infof("apiserver is disabled")
 		close(done)
 		return nil
 	}
@@ -273,7 +274,7 @@ func (s *apiserver) Serve(handler http.Handler, shutdownTimeout time.Duration, s
 		return nil, fmt.Errorf("listener must not be nil")
 	}
 
-	secureServer := &http.Server{
+	server := &http.Server{
 		Addr:           s.config.Listener.Addr().String(),
 		Handler:        handler,
 		MaxHeaderBytes: 1 << 20,
@@ -284,8 +285,8 @@ func (s *apiserver) Serve(handler http.Handler, shutdownTimeout time.Duration, s
 		},
 	}
 
-	klog.Infof("Serving securely on %s", secureServer.Addr)
-	return RunServer(secureServer, s.config.Listener, shutdownTimeout, stopCh)
+	klog.Infof("Serving on %s", server.Addr)
+	return RunServer(server, s.config.Listener, shutdownTimeout, stopCh)
 }
 
 // RunServer spawns a go-routine continuously serving until the stopCh is

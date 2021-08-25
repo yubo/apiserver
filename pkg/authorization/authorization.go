@@ -8,9 +8,9 @@ import (
 	"github.com/yubo/apiserver/pkg/authorization/union"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/golib/proc"
+	"github.com/yubo/golib/util"
 	utilerrors "github.com/yubo/golib/util/errors"
 	"github.com/yubo/golib/util/sets"
-	"github.com/yubo/golib/util"
 	"k8s.io/klog/v2"
 )
 
@@ -126,7 +126,7 @@ func (p *authorization) Authorizer() authorizer.Authorizer {
 }
 
 func (p *authorization) init(ctx context.Context) error {
-	c := proc.ConfigerFrom(ctx)
+	c := proc.ConfigerMustFrom(ctx)
 	p.ctx, p.cancel = context.WithCancel(ctx)
 
 	cf := newConfig()
