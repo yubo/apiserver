@@ -782,6 +782,13 @@ func (r *Request) Watch(ctx context.Context, obj interface{}) (watch.Interface, 
 	if resp.StatusCode != http.StatusOK {
 		defer resp.Body.Close()
 		if result := r.transformResponse(resp, req); result.err != nil {
+			// try decode body
+			status := &api.Status{}
+			if err := result.Into(status); err != nil {
+				if e, ok := err.(*errors.StatusError); ok {
+					return nil, e
+				}
+			}
 			return nil, result.err
 		}
 		return nil, fmt.Errorf("for request %s, got status: %v", url, resp.StatusCode)
