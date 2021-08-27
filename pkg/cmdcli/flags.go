@@ -8,6 +8,11 @@ import (
 	"strings"
 
 	"github.com/spf13/pflag"
+	"github.com/yubo/golib/configer"
+)
+
+const (
+	maxDepth = 5
 )
 
 // struct -> args {{{
@@ -24,16 +29,14 @@ func TrimArgs(in []string) []string {
 	return out
 }
 
-// `flags:""`
-// `flags:"-"`
-// `flags:",arg"`
-// `flags:"values,,"`
-// `flags:"values,f,"`
+// `flag:""`
+// `flag:"values"`
+// `flag:"values,f"`
 
 // struct -> []string
 // GetArgs decode args from sample
 func GetArgs(args, args2 *[]string, sample interface{}) error {
-	err := getArgs(args, args2, sample)
+	err := getArgs(args, args2, sample, 0)
 	if err != nil {
 		return err
 	}
@@ -42,7 +45,11 @@ func GetArgs(args, args2 *[]string, sample interface{}) error {
 	return nil
 }
 
-func getArgs(args, args2 *[]string, sample interface{}) error {
+func getArgs(args, args2 *[]string, sample interface{}, depth int) error {
+	if depth > maxDepth {
+		panic(fmt.Sprintf("depth is larger than the maximum allowed depth of %d", maxDepth))
+	}
+
 	rv := reflect.Indirect(reflect.ValueOf(sample))
 	rt := rv.Type()
 
@@ -51,8 +58,8 @@ func getArgs(args, args2 *[]string, sample interface{}) error {
 	}
 
 	for i := 0; i < rt.NumField(); i++ {
+		sf := rt.Field(i)
 		fv := rv.Field(i)
-		ff := rt.Field(i)
 
 		if !fv.CanInterface() {
 			continue
@@ -65,16 +72,12 @@ func getArgs(args, args2 *[]string, sample interface{}) error {
 			fv = fv.Elem()
 		}
 
-		flags, _, skip, arg, arg2, local, inline, _, err := getTags(ff)
-		if err != nil {
-			panic(err)
-		}
-
-		if skip || local {
+		opt := configer.GetTagOpts(sf)
+		if opt.Skip {
 			continue
 		}
 
-		if arg {
+		if opt.Arg == "1" {
 			in := fv.Interface()
 			if v, ok := in.([]string); ok {
 				*args = append(*args, v...)
@@ -88,7 +91,7 @@ func getArgs(args, args2 *[]string, sample interface{}) error {
 			continue
 		}
 
-		if arg2 {
+		if opt.Arg == "2" {
 			in := fv.Interface()
 			if v, ok := in.([]string); ok {
 				*args2 = append(*args2, v...)
@@ -102,23 +105,23 @@ func getArgs(args, args2 *[]string, sample interface{}) error {
 			continue
 		}
 
-		if inline {
-			if err := getArgs(args, args2, fv.Interface()); err != nil {
+		// inline
+		if sf.Type.Kind() == reflect.Struct {
+			if err := getArgs(args, args2, fv.Interface(), depth+1); err != nil {
 				return err
 			}
 			continue
 		}
 
-		if err := getArgs2(args, "--"+flags[0], fv); err != nil {
-			return fmt.Errorf("%s.%s %s", rt.Name(), ff.Name, err.Error())
+		if err := _getArgs(args, "--"+opt.Flag[0], fv); err != nil {
+			return fmt.Errorf("%s.%s %s", rt.Name(), sf.Name, err.Error())
 		}
 	}
 
 	return nil
 }
 
-func getArgs2(args *[]string, key string, rv reflect.Value) (err error) {
-
+func _getArgs(args *[]string, key string, rv reflect.Value) (err error) {
 	if arg, ok := rv.Interface().(CmdArg); ok {
 		*args = append(*args, arg.CmdArg(key)...)
 		return
@@ -140,7 +143,7 @@ func getArgs2(args *[]string, key string, rv reflect.Value) (err error) {
 	case reflect.Slice:
 		for i := 0; i < rv.Len(); i++ {
 			fv := reflect.Indirect(rv.Index(i))
-			if err = getArgs2(args, key, fv); err != nil {
+			if err = _getArgs(args, key, fv); err != nil {
 				return
 			}
 		}
@@ -149,54 +152,57 @@ func getArgs2(args *[]string, key string, rv reflect.Value) (err error) {
 	}
 
 	return
-
 }
 
 // }}}
 
 // struct -> pflag.Addflags -> cml help/usage {{{
 func AddFlags(fs *pflag.FlagSet, in interface{}) {
-	if reflect.ValueOf(in).Kind() != reflect.Ptr {
-		panic("must ptr")
+	addFlags(fs, in, 0)
+}
+
+func addFlags(fs *pflag.FlagSet, in interface{}, depth int) {
+	if depth > maxDepth {
+		panic(fmt.Sprintf("path.depth is larger than the maximum allowed depth of %d", maxDepth))
+	}
+
+	if k := reflect.ValueOf(in).Kind(); k != reflect.Ptr {
+		panic(fmt.Sprintf("sample must be a ptr, got %s", k))
 	}
 
 	rv := reflect.ValueOf(in).Elem()
 	rt := rv.Type()
 	for i := 0; i < rt.NumField(); i++ {
+		sf := rt.Field(i)
 		fv := rv.Field(i)
-		ff := rt.Field(i)
-		ft := ff.Type
+		ft := sf.Type
 
-		flags, def, skip, arg, arg2, _, inline, desc, err := getTags(ff)
-		if err != nil {
-			panic(err)
-		}
-
-		if skip || arg || arg2 {
+		opt := configer.GetTagOpts(sf)
+		if len(opt.Flag) == 0 {
 			continue
 		}
 
-		if inline {
+		if ft.Kind() == reflect.Struct {
 			prepareValue(fv, ft)
 			if fv.Kind() == reflect.Ptr {
 				fv = fv.Elem()
 				ft = fv.Type()
 			}
-			AddFlags(fs, fv.Addr().Interface())
+			addFlags(fs, fv.Addr().Interface(), depth+1)
 			continue
 		}
 
-		addFlag(fs, fv, ft, flags, def, desc)
+		_addFlag(fs, fv, ft, opt)
 	}
 }
 
-func addFlag(fs *pflag.FlagSet, rv reflect.Value, rt reflect.Type, flags []string, def, desc string) {
-	if !rv.CanSet() {
-		panic(fmt.Sprintf("%v(%s) can not be set", flags, rv.Kind()))
-	}
+func _addFlag(fs *pflag.FlagSet, rv reflect.Value, rt reflect.Type, opt *configer.TagOpts) {
+	flags := opt.Flag
+	desc := opt.Description
+	def := opt.Default
 
-	if len(flags) != 2 {
-		panic(fmt.Sprintf("%v(%s) len != 2", flags, rv.Kind()))
+	if !rv.CanSet() {
+		panic(fmt.Sprintf("field %s (%s) can not be set", opt.Name, rv.Kind()))
 	}
 
 	if rv.Kind() == reflect.Ptr {
@@ -217,7 +223,7 @@ func addFlag(fs *pflag.FlagSet, rv reflect.Value, rt reflect.Type, flags []strin
 		return
 	}
 
-	if flags[1] == "" {
+	if len(flags) == 1 {
 		switch rv.Kind() {
 		case reflect.String:
 			fs.StringVar(p.(*string), flags[0], def, desc)
@@ -291,40 +297,41 @@ func CleanupArgs(fs *pflag.FlagSet, out interface{}) {
 	rv = rv.Elem()
 	rt = rv.Type()
 
-	cleanupArgs(fs, rv, rt)
+	cleanupArgs(fs, rv, rt, 0)
 }
 
 // rv is elem()
-func cleanupArgs(fs *pflag.FlagSet, rv reflect.Value, rt reflect.Type) {
+func cleanupArgs(fs *pflag.FlagSet, rv reflect.Value, rt reflect.Type, depth int) {
+	if depth > maxDepth {
+		panic(fmt.Sprintf("depth is larger than the maximum allowed depth of %d", maxDepth))
+	}
+
 	if rv.Kind() != reflect.Struct || rt.String() == "time.Time" {
 		panic("schema: interface must be a pointer to struct")
 	}
 
 	for i := 0; i < rt.NumField(); i++ {
+		sf := rt.Field(i)
 		fv := rv.Field(i)
-		ff := rt.Field(i)
-		ft := ff.Type
+		ft := sf.Type
 
-		flags, def, skip, arg, arg2, _, inline, _, err := getTags(ff)
-		if err != nil {
-			panic(err)
-		}
+		opt := configer.GetTagOpts(sf)
+		//flags, def, skip, arg, arg2, _, inline, _, err := getTags(sf)
 
-		if skip || arg || arg2 {
-			// dlog.Debugf("skip %v arg %v", skip, arg)
+		if opt.Skip {
 			continue
 		}
 
-		if inline {
+		if sf.Type.Kind() == reflect.Struct {
 			if fv.Kind() == reflect.Ptr {
 				fv = fv.Elem()
 				ft = fv.Type()
 			}
-			cleanupArgs(fs, fv, ft)
+			cleanupArgs(fs, fv, ft, depth+1)
 			continue
 		}
 
-		if def == "" && !fs.Changed(flags[0]) &&
+		if opt.Default == "" && !fs.Changed(opt.Flag[0]) &&
 			(fv.Kind() == reflect.Ptr ||
 				fv.Kind() == reflect.Map ||
 				fv.Kind() == reflect.Slice) {

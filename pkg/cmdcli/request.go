@@ -54,8 +54,11 @@ func (p *Request) Do(ctx context.Context) error {
 		req = req.Prefix(p.prefix)
 	}
 
-	if p.input != nil {
-		req = req.VersionedParams(p.input, scheme.ParameterCodec)
+	if p.param != nil {
+		req = req.VersionedParams(p.param, scheme.ParameterCodec)
+	}
+	if p.body != nil {
+		req = req.Body(p.body)
 	}
 
 	if p.timeout > 0 {
@@ -93,10 +96,12 @@ func (p *Request) Do(ctx context.Context) error {
 type RequestOptions struct {
 	method  string
 	prefix  string
-	timeout time.Duration // second
-	input   interface{}
-	output  interface{}
-	cb      []func(interface{})
+	client  *rest.RESTClient    // client
+	timeout time.Duration       // second
+	param   interface{}         // param variables
+	body    interface{}         // string, []byte, io.Reader, struct{}
+	output  interface{}         //
+	cb      []func(interface{}) //
 }
 
 type RequestOption interface {
@@ -117,6 +122,11 @@ func newFuncRequestOption(f func(*RequestOptions)) *funcRequestOption {
 	}
 }
 
+func WithClient(client *rest.RESTClient) RequestOption {
+	return newFuncRequestOption(func(o *RequestOptions) {
+		o.client = client
+	})
+}
 func WithMethod(method string) RequestOption {
 	return newFuncRequestOption(func(o *RequestOptions) {
 		o.method = method
@@ -127,9 +137,14 @@ func WithPrifix(prefix string) RequestOption {
 		o.prefix = prefix
 	})
 }
-func WithInput(input interface{}) RequestOption {
+func WithParam(param interface{}) RequestOption {
 	return newFuncRequestOption(func(o *RequestOptions) {
-		o.input = input
+		o.param = param
+	})
+}
+func WithBody(body interface{}) RequestOption {
+	return newFuncRequestOption(func(o *RequestOptions) {
+		o.body = body
 	})
 }
 func WithOutput(output interface{}) RequestOption {

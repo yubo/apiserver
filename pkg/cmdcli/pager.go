@@ -38,7 +38,7 @@ func NewPager(r *Request, stdout io.Writer, disablePage bool) (*Pager, error) {
 		stdout:      stdout,
 	}
 
-	if pagination, err := getPaginationFrom(r.input); err != nil {
+	if pagination, err := getPaginationFrom(r.param); err != nil {
 		return nil, err
 	} else {
 		p.Pagination = pagination
