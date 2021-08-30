@@ -8,8 +8,8 @@ import (
 
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/rest"
-	"github.com/yubo/golib/proc"
 	"github.com/yubo/golib/logs"
+	"github.com/yubo/golib/proc"
 
 	// http
 	_ "github.com/yubo/apiserver/pkg/apiserver/register"

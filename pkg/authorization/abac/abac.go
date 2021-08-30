@@ -56,7 +56,7 @@ func NewFromFile(path string) (PolicyList, error) {
 	// comments in files, and identification of errors by line number.
 	file, err := os.Open(path)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("open --authorization-policy-file=%s error %s", path, err)
 	}
 	defer file.Close()
 

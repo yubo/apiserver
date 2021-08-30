@@ -5,6 +5,7 @@ import (
 
 	"github.com/yubo/apiserver/pkg/authorization"
 	"github.com/yubo/apiserver/pkg/authorization/abac"
+	"github.com/yubo/apiserver/pkg/authorization/abac/api"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/golib/proc"
@@ -25,7 +26,8 @@ var (
 		Priority:    proc.PRI_SYS_INIT,
 		SubPriority: options.PRI_M_AUTHZ - 1,
 	}}
-	_config *config
+	_config    *config
+	PolicyList []*api.Policy
 )
 
 type config struct {
@@ -62,7 +64,14 @@ func init() {
 	proc.RegisterFlags(modulePath, "authorization", newConfig())
 
 	factory := func() (authorizer.Authorizer, error) {
-		return abac.NewFromFile(_auth.config.PolicyFile)
+		if _auth.config.PolicyFile != "" {
+			p, err := abac.NewFromFile(_auth.config.PolicyFile)
+			if err != nil {
+				return nil, err
+			}
+			return abac.PolicyList(append(PolicyList, p...)), nil
+		}
+		return abac.PolicyList(PolicyList), nil
 	}
 
 	authorization.RegisterAuthz("ABAC", factory)
