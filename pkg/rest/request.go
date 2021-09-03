@@ -783,13 +783,7 @@ func (r *Request) Watch(ctx context.Context, obj interface{}) (watch.Interface, 
 		defer resp.Body.Close()
 		if result := r.transformResponse(resp, req); result.err != nil {
 			// try decode body
-			status := &api.Status{}
-			if err := result.Into(status); err != nil {
-				if e, ok := err.(*errors.StatusError); ok {
-					return nil, e
-				}
-			}
-			return nil, result.err
+			return nil, result.Error()
 		}
 		return nil, fmt.Errorf("for request %s, got status: %v", url, resp.StatusCode)
 	}
@@ -1059,6 +1053,9 @@ func (r *Request) Do(ctx context.Context) Result {
 	err := r.request(ctx, func(req *http.Request, resp *http.Response) {
 		result = r.transformResponse(resp, req)
 	})
+	if result.err != nil {
+		return result
+	}
 	if err != nil {
 		return Result{err: err}
 	}
@@ -1338,7 +1335,7 @@ type Result struct {
 
 // Raw returns the raw result.
 func (r Result) Raw() ([]byte, error) {
-	return r.body, r.err
+	return r.body, r.Error()
 }
 
 // Get returns the result as an object, which means it passes through the decoder.

@@ -1,4 +1,4 @@
-package configer
+package cmdcli
 
 import (
 	"testing"

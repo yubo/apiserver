@@ -153,48 +153,6 @@ func _getArgs(args *[]string, key string, rv reflect.Value) (err error) {
 	return
 }
 
-func CheckArgsLength(argsReceived int, requiredArgs ...string) error {
-	expectedNum := len(requiredArgs)
-	if argsReceived != expectedNum {
-		arg := "arguments"
-		if expectedNum == 1 {
-			arg = "argument"
-		}
-
-		e := fmt.Sprintf("This command needs %v %s:", expectedNum, arg)
-		for _, v := range requiredArgs {
-			e += " <" + v + ">"
-		}
-		return fmt.Errorf(e)
-	}
-	return nil
-}
-
-func CheckArgsLength3(args []string, atLeast int, requiredArgs ...string) (string, string, string, error) {
-	if len(args) < atLeast {
-		arg := "arguments"
-		if atLeast == 1 {
-			arg = "argument"
-		}
-
-		e := fmt.Sprintf("This command needs %v %s:", atLeast, arg)
-		for i, v := range requiredArgs {
-			if i < atLeast {
-				e += " <" + v + ">"
-			} else {
-				e += " [" + v + "]"
-			}
-		}
-		return "", "", "", fmt.Errorf(e)
-	}
-
-	r := [3]string{}
-	for i := 0; i < 3 && i < len(args); i++ {
-		r[i] = args[i]
-	}
-	return r[0], r[1], r[2], nil
-}
-
 // struct -> cmd flags
 // CleanupArgs set ptr to nil which flags has not been changed
 func CleanupArgs(fs *pflag.FlagSet, out interface{}) {
@@ -232,7 +190,7 @@ func cleanupArgs(fs *pflag.FlagSet, rv reflect.Value, rt reflect.Type, depth int
 		fv := rv.Field(i)
 		ft := sf.Type
 
-		opt := GetTagOpts(sf)
+		opt := configer.GetTagOpts(sf)
 
 		if opt.Skip {
 			continue
