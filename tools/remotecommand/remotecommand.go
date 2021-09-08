@@ -24,10 +24,11 @@ import (
 
 	"k8s.io/klog/v2"
 
-	"github.com/yubo/golib/util/httpstream"
-	"github.com/yubo/golib/util/remotecommand"
 	restclient "github.com/yubo/apiserver/pkg/rest"
 	spdy "github.com/yubo/apiserver/pkg/rest/transport/spdy"
+	"github.com/yubo/golib/util/httpstream"
+	"github.com/yubo/golib/util/remotecommand"
+	"github.com/yubo/golib/util/term"
 )
 
 // StreamOptions holds information pertaining to the current streaming session:
@@ -38,7 +39,7 @@ type StreamOptions struct {
 	Stdout            io.Writer
 	Stderr            io.Writer
 	Tty               bool
-	TerminalSizeQueue TerminalSizeQueue
+	TerminalSizeQueue term.TerminalSizeQueue
 }
 
 // Executor is an interface for transporting shell-style streams.

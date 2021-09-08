@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/creack/pty"
+	"github.com/yubo/golib/stream"
 	"github.com/yubo/golib/util/term"
 	"k8s.io/klog/v2"
 )
@@ -25,6 +26,8 @@ type Session struct {
 	running  bool
 	exitCode int
 	pid      int
+	pty      stream.Pty
+	proxy    *stream.ProxyTty
 }
 
 type SessionStatus struct {

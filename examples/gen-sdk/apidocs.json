@@ -1,0 +1,291 @@
+{
+ "swagger": "2.0",
+ "info": {
+  "title": "apiserver.swagger"
+ },
+ "paths": {
+  "/api/user": {
+   "get": {
+    "consumes": [
+     "application/json"
+    ],
+    "produces": [
+     "application/json"
+    ],
+    "tags": [
+     "user"
+    ],
+    "summary": "search/list users",
+    "operationId": "func2",
+    "parameters": [
+     {
+      "type": "string",
+      "description": "query user",
+      "name": "query",
+      "in": "query"
+     },
+     {
+      "type": "boolean",
+      "description": "just response total count",
+      "name": "count",
+      "in": "query"
+     },
+     {
+      "type": "integer",
+      "description": "page size",
+      "name": "pageSize",
+      "in": "query"
+     },
+     {
+      "type": "integer",
+      "description": "current page number, start at 1(defualt)",
+      "name": "currentPage",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "column name",
+      "name": "sorter",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "asc(default)/desc",
+      "name": "order",
+      "in": "query"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "schema": {
+       "$ref": "#/definitions/main.GetUsersOutput"
+      }
+     }
+    }
+   },
+   "post": {
+    "consumes": [
+     "application/json"
+    ],
+    "produces": [
+     "application/json"
+    ],
+    "tags": [
+     "user"
+    ],
+    "summary": "create user",
+    "operationId": "func1",
+    "parameters": [
+     {
+      "name": "body",
+      "in": "body",
+      "required": true,
+      "schema": {
+       "$ref": "#/definitions/main.CreateUserInput"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "schema": {
+       "$ref": "#/definitions/main.CreateUserOutput"
+      }
+     }
+    }
+   }
+  },
+  "/api/user/{user-name}": {
+   "get": {
+    "consumes": [
+     "application/json"
+    ],
+    "produces": [
+     "application/json"
+    ],
+    "tags": [
+     "user"
+    ],
+    "summary": "get user",
+    "operationId": "func3",
+    "parameters": [
+     {
+      "type": "string",
+      "name": "user-name",
+      "in": "path",
+      "required": true
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "schema": {
+       "$ref": "#/definitions/main.User"
+      }
+     }
+    }
+   },
+   "put": {
+    "consumes": [
+     "application/json"
+    ],
+    "produces": [
+     "application/json"
+    ],
+    "tags": [
+     "user"
+    ],
+    "summary": "update user",
+    "operationId": "func4",
+    "parameters": [
+     {
+      "type": "string",
+      "name": "user-name",
+      "in": "path",
+      "required": true
+     },
+     {
+      "name": "body",
+      "in": "body",
+      "required": true,
+      "schema": {
+       "$ref": "#/definitions/main.UpdateUserBody"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "schema": {
+       "$ref": "#/definitions/main.User"
+      }
+     }
+    }
+   },
+   "delete": {
+    "consumes": [
+     "application/json"
+    ],
+    "produces": [
+     "application/json"
+    ],
+    "tags": [
+     "user"
+    ],
+    "summary": "delete user",
+    "operationId": "func5",
+    "parameters": [
+     {
+      "type": "string",
+      "name": "user-name",
+      "in": "path",
+      "required": true
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "schema": {
+       "$ref": "#/definitions/main.User"
+      }
+     }
+    }
+   }
+  }
+ },
+ "definitions": {
+  "main.CreateUserInput": {
+   "required": [
+    "name",
+    "nickName",
+    "phone"
+   ],
+   "properties": {
+    "name": {
+     "type": "string"
+    },
+    "nickName": {
+     "type": "string"
+    },
+    "phone": {
+     "type": "string"
+    }
+   }
+  },
+  "main.CreateUserOutput": {
+   "required": [
+    "name",
+    "nickName",
+    "phone"
+   ],
+   "properties": {
+    "name": {
+     "type": "string"
+    },
+    "nickName": {
+     "type": "string"
+    },
+    "phone": {
+     "type": "string"
+    }
+   }
+  },
+  "main.GetUsersOutput": {
+   "required": [
+    "total",
+    "list"
+   ],
+   "properties": {
+    "list": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/main.User"
+     }
+    },
+    "total": {
+     "type": "integer",
+     "format": "int32"
+    }
+   }
+  },
+  "main.UpdateUserBody": {
+   "required": [
+    "nickName",
+    "phone"
+   ],
+   "properties": {
+    "nickName": {
+     "type": "string"
+    },
+    "phone": {
+     "type": "string"
+    }
+   }
+  },
+  "main.User": {
+   "required": [
+    "name",
+    "nickName",
+    "phone"
+   ],
+   "properties": {
+    "name": {
+     "type": "string"
+    },
+    "nickName": {
+     "type": "string"
+    },
+    "phone": {
+     "type": "string"
+    }
+   }
+  }
+ },
+ "tags": [
+  {
+   "description": "user Api - swagger api sample",
+   "name": "user"
+  }
+ ]
+}

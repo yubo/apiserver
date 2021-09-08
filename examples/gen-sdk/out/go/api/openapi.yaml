@@ -1,0 +1,216 @@
+openapi: 3.0.1
+info:
+  title: apiserver.swagger
+servers:
+- url: /
+tags:
+- description: user Api - swagger api sample
+  name: user
+paths:
+  /api/user:
+    get:
+      operationId: func2
+      parameters:
+      - description: query user
+        in: query
+        name: query
+        schema:
+          type: string
+      - description: just response total count
+        in: query
+        name: count
+        schema:
+          type: boolean
+      - description: page size
+        in: query
+        name: pageSize
+        schema:
+          type: integer
+      - description: current page number, start at 1(defualt)
+        in: query
+        name: currentPage
+        schema:
+          type: integer
+      - description: column name
+        in: query
+        name: sorter
+        schema:
+          type: string
+      - description: asc(default)/desc
+        in: query
+        name: order
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/main.GetUsersOutput'
+          description: OK
+      summary: search/list users
+      tags:
+      - user
+    post:
+      operationId: func1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/main.CreateUserInput'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/main.CreateUserOutput'
+          description: OK
+      summary: create user
+      tags:
+      - user
+      x-codegen-request-body-name: body
+  /api/user/{user-name}:
+    delete:
+      operationId: func5
+      parameters:
+      - in: path
+        name: user-name
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/main.User'
+          description: OK
+      summary: delete user
+      tags:
+      - user
+    get:
+      operationId: func3
+      parameters:
+      - in: path
+        name: user-name
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/main.User'
+          description: OK
+      summary: get user
+      tags:
+      - user
+    put:
+      operationId: func4
+      parameters:
+      - in: path
+        name: user-name
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/main.UpdateUserBody'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/main.User'
+          description: OK
+      summary: update user
+      tags:
+      - user
+      x-codegen-request-body-name: body
+components:
+  schemas:
+    main.CreateUserInput:
+      properties:
+        name:
+          type: string
+        nickName:
+          type: string
+        phone:
+          type: string
+      required:
+      - name
+      - nickName
+      - phone
+      type: object
+    main.CreateUserOutput:
+      example:
+        phone: phone
+        nickName: nickName
+        name: name
+      properties:
+        name:
+          type: string
+        nickName:
+          type: string
+        phone:
+          type: string
+      required:
+      - name
+      - nickName
+      - phone
+      type: object
+    main.GetUsersOutput:
+      example:
+        total: 0
+        list:
+        - phone: phone
+          nickName: nickName
+          name: name
+        - phone: phone
+          nickName: nickName
+          name: name
+      properties:
+        list:
+          items:
+            $ref: '#/components/schemas/main.User'
+          type: array
+        total:
+          format: int32
+          type: integer
+      required:
+      - list
+      - total
+      type: object
+    main.UpdateUserBody:
+      properties:
+        nickName:
+          type: string
+        phone:
+          type: string
+      required:
+      - nickName
+      - phone
+      type: object
+    main.User:
+      example:
+        phone: phone
+        nickName: nickName
+        name: name
+      properties:
+        name:
+          type: string
+        nickName:
+          type: string
+        phone:
+          type: string
+      required:
+      - name
+      - nickName
+      - phone
+      type: object
+x-original-swagger-version: "2.0"

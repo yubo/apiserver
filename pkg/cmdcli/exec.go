@@ -90,7 +90,7 @@ func (p *execRequest) Run() error {
 	// ensure we can recover the terminal while attached
 	t := o.SetupTTY()
 
-	var sizeQueue remotecommand.TerminalSizeQueue
+	var sizeQueue term.TerminalSizeQueue
 	if t.Raw {
 		// this call spawns a goroutine to monitor/update the terminal size
 		sizeQueue = t.MonitorSize(t.GetSize())
@@ -193,7 +193,7 @@ func (o *StreamOptions) SetupTTY() *term.TTY {
 }
 
 // DefaultRemoteExecutor is the standard implementation of remote command execution
-func RemoteExecute(method string, url *url.URL, config *rest.Config, stdin io.Reader, stdout, stderr io.Writer, tty bool, terminalSizeQueue remotecommand.TerminalSizeQueue) error {
+func RemoteExecute(method string, url *url.URL, config *rest.Config, stdin io.Reader, stdout, stderr io.Writer, tty bool, terminalSizeQueue term.TerminalSizeQueue) error {
 	exec, err := remotecommand.NewSPDYExecutor(config, method, url)
 	if err != nil {
 		return err

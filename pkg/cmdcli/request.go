@@ -132,7 +132,7 @@ func WithMethod(method string) RequestOption {
 		o.method = method
 	})
 }
-func WithPrifix(prefix string) RequestOption {
+func WithPrefix(prefix string) RequestOption {
 	return newFuncRequestOption(func(o *RequestOptions) {
 		o.prefix = prefix
 	})
