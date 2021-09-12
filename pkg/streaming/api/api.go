@@ -66,22 +66,22 @@ type ExecResponse struct {
 
 type AttachRequest struct {
 	// ID of the container to which to attach.
-	ContainerId string `json:"container_id,omitempty"`
+	ContainerId string `json:"container_id,omitempty" param:"query"`
 	// Whether to stream stdin.
 	// One of `stdin`, `stdout`, and `stderr` MUST be true.
-	Stdin bool `json:"stdin,omitempty"`
+	Stdin bool `json:"stdin,omitempty" param:"query"`
 	// Whether the process being attached is running in a TTY.
 	// This must match the TTY setting in the ContainerConfig.
-	Tty bool `json:"tty,omitempty"`
+	Tty bool `json:"tty,omitempty" param:"query"`
 	// Whether to stream stdout.
 	// One of `stdin`, `stdout`, and `stderr` MUST be true.
-	Stdout bool `json:"stdout,omitempty"`
+	Stdout bool `json:"stdout,omitempty" param:"query"`
 	// Whether to stream stderr.
 	// One of `stdin`, `stdout`, and `stderr` MUST be true.
 	// If `tty` is true, `stderr` MUST be false. Multiplexing is not supported
 	// in this case. The output of stdout and stderr will be combined to a
 	// single stream.
-	Stderr bool `json:"stderr,omitempty"`
+	Stderr bool `json:"stderr,omitempty" param:"query"`
 }
 
 type AttachResponse struct {

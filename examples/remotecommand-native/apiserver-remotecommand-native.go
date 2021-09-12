@@ -39,10 +39,6 @@ var (
 		HookNum:  proc.ACTION_START,
 		Priority: proc.PRI_MODULE,
 	}}
-	_server = &server{
-		config:   streaming.DefaultConfig,
-		provider: native.NewProvider(),
-	}
 )
 
 type server struct {
@@ -68,8 +64,18 @@ func start(ctx context.Context) error {
 	if !ok {
 		return fmt.Errorf("unable to get http server from the context")
 	}
+	//TODO:
+	fd, err := os.Create("/tmp/test.rec")
+	if err != nil {
+		return err
+	}
 
-	_server.installWs(http)
+	srv := &server{
+		config:   streaming.DefaultConfig,
+		provider: native.NewProvider(ctx, fd),
+	}
+	srv.installWs(http)
+
 	return nil
 }
 
@@ -109,7 +115,6 @@ func (p *server) exec(w http.ResponseWriter, req *http.Request, in *api.ExecRequ
 		p.config.SupportedRemoteCommandProtocols)
 
 	return nil
-
 }
 
 func (p *server) attach(w http.ResponseWriter, req *http.Request, in *api.AttachRequest) error {

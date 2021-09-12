@@ -9,8 +9,8 @@ import (
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/golib/api/errors"
-	"github.com/yubo/golib/proc"
 	"github.com/yubo/golib/logs"
+	"github.com/yubo/golib/proc"
 	"github.com/yubo/golib/util"
 
 	_ "github.com/yubo/apiserver/pkg/apiserver/register"
@@ -41,7 +41,7 @@ type CreateUserOutput User
 
 type GetUsersInput struct {
 	rest.Pagination
-	Query *string `param:"query" name:"query" description:"query user"`
+	Query *string `param:"query" name:"query" description:"query user name or nick name"`
 	Count bool    `param:"query" name:"count" description:"just response total count"`
 }
 

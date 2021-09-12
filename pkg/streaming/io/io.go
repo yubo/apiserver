@@ -29,7 +29,6 @@ var errInvalidWrite = errors.New("invalid write result")
 // copyBuffer is the actual implementation of Copy and CopyBuffer.
 // if buf is nil, one is allocated.
 func copyBuffer(dst io.Writer, src io.Reader, buf []byte) (written int64, err error) {
-	klog.Info("----")
 	// If the reader has a WriteTo method, use it to do the copy.
 	// Avoids an allocation and a copy.
 	//if wt, ok := src.(io.WriterTo); ok {

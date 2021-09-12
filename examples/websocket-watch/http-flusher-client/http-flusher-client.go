@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"os"
-	"time"
 
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/golib/scheme"
@@ -22,7 +21,7 @@ func flusher() error {
 		return err
 	}
 
-	watching, err := c.Get().Prefix("hello").Watch(context.Background(), &time.Time{})
+	watching, err := c.Get().Prefix("hello").Watch(context.Background(), new(string))
 	if err != nil {
 		return err
 	}
@@ -34,7 +33,7 @@ func flusher() error {
 			klog.Info("unable to watching, exit")
 			return nil
 		}
-		klog.InfoS("recv event", "type", got.Type, "object", got.Object.(*time.Time))
+		klog.InfoS("recv event", "type", got.Type, "object", *got.Object.(*string))
 	}
 }
 

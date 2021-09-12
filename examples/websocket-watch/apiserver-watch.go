@@ -12,8 +12,8 @@ import (
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/apiserver/pkg/watch"
-	"github.com/yubo/golib/proc"
 	"github.com/yubo/golib/logs"
+	"github.com/yubo/golib/proc"
 	"k8s.io/klog/v2"
 
 	_ "github.com/yubo/apiserver/pkg/apiserver/register"
@@ -80,7 +80,7 @@ func watchHandle(w http.ResponseWriter, req *http.Request) error {
 			if watcher.IsStopped() {
 				return
 			}
-			watcher.Add(t)
+			watcher.Add(t.String())
 		}
 	}()
 

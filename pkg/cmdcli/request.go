@@ -28,7 +28,7 @@ func NewRequestWithClient(client *rest.RESTClient, opts ...RequestOption) *Reque
 	}
 
 	for _, opt := range opts {
-		opt.apply(&o.RequestOptions)
+		opt(&o.RequestOptions)
 	}
 	return o
 }
@@ -104,61 +104,45 @@ type RequestOptions struct {
 	cb      []func(interface{}) //
 }
 
-type RequestOption interface {
-	apply(*RequestOptions)
-}
-
-type funcRequestOption struct {
-	f func(*RequestOptions)
-}
-
-func (p *funcRequestOption) apply(opt *RequestOptions) {
-	p.f(opt)
-}
-
-func newFuncRequestOption(f func(*RequestOptions)) *funcRequestOption {
-	return &funcRequestOption{
-		f: f,
-	}
-}
+type RequestOption func(*RequestOptions)
 
 func WithClient(client *rest.RESTClient) RequestOption {
-	return newFuncRequestOption(func(o *RequestOptions) {
+	return func(o *RequestOptions) {
 		o.client = client
-	})
+	}
 }
 func WithMethod(method string) RequestOption {
-	return newFuncRequestOption(func(o *RequestOptions) {
+	return func(o *RequestOptions) {
 		o.method = method
-	})
+	}
 }
 func WithPrefix(prefix string) RequestOption {
-	return newFuncRequestOption(func(o *RequestOptions) {
+	return func(o *RequestOptions) {
 		o.prefix = prefix
-	})
+	}
 }
 func WithParam(param interface{}) RequestOption {
-	return newFuncRequestOption(func(o *RequestOptions) {
+	return func(o *RequestOptions) {
 		o.param = param
-	})
+	}
 }
 func WithBody(body interface{}) RequestOption {
-	return newFuncRequestOption(func(o *RequestOptions) {
+	return func(o *RequestOptions) {
 		o.body = body
-	})
+	}
 }
 func WithOutput(output interface{}) RequestOption {
-	return newFuncRequestOption(func(o *RequestOptions) {
+	return func(o *RequestOptions) {
 		o.output = output
-	})
+	}
 }
 func WithCallback(cb ...func(interface{})) RequestOption {
-	return newFuncRequestOption(func(o *RequestOptions) {
+	return func(o *RequestOptions) {
 		o.cb = cb
-	})
+	}
 }
 func WithTimeout(timeout time.Duration) RequestOption {
-	return newFuncRequestOption(func(o *RequestOptions) {
+	return func(o *RequestOptions) {
 		o.timeout = timeout
-	})
+	}
 }
