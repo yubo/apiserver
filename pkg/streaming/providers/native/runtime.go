@@ -7,35 +7,43 @@ import (
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/yubo/apiserver/pkg/streaming"
 	"github.com/yubo/golib/api/errors"
+	"github.com/yubo/golib/stream"
 	"github.com/yubo/golib/util/rand"
 	"github.com/yubo/golib/util/term"
 	"k8s.io/klog/v2"
 )
 
 const (
-	defaultBufSize = 32 * 1024
+	defIdLent     = 10
+	defGcInterval = time.Minute
 )
 
-var (
-	idLen      = 10
-	gcInterval = time.Minute
-)
-
-func NewProvider(ctx context.Context, recFd io.WriteCloser) streaming.Provider {
-	if runtime, err := NewRuntime(ctx, recFd); err != nil {
+func NewProvider(ctx context.Context, opts ...Opt) streaming.Provider {
+	runtime, err := NewRuntime(ctx, opts...)
+	if err != nil {
 		panic(err)
-	} else {
-		return streaming.NewProvider(runtime)
 	}
+
+	return streaming.NewProvider(runtime)
 }
 
-func NewRuntime(ctx context.Context, recFd io.WriteCloser) (streaming.Runtime, error) {
+func NewRuntime(ctx context.Context, opts ...Opt) (streaming.Runtime, error) {
+	options := &Options{
+		idLen:              defIdLent,
+		gcInterval:         defGcInterval,
+		recFilePathFactory: defRecFilePathFactory,
+	}
+	for _, opt := range opts {
+		opt(options)
+	}
+
 	r := &streamingRuntime{
 		ctx:      ctx,
 		sessions: make(map[string]*Session),
-		recFd:    recFd,
+		options:  options,
 	}
 
 	if err := r.start(); err != nil {
@@ -45,18 +53,62 @@ func NewRuntime(ctx context.Context, recFd io.WriteCloser) (streaming.Runtime, e
 	return r, nil
 }
 
-type streamingRuntime struct {
-	sync.RWMutex
-	sessions map[string]*Session
-	ctx      context.Context
-	recFd    io.WriteCloser
+type Options struct {
+	recorderProvider   RecorderProvider
+	gcInterval         time.Duration
+	idLen              int
+	recFilePathFactory func(sessionId string) string
+}
+
+type Opt func(*Options)
+
+func WithRecorder(recorderProvider RecorderProvider) Opt {
+	return func(o *Options) {
+		o.recorderProvider = recorderProvider
+	}
+}
+
+func WithIdLen(idLen int) Opt {
+	return func(o *Options) {
+		o.idLen = idLen
+	}
+}
+
+func WithGcInterval(gcInterval time.Duration) Opt {
+	return func(o *Options) {
+		o.gcInterval = gcInterval
+	}
+}
+
+func WithRecFilePathFactroy(factory func(sessionId string) string) Opt {
+	return func(o *Options) {
+		o.recFilePathFactory = factory
+	}
 }
 
 var _ streaming.Runtime = &streamingRuntime{}
 
+type streamingRuntime struct {
+	sync.RWMutex
+	sessions map[string]*Session
+	ctx      context.Context
+	options  *Options
+}
+
+type execConfig struct {
+	User       string   // User that will run the command
+	Detach     bool     // Execute in detach mode
+	DetachKeys string   // Escape keys for detach
+	Env        []string // Environment variables
+	WorkingDir string   // Working directory
+	Cmd        []string // Execution commands and args
+	Timeout    time.Duration
+	recorder   stream.Recorder
+}
+
 func (p *streamingRuntime) Exec(containerID string, cmd []string, in io.Reader, out, errOut io.WriteCloser, isTty bool, resize <-chan term.TerminalSize) error {
 
-	session, err := p.newSession(&ExecConfig{Cmd: cmd, Timeout: 0})
+	session, err := p.newSession(&execConfig{Cmd: cmd, Timeout: 0})
 	if err != nil {
 		return fmt.Errorf("failed to exec - Exec setup failed - %v", err)
 	}
@@ -78,7 +130,7 @@ func (r *streamingRuntime) PortForward(podSandboxID string, port int32, stream i
 
 func (p *streamingRuntime) start() error {
 	go func() {
-		ticker := time.NewTicker(gcInterval)
+		ticker := time.NewTicker(p.options.gcInterval)
 		defer ticker.Stop()
 
 		for {
@@ -111,7 +163,7 @@ func (p *streamingRuntime) uniqueID() (string, error) {
 	const maxTries = 10
 	// Number of bytes to be tokenLen when base64 encoded.
 	for i := 0; i < maxTries; i++ {
-		code := rand.String(idLen)
+		code := rand.String(p.options.idLen)
 		if _, exists := p.sessions[code]; !exists {
 			return code, nil
 		}
@@ -120,7 +172,7 @@ func (p *streamingRuntime) uniqueID() (string, error) {
 }
 
 // TODO
-func (p *streamingRuntime) newSession(config *ExecConfig) (*Session, error) {
+func (p *streamingRuntime) newSession(config *execConfig) (*Session, error) {
 	p.Lock()
 	defer p.Unlock()
 
@@ -130,11 +182,12 @@ func (p *streamingRuntime) newSession(config *ExecConfig) (*Session, error) {
 	}
 
 	s := &Session{
-		ExecConfig: config,
+		execConfig: config,
 		id:         id,
+		Options:    p.options,
 	}
 
-	if err := s.init(p.ctx, p.recFd); err != nil {
+	if err := s.init(p.ctx); err != nil {
 		return nil, err
 	}
 
@@ -154,4 +207,13 @@ func (p *streamingRuntime) checkSessionStatus(id string) (*Session, error) {
 	}
 	return session, nil
 
+}
+
+func defRecFilePathFactory(sessionId string) string {
+	// should set nodeName by uuid.SetNodeInterface(name string)
+	file, err := uuid.NewUUID()
+	if err != nil {
+		panic(err)
+	}
+	return file.String()
 }

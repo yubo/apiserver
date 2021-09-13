@@ -64,15 +64,18 @@ func start(ctx context.Context) error {
 	if !ok {
 		return fmt.Errorf("unable to get http server from the context")
 	}
-	//TODO:
-	fd, err := os.Create("/tmp/test.rec")
+
+	recorderProvider, err := native.NewFileRecorderProvider("/tmp")
 	if err != nil {
 		return err
 	}
 
 	srv := &server{
-		config:   streaming.DefaultConfig,
-		provider: native.NewProvider(ctx, fd),
+		config: streaming.DefaultConfig,
+		provider: native.NewProvider(ctx,
+			native.WithRecorder(recorderProvider),
+			native.WithRecFilePathFactroy(func(id string) string { return id }),
+		),
 	}
 	srv.installWs(http)
 

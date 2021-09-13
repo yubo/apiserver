@@ -13,9 +13,14 @@ import (
 	"k8s.io/klog/v2"
 )
 
+const (
+	defaultBufSize = 32 * 1024
+)
+
 type Session struct {
 	sync.RWMutex
-	*ExecConfig
+	*execConfig
+	*Options
 
 	ctx      context.Context
 	cancel   context.CancelFunc
@@ -63,7 +68,7 @@ func (p *Session) Close() error {
 	return nil
 }
 
-func (p *Session) init(ctx context.Context, recFd io.WriteCloser) error {
+func (p *Session) init(ctx context.Context) error {
 	if p.Timeout == 0 {
 		p.ctx, p.cancel = context.WithCancel(ctx)
 	} else {
@@ -77,8 +82,8 @@ func (p *Session) init(ctx context.Context, recFd io.WriteCloser) error {
 	go func() {
 		defer p.Close()
 
-		if recFd != nil {
-			recorder, err := stream.NewRecorder(recFd)
+		if p.recorderProvider != nil {
+			recorder, err := p.recorderProvider.Open(p.recFilePathFactory(p.id))
 			if err != nil {
 				started <- err
 				return
