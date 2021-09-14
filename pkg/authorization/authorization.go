@@ -172,7 +172,7 @@ func (p *authorization) initAuthorization() (err error) {
 	}
 
 	if klog.V(6).Enabled() {
-		for k, _ := range p.authzFactorys {
+		for k := range p.authzFactorys {
 			klog.Infof("authz %s is valid", k)
 		}
 	}

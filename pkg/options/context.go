@@ -5,6 +5,7 @@ import (
 
 	// authentication "github.com/yubo/apiserver/modules/authentication/lib"
 
+	"github.com/yubo/apiserver/pkg/authorization/rbac"
 	"github.com/yubo/golib/net/session"
 	"github.com/yubo/golib/orm"
 	"github.com/yubo/golib/proc"
@@ -23,6 +24,7 @@ const (
 	authnKey          // Authentication
 	sessionManagerKey //
 	authzKey          // authorization
+	rbacKey           // authz-rbac
 )
 
 // WithValue returns a copy of parent in which the value associated with key is val.
@@ -112,4 +114,22 @@ func DBMustFrom(ctx context.Context) *orm.DB {
 		panic("unable get db")
 	}
 	return db
+}
+
+func WithRBAC(ctx context.Context, r *rbac.RBACAuthorizer) {
+	klog.V(5).Infof("attr with rbac")
+	proc.AttrMustFrom(ctx)[rbacKey] = r
+}
+
+func RBACFrom(ctx context.Context) (*rbac.RBACAuthorizer, bool) {
+	v, ok := proc.AttrMustFrom(ctx)[rbacKey].(*rbac.RBACAuthorizer)
+	return v, ok
+}
+
+func RBACMustFrom(ctx context.Context) *rbac.RBACAuthorizer {
+	v, ok := proc.AttrMustFrom(ctx)[rbacKey].(*rbac.RBACAuthorizer)
+	if !ok {
+		panic("unable get RBACAuthorizer")
+	}
+	return v
 }

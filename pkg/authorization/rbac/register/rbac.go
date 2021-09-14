@@ -7,7 +7,8 @@ import (
 	"github.com/yubo/apiserver/pkg/authorization"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	"github.com/yubo/apiserver/pkg/authorization/rbac"
-	"github.com/yubo/apiserver/pkg/listers"
+	"github.com/yubo/apiserver/pkg/authorization/rbac/db"
+	"github.com/yubo/apiserver/pkg/authorization/rbac/file"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/golib/proc"
 )
@@ -28,7 +29,10 @@ var (
 	}}
 )
 
-type config struct{}
+type config struct {
+	file.Config
+	Provider string `json:"provider" flag:"rbac-provider" description:"rbac provider(file,db), used with --authorization-mode=RBAC"`
+}
 
 func (o *config) Validate() error {
 	return nil
@@ -45,7 +49,7 @@ func newConfig() *config {
 }
 
 func (p *authModule) init(ctx context.Context) error {
-	c := proc.ConfigerFrom(ctx)
+	c := proc.ConfigerMustFrom(ctx)
 
 	cf := newConfig()
 	if err := c.Read(moduleName, cf); err != nil {
@@ -53,6 +57,23 @@ func (p *authModule) init(ctx context.Context) error {
 	}
 	p.config = cf
 	p.ctx = ctx
+
+	var rbacAuth *rbac.RBACAuthorizer
+	var err error
+	switch cf.Provider {
+	case "file":
+		rbacAuth, err = file.NewRBAC(&cf.Config)
+	case "db":
+		rbacAuth, err = db.NewRBAC(options.DBMustFrom(ctx))
+	case "":
+	default:
+		return fmt.Errorf("unsupported rbac provider %s", cf.Provider)
+	}
+
+	if err != nil {
+		return err
+	}
+	options.WithRBAC(ctx, rbacAuth)
 
 	return nil
 }
@@ -62,18 +83,12 @@ func init() {
 	proc.RegisterFlags(moduleName, "authorization", newConfig())
 
 	factory := func() (authorizer.Authorizer, error) {
-
-		db, ok := options.DBFrom(_auth.ctx)
+		rbac, ok := options.RBACFrom(_auth.ctx)
 		if !ok {
 			return nil, fmt.Errorf("unable to get db from the context")
 		}
-		return rbac.New(
-			&rbac.RoleGetter{Lister: listers.NewRoleLister(db)},
-			&rbac.RoleBindingLister{Lister: listers.NewRoleBindingLister(db)},
-			&rbac.ClusterRoleGetter{Lister: listers.NewClusterRoleLister(db)},
-			&rbac.ClusterRoleBindingLister{Lister: listers.NewClusterRoleBindingLister(db)},
-		), nil
-	}
 
+		return rbac, nil
+	}
 	authorization.RegisterAuthz("RBAC", factory)
 }
