@@ -7,6 +7,7 @@ const (
 	MIME_XML         = "application/xml"
 	MIME_TXT         = "text/plain"
 	MIME_URL_ENCODED = "application/x-www-form-urlencoded"
+	MIME_PROTOBUF    = "application/x-protobuf"
 	MIME_OCTET       = "application/octet-stream" // If Content-Type is not present in request, use the default
 
 	PathType   = "path"

@@ -6,7 +6,6 @@ require (
 	github.com/Azure/go-autorest/autorest v0.11.19
 	github.com/Azure/go-autorest/autorest/adal v0.9.14
 	github.com/buger/goterm v1.0.1
-	github.com/containerd/console v1.0.3 // indirect
 	github.com/containerd/containerd v1.5.5 // indirect
 	github.com/coreos/go-oidc v2.1.0+incompatible
 	github.com/creack/pty v1.1.11
@@ -17,6 +16,7 @@ require (
 	github.com/emicklei/go-restful-openapi v1.4.1
 	github.com/fortytw2/leaktest v1.3.0
 	github.com/go-openapi/spec v0.20.3
+	github.com/gogo/protobuf v1.3.2
 	github.com/golang/mock v1.4.1
 	github.com/golang/protobuf v1.5.2
 	github.com/google/go-cmp v0.5.5
