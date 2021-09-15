@@ -1,1 +1,3 @@
-token-777,user3,uid3,"group1,group2"
+token-admin,admin,uid-admin,"apiserver:admin"
+token-reporter,reporter,uid-reporter,"apiserver:reporter"
+token-guest,guest,uid-guest,"apiserver:guest"

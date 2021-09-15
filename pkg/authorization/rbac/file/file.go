@@ -80,7 +80,9 @@ func (p *FileStorage) loadDir(path string, maxDepth int) error {
 			continue
 		}
 
-		p.loadFile(entry, path)
+		if err := p.loadFile(entry, path); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -153,6 +155,7 @@ func (p *FileStorage) loadConfig(data []byte, source string) error {
 		}
 		p.clusterRoleBindings = append(p.clusterRoleBindings, obj)
 	default:
+		klog.V(10).Infof("---- kind %s skipped", meta.Kind)
 		return nil
 	}
 

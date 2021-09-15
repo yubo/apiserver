@@ -27,9 +27,10 @@ func (p *clusterRoleLister) List(selector labels.Selector) (ret []*rbac.ClusterR
 // Get retrieves the ClusterRole from the db for a given name.
 func (p *clusterRoleLister) Get(name string) (ret *rbac.ClusterRole, err error) {
 	a := p.clusterRoles
-	i := sort.Search(len(a), func(i int) bool { return a[i].Name >= name })
-	if ret = a[i]; ret.Name == name {
-		return ret, nil
+	if i := sort.Search(len(a), func(i int) bool { return a[i].Name >= name }); i < len(a) {
+		if ret = a[i]; ret.Name == name {
+			return ret, nil
+		}
 	}
 
 	return nil, errors.NewNotFound("ClusterRole")

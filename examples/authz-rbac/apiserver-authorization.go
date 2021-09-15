@@ -24,6 +24,7 @@ import (
 )
 
 // go run ./apiserver-authorization.go --token-auth-file=./tokens.cvs --authorization-mode=RBAC --rbac-provider=file --rbac-config-path=./testdata
+// curl -X POST http://localhost:8080/api/v1/namespaces/test/users -H "Authorization: Bearer token-admin"
 
 const (
 	moduleName = "apiserver.authentication"
@@ -59,12 +60,18 @@ func start(ctx context.Context) error {
 
 func installWs(http rest.GoRestfulContainer) {
 	rest.WsRouteBuild(&rest.WsOption{
-		Path:               "/",
+		Path:               "/api/v1",
 		GoRestfulContainer: http,
 		Routes: []rest.WsRoute{
-			{Method: "GET", SubPath: "/ro", Handle: handle},
-			{Method: "POST", SubPath: "/rw", Handle: handle},
-			{Method: "GET", SubPath: "/unauthenticated", Handle: handle},
+			// with clusterRole & ClusterRoleBinding
+			{Method: "GET", SubPath: "/users", Handle: handle},
+			{Method: "POST", SubPath: "/users", Handle: handle},
+			{Method: "GET", SubPath: "/status", Handle: handle},
+
+			// with role & roleBinding (test namespace)
+			{Method: "GET", SubPath: "/namespaces/test/users", Handle: handle},
+			{Method: "POST", SubPath: "/namespaces/test/users", Handle: handle},
+			{Method: "GET", SubPath: "/namespaces/test/status", Handle: handle},
 		},
 	})
 }
