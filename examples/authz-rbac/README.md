@@ -1,4 +1,4 @@
-## apiserver authz rbac
+# apiserver authz rbac
 
 ```
 Resource paths
@@ -19,12 +19,17 @@ Special verbs with subresources:
 /api/{version}/watch/namespaces/{namespace}/{resource}
 ```
 
-#### Users
+## Authentication
+[tokens.cvs](./tokens.cvs)
 ```csv
 token-admin,admin,uid-admin,"apiserver:admin"
 token-reporter,reporter,uid-reporter,"apiserver:reporter"
 token-guest,guest,uid-guest,"apiserver:guest"
 ```
+
+## Authorization
+
+[rbac.yaml](./testdata/rbac.yaml)
 
 #### Roles
 ```yaml
@@ -93,9 +98,7 @@ subjects:
     name: "*"
 ```
 
-#### Test
-
-
+## Test
 
 ```shell
 // run server
@@ -133,5 +136,4 @@ curl -X POST http://localhost:8080/api/v1/namespaces/test/users -H "Authorizatio
 ```
 
 ## See Also
-// go run ./apiserver-authorization.go --token-auth-file=./tokens.cvs --authorization-mode=RBAC --rbac-provider=file --rbac-config-path=./testdata
 - https://kubernetes.io/docs/reference/access-authn-authz/rbac/
