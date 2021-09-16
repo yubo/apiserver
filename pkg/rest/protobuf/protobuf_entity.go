@@ -11,6 +11,10 @@ import (
 
 const MIME_PROTOBUF = "application/x-protobuf" // Accept or Content-Type used in Consumes() and/or Produces()
 
+func RegisterEntityAccessor() {
+	restful.RegisterEntityAccessor(MIME_PROTOBUF, NewEntityAccessorProtobuf())
+}
+
 // NewEntityAccessorMPack returns a new EntityReaderWriter for accessing MessagePack content.
 // This package is not initialized with such an accessor using the MIME_MSGPACK contentType.
 func NewEntityAccessorProtobuf() restful.EntityReaderWriter {
