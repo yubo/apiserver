@@ -7,7 +7,6 @@ import (
 	"github.com/emicklei/go-restful"
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/responsewriters"
-	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/golib/net/session"
 	"k8s.io/klog/v2"
 )
@@ -36,7 +35,7 @@ func Session(sm session.SessionManager) restful.FilterFunction {
 	return func(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
 		s, err := sm.Start(resp, req.Request)
 		if err != nil {
-			rest.HttpWriteErr(resp, fmt.Errorf("session start err %s", err))
+			responsewriters.InternalError(resp, req.Request, fmt.Errorf("session start err %s", err))
 			return
 		}
 		defer s.Update(resp)

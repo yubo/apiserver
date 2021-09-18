@@ -236,3 +236,8 @@ func WriteRawJSON(statusCode int, object interface{}, w http.ResponseWriter) {
 	w.WriteHeader(statusCode)
 	w.Write(output)
 }
+
+func HttpRedirect(w http.ResponseWriter, url string) {
+	w.Header().Add("location", url)
+	w.WriteHeader(http.StatusFound)
+}

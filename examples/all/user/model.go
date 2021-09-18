@@ -18,8 +18,13 @@ const (
 		" CREATE UNIQUE INDEX `user_index_phone` on `user` (`phone`);"
 )
 
-func createUser(db *orm.DB, in *CreateUserInput) (int64, error) {
-	return db.InsertLastId("user", in)
+func createUser(db *orm.DB, in *CreateUserInput) (*User, error) {
+	err := db.Insert("user", in)
+	if err != nil {
+		return nil, err
+	}
+
+	return getUser(db, in.Name)
 }
 
 func genUserSql(in *GetUsersInput) (where string, args []interface{}) {

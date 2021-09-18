@@ -9,6 +9,7 @@ import (
 	"github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/go-openapi/spec"
+	"github.com/yubo/apiserver/pkg/responsewriters"
 	"github.com/yubo/golib/encoding/urlencoded"
 	"github.com/yubo/golib/runtime"
 	"github.com/yubo/golib/scheme"
@@ -103,7 +104,7 @@ func (p *WsOption) build() error {
 			if p.RespWrite != nil {
 				route.RespWrite = p.RespWrite
 			} else {
-				route.RespWrite = RespWrite
+				route.RespWrite = DefaultRespWrite
 			}
 		}
 
@@ -343,7 +344,7 @@ func (p *RouteBuilder) registerHandle(b *restful.RouteBuilder, wr *WsRoute) erro
 			body := reflect.New(bodyType).Interface()
 
 			if err := ReadEntity(req, param, body); err != nil {
-				HttpWriteData(resp, nil, err)
+				responsewriters.Error(err, resp.ResponseWriter, req.Request)
 				return
 			}
 
@@ -359,7 +360,7 @@ func (p *RouteBuilder) registerHandle(b *restful.RouteBuilder, wr *WsRoute) erro
 			// with param
 			param := reflect.New(paramType).Interface()
 			if err := ReadEntity(req, param, nil); err != nil {
-				HttpWriteData(resp, nil, err)
+				responsewriters.Error(err, resp.ResponseWriter, req.Request)
 				return
 			}
 
@@ -376,12 +377,12 @@ func (p *RouteBuilder) registerHandle(b *restful.RouteBuilder, wr *WsRoute) erro
 		}
 
 		if numOut == 2 {
-			wr.RespWrite(resp, req.Request, vtoi(ret[0]), vtoe(ret[1]))
+			wr.RespWrite(resp, req.Request, toInterface(ret[0]), toError(ret[1]))
 			return
 		}
 
 		if numOut == 1 {
-			wr.RespWrite(resp, req.Request, NoneParam{}, vtoe(ret[0]))
+			wr.RespWrite(resp, req.Request, NoneParam{}, toError(ret[0]))
 		}
 	})
 	return nil
@@ -409,7 +410,7 @@ func (p *RouteBuilder) buildBody(consume string, body interface{}) *RouteBuilder
 	return p
 }
 
-func vtoi(v reflect.Value) interface{} {
+func toInterface(v reflect.Value) interface{} {
 	if v.CanInterface() {
 		return v.Interface()
 	}
@@ -417,7 +418,7 @@ func vtoi(v reflect.Value) interface{} {
 	return nil
 }
 
-func vtoe(v reflect.Value) error {
+func toError(v reflect.Value) error {
 	if v.CanInterface() {
 		e, _ := v.Interface().(error)
 		return e

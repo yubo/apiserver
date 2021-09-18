@@ -6,10 +6,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/emicklei/go-restful"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/request"
-	"github.com/yubo/apiserver/pkg/responsewriters"
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/golib/orm"
 	"k8s.io/klog/v2"
@@ -59,7 +57,6 @@ func (p *Module) installWs() {
 		Produces:           []string{rest.MIME_JSON},
 		Consumes:           []string{rest.MIME_JSON},
 		Tags:               []string{"user"},
-		RespWrite:          respWrite,
 		GoRestfulContainer: p.http,
 		Routes: []rest.WsRoute{{
 			Method: "POST", SubPath: "/",
@@ -85,11 +82,8 @@ func (p *Module) installWs() {
 	})
 }
 
-func (p *Module) createUser(w http.ResponseWriter, req *http.Request, _ *rest.NoneParam, in *CreateUserInput) (*CreateUserOutput, error) {
-	id, err := createUser(p.db, in)
-
-	return &CreateUserOutput{int64(id)}, err
-
+func (p *Module) createUser(w http.ResponseWriter, req *http.Request, _ *rest.NoneParam, in *CreateUserInput) (*User, error) {
+	return createUser(p.db, in)
 }
 
 func (p *Module) getUsers(w http.ResponseWriter, req *http.Request, param *GetUsersInput) (*GetUsersOutput, error) {
@@ -115,25 +109,4 @@ func (p *Module) deleteUser(w http.ResponseWriter, req *http.Request, in *Delete
 
 func addAuthScope() {
 	rest.ScopeRegister("user:write", "user")
-}
-
-func respWrite(resp *restful.Response, req *http.Request, data interface{}, err error) {
-	var eMsg string
-	code := int32(http.StatusOK)
-
-	if err != nil {
-		status := responsewriters.ErrorToAPIStatus(err)
-		eMsg = status.Message
-		code = status.Code
-
-		if klog.V(3).Enabled() {
-			klog.ErrorDepth(1, fmt.Sprintf("httpReturn %d %s", code, eMsg))
-		}
-	}
-
-	resp.WriteEntity(map[string]interface{}{
-		"dat":  data,
-		"err":  eMsg,
-		"code": code,
-	})
 }

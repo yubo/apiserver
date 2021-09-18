@@ -2,6 +2,8 @@
 package user
 
 import (
+	"fmt"
+
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/golib/util"
 )
@@ -13,11 +15,13 @@ type User struct {
 }
 
 type CreateUserInput struct {
-	Name  *string `json:"name"`
+	Name  string  `json:"name"`
 	Phone *string `json:"phone"`
 }
 
-type CreateUserOutput rest.RespID
+type CreateUserOutput struct {
+	ID int64 `json:"id" description:"id"`
+}
 
 type GetUsersInput struct {
 	rest.Pagination
@@ -26,6 +30,9 @@ type GetUsersInput struct {
 }
 
 func (p *GetUsersInput) Validate() error {
+	if p.Name == "" {
+		return fmt.Errorf("invalid user name")
+	}
 	return nil
 }
 
@@ -57,9 +64,4 @@ type UpdateUserBody struct {
 
 type DeleteUserInput struct {
 	Name string `param:"path" name:"user-name"`
-}
-
-type DeleteUserOutput struct {
-	rest.RespStatus
-	Data *User `json:"dat"`
 }
