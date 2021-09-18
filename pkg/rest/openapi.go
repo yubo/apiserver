@@ -150,20 +150,21 @@ type WsRoute struct {
 	//Action string
 	Acl string
 	//--
-	Method      string
-	SubPath     string
-	Desc        string
-	Scope       string
-	Consume     string
-	Produce     string
-	Handle      interface{}
-	Filter      restful.FilterFunction
-	Filters     []restful.FilterFunction
-	ExtraOutput []ApiOutput
-	Tags        []string
-	RespWrite   func(resp *restful.Response, req *http.Request, data interface{}, err error)
-	// Input       interface{}
-	// Output      interface{}
+	Method       string
+	SubPath      string
+	Desc         string
+	Scope        string
+	Consume      string
+	Produce      string
+	Handle       interface{}
+	Filter       restful.FilterFunction
+	Filters      []restful.FilterFunction
+	ExtraOutput  []ApiOutput
+	Tags         []string
+	RespWrite    func(resp *restful.Response, req *http.Request, data interface{}, err error)
+	InputParam   interface{} // pri > handle
+	InputPayload interface{} // pri > handle
+	Output       interface{} // pri > handle
 	// Handle      restful.RouteFunction
 }
 
@@ -244,8 +245,9 @@ func (p *RouteBuilder) registerHandle(b *restful.RouteBuilder, wr *WsRoute) erro
 
 	// handle(req *restful.Request, resp *restful.Response)
 	// handle(req *restful.Request, resp *restful.Response, param *struct{})
-	// handle(req *restful.Request, resp *restful.Response, param *struct{}, body []struct{})
-	// handle(req *restful.Request, resp *restful.Response, param *struct{}, body *struct{})
+	// handle(req *restful.Request, resp *restful.Response, param *struct{}, body *slice)
+	// handle(req *restful.Request, resp *restful.Response, param *struct{}, body *map)
+	// handle(req *restful.Request, resp *restful.Response, param *struct{}, body *struct)
 	// handle(...) error
 	// handle(...) (out struct{}, err error)
 
@@ -272,7 +274,6 @@ func (p *RouteBuilder) registerHandle(b *restful.RouteBuilder, wr *WsRoute) erro
 
 	var paramType reflect.Type
 	var bodyType reflect.Type
-	var useElem bool
 
 	// 3, 4
 	if numIn > 2 {
@@ -282,33 +283,41 @@ func (p *RouteBuilder) registerHandle(b *restful.RouteBuilder, wr *WsRoute) erro
 		case reflect.Ptr:
 			paramType = paramType.Elem()
 			if paramType.Kind() != reflect.Struct {
-				return fmt.Errorf("must ptr to struct, got ptr -> %s", paramType.Kind())
+				return fmt.Errorf("param must ptr to struct, got ptr -> %s", paramType.Kind())
 			}
 		default:
 			return fmt.Errorf("param just support ptr to struct")
 		}
 
-		p.buildParam(reflect.New(paramType).Elem().Interface())
-
+		if wr.InputParam == nil {
+			p.buildParam(reflect.New(paramType).Elem().Interface())
+		}
+	}
+	if wr.InputParam != nil {
+		p.buildParam(wr.InputParam)
 	}
 
 	// 4
 	if numIn > 3 {
 		bodyType = t.In(3)
 
+		if bodyType.Kind() != reflect.Ptr {
+			return fmt.Errorf("payload must be a ptr, got %s", bodyType.Kind())
+		}
+		bodyType = bodyType.Elem()
+
 		switch bodyType.Kind() {
-		case reflect.Ptr:
-			bodyType = bodyType.Elem()
-			if bodyType.Kind() != reflect.Struct {
-				return fmt.Errorf("must ptr to struct, got ptr -> %s", bodyType.Kind())
-			}
-		case reflect.Slice, reflect.Map:
-			useElem = true
+		case reflect.Struct, reflect.Slice, reflect.Map:
 		default:
-			return fmt.Errorf("just support slice and ptr to struct")
+			return fmt.Errorf("just support ptr to struct|slice|map")
 		}
 
-		p.buildBody(wr.Consume, reflect.New(bodyType).Elem().Interface())
+		if wr.InputPayload == nil {
+			p.buildBody(wr.Consume, reflect.New(bodyType).Elem().Interface())
+		}
+	}
+	if wr.InputPayload != nil {
+		p.buildBody(wr.Consume, wr.InputPayload)
 	}
 
 	if numOut == 2 {
@@ -317,7 +326,12 @@ func (p *RouteBuilder) registerHandle(b *restful.RouteBuilder, wr *WsRoute) erro
 			ot = ot.Elem()
 		}
 		output := reflect.New(ot).Elem().Interface()
-		b.Returns(http.StatusOK, "OK", output)
+		if wr.Output == nil {
+			b.Returns(http.StatusOK, "OK", output)
+		}
+	}
+	if wr.Output != nil {
+		b.Returns(http.StatusOK, "OK", wr.Output)
 	}
 
 	b.To(func(req *restful.Request, resp *restful.Response) {
@@ -333,17 +347,12 @@ func (p *RouteBuilder) registerHandle(b *restful.RouteBuilder, wr *WsRoute) erro
 				return
 			}
 
-			bodyValue := reflect.ValueOf(body)
-			if useElem {
-				bodyValue = bodyValue.Elem()
-			}
-
 			// TODO: use (w http.ResponseWriter, req *http.Request)
 			ret = v.Call([]reflect.Value{
 				reflect.ValueOf(resp.ResponseWriter),
 				reflect.ValueOf(req.Request),
 				reflect.ValueOf(param),
-				bodyValue,
+				reflect.ValueOf(body),
 			})
 
 		} else if numIn == 3 {

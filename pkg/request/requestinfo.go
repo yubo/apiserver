@@ -24,7 +24,6 @@ import (
 
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/util/sets"
-	"k8s.io/klog/v2"
 )
 
 // LongRunningRequestCheck is a predicate which is true for long-running http requests.
@@ -224,8 +223,6 @@ func (r *RequestInfoFactory) NewRequestInfo(req *http.Request) (*RequestInfo, er
 	if len(requestInfo.Name) == 0 && requestInfo.Verb == "delete" {
 		requestInfo.Verb = "deletecollection"
 	}
-
-	klog.V(6).Infof("requestinfo %+v", requestInfo)
 
 	return &requestInfo, nil
 }

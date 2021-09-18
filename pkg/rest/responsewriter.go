@@ -47,6 +47,7 @@ func RespWrite(resp *restful.Response, req *http.Request, data interface{}, err 
 	}
 
 	if _, ok := data.(NoneParam); ok {
+		resp.WriteHeader(http.StatusOK)
 		return
 	}
 
