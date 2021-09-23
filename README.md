@@ -1,19 +1,22 @@
 # API server
 
-## example
+## Examples
 
-```
-cd example
-make
-
-# https://kubernetes.io/zh/docs/reference/access-authn-authz/authentication/#static-token-file
-echo 'token-1,system:yubo,uid:yubo,"group1,group2,group3"' > tokens.cvs
-
-./helo \
-	--config ./helo.yml \
-	--token-auth-file=./tokens.cvs \
-	-v 10 \
-	--anonymous-auth \
-	--authorization-mode=AlwaysAllow \
-	--logtostderr
-```
+- Generic
+  * [Hello World](./examples/hello)
+  * [All In One](./examples/all)
+  * [List](./examples/list)
+- Auth
+  * [Authentication](./examples/authn)
+  * [Authentication Custom](./examples/authn-custom)
+  * [Authorization ABAC](./examples/authz-abac)
+  * [Authorization RBAC](./examples/authz-rbac)
+- Stream
+  * [Remotecommand Container](./examples/remotecommand-container)
+  * [Remotecommand Native](./examples/remotecommand-native)
+  * [Websocket Authentication](./examples/websocket-auth)
+  * [Websocket Watch](./examples/websocket-watch)
+- OpenAPI
+  * [Swagger](./examples/swagger)
+  * [Custom response](./examples/custom-response)
+  * [Generate SDK](./examples/gen-sdk)
