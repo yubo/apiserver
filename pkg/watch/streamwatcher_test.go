@@ -22,8 +22,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/yubo/golib/runtime"
 	. "github.com/yubo/apiserver/pkg/watch"
+	"github.com/yubo/golib/runtime"
 )
 
 type fakeDecoder struct {
@@ -52,7 +52,7 @@ type fakeReporter struct {
 	err error
 }
 
-func (f *fakeReporter) AsObject(err error) runtime.Object {
+func (f *fakeReporter) AsObject(err error) interface{} {
 	f.err = err
 	return runtime.Unstructured(nil)
 }

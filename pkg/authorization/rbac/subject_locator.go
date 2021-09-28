@@ -18,10 +18,10 @@ limitations under the License.
 package rbac
 
 import (
+	"github.com/yubo/apiserver/pkg/api/rbac"
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	rbacregistryvalidation "github.com/yubo/apiserver/pkg/authorization/rbac/validation"
-	"github.com/yubo/apiserver/pkg/api/rbac"
 	utilerrors "github.com/yubo/golib/util/errors"
 )
 
@@ -60,9 +60,9 @@ func NewSubjectAccessEvaluator(roles rbacregistryvalidation.RoleGetter, roleBind
 // AllowedSubjects returns the subjects that can perform an action and any errors encountered while computing the list.
 // It is possible to have both subjects and errors returned if some rolebindings couldn't be resolved, but others could be.
 func (r *SubjectAccessEvaluator) AllowedSubjects(requestAttributes authorizer.Attributes) ([]rbac.Subject, error) {
-	subjects := []rbac.Subject{{Kind: rbac.GroupKind, Name: user.SystemPrivilegedGroup}}
+	subjects := []rbac.Subject{{Kind: rbac.GroupKind, APIGroup: rbac.GroupName, Name: user.SystemPrivilegedGroup}}
 	if len(r.superUser) > 0 {
-		subjects = append(subjects, rbac.Subject{Kind: rbac.UserKind, Name: r.superUser})
+		subjects = append(subjects, rbac.Subject{Kind: rbac.UserKind, APIGroup: rbac.GroupName, Name: r.superUser})
 	}
 	errorlist := []error{}
 

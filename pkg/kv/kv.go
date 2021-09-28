@@ -1,6 +1,7 @@
 package kv
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/yubo/golib/proc"
@@ -73,18 +74,21 @@ type Module struct {
 var (
 	_module = &Module{name: moduleName}
 	hookOps = []proc.HookOps{{
-		Hook:     _module.test,
+		Hook:     _module.start,
 		Owner:    moduleName,
-		HookNum:  proc.ACTION_TEST,
-		Priority: proc.PRI_PRE_SYS,
+		HookNum:  proc.ACTION_START,
+		Priority: proc.PRI_SYS_PRESTART,
 	}}
 )
 
-func (p *Module) test(ops *proc.HookOps, cf *proc.Configer) error {
-	c := &Config{}
-	if err := cf.Read(p.name, c); err != nil {
-		return fmt.Errorf("%s read config err: %s", p.name, err)
+// TODO
+func (p *Module) start(ctx context.Context) error {
+	c := proc.ConfigerMustFrom(ctx)
+	cf := &Config{}
+	if err := c.Read("kv", cf); err != nil {
+		return err
 	}
+	p.Config = cf
 
 	return nil
 }

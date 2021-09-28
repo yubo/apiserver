@@ -46,7 +46,7 @@ type DelegatingAuthenticatorConfig struct {
 	// CAContentProvider are the options for verifying incoming connections using mTLS and directly assigning to users.
 	// Generally this is the CA bundle file used to authenticate client certificates
 	// If this is nil, then mTLS will not be used.
-	ClientCertificateCAContentProvider CAContentProvider
+	//ClientCertificateCAContentProvider CAContentProvider
 
 	APIAudiences authenticator.Audiences
 }

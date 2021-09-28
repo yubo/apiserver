@@ -35,6 +35,7 @@ import (
 	kubeletportforward "github.com/yubo/apiserver/pkg/streaming/portforward"
 	"github.com/yubo/apiserver/tools/remotecommand"
 	"github.com/yubo/golib/api"
+	"github.com/yubo/golib/util/term"
 )
 
 const (
@@ -413,13 +414,13 @@ type fakeRuntime struct {
 	t *testing.T
 }
 
-func (f *fakeRuntime) Exec(containerID string, cmd []string, stdin io.Reader, stdout, stderr io.WriteCloser, tty bool, resize <-chan remotecommand.TerminalSize) error {
+func (f *fakeRuntime) Exec(containerID string, cmd []string, stdin io.Reader, stdout, stderr io.WriteCloser, tty bool, resize <-chan term.TerminalSize) error {
 	assert.Equal(f.t, testContainerID, containerID)
 	doServerStreams(f.t, "exec", stdin, stdout, stderr)
 	return nil
 }
 
-func (f *fakeRuntime) Attach(containerID string, stdin io.Reader, stdout, stderr io.WriteCloser, tty bool, resize <-chan remotecommand.TerminalSize) error {
+func (f *fakeRuntime) Attach(containerID string, stdin io.Reader, stdout, stderr io.WriteCloser, tty bool, resize <-chan term.TerminalSize) error {
 	assert.Equal(f.t, testContainerID, containerID)
 	doServerStreams(f.t, "attach", stdin, stdout, stderr)
 	return nil

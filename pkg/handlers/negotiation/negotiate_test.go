@@ -23,8 +23,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/yubo/golib/runtime"
 	"github.com/yubo/golib/api"
+	"github.com/yubo/golib/runtime"
 )
 
 // statusError is an object that can be converted into an metav1.Status
@@ -249,7 +249,7 @@ func TestNegotiate(t *testing.T) {
 			req = &http.Request{Header: http.Header{}}
 			req.Header.Set("Accept", test.accept)
 		}
-		_, s, err := NegotiateOutputMediaType(req, test.ns, DefaultEndpointRestrictions)
+		_, s, err := NegotiateOutputMediaType(req, test.ns)
 		switch {
 		case err == nil && test.errFn != nil:
 			t.Errorf("%d: failed: expected error", i)
@@ -301,7 +301,7 @@ func BenchmarkNegotiateMediaTypeOptions(b *testing.B) {
 	header := "application/vnd.kubernetes.protobuf,*/*"
 
 	for i := 0; i < b.N; i++ {
-		options, _ := NegotiateMediaTypeOptions(header, accepted, DefaultEndpointRestrictions)
+		options, _ := NegotiateMediaTypeOptions(header, accepted)
 		if options.Accepted != accepted[1] {
 			b.Errorf("Unexpected result")
 		}

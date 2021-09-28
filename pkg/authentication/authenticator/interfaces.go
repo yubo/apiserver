@@ -19,6 +19,8 @@ package authenticator
 import (
 	"context"
 	"net/http"
+	"reflect"
+	"runtime"
 
 	"github.com/yubo/apiserver/pkg/authentication/user"
 )
@@ -48,6 +50,9 @@ type TokenFunc func(ctx context.Context, token string) (*Response, bool, error)
 func (f TokenFunc) AuthenticateToken(ctx context.Context, token string) (*Response, bool, error) {
 	return f(ctx, token)
 }
+func (f TokenFunc) Name() string    { return runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name() }
+func (f TokenFunc) Priority() int   { return 0 }
+func (f TokenFunc) Available() bool { return true }
 
 // RequestFunc is a function that implements the Request interface.
 type RequestFunc func(req *http.Request) (*Response, bool, error)
@@ -56,6 +61,10 @@ type RequestFunc func(req *http.Request) (*Response, bool, error)
 func (f RequestFunc) AuthenticateRequest(req *http.Request) (*Response, bool, error) {
 	return f(req)
 }
+
+func (f RequestFunc) Name() string    { return runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name() }
+func (f RequestFunc) Priority() int   { return 0 }
+func (f RequestFunc) Available() bool { return true }
 
 // Response is the struct returned by authenticator interfaces upon successful
 // authentication. It contains information about whether the authenticator

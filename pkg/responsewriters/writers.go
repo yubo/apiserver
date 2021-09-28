@@ -41,11 +41,11 @@ import (
 // a client and the feature gate for APIResponseCompression is enabled.
 func SerializeObject(mediaType string, encoder runtime.Encoder, hw http.ResponseWriter, req *http.Request, statusCode int, object runtime.Object) {
 	trace := utiltrace.New("SerializeObject",
-		utiltrace.Field{"method", req.Method},
-		utiltrace.Field{"url", req.URL.Path},
-		utiltrace.Field{"protocol", req.Proto},
-		utiltrace.Field{"mediaType", mediaType},
-		utiltrace.Field{"encoder", encoder.Identifier()})
+		utiltrace.Field{Key: "method", Value: req.Method},
+		utiltrace.Field{Key: "url", Value: req.URL.Path},
+		utiltrace.Field{Key: "protocol", Value: req.Proto},
+		utiltrace.Field{Key: "mediaType", Value: mediaType},
+		utiltrace.Field{Key: "encoder", Value: encoder.Identifier()})
 	defer trace.LogIfLong(5 * time.Second)
 
 	w := &deferredResponseWriter{
@@ -147,14 +147,14 @@ type deferredResponseWriter struct {
 func (w *deferredResponseWriter) Write(p []byte) (n int, err error) {
 	if w.trace != nil {
 		// This Step usually wraps in-memory object serialization.
-		w.trace.Step("About to start writing response", utiltrace.Field{"size", len(p)})
+		w.trace.Step("About to start writing response", utiltrace.Field{Key: "size", Value: len(p)})
 
 		firstWrite := !w.hasWritten
 		defer func() {
 			w.trace.Step("Write call finished",
-				utiltrace.Field{"writer", fmt.Sprintf("%T", w.w)},
-				utiltrace.Field{"size", len(p)},
-				utiltrace.Field{"firstWrite", firstWrite})
+				utiltrace.Field{Key: "writer", Value: fmt.Sprintf("%T", w.w)},
+				utiltrace.Field{Key: "size", Value: len(p)},
+				utiltrace.Field{Key: "firstWrite", Value: firstWrite})
 		}()
 	}
 	if w.hasWritten {

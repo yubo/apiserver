@@ -17,11 +17,14 @@ limitations under the License.
 package group
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/pkg/authentication/user"
 )
+
+var _ authenticator.Request = &GroupAdder{}
 
 // GroupAdder adds groups to an authenticated user.Info
 type GroupAdder struct {
@@ -51,7 +54,7 @@ func (g *GroupAdder) AuthenticateRequest(req *http.Request) (*authenticator.Resp
 }
 
 func (a *GroupAdder) Name() string {
-	return "groupAdder authenticator"
+	return fmt.Sprintf("groupAdder authenticator %v", a.Groups)
 }
 func (a *GroupAdder) Priority() int {
 	if a.Authenticator != nil {

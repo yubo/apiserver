@@ -20,10 +20,10 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/yubo/apiserver/pkg/api/rbac"
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	rbacregistryvalidation "github.com/yubo/apiserver/pkg/authorization/rbac/validation"
-	"github.com/yubo/apiserver/pkg/api/rbac"
 )
 
 func TestSubjectLocator(t *testing.T) {
@@ -58,29 +58,29 @@ func TestSubjectLocator(t *testing.T) {
 				{
 					&defaultAttributes{"", "", "get", "Pods", "", "ns1", ""},
 					[]rbac.Subject{
-						{Kind: rbac.GroupKind, Name: user.SystemPrivilegedGroup},
-						{Kind: rbac.UserKind, Name: "super-admin"},
-						{Kind: rbac.GroupKind, Name: "super-admins"},
-						{Kind: rbac.UserKind, Name: "admin"},
-						{Kind: rbac.GroupKind, Name: "admins"},
+						{Kind: rbac.GroupKind, APIGroup: rbac.GroupName, Name: user.SystemPrivilegedGroup},
+						{Kind: rbac.UserKind, APIGroup: rbac.GroupName, Name: "super-admin"},
+						{Kind: rbac.GroupKind, APIGroup: rbac.GroupName, Name: "super-admins"},
+						{Kind: rbac.UserKind, APIGroup: rbac.GroupName, Name: "admin"},
+						{Kind: rbac.GroupKind, APIGroup: rbac.GroupName, Name: "admins"},
 					},
 				},
 				{
 					// cluster role matches star in namespace
 					&defaultAttributes{"", "", "*", "Pods", "", "*", ""},
 					[]rbac.Subject{
-						{Kind: rbac.GroupKind, Name: user.SystemPrivilegedGroup},
-						{Kind: rbac.UserKind, Name: "super-admin"},
-						{Kind: rbac.GroupKind, Name: "super-admins"},
+						{Kind: rbac.GroupKind, APIGroup: rbac.GroupName, Name: user.SystemPrivilegedGroup},
+						{Kind: rbac.UserKind, APIGroup: rbac.GroupName, Name: "super-admin"},
+						{Kind: rbac.GroupKind, APIGroup: rbac.GroupName, Name: "super-admins"},
 					},
 				},
 				{
 					// empty ns
 					&defaultAttributes{"", "", "*", "Pods", "", "", ""},
 					[]rbac.Subject{
-						{Kind: rbac.GroupKind, Name: user.SystemPrivilegedGroup},
-						{Kind: rbac.UserKind, Name: "super-admin"},
-						{Kind: rbac.GroupKind, Name: "super-admins"},
+						{Kind: rbac.GroupKind, APIGroup: rbac.GroupName, Name: user.SystemPrivilegedGroup},
+						{Kind: rbac.UserKind, APIGroup: rbac.GroupName, Name: "super-admin"},
+						{Kind: rbac.GroupKind, APIGroup: rbac.GroupName, Name: "super-admins"},
 					},
 				},
 			},
@@ -104,32 +104,32 @@ func TestSubjectLocator(t *testing.T) {
 				{
 					&defaultAttributes{"", "", "get", "Pods", "", "ns1", ""},
 					[]rbac.Subject{
-						{Kind: rbac.GroupKind, Name: user.SystemPrivilegedGroup},
-						{Kind: rbac.UserKind, Name: "foo"},
-						{Kind: rbac.UserKind, Name: "super-admin"},
-						{Kind: rbac.GroupKind, Name: "super-admins"},
-						{Kind: rbac.UserKind, Name: "admin"},
-						{Kind: rbac.GroupKind, Name: "admins"},
+						{Kind: rbac.GroupKind, APIGroup: rbac.GroupName, Name: user.SystemPrivilegedGroup},
+						{Kind: rbac.UserKind, APIGroup: rbac.GroupName, Name: "foo"},
+						{Kind: rbac.UserKind, APIGroup: rbac.GroupName, Name: "super-admin"},
+						{Kind: rbac.GroupKind, APIGroup: rbac.GroupName, Name: "super-admins"},
+						{Kind: rbac.UserKind, APIGroup: rbac.GroupName, Name: "admin"},
+						{Kind: rbac.GroupKind, APIGroup: rbac.GroupName, Name: "admins"},
 					},
 				},
 				{
 					// verb matchies correctly
 					&defaultAttributes{"", "", "create", "Pods", "", "ns1", ""},
 					[]rbac.Subject{
-						{Kind: rbac.GroupKind, Name: user.SystemPrivilegedGroup},
-						{Kind: rbac.UserKind, Name: "foo"},
-						{Kind: rbac.UserKind, Name: "super-admin"},
-						{Kind: rbac.GroupKind, Name: "super-admins"},
+						{Kind: rbac.GroupKind, APIGroup: rbac.GroupName, Name: user.SystemPrivilegedGroup},
+						{Kind: rbac.UserKind, APIGroup: rbac.GroupName, Name: "foo"},
+						{Kind: rbac.UserKind, APIGroup: rbac.GroupName, Name: "super-admin"},
+						{Kind: rbac.GroupKind, APIGroup: rbac.GroupName, Name: "super-admins"},
 					},
 				},
 				{
 					// binding only works in correct ns
 					&defaultAttributes{"", "", "get", "Pods", "", "ns2", ""},
 					[]rbac.Subject{
-						{Kind: rbac.GroupKind, Name: user.SystemPrivilegedGroup},
-						{Kind: rbac.UserKind, Name: "foo"},
-						{Kind: rbac.UserKind, Name: "super-admin"},
-						{Kind: rbac.GroupKind, Name: "super-admins"},
+						{Kind: rbac.GroupKind, APIGroup: rbac.GroupName, Name: user.SystemPrivilegedGroup},
+						{Kind: rbac.UserKind, APIGroup: rbac.GroupName, Name: "foo"},
+						{Kind: rbac.UserKind, APIGroup: rbac.GroupName, Name: "super-admin"},
+						{Kind: rbac.GroupKind, APIGroup: rbac.GroupName, Name: "super-admins"},
 					},
 				},
 			},

@@ -68,35 +68,6 @@ func (authzHandler unionAuthzHandler) Authorize(ctx context.Context, a authorize
 	return authorizer.DecisionNoOpinion, strings.Join(reasonlist, "\n"), utilerrors.NewAggregate(errlist)
 }
 
-// RulesFor against a chain of authorizer.RuleResolver objects and returns nil if successful and returns error if unsuccessful
-func (authzHandler unionAuthzHandler) RulesFor(user user.Info, namespace string) ([]authorizer.ResourceRuleInfo, []authorizer.NonResourceRuleInfo, bool, error) {
-	var (
-		errList              []error
-		resourceRulesList    []authorizer.ResourceRuleInfo
-		nonResourceRulesList []authorizer.NonResourceRuleInfo
-	)
-	incompleteStatus := false
-
-	for _, currAuthzHandler := range authzHandler {
-		resourceRules, nonResourceRules, incomplete, err := currAuthzHandler.RulesFor(user, namespace)
-
-		if incomplete {
-			incompleteStatus = true
-		}
-		if err != nil {
-			errList = append(errList, err)
-		}
-		if len(resourceRules) > 0 {
-			resourceRulesList = append(resourceRulesList, resourceRules...)
-		}
-		if len(nonResourceRules) > 0 {
-			nonResourceRulesList = append(nonResourceRulesList, nonResourceRules...)
-		}
-	}
-
-	return resourceRulesList, nonResourceRulesList, incompleteStatus, utilerrors.NewAggregate(errList)
-}
-
 // unionAuthzRulesHandler authorizer against a chain of authorizer.RuleResolver
 type unionAuthzRulesHandler []authorizer.RuleResolver
 

@@ -90,7 +90,7 @@ func TestAuthenticateRequestWithAud(t *testing.T) {
 						failed = 1
 					}
 				}),
-				tc.apiAuds,
+				//tc.apiAuds,
 			)
 			auth.ServeHTTP(httptest.NewRecorder(), &http.Request{Header: map[string][]string{"Authorization": {"Something"}}})
 			if tc.expectSuccess {
@@ -127,7 +127,7 @@ func TestAuthenticateRequest(t *testing.T) {
 		http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {
 			t.Errorf("unexpected call to failed")
 		}),
-		nil,
+		//nil,
 	)
 
 	auth.ServeHTTP(httptest.NewRecorder(), &http.Request{Header: map[string][]string{"Authorization": {"Something"}}})
@@ -147,7 +147,7 @@ func TestAuthenticateRequestFailed(t *testing.T) {
 		http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {
 			close(failed)
 		}),
-		nil,
+		//nil,
 	)
 
 	auth.ServeHTTP(httptest.NewRecorder(), &http.Request{})
@@ -167,7 +167,7 @@ func TestAuthenticateRequestError(t *testing.T) {
 		http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {
 			close(failed)
 		}),
-		nil,
+		//nil,
 	)
 
 	auth.ServeHTTP(httptest.NewRecorder(), &http.Request{})

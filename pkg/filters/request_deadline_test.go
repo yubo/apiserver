@@ -170,10 +170,10 @@ func TestWithRequestDeadline(t *testing.T) {
 				deadlineGot, hasDeadlineGot = deadline(req)
 			})
 
-			fakeSink := &fakeAuditSink{}
-			withDeadline := WithRequestDeadline(handler, fakeSink,
+			//fakeSink := &fakeAuditSink{}
+			withDeadline := WithRequestDeadline(handler,
 				func(_ *http.Request, _ *request.RequestInfo) bool { return test.longRunning },
-				newSerializer(), requestTimeoutMaximum)
+				requestTimeoutMaximum)
 			withDeadline = WithRequestInfo(withDeadline, &fakeRequestResolver{})
 
 			testRequest := newRequest(t, test.requestURL)
@@ -222,9 +222,9 @@ func TestWithRequestDeadlineWithClock(t *testing.T) {
 	receivedTimestampExpected := time.Now().Add(time.Minute)
 	fakeClock := utilclock.NewFakeClock(receivedTimestampExpected)
 
-	fakeSink := &fakeAuditSink{}
-	withDeadline := withRequestDeadline(handler, fakeSink,
-		func(_ *http.Request, _ *request.RequestInfo) bool { return false }, newSerializer(), time.Minute, fakeClock)
+	//fakeSink := &fakeAuditSink{}
+	withDeadline := withRequestDeadline(handler,
+		func(_ *http.Request, _ *request.RequestInfo) bool { return false }, time.Minute, fakeClock)
 	withDeadline = WithRequestInfo(withDeadline, &fakeRequestResolver{})
 
 	testRequest := newRequest(t, "/api/v1/namespaces?timeout=1s")
@@ -256,9 +256,9 @@ func TestWithRequestDeadlineWithPanic(t *testing.T) {
 		panic(panicErrExpected)
 	})
 
-	fakeSink := &fakeAuditSink{}
-	withDeadline := WithRequestDeadline(handler, fakeSink,
-		func(_ *http.Request, _ *request.RequestInfo) bool { return false }, newSerializer(), 1*time.Minute)
+	//fakeSink := &fakeAuditSink{}
+	withDeadline := WithRequestDeadline(handler,
+		func(_ *http.Request, _ *request.RequestInfo) bool { return false }, 1*time.Minute)
 	withDeadline = WithRequestInfo(withDeadline, &fakeRequestResolver{})
 	withPanicRecovery := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		defer func() {
@@ -292,9 +292,9 @@ func TestWithRequestDeadlineWithRequestTimesOut(t *testing.T) {
 		}
 	})
 
-	fakeSink := &fakeAuditSink{}
-	withDeadline := WithRequestDeadline(handler, fakeSink,
-		func(_ *http.Request, _ *request.RequestInfo) bool { return false }, newSerializer(), 1*time.Minute)
+	//fakeSink := &fakeAuditSink{}
+	withDeadline := WithRequestDeadline(handler,
+		func(_ *http.Request, _ *request.RequestInfo) bool { return false }, 1*time.Minute)
 	withDeadline = WithRequestInfo(withDeadline, &fakeRequestResolver{})
 
 	testRequest := newRequest(t, fmt.Sprintf("/api/v1/namespaces?timeout=%s", timeout))
@@ -324,8 +324,7 @@ func message(err error) string {
 }
 
 func newSerializer() runtime.NegotiatedSerializer {
-	scheme := runtime.NewScheme()
-	return serializer.NewCodecFactory(scheme).WithoutConversion()
+	return serializer.NewCodecFactory().WithoutConversion()
 }
 
 type fakeRequestResolver struct{}

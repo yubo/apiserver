@@ -20,7 +20,6 @@ package abac
 import (
 	"bufio"
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -28,6 +27,7 @@ import (
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/authorization/abac/api"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
+	"github.com/yubo/golib/scheme"
 	"k8s.io/klog/v2"
 )
 
@@ -63,6 +63,8 @@ func NewFromFile(path string) (PolicyList, error) {
 	scanner := bufio.NewScanner(file)
 	pl := make(PolicyList, 0)
 
+	decoder := scheme.Codecs.UniversalDeserializer()
+
 	i := 0
 	unversionedLines := 0
 	for scanner.Scan() {
@@ -76,11 +78,18 @@ func NewFromFile(path string) (PolicyList, error) {
 		}
 
 		decodedPolicy := &api.Policy{}
-		err := json.Unmarshal(b, decodedPolicy)
-		if err != nil {
-			return nil, policyLoadError{path, i, b, err}
+		_, err := decoder.Decode(b, decodedPolicy)
+		if err != nil || decodedPolicy.Validate() != nil {
+			oldPolicy := &api.PolicySpec{}
+			if _, err := decoder.Decode(b, oldPolicy); err != nil {
+				return nil, policyLoadError{path, i, b, err}
+			}
+
+			oldPolicy.ValidateV0()
+
+			pl = append(pl, &api.Policy{Spec: *oldPolicy})
+			continue
 		}
-		klog.V(5).InfoS("authz.abac.readfile", "i", i, "line", string(b), "policy", decodedPolicy)
 
 		pl = append(pl, decodedPolicy)
 	}
@@ -220,7 +229,7 @@ func (pl PolicyList) Authorize(ctx context.Context, a authorizer.Attributes) (au
 			klog.V(5).InfoS("authz.abac allow", "policy", *p)
 			return authorizer.DecisionAllow, "", nil
 		}
-		klog.V(5).InfoS("authz.abac miss match", "policy", *p)
+		klog.V(5).InfoS("authz.abac miss match", "policy", *p, "auth", a)
 	}
 	klog.V(5).Infof("authz.abac no policy matched")
 	return authorizer.DecisionNoOpinion, "No policy matched.", nil

@@ -2,10 +2,7 @@
 package user
 
 import (
-	"fmt"
-
 	"github.com/yubo/apiserver/pkg/rest"
-	"github.com/yubo/golib/util"
 )
 
 type User struct {
@@ -27,17 +24,6 @@ type GetUsersInput struct {
 	rest.Pagination
 	Query *string `param:"query" name:"query" description:"query user"`
 	Count bool    `param:"query" name:"count" description:"just response total count"`
-}
-
-func (p *GetUsersInput) Validate() error {
-	if p.Name == "" {
-		return fmt.Errorf("invalid user name")
-	}
-	return nil
-}
-
-func (p GetUsersInput) String() string {
-	return util.Prettify(p)
 }
 
 type GetUsersOutput struct {

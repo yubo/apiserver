@@ -16,6 +16,8 @@ limitations under the License.
 
 package api
 
+import "errors"
+
 // +k8s:deepcopy-gen:interfaces=github.com/yubo/golib/runtime.Object
 
 // Policy contains a single ABAC policy rule
@@ -26,6 +28,14 @@ type Policy struct {
 
 	// Spec describes the policy rule
 	Spec PolicySpec `json:"spec,omitempty"`
+}
+
+func (p *Policy) Validate() error {
+	if p.Spec.User == "" && p.Spec.Group == "" {
+		return errors.New("user and group both empty")
+	}
+
+	return nil
 }
 
 // PolicySpec contains the attributes for a policy rule
@@ -46,7 +56,7 @@ type PolicySpec struct {
 
 	// APIGroup is the name of an API group. APIGroup, Resource, and Namespace are required to match resource requests.
 	// "*" matches all API groups
-	APIGroup string
+	APIGroup string `json:"apiGroup,omitempty"`
 
 	// Resource is the name of a resource. APIGroup, Resource, and Namespace are required to match resource requests.
 	// "*" matches all resources
@@ -69,4 +79,20 @@ type PolicySpec struct {
 	// TODO: want a way to allow a controller to create a pod based only on a
 	// certain podTemplates.
 
+}
+
+func (p *PolicySpec) ValidateV0() error {
+	p.APIGroup = "*"
+
+	if p.Namespace == "" {
+		p.Namespace = "*"
+	}
+	if p.Resource == "" {
+		p.Resource = "*"
+	}
+	if p.User == "" && p.Group == "" {
+		p.Group = "system:authenticated"
+	}
+
+	return nil
 }

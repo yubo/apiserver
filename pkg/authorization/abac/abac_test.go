@@ -61,7 +61,8 @@ func TestExampleFile(t *testing.T) {
 }
 
 func TestAuthorizeV0(t *testing.T) {
-	a, err := newWithContents(t, `{                    "readonly": true, "resource": "events"   }
+	a, err := newWithContents(t, `
+{                    "readonly": true, "resource": "events"   }
 {"user":"scheduler", "readonly": true, "resource": "pods"     }
 {"user":"scheduler",                   "resource": "bindings" }
 {"user":"kubelet",   "readonly": true, "resource": "bindings" }
@@ -780,11 +781,7 @@ func TestPolicy(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		policy := &api.Policy{}
-		if err := api.Scheme.Convert(test.policy, policy, nil); err != nil {
-			t.Errorf("%s: error converting: %v", test.name, err)
-			continue
-		}
+		policy := test.policy.(*api.Policy)
 		matches := matches(*policy, test.attr)
 		if test.matches != matches {
 			t.Errorf("%s: expected: %t, saw: %t", test.name, test.matches, matches)

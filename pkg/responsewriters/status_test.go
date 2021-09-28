@@ -34,7 +34,7 @@ func TestBadStatusErrorToAPIStatus(t *testing.T) {
 		Code:   500,
 	}
 	if !reflect.DeepEqual(actual, expected) {
-		t.Errorf("%s: Expected %#v, Got %#v", actual, expected, actual)
+		t.Errorf("%v: Expected %#v, Got %#v", actual, expected, actual)
 	}
 }
 

@@ -20,12 +20,13 @@ import (
 	"context"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	bootstrapapi "github.com/yubo/apiserver/pkg/cluster-bootstrap/token/api"
-	"github.com/yubo/golib/labels"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/api/errors"
+	"github.com/yubo/golib/labels"
 )
 
 type lister struct {
@@ -52,7 +53,7 @@ const (
 )
 
 func TestTokenAuthenticator(t *testing.T) {
-	now := api.Now()
+	now := time.Now()
 
 	tests := []struct {
 		name string

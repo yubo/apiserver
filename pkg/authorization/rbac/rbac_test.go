@@ -29,9 +29,10 @@ import (
 	"github.com/yubo/golib/api"
 )
 
-func newRule(verbs, resources, nonResourceURLs string) rbac.PolicyRule {
+func newRule(verbs, apiGroups, resources, nonResourceURLs string) rbac.PolicyRule {
 	return rbac.PolicyRule{
 		Verbs:           strings.Split(verbs, ","),
+		APIGroups:       strings.Split(apiGroups, ","),
 		Resources:       strings.Split(resources, ","),
 		NonResourceURLs: strings.Split(nonResourceURLs, ","),
 	}
@@ -54,8 +55,9 @@ func newClusterRoleBinding(roleName string, subjects ...string) *rbac.ClusterRol
 	r := &rbac.ClusterRoleBinding{
 		ObjectMeta: api.ObjectMeta{},
 		RoleRef: rbac.RoleRef{
-			Kind: "ClusterRole", // ClusterRoleBindings can only refer to ClusterRole
-			Name: roleName,
+			APIGroup: rbac.GroupName,
+			Kind:     "ClusterRole", // ClusterRoleBindings can only refer to ClusterRole
+			Name:     roleName,
 		},
 	}
 
@@ -64,14 +66,14 @@ func newClusterRoleBinding(roleName string, subjects ...string) *rbac.ClusterRol
 		split := strings.SplitN(subject, ":", 2)
 		r.Subjects[i].Kind, r.Subjects[i].Name = split[0], split[1]
 
-		//switch r.Subjects[i].Kind {
-		//case rbac.ServiceAccountKind:
-		//	r.Subjects[i].APIGroup = ""
-		//case rbac.UserKind, rbac.GroupKind:
-		//	r.Subjects[i].APIGroup = rbac.GroupName
-		//default:
-		//	panic(fmt.Errorf("invalid kind %s", r.Subjects[i].Kind))
-		//}
+		switch r.Subjects[i].Kind {
+		case rbac.ServiceAccountKind:
+			r.Subjects[i].APIGroup = ""
+		case rbac.UserKind, rbac.GroupKind:
+			r.Subjects[i].APIGroup = rbac.GroupName
+		default:
+			panic(fmt.Errorf("invalid kind %s", r.Subjects[i].Kind))
+		}
 	}
 	return r
 }
@@ -81,9 +83,9 @@ func newRoleBinding(namespace, roleName string, bindType uint16, subjects ...str
 
 	switch bindType {
 	case bindToRole:
-		r.RoleRef = rbac.RoleRef{Kind: "Role", Name: roleName}
+		r.RoleRef = rbac.RoleRef{APIGroup: rbac.GroupName, Kind: "Role", Name: roleName}
 	case bindToClusterRole:
-		r.RoleRef = rbac.RoleRef{Kind: "ClusterRole", Name: roleName}
+		r.RoleRef = rbac.RoleRef{APIGroup: rbac.GroupName, Kind: "ClusterRole", Name: roleName}
 	}
 
 	r.Subjects = make([]rbac.Subject, len(subjects))
@@ -91,14 +93,14 @@ func newRoleBinding(namespace, roleName string, bindType uint16, subjects ...str
 		split := strings.SplitN(subject, ":", 2)
 		r.Subjects[i].Kind, r.Subjects[i].Name = split[0], split[1]
 
-		//switch r.Subjects[i].Kind {
-		//case rbac.ServiceAccountKind:
-		//	r.Subjects[i].APIGroup = ""
-		//case rbac.UserKind, rbac.GroupKind:
-		//	r.Subjects[i].APIGroup = rbac.GroupName
-		//default:
-		//	panic(fmt.Errorf("invalid kind %s", r.Subjects[i].Kind))
-		//}
+		switch r.Subjects[i].Kind {
+		case rbac.ServiceAccountKind:
+			r.Subjects[i].APIGroup = ""
+		case rbac.UserKind, rbac.GroupKind:
+			r.Subjects[i].APIGroup = rbac.GroupName
+		default:
+			panic(fmt.Errorf("invalid kind %s", r.Subjects[i].Kind))
+		}
 	}
 	return r
 }
@@ -295,44 +297,44 @@ func TestRuleMatches(t *testing.T) {
 		},
 		{
 			name: "star resource, exact match other",
-			rule: rbac.NewRule("verb1").Resources("*").RuleOrDie(),
+			rule: rbac.NewRule("verb1").Groups("group1").Resources("*").RuleOrDie(),
 			requestsToExpected: map[authorizer.AttributesRecord]bool{
-				resourceRequest("verb1").Resource("resource1").New(): true,
-				resourceRequest("verb1").Resource("resource1").New(): false,
-				resourceRequest("verb1").Resource("resource2").New(): true,
-				resourceRequest("verb1").Resource("resource2").New(): false,
-				resourceRequest("verb2").Resource("resource1").New(): false,
-				resourceRequest("verb2").Resource("resource1").New(): false,
-				resourceRequest("verb2").Resource("resource2").New(): false,
-				resourceRequest("verb2").Resource("resource2").New(): false,
+				resourceRequest("verb1").Group("group1").Resource("resource1").New(): true,
+				resourceRequest("verb1").Group("group2").Resource("resource1").New(): false,
+				resourceRequest("verb1").Group("group1").Resource("resource2").New(): true,
+				resourceRequest("verb1").Group("group2").Resource("resource2").New(): false,
+				resourceRequest("verb2").Group("group1").Resource("resource1").New(): false,
+				resourceRequest("verb2").Group("group2").Resource("resource1").New(): false,
+				resourceRequest("verb2").Group("group1").Resource("resource2").New(): false,
+				resourceRequest("verb2").Group("group2").Resource("resource2").New(): false,
 			},
 		},
 		{
 			name: "tuple expansion",
 			rule: rbac.NewRule("verb1", "verb2").Groups("group1", "group2").Resources("resource1", "resource2").RuleOrDie(),
 			requestsToExpected: map[authorizer.AttributesRecord]bool{
-				resourceRequest("verb1").Resource("resource1").New(): true,
-				resourceRequest("verb1").Resource("resource1").New(): true,
-				resourceRequest("verb1").Resource("resource2").New(): true,
-				resourceRequest("verb1").Resource("resource2").New(): true,
-				resourceRequest("verb2").Resource("resource1").New(): true,
-				resourceRequest("verb2").Resource("resource1").New(): true,
-				resourceRequest("verb2").Resource("resource2").New(): true,
-				resourceRequest("verb2").Resource("resource2").New(): true,
+				resourceRequest("verb1").Group("group1").Resource("resource1").New(): true,
+				resourceRequest("verb1").Group("group2").Resource("resource1").New(): true,
+				resourceRequest("verb1").Group("group1").Resource("resource2").New(): true,
+				resourceRequest("verb1").Group("group2").Resource("resource2").New(): true,
+				resourceRequest("verb2").Group("group1").Resource("resource1").New(): true,
+				resourceRequest("verb2").Group("group2").Resource("resource1").New(): true,
+				resourceRequest("verb2").Group("group1").Resource("resource2").New(): true,
+				resourceRequest("verb2").Group("group2").Resource("resource2").New(): true,
 			},
 		},
 		{
 			name: "subresource expansion",
-			rule: rbac.NewRule("*").Resources("resource1/subresource1").RuleOrDie(),
+			rule: rbac.NewRule("*").Groups("*").Resources("resource1/subresource1").RuleOrDie(),
 			requestsToExpected: map[authorizer.AttributesRecord]bool{
-				resourceRequest("verb1").Resource("resource1").Subresource("subresource1").New(): true,
-				resourceRequest("verb1").Resource("resource1").Subresource("subresource2").New(): false,
-				resourceRequest("verb1").Resource("resource2").Subresource("subresource1").New(): false,
-				resourceRequest("verb1").Resource("resource2").Subresource("subresource1").New(): false,
-				resourceRequest("verb2").Resource("resource1").Subresource("subresource1").New(): true,
-				resourceRequest("verb2").Resource("resource1").Subresource("subresource2").New(): false,
-				resourceRequest("verb2").Resource("resource2").Subresource("subresource1").New(): false,
-				resourceRequest("verb2").Resource("resource2").Subresource("subresource1").New(): false,
+				resourceRequest("verb1").Group("group1").Resource("resource1").Subresource("subresource1").New(): true,
+				resourceRequest("verb1").Group("group2").Resource("resource1").Subresource("subresource2").New(): false,
+				resourceRequest("verb1").Group("group1").Resource("resource2").Subresource("subresource1").New(): false,
+				resourceRequest("verb1").Group("group2").Resource("resource2").Subresource("subresource1").New(): false,
+				resourceRequest("verb2").Group("group1").Resource("resource1").Subresource("subresource1").New(): true,
+				resourceRequest("verb2").Group("group2").Resource("resource1").Subresource("subresource2").New(): false,
+				resourceRequest("verb2").Group("group1").Resource("resource2").Subresource("subresource1").New(): false,
+				resourceRequest("verb2").Group("group2").Resource("resource2").Subresource("subresource1").New(): false,
 			},
 		},
 		{
@@ -409,10 +411,10 @@ func nonresourceRequest(verb string) *requestAttributeBuilder {
 	}
 }
 
-//func (r *requestAttributeBuilder) Group(group string) *requestAttributeBuilder {
-//	r.request.APIGroup = group
-//	return r
-//}
+func (r *requestAttributeBuilder) Group(group string) *requestAttributeBuilder {
+	r.request.APIGroup = group
+	return r
+}
 
 func (r *requestAttributeBuilder) Resource(resource string) *requestAttributeBuilder {
 	r.request.Resource = resource

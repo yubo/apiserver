@@ -1,3 +1,4 @@
+//go:build !dockerless
 // +build !dockerless
 
 /*
@@ -29,7 +30,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	mockclient "github.com/yubo/apiserver/pkg/streaming/providers/dockershim/libdocker/testing"
-	"github.com/yubo/apiserver/tools/remotecommand"
+	"github.com/yubo/golib/util/term"
 )
 
 func TestExecInContainer(t *testing.T) {
@@ -106,7 +107,7 @@ func TestExecInContainer(t *testing.T) {
 	cmd := []string{"/bin/bash"}
 	var stdin io.Reader
 	var stdout, stderr io.WriteCloser
-	var resize <-chan remotecommand.TerminalSize
+	var resize <-chan term.TerminalSize
 
 	for _, tc := range testcases {
 		t.Logf("TestCase: %q", tc.description)

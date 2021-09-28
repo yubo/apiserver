@@ -41,6 +41,9 @@ var (
 func (mock *mockAuthRequestHandler) AuthenticateToken(ctx context.Context, token string) (*authenticator.Response, bool, error) {
 	return &authenticator.Response{User: mock.returnUser}, mock.isAuthenticated, mock.err
 }
+func (mock *mockAuthRequestHandler) Name() string    { return "mock" }
+func (mock *mockAuthRequestHandler) Priority() int   { return 0 }
+func (mock *mockAuthRequestHandler) Available() bool { return true }
 
 func TestAuthenticateTokenSecondPasses(t *testing.T) {
 	handler1 := &mockAuthRequestHandler{returnUser: user1}

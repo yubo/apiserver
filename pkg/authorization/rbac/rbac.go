@@ -101,6 +101,10 @@ func (r *RBACAuthorizer) Authorize(ctx context.Context, requestAttributes author
 			b.WriteString(requestAttributes.GetVerb())
 			b.WriteString(`" resource "`)
 			b.WriteString(requestAttributes.GetResource())
+			if len(requestAttributes.GetAPIGroup()) > 0 {
+				b.WriteString(`.`)
+				b.WriteString(requestAttributes.GetAPIGroup())
+			}
 			if len(requestAttributes.GetSubresource()) > 0 {
 				b.WriteString(`/`)
 				b.WriteString(requestAttributes.GetSubresource())
@@ -144,6 +148,7 @@ func (r *RBACAuthorizer) RulesFor(user user.Info, namespace string) ([]authorize
 		if len(policyRule.Resources) > 0 {
 			r := authorizer.DefaultResourceRuleInfo{
 				Verbs:         policyRule.Verbs,
+				APIGroups:     policyRule.APIGroups,
 				Resources:     policyRule.Resources,
 				ResourceNames: policyRule.ResourceNames,
 			}
@@ -189,6 +194,7 @@ func RuleAllows(requestAttributes authorizer.Attributes, rule *rbac.PolicyRule) 
 		}
 
 		return rbac.VerbMatches(rule, requestAttributes.GetVerb()) &&
+			rbac.APIGroupMatches(rule, requestAttributes.GetAPIGroup()) &&
 			rbac.ResourceMatches(rule, combinedResource, requestAttributes.GetSubresource()) &&
 			rbac.ResourceNameMatches(rule, requestAttributes.GetName())
 	}

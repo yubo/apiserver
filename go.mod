@@ -14,7 +14,6 @@ require (
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/emicklei/go-restful v2.15.0+incompatible
 	github.com/emicklei/go-restful-openapi v1.4.1
-	github.com/fortytw2/leaktest v1.3.0
 	github.com/go-openapi/spec v0.20.3
 	github.com/gogo/protobuf v1.3.2
 	github.com/golang/mock v1.4.1
@@ -34,7 +33,6 @@ require (
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.7.0
-	github.com/uber-go/tally v3.3.17+incompatible
 	github.com/uber/jaeger-client-go v2.25.0+incompatible
 	github.com/uber/jaeger-lib v2.2.0+incompatible
 	github.com/yubo/golib v0.0.0-20210816033817-49c454336790
@@ -48,7 +46,6 @@ require (
 	gopkg.in/square/go-jose.v2 v2.5.1
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.22.0
-	k8s.io/apimachinery v0.22.0
 	k8s.io/client-go v0.22.0
 	k8s.io/klog/v2 v2.9.0
 )

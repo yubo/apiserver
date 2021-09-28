@@ -39,6 +39,7 @@ const (
 
 	// AutoUpdateAnnotationKey is the name of an annotation which prevents reconciliation if set to "false"
 	AutoUpdateAnnotationKey = "rbac.authorization.kubernetes.io/autoupdate"
+	GroupName               = "rbac.authorization.k8s.io"
 )
 
 // PolicyRule holds information that describes a policy rule, but does not contain information
@@ -49,7 +50,7 @@ type PolicyRule struct {
 
 	// APIGroups is the name of the APIGroup that contains the resources.
 	// If multiple API groups are specified, any action requested against one of the enumerated resources in any API group will be allowed.
-	//APIGroups []string
+	APIGroups []string
 	// Resources is a list of resources this rule applies to.  '*' represents all resources in the specified apiGroups.
 	// '*/foo' represents the subresource 'foo' for all resources in the specified apiGroups.
 	Resources []string
@@ -72,7 +73,7 @@ type Subject struct {
 	// APIGroup holds the API group of the referenced subject.
 	// Defaults to "" for ServiceAccount subjects.
 	// Defaults to "rbac.authorization.k8s.io" for User and Group subjects.
-	//APIGroup string
+	APIGroup string
 	// Name of the object being referenced.
 	Name string
 	// Namespace of the referenced object.  If the object kind is non-namespace, such as "User" or "Group", and this value is not empty
@@ -83,7 +84,7 @@ type Subject struct {
 // RoleRef contains information that points to the role being used
 type RoleRef struct {
 	// APIGroup is the group for the resource being referenced
-	//APIGroup string
+	APIGroup string
 	// Kind is the type of resource being referenced
 	Kind string
 	// Name is the name of resource being referenced

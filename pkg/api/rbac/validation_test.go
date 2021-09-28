@@ -19,7 +19,6 @@ package rbac
 import (
 	"testing"
 
-	"github.com/yubo/apiserver/pkg/api/rbac"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/util/validation/field"
 )

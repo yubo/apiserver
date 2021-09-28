@@ -69,8 +69,6 @@ type Attributes interface {
 // authorized, otherwise it returns an error.
 type Authorizer interface {
 	Authorize(ctx context.Context, a Attributes) (authorized Decision, reason string, err error)
-	// RulesFor get the list of cluster wide rules, the list of rules in the specific namespace, incomplete status and errors.
-	RulesFor(user user.Info, namespace string) ([]ResourceRuleInfo, []NonResourceRuleInfo, bool, error)
 }
 
 type AuthorizerFactory func() (Authorizer, error)
