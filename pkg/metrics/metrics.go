@@ -1,13 +1,21 @@
 package metrics
 
 import (
+	"bufio"
 	"context"
+	"net"
 	"net/http"
+	"net/url"
+	"strconv"
+	"strings"
 	"time"
 
+	"github.com/emicklei/go-restful"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/request"
+	"github.com/yubo/golib/util/sets"
 )
 
 // resettableCollector is the interface implemented by prometheus.MetricVec
@@ -178,6 +186,37 @@ var (
 		requestFilterDuration,
 		requestAbortsTotal,
 	}
+
+	// these are the known (e.g. whitelisted/known) content types which we will report for
+	// request metrics. Any other RFC compliant content types will be aggregated under 'unknown'
+	knownMetricContentTypes = sets.NewString(
+		"application/apply-patch+yaml",
+		"application/json",
+		"application/json-patch+json",
+		"application/merge-patch+json",
+		"application/strategic-merge-patch+json",
+		"application/vnd.kubernetes.protobuf",
+		"application/vnd.kubernetes.protobuf;stream=watch",
+		"application/yaml",
+		"text/plain",
+		"text/plain;charset=utf-8")
+	// these are the valid request methods which we report in our metrics. Any other request methods
+	// will be aggregated under 'unknown'
+	validRequestMethods = sets.NewString(
+		"APPLY",
+		"CONNECT",
+		"CREATE",
+		"DELETE",
+		"DELETECOLLECTION",
+		"GET",
+		"LIST",
+		"PATCH",
+		"POST",
+		"PROXY",
+		"PUT",
+		"UPDATE",
+		"WATCH",
+		"WATCHLIST")
 )
 
 const (
@@ -190,6 +229,16 @@ const (
 	WaitingPhase = "waiting"
 	// ExecutingPhase is the phase value for an executing request
 	ExecutingPhase = "executing"
+)
+
+const (
+	// deprecatedAnnotationKey is a key for an audit annotation set to
+	// "true" on requests made to deprecated API versions
+	deprecatedAnnotationKey = "k8s.io/deprecated"
+	// removedReleaseAnnotationKey is a key for an audit annotation set to
+	// the target removal release, in "<major>.<minor>" format,
+	// on requests made to deprecated API versions with a target removal release
+	removedReleaseAnnotationKey = "k8s.io/removed-release"
 )
 
 // Reset all metrics.
@@ -222,4 +271,363 @@ func RecordFilterLatency(ctx context.Context, name string, elapsed time.Duration
 func RecordRequestAbort(req *http.Request, requestInfo *request.RequestInfo) {
 	requestInfo = &request.RequestInfo{Verb: req.Method, Path: req.URL.Path}
 	requestAbortsTotal.WithLabelValues(requestInfo.Verb, requestInfo.Path).Inc()
+}
+
+// RecordRequestTermination records that the request was terminated early as part of a resource
+// preservation or apiserver self-defense mechanism (e.g. timeouts, maxinflight throttling,
+// proxyHandler errors). RecordRequestTermination should only be called zero or one times
+// per request.
+func RecordRequestTermination(req *http.Request, requestInfo *request.RequestInfo, component string, code int) {
+	if requestInfo == nil {
+		requestInfo = &request.RequestInfo{Verb: req.Method, Path: req.URL.Path}
+	}
+	scope := CleanScope(requestInfo)
+
+	// We don't use verb from <requestInfo>, as this may be propagated from
+	// InstrumentRouteFunc which is registered in installer.go with predefined
+	// list of verbs (different than those translated to RequestInfo).
+	// However, we need to tweak it e.g. to differentiate GET from LIST.
+	reportedVerb := cleanVerb(canonicalVerb(strings.ToUpper(req.Method), scope), req)
+
+	if requestInfo.IsResourceRequest {
+		requestTerminationsTotal.WithLabelValues(reportedVerb, requestInfo.APIGroup, requestInfo.APIVersion, requestInfo.Resource, requestInfo.Subresource, scope, component, codeToString(code)).Inc()
+	} else {
+		requestTerminationsTotal.WithLabelValues(reportedVerb, "", "", "", requestInfo.Path, scope, component, codeToString(code)).Inc()
+	}
+}
+
+// RecordLongRunning tracks the execution of a long running request against the API server. It provides an accurate count
+// of the total number of open long running requests. requestInfo may be nil if the caller is not in the normal request flow.
+func RecordLongRunning(req *http.Request, requestInfo *request.RequestInfo, component string, fn func()) {
+	if requestInfo == nil {
+		requestInfo = &request.RequestInfo{Verb: req.Method, Path: req.URL.Path}
+	}
+	var g prometheus.Gauge
+	scope := CleanScope(requestInfo)
+
+	// We don't use verb from <requestInfo>, as this may be propagated from
+	// InstrumentRouteFunc which is registered in installer.go with predefined
+	// list of verbs (different than those translated to RequestInfo).
+	// However, we need to tweak it e.g. to differentiate GET from LIST.
+	reportedVerb := cleanVerb(canonicalVerb(strings.ToUpper(req.Method), scope), req)
+
+	if requestInfo.IsResourceRequest {
+		g = longRunningRequestGauge.WithLabelValues(reportedVerb, requestInfo.APIGroup, requestInfo.APIVersion, requestInfo.Resource, requestInfo.Subresource, scope, component)
+	} else {
+		g = longRunningRequestGauge.WithLabelValues(reportedVerb, "", "", "", requestInfo.Path, scope, component)
+	}
+	g.Inc()
+	defer g.Dec()
+	fn()
+}
+
+// MonitorRequest handles standard transformations for client and the reported verb and then invokes Monitor to record
+// a request. verb must be uppercase to be backwards compatible with existing monitoring tooling.
+func MonitorRequest(req *http.Request, verb, group, version, resource, subresource, scope, component string, deprecated bool, removedRelease string, contentType string, httpCode, respSize int, elapsed time.Duration) {
+	// We don't use verb from <requestInfo>, as this may be propagated from
+	// InstrumentRouteFunc which is registered in installer.go with predefined
+	// list of verbs (different than those translated to RequestInfo).
+	// However, we need to tweak it e.g. to differentiate GET from LIST.
+	reportedVerb := cleanVerb(canonicalVerb(strings.ToUpper(req.Method), scope), req)
+
+	dryRun := cleanDryRun(req.URL)
+	elapsedSeconds := elapsed.Seconds()
+	cleanContentType := cleanContentType(contentType)
+	requestCounter.WithLabelValues(reportedVerb, dryRun, group, version, resource, subresource, scope, component, cleanContentType, codeToString(httpCode)).Inc()
+	// MonitorRequest happens after authentication, so we can trust the username given by the request
+	info, ok := request.UserFrom(req.Context())
+	if ok && info.GetName() == user.APIServerUser {
+		apiSelfRequestCounter.WithLabelValues(reportedVerb, resource, subresource).Inc()
+	}
+	if deprecated {
+		deprecatedRequestGauge.WithLabelValues(group, version, resource, subresource, removedRelease).Set(1)
+		//audit.AddAuditAnnotation(req.Context(), deprecatedAnnotationKey, "true")
+		//if len(removedRelease) > 0 {
+		//	audit.AddAuditAnnotation(req.Context(), removedReleaseAnnotationKey, removedRelease)
+		//}
+	}
+	requestLatencies.WithLabelValues(reportedVerb, dryRun, group, version, resource, subresource, scope, component).Observe(elapsedSeconds)
+	// We are only interested in response sizes of read requests.
+	if verb == "GET" || verb == "LIST" {
+		responseSizes.WithLabelValues(reportedVerb, group, version, resource, subresource, scope, component).Observe(float64(respSize))
+	}
+}
+
+// InstrumentRouteFunc works like Prometheus' InstrumentHandlerFunc but wraps
+// the go-restful RouteFunction instead of a HandlerFunc plus some Kubernetes endpoint specific information.
+func InstrumentRouteFunc(verb, group, version, resource, subresource, scope, component string, deprecated bool, removedRelease string, routeFunc restful.RouteFunction) restful.RouteFunction {
+	return restful.RouteFunction(func(req *restful.Request, response *restful.Response) {
+		requestReceivedTimestamp, ok := request.ReceivedTimestampFrom(req.Request.Context())
+		if !ok {
+			requestReceivedTimestamp = time.Now()
+		}
+
+		delegate := &ResponseWriterDelegator{ResponseWriter: response.ResponseWriter}
+
+		_, cn := response.ResponseWriter.(http.CloseNotifier)
+		_, fl := response.ResponseWriter.(http.Flusher)
+		_, hj := response.ResponseWriter.(http.Hijacker)
+		var rw http.ResponseWriter
+		if cn && fl && hj {
+			rw = &fancyResponseWriterDelegator{delegate}
+		} else {
+			rw = delegate
+		}
+		response.ResponseWriter = rw
+
+		routeFunc(req, response)
+
+		MonitorRequest(req.Request, verb, group, version, resource, subresource, scope, component, deprecated, removedRelease, delegate.Header().Get("Content-Type"), delegate.Status(), delegate.ContentLength(), time.Since(requestReceivedTimestamp))
+	})
+}
+
+// InstrumentHandlerFunc works like Prometheus' InstrumentHandlerFunc but adds some Kubernetes endpoint specific information.
+func InstrumentHandlerFunc(verb, group, version, resource, subresource, scope, component string, deprecated bool, removedRelease string, handler http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		requestReceivedTimestamp, ok := request.ReceivedTimestampFrom(req.Context())
+		if !ok {
+			requestReceivedTimestamp = time.Now()
+		}
+
+		delegate := &ResponseWriterDelegator{ResponseWriter: w}
+
+		_, cn := w.(http.CloseNotifier)
+		_, fl := w.(http.Flusher)
+		_, hj := w.(http.Hijacker)
+		if cn && fl && hj {
+			w = &fancyResponseWriterDelegator{delegate}
+		} else {
+			w = delegate
+		}
+
+		handler(w, req)
+
+		MonitorRequest(req, verb, group, version, resource, subresource, scope, component, deprecated, removedRelease, delegate.Header().Get("Content-Type"), delegate.Status(), delegate.ContentLength(), time.Since(requestReceivedTimestamp))
+	}
+}
+
+// cleanContentType binds the contentType (for metrics related purposes) to a
+// bounded set of known/expected content-types.
+func cleanContentType(contentType string) string {
+	normalizedContentType := strings.ToLower(contentType)
+	if strings.HasSuffix(contentType, " stream=watch") || strings.HasSuffix(contentType, " charset=utf-8") {
+		normalizedContentType = strings.ReplaceAll(contentType, " ", "")
+	}
+	if knownMetricContentTypes.Has(normalizedContentType) {
+		return normalizedContentType
+	}
+	return OtherContentType
+}
+
+// CleanScope returns the scope of the request.
+func CleanScope(requestInfo *request.RequestInfo) string {
+	if requestInfo.Namespace != "" {
+		return "namespace"
+	}
+	if requestInfo.Name != "" {
+		return "resource"
+	}
+	if requestInfo.IsResourceRequest {
+		return "cluster"
+	}
+	// this is the empty scope
+	return ""
+}
+
+func canonicalVerb(verb string, scope string) string {
+	switch verb {
+	case "GET", "HEAD":
+		if scope != "resource" && scope != "" {
+			return "LIST"
+		}
+		return "GET"
+	default:
+		return verb
+	}
+}
+
+func cleanVerb(verb string, request *http.Request) string {
+	reportedVerb := verb
+	if verb == "LIST" {
+		// see apimachinery/pkg/runtime/conversion.go Convert_Slice_string_To_bool
+		if values := request.URL.Query()["watch"]; len(values) > 0 {
+			if value := strings.ToLower(values[0]); value != "0" && value != "false" {
+				reportedVerb = "WATCH"
+			}
+		}
+	}
+	// normalize the legacy WATCHLIST to WATCH to ensure users aren't surprised by metrics
+	if verb == "WATCHLIST" {
+		reportedVerb = "WATCH"
+	}
+	//if verb == "PATCH" && request.Header.Get("Content-Type") == string(types.ApplyPatchType) && utilfeature.DefaultFeatureGate.Enabled(features.ServerSideApply) {
+	//	reportedVerb = "APPLY"
+	//}
+	if validRequestMethods.Has(reportedVerb) {
+		return reportedVerb
+	}
+	return OtherRequestMethod
+}
+
+func cleanDryRun(u *url.URL) string {
+	// avoid allocating when we don't see dryRun in the query
+	if !strings.Contains(u.RawQuery, "dryRun") {
+		return ""
+	}
+	dryRun := u.Query()["dryRun"]
+	// Since dryRun could be valid with any arbitrarily long length
+	// we have to dedup and sort the elements before joining them together
+	// TODO: this is a fairly large allocation for what it does, consider
+	//   a sort and dedup in a single pass
+	return strings.Join(sets.NewString(dryRun...).List(), ",")
+}
+
+// ResponseWriterDelegator interface wraps http.ResponseWriter to additionally record content-length, status-code, etc.
+type ResponseWriterDelegator struct {
+	http.ResponseWriter
+
+	status      int
+	written     int64
+	wroteHeader bool
+}
+
+func (r *ResponseWriterDelegator) WriteHeader(code int) {
+	r.status = code
+	r.wroteHeader = true
+	r.ResponseWriter.WriteHeader(code)
+}
+
+func (r *ResponseWriterDelegator) Write(b []byte) (int, error) {
+	if !r.wroteHeader {
+		r.WriteHeader(http.StatusOK)
+	}
+	n, err := r.ResponseWriter.Write(b)
+	r.written += int64(n)
+	return n, err
+}
+
+func (r *ResponseWriterDelegator) Status() int {
+	return r.status
+}
+
+func (r *ResponseWriterDelegator) ContentLength() int {
+	return int(r.written)
+}
+
+type fancyResponseWriterDelegator struct {
+	*ResponseWriterDelegator
+}
+
+func (f *fancyResponseWriterDelegator) CloseNotify() <-chan bool {
+	return f.ResponseWriter.(http.CloseNotifier).CloseNotify()
+}
+
+func (f *fancyResponseWriterDelegator) Flush() {
+	f.ResponseWriter.(http.Flusher).Flush()
+}
+
+func (f *fancyResponseWriterDelegator) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	return f.ResponseWriter.(http.Hijacker).Hijack()
+}
+
+// Small optimization over Itoa
+func codeToString(s int) string {
+	switch s {
+	case 100:
+		return "100"
+	case 101:
+		return "101"
+
+	case 200:
+		return "200"
+	case 201:
+		return "201"
+	case 202:
+		return "202"
+	case 203:
+		return "203"
+	case 204:
+		return "204"
+	case 205:
+		return "205"
+	case 206:
+		return "206"
+
+	case 300:
+		return "300"
+	case 301:
+		return "301"
+	case 302:
+		return "302"
+	case 304:
+		return "304"
+	case 305:
+		return "305"
+	case 307:
+		return "307"
+
+	case 400:
+		return "400"
+	case 401:
+		return "401"
+	case 402:
+		return "402"
+	case 403:
+		return "403"
+	case 404:
+		return "404"
+	case 405:
+		return "405"
+	case 406:
+		return "406"
+	case 407:
+		return "407"
+	case 408:
+		return "408"
+	case 409:
+		return "409"
+	case 410:
+		return "410"
+	case 411:
+		return "411"
+	case 412:
+		return "412"
+	case 413:
+		return "413"
+	case 414:
+		return "414"
+	case 415:
+		return "415"
+	case 416:
+		return "416"
+	case 417:
+		return "417"
+	case 418:
+		return "418"
+
+	case 500:
+		return "500"
+	case 501:
+		return "501"
+	case 502:
+		return "502"
+	case 503:
+		return "503"
+	case 504:
+		return "504"
+	case 505:
+		return "505"
+
+	case 428:
+		return "428"
+	case 429:
+		return "429"
+	case 431:
+		return "431"
+	case 511:
+		return "511"
+
+	default:
+		return strconv.Itoa(s)
+	}
 }

@@ -27,7 +27,7 @@ func newServer(cf *config) (*server, error) {
 	mux := http.NewServeMux()
 
 	if cf.Metrics {
-		mux.Handle("/debug/metrics", promhttp.Handler())
+		mux.Handle(cf.MetricsPath, promhttp.Handler())
 	}
 	if cf.Expvar {
 		mux.Handle("/debug/vars", expvar.Handler())

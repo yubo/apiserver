@@ -22,7 +22,7 @@ func Get(db *orm.DB, kind string, name string, dst interface{}) error {
 }
 
 type ListerOptions struct {
-	DB      *orm.DB
+	DB      orm.DB
 	Table   string
 	Index   string
 	Limit   int64
@@ -34,7 +34,7 @@ type ListerOptions struct {
 }
 
 type Lister struct {
-	db      *orm.DB
+	db      orm.DB
 	table   string
 	index   string
 	limit   int64

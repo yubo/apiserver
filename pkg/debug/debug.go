@@ -11,13 +11,14 @@ const (
 )
 
 type config struct {
-	Address *string
-	Pprof   bool
-	Expvar  bool
-	Metrics bool
+	Address     *string `json:"address" default:"loalhost:8080"`
+	Pprof       bool    `json:"pprof" default:"true"`
+	Expvar      bool    `json:"expvar" default:"true"`
+	Metrics     bool    `json:"metrics" default:"true"`
+	MetricsPath string  `json:"metricsPath" default:"/debug/metrics"`
 }
 
-type debugModule struct {
+type module struct {
 	config    *config
 	name      string
 	stoppedCh <-chan struct{}
@@ -26,21 +27,21 @@ type debugModule struct {
 }
 
 var (
-	_module = &debugModule{name: moduleName}
+	this    = &module{name: moduleName}
 	hookOps = []proc.HookOps{{
-		Hook:     _module.start,
+		Hook:     this.start,
 		Owner:    moduleName,
 		HookNum:  proc.ACTION_START,
 		Priority: proc.PRI_MODULE,
 	}, {
-		Hook:     _module.stop,
+		Hook:     this.stop,
 		Owner:    moduleName,
 		HookNum:  proc.ACTION_STOP,
 		Priority: proc.PRI_MODULE,
 	}}
 )
 
-func (p *debugModule) start(ctx context.Context) error {
+func (p *module) start(ctx context.Context) error {
 	c := proc.ConfigerMustFrom(ctx)
 
 	cf := &config{}
@@ -70,7 +71,7 @@ func (p *debugModule) start(ctx context.Context) error {
 	return nil
 }
 
-func (p *debugModule) stop(ctx context.Context) error {
+func (p *module) stop(ctx context.Context) error {
 	if p.cancel == nil {
 		return nil
 	}

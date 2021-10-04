@@ -335,7 +335,7 @@ func (p *RouteBuilder) registerHandle(b *restful.RouteBuilder, wr *WsRoute) erro
 		b.Returns(http.StatusOK, "OK", wr.Output)
 	}
 
-	b.To(func(req *restful.Request, resp *restful.Response) {
+	handler := func(req *restful.Request, resp *restful.Response) {
 		var ret []reflect.Value
 
 		if numIn == 4 {
@@ -384,7 +384,9 @@ func (p *RouteBuilder) registerHandle(b *restful.RouteBuilder, wr *WsRoute) erro
 		if numOut == 1 {
 			wr.RespWrite(resp, req.Request, NoneParam{}, toError(ret[0]))
 		}
-	})
+	}
+
+	b.To(handler)
 	return nil
 }
 

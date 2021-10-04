@@ -34,6 +34,7 @@ import (
 	"time"
 
 	"github.com/emicklei/go-restful"
+	"github.com/yubo/apiserver/pkg/metrics"
 	"github.com/yubo/apiserver/pkg/request"
 	restclientwatch "github.com/yubo/apiserver/pkg/rest/watch"
 	"github.com/yubo/apiserver/pkg/watch"
@@ -48,7 +49,6 @@ import (
 	"github.com/yubo/golib/util/net"
 	"golang.org/x/net/http2"
 
-	//"k8s.io/client-go/tools/metrics"
 	"k8s.io/klog/v2"
 )
 
@@ -676,7 +676,7 @@ func (r *Request) tryThrottleWithInfo(ctx context.Context, retryInfo string) err
 		// but we use a throttled logger to prevent spamming.
 		globalThrottledLogger.Infof(message)
 	}
-	//metrics.RateLimiterLatency.Observe(r.verb, r.finalURLTemplate(), latency)
+	metrics.RateLimiterLatency.Observe(r.verb, r.finalURLTemplate(), latency)
 
 	return err
 }
@@ -814,19 +814,19 @@ func (r *Request) Watch(ctx context.Context, obj interface{}) (watch.Interface, 
 // updateURLMetrics is a convenience function for pushing metrics.
 // It also handles corner cases for incomplete/invalid request data.
 func updateURLMetrics(req *Request, resp *http.Response, err error) {
-	//url := "none"
-	//if req.c.base != nil {
-	//	url = req.c.base.Host
-	//}
+	url := "none"
+	if req.c.base != nil {
+		url = req.c.base.Host
+	}
 
 	// Errors can be arbitrary strings. Unbound label cardinality is not suitable for a metric
 	// system so we just report them as `<error>`.
-	//if err != nil {
-	//	metrics.RequestResult.Increment("<error>", req.verb, url)
-	//} else {
-	//	//Metrics for failure codes
-	//	metrics.RequestResult.Increment(strconv.Itoa(resp.StatusCode), req.verb, url)
-	//}
+	if err != nil {
+		metrics.RequestResult.Increment("<error>", req.verb, url)
+	} else {
+		//Metrics for failure codes
+		metrics.RequestResult.Increment(strconv.Itoa(resp.StatusCode), req.verb, url)
+	}
 }
 
 // Stream formats and executes the request, and offers streaming of the response.
@@ -921,10 +921,10 @@ func (r *Request) requestPreflightCheck() error {
 // server - the provided function is responsible for handling server errors.
 func (r *Request) request(ctx context.Context, fn func(*http.Request, *http.Response)) error {
 	//Metrics for total request latency
-	//start := time.Now()
-	//defer func() {
-	//	metrics.RequestLatency.Observe(r.verb, r.finalURLTemplate(), time.Since(start))
-	//}()
+	start := time.Now()
+	defer func() {
+		metrics.RequestLatency.Observe(r.verb, r.finalURLTemplate(), time.Since(start))
+	}()
 
 	if r.err != nil {
 		klog.V(4).Infof("Error in request: %v", r.err)

@@ -22,6 +22,7 @@ import (
 
 	"github.com/emicklei/go-restful"
 	"github.com/opentracing/opentracing-go"
+	"github.com/yubo/apiserver/pkg/api/audit"
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/net/session"
@@ -97,6 +98,17 @@ func WithUser(parent context.Context, user user.Info) context.Context {
 func UserFrom(ctx context.Context) (user.Info, bool) {
 	user, ok := ctx.Value(userKey).(user.Info)
 	return user, ok
+}
+
+// WithAuditEvent returns set audit event struct.
+func WithAuditEvent(parent context.Context, ev *audit.Event) context.Context {
+	return WithValue(parent, auditKey, ev)
+}
+
+// AuditEventFrom returns the audit event struct on the ctx
+func AuditEventFrom(ctx context.Context) *audit.Event {
+	ev, _ := ctx.Value(auditKey).(*audit.Event)
+	return ev
 }
 
 // WithResp returns a copy of parent in which the response value is set

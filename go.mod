@@ -8,7 +8,6 @@ require (
 	github.com/buger/goterm v1.0.1
 	github.com/containerd/containerd v1.5.5 // indirect
 	github.com/coreos/go-oidc v2.1.0+incompatible
-	github.com/creack/pty v1.1.11
 	github.com/docker/distribution v2.7.1+incompatible
 	github.com/docker/docker v17.12.0-ce-rc1.0.20200916142827-bd33bbf0497b+incompatible
 	github.com/docker/go-connections v0.4.0 // indirect
@@ -21,7 +20,6 @@ require (
 	github.com/google/go-cmp v0.5.5
 	github.com/google/gofuzz v1.2.0
 	github.com/google/uuid v1.2.0
-	github.com/gorilla/websocket v1.4.2
 	github.com/moby/term v0.0.0-20201216013528-df9cb8a40635
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822
@@ -45,8 +43,6 @@ require (
 	google.golang.org/protobuf v1.26.0
 	gopkg.in/square/go-jose.v2 v2.5.1
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/api v0.22.0
-	k8s.io/client-go v0.22.0
 	k8s.io/klog/v2 v2.9.0
 )
 
