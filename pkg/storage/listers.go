@@ -13,11 +13,11 @@ const (
 	MAX_ROWS = 200
 )
 
-func List(db *orm.DB, kind string, selector labels.Selector, dst interface{}) error {
+func List(db orm.DB, kind string, selector labels.Selector, dst interface{}) error {
 	return nil
 }
 
-func Get(db *orm.DB, kind string, name string, dst interface{}) error {
+func Get(db orm.DB, kind string, name string, dst interface{}) error {
 	return nil
 }
 

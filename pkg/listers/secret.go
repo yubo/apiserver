@@ -2,8 +2,8 @@ package listers
 
 import (
 	"github.com/yubo/apiserver/pkg/storage"
-	"github.com/yubo/golib/labels"
 	"github.com/yubo/golib/api"
+	"github.com/yubo/golib/labels"
 	"github.com/yubo/golib/orm"
 )
 
@@ -20,11 +20,11 @@ type SecretLister interface {
 
 // secretLister implements the SecretLister interface.
 type secretLister struct {
-	db *orm.DB
+	db orm.DB
 }
 
 // NewSecretLister returns a new SecretLister.
-func NewSecretLister(db *orm.DB) SecretLister {
+func NewSecretLister(db orm.DB) SecretLister {
 	return &secretLister{db: db}
 }
 

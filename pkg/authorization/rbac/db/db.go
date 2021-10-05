@@ -13,7 +13,7 @@ type FileStorage struct {
 	*Config
 }
 
-func NewRBAC(db *orm.DB) (*rbac.RBACAuthorizer, error) {
+func NewRBAC(db orm.DB) (*rbac.RBACAuthorizer, error) {
 
 	return rbac.New(
 		&rbac.RoleGetter{Lister: NewRoleLister(db)},

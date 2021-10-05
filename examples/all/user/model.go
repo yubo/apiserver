@@ -18,8 +18,8 @@ const (
 		" CREATE UNIQUE INDEX `user_index_phone` on `user` (`phone`);"
 )
 
-func createUser(db *orm.DB, in *CreateUserInput) (*User, error) {
-	err := db.Insert("user", in)
+func createUser(db orm.DB, in *CreateUserInput) (*User, error) {
+	err := db.Insert(in, orm.WithTable("user"))
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +41,7 @@ func genUserSql(in *GetUsersInput) (where string, args []interface{}) {
 	return
 }
 
-func getUsers(db *orm.DB, in *GetUsersInput) (total int, list []*User, err error) {
+func getUsers(db orm.DB, in *GetUsersInput) (total int, list []*User, err error) {
 	sql, args := genUserSql(in)
 
 	err = db.Query("select count(*) from user "+sql, args...).Row(&total)
@@ -53,19 +53,19 @@ func getUsers(db *orm.DB, in *GetUsersInput) (total int, list []*User, err error
 	return
 }
 
-func getUser(db *orm.DB, name string) (ret *User, err error) {
+func getUser(db orm.DB, name string) (ret *User, err error) {
 	err = db.Query("select * from user where name = ?", name).Row(&ret)
 	return
 }
 
-func updateUser(db *orm.DB, in *UpdateUserBody) (*User, error) {
-	if err := db.Update("user", in); err != nil {
+func updateUser(db orm.DB, in *UpdateUserBody) (*User, error) {
+	if err := db.Update(in, orm.WithTable("user")); err != nil {
 		return nil, err
 	}
 	return getUser(db, in.Name)
 }
 
-func deleteUser(db *orm.DB, name string) (ret *User, err error) {
+func deleteUser(db orm.DB, name string) (ret *User, err error) {
 	if ret, err = getUser(db, name); err != nil {
 		return
 	}

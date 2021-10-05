@@ -10,11 +10,11 @@ import (
 
 // clusterRoleBindingLister implements the ClusterRoleBindingLister interface.
 type clusterRoleBindingLister struct {
-	db *orm.DB
+	db orm.DB
 }
 
 // NewClusterRoleBindingLister returns a new ClusterRoleBindingLister.
-func NewClusterRoleBindingLister(db *orm.DB) listers.ClusterRoleBindingLister {
+func NewClusterRoleBindingLister(db orm.DB) listers.ClusterRoleBindingLister {
 	return &clusterRoleBindingLister{db: db}
 }
 

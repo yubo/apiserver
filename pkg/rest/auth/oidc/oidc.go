@@ -28,9 +28,9 @@ import (
 	"sync"
 	"time"
 
-	"golang.org/x/oauth2"
+	restclient "github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/golib/util/net"
-	restclient "k8s.io/client-go/rest"
+	"golang.org/x/oauth2"
 	"k8s.io/klog/v2"
 )
 

@@ -3,12 +3,14 @@ package rest
 import (
 	"fmt"
 	"net/http"
+	"path"
 	"reflect"
 	"strings"
 
 	"github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/go-openapi/spec"
+	"github.com/yubo/apiserver/pkg/metrics"
 	"github.com/yubo/apiserver/pkg/responsewriters"
 	"github.com/yubo/golib/encoding/urlencoded"
 	"github.com/yubo/golib/runtime"
@@ -157,6 +159,7 @@ type WsRoute struct {
 	Scope        string
 	Consume      string
 	Produce      string
+	Deprecated   bool
 	Handle       interface{}
 	Filter       restful.FilterFunction
 	Filters      []restful.FilterFunction
@@ -190,12 +193,12 @@ func NewRouteBuilder(ws *restful.WebService) *RouteBuilder {
 func (p *RouteBuilder) Build(wr *WsRoute) error {
 	var b *restful.RouteBuilder
 
-	switch wr.Method {
-	case "GET":
+	switch strings.ToUpper(wr.Method) {
+	case "GET", "LIST":
 		b = p.ws.GET(wr.SubPath)
-	case "POST":
+	case "POST", "CREATE":
 		b = p.ws.POST(wr.SubPath)
-	case "PUT":
+	case "PUT", "UPDATE":
 		b = p.ws.PUT(wr.SubPath)
 	case "DELETE":
 		b = p.ws.DELETE(wr.SubPath)
@@ -385,6 +388,13 @@ func (p *RouteBuilder) registerHandle(b *restful.RouteBuilder, wr *WsRoute) erro
 			wr.RespWrite(resp, req.Request, NoneParam{}, toError(ret[0]))
 		}
 	}
+
+	handler = metrics.InstrumentRouteFunc(wr.Method,
+		path.Join(p.ws.RootPath(), wr.SubPath),
+		metrics.APIServerComponent,
+		wr.Deprecated,
+		handler,
+	)
 
 	b.To(handler)
 	return nil

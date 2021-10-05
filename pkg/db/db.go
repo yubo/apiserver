@@ -35,7 +35,7 @@ func (p *Config) Validate() error {
 type dbModule struct {
 	config *Config
 	name   string
-	db     *orm.DB
+	db     orm.DB
 	ctx    context.Context
 	cancel context.CancelFunc
 }
@@ -72,7 +72,7 @@ func (p *dbModule) init(ctx context.Context) (err error) {
 
 	// db
 	if cf.Driver != "" && cf.Dsn != "" {
-		if p.db, err = orm.DbOpenWithCtx(cf.Driver, cf.Dsn, p.ctx); err != nil {
+		if p.db, err = orm.Open(cf.Driver, cf.Dsn, orm.WithContext(p.ctx)); err != nil {
 			return err
 		}
 		options.WithDB(ctx, p.db)

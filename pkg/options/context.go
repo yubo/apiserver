@@ -98,18 +98,18 @@ func SessionManagerFrom(ctx context.Context) (session.SessionManager, bool) {
 	return sm, ok
 }
 
-func WithDB(ctx context.Context, db *orm.DB) {
+func WithDB(ctx context.Context, db orm.DB) {
 	klog.V(5).Infof("attr with db")
 	proc.AttrMustFrom(ctx)[dbKey] = db
 }
 
-func DBFrom(ctx context.Context) (*orm.DB, bool) {
-	db, ok := proc.AttrMustFrom(ctx)[dbKey].(*orm.DB)
+func DBFrom(ctx context.Context) (orm.DB, bool) {
+	db, ok := proc.AttrMustFrom(ctx)[dbKey].(orm.DB)
 	return db, ok
 }
 
-func DBMustFrom(ctx context.Context) *orm.DB {
-	db, ok := proc.AttrMustFrom(ctx)[dbKey].(*orm.DB)
+func DBMustFrom(ctx context.Context) orm.DB {
+	db, ok := proc.AttrMustFrom(ctx)[dbKey].(orm.DB)
 	if !ok {
 		panic("unable get db")
 	}

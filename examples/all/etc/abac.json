@@ -1,0 +1,2 @@
+{"group":"system:authenticated",     "nonResourcePath": "/authn"}
+{"group":"*",                        "nonResourcePath": "*"}

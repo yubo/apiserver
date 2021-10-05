@@ -16,7 +16,7 @@ import (
 type Module struct {
 	Name string
 	http options.ApiServer
-	db   *orm.DB
+	db   orm.DB
 	ctx  context.Context
 }
 

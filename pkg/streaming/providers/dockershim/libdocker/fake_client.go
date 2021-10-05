@@ -34,9 +34,8 @@ import (
 	dockertypes "github.com/docker/docker/api/types"
 	dockercontainer "github.com/docker/docker/api/types/container"
 	dockerimagetypes "github.com/docker/docker/api/types/image"
+	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/util/clock"
-
-	v1 "k8s.io/api/core/v1"
 )
 
 type CalledDetail struct {
@@ -822,7 +821,7 @@ type FakeDockerPuller struct {
 	client Interface
 }
 
-func (f *FakeDockerPuller) Pull(image string, _ []v1.Secret) error {
+func (f *FakeDockerPuller) Pull(image string, _ []api.Secret) error {
 	return f.client.PullImage(image, dockertypes.AuthConfig{}, dockertypes.ImagePullOptions{})
 }
 

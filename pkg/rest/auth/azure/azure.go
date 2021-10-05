@@ -28,10 +28,9 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/adal"
 	"github.com/Azure/go-autorest/autorest/azure"
-	"k8s.io/klog/v2"
-
+	restclient "github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/golib/util/net"
-	restclient "k8s.io/client-go/rest"
+	"k8s.io/klog/v2"
 )
 
 type configMode int

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/yubo/apiserver/pkg/metrics"
 	"k8s.io/klog/v2"
 )
 
@@ -27,8 +28,10 @@ func newServer(cf *config) (*server, error) {
 	mux := http.NewServeMux()
 
 	if cf.Metrics {
+		metrics.RestRegister()
 		mux.Handle(cf.MetricsPath, promhttp.Handler())
 	}
+
 	if cf.Expvar {
 		mux.Handle("/debug/vars", expvar.Handler())
 	}

@@ -2,7 +2,7 @@
 
 VERSION=0.0.1
 RELEASE=1
-APP_NAME=helo
+APP_NAME=example-all
 FILE_NAME=$(APP_NAME)-$(VERSION)-$(RELEASE).$(shell uname -s).$(shell uname -m)
 DEP_OBJS=$(shell find . -name "*.go" -type f) \
 	 ./tracing/tracing.pb.go
@@ -21,9 +21,9 @@ $(APP_NAME): $(DEP_OBJS)
 
 .PHONY: devrun run dev
 devrun:
-	@echo "./$(APP_NAME) \
-		-f ./$(APP_NAME).yml \
-		--token-auth-file=./run/tokens.cvs \
+	@echo "./${APP_NAME} \
+		-f ./etc/${APP_NAME}.yaml \
+		--token-auth-file=./etc/tokens.cvs \
 		-v 10 \
 		--anonymous-auth \
 		--logtostderr"
@@ -32,8 +32,8 @@ devrun:
 		#--tls-private-key-file=./run/pki/apiserver.key \
 
 run:
-	./$(APP_NAME) \
-		-f ./$(APP_NAME).yml \
+	./${APP_NAME} \
+		-f ./etc/${APP_NAME}.yml \
 		-v 10 \
 		--anonymous-auth \
 		--logtostderr 2>&1
@@ -46,7 +46,7 @@ run:
 
 
 dev: $(DEP_OBJS)
-	APP_NAME=$(APP_NAME) watcher --logtostderr -v 3 -e build -e .git -e docs -e vendor -f .go -f .sql -d 1000 -i ../
+	APP_NAME=$(APP_NAME) watcher --logtostderr -v 3 -e build -e .git -e docs -e vendor -f .go -f .sql -d 1000ms -i ../
 
 clean:
 	rm -f $(APP_NAME)

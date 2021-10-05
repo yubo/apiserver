@@ -10,11 +10,11 @@ import (
 
 // roleLister implements the RoleLister interface.
 type roleLister struct {
-	db *orm.DB
+	db orm.DB
 }
 
 // NewRoleLister returns a new RoleLister.
-func NewRoleLister(db *orm.DB) listers.RoleLister {
+func NewRoleLister(db orm.DB) listers.RoleLister {
 	return &roleLister{db: db}
 }
 

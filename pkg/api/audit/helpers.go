@@ -1,5 +1,5 @@
 /*
-Copyright 2016 The Kubernetes Authors.
+Copyright 2017 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,12 +14,25 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package auth
+package audit
 
-import (
-	// Initialize all known client auth plugins.
-	_ "github.com/yubo/apiserver/pkg/rest/auth/azure"
-	_ "github.com/yubo/apiserver/pkg/rest/auth/gcp"
-	_ "github.com/yubo/apiserver/pkg/rest/auth/oidc"
-	_ "github.com/yubo/apiserver/pkg/rest/auth/openstack"
-)
+func ordLevel(l Level) int {
+	switch l {
+	case LevelMetadata:
+		return 1
+	case LevelRequest:
+		return 2
+	case LevelRequestResponse:
+		return 3
+	default:
+		return 0
+	}
+}
+
+func (a Level) Less(b Level) bool {
+	return ordLevel(a) < ordLevel(b)
+}
+
+func (a Level) GreaterOrEqual(b Level) bool {
+	return ordLevel(a) >= ordLevel(b)
+}

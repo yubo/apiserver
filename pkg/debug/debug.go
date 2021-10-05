@@ -84,4 +84,5 @@ func (p *module) stop(ctx context.Context) error {
 
 func Register() {
 	proc.RegisterHooks(hookOps)
+	proc.RegisterFlags("debug", "debug", &config{})
 }

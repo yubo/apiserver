@@ -10,11 +10,11 @@ import (
 
 // roleBindingLister implements the RoleBindingLister interface.
 type roleBindingLister struct {
-	db *orm.DB
+	db orm.DB
 }
 
 // NewRoleBindingLister returns a new RoleBindingLister.
-func NewRoleBindingLister(db *orm.DB) listers.RoleBindingLister {
+func NewRoleBindingLister(db orm.DB) listers.RoleBindingLister {
 	return &roleBindingLister{db: db}
 }
 
