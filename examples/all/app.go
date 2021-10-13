@@ -43,6 +43,7 @@ import (
 	_ "github.com/yubo/apiserver/pkg/rest/swagger/register"
 	_ "github.com/yubo/apiserver/pkg/session/register"
 	_ "github.com/yubo/apiserver/pkg/tracing/register"
+	_ "github.com/yubo/golib/logs/register"
 	_ "github.com/yubo/golib/orm/sqlite"
 )
 

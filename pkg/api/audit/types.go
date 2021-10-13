@@ -66,7 +66,7 @@ package audit
 //	StagePanic = "Panic"
 //)
 //
-//// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+//// +k8s:deepcopy-gen:interfaces=github.com/yubo/golib/runtime.Object
 //
 //// Event captures all the information that can be included in an API audit log.
 //type Event struct {
@@ -134,7 +134,7 @@ package audit
 //	Annotations map[string]string
 //}
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:deepcopy-gen:interfaces=github.com/yubo/golib/runtime.Object
 
 // EventList is a list of audit Events.
 //type EventList struct {
@@ -145,7 +145,7 @@ package audit
 //	Items []Event
 //}
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:deepcopy-gen:interfaces=github.com/yubo/golib/runtime.Object
 
 // Policy defines the configuration of audit logging, and the rules for how different request
 // categories are logged.
@@ -167,7 +167,7 @@ package audit
 //	OmitStages []Stage
 //}
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:deepcopy-gen:interfaces=github.com/yubo/golib/runtime.Object
 
 // PolicyList is a list of audit Policies.
 //type PolicyList struct {

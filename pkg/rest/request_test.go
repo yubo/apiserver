@@ -42,7 +42,7 @@ import (
 	restclientwatch "github.com/yubo/apiserver/pkg/rest/watch"
 	"github.com/yubo/golib/runtime"
 	"github.com/yubo/golib/runtime/serializer/streaming"
-	"github.com/yubo/apiserver/pkg/watch"
+	"github.com/yubo/golib/watch"
 	"github.com/yubo/golib/api"
 	apierrors "github.com/yubo/golib/api/errors"
 	"github.com/yubo/golib/util/clock"

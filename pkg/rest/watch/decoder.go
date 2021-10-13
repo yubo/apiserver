@@ -23,7 +23,7 @@ import (
 
 	"github.com/yubo/golib/runtime"
 	"github.com/yubo/golib/runtime/serializer/streaming"
-	"github.com/yubo/apiserver/pkg/watch"
+	"github.com/yubo/golib/watch"
 )
 
 // Decoder implements the watch.Decoder interface for io.ReadClosers that

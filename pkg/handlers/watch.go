@@ -8,7 +8,7 @@ import (
 
 	"github.com/yubo/apiserver/pkg/apiserver/httplog"
 	"github.com/yubo/apiserver/pkg/handlers/negotiation"
-	"github.com/yubo/apiserver/pkg/watch"
+	"github.com/yubo/golib/watch"
 	"github.com/yubo/golib/api/errors"
 	"github.com/yubo/golib/runtime"
 	"github.com/yubo/golib/runtime/serializer/streaming"

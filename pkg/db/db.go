@@ -13,16 +13,16 @@ const (
 	moduleName = "db"
 )
 
-type Config struct {
-	Driver string `json:"driver" description:"default: mysql"`
-	Dsn    string `json:"dsn"`
+type config struct {
+	Driver string `json:"driver" flag:"db-driver" default:"mysql" description:"default: mysql"`
+	Dsn    string `json:"dsn" flag:"db-dsn" description:"db is disabled when empty dsn"`
 }
 
-func (p Config) String() string {
+func (p config) String() string {
 	return util.Prettify(p)
 }
 
-func (p *Config) Validate() error {
+func (p *config) Validate() error {
 	if p.Dsn == "" {
 		return nil
 	}
@@ -33,7 +33,7 @@ func (p *Config) Validate() error {
 }
 
 type dbModule struct {
-	config *Config
+	config *config
 	name   string
 	db     orm.DB
 	ctx    context.Context
@@ -63,7 +63,7 @@ func (p *dbModule) init(ctx context.Context) (err error) {
 	configer := proc.ConfigerMustFrom(ctx)
 	p.ctx, p.cancel = context.WithCancel(ctx)
 
-	cf := &Config{}
+	cf := &config{}
 	if err := configer.Read(p.name, cf); err != nil {
 		return err
 	}
@@ -88,4 +88,5 @@ func (p *dbModule) stop(ctx context.Context) error {
 
 func Register() {
 	proc.RegisterHooks(hookOps)
+	proc.RegisterFlags("db", "db", &config{})
 }

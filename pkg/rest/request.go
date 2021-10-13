@@ -37,7 +37,7 @@ import (
 	"github.com/yubo/apiserver/pkg/metrics"
 	"github.com/yubo/apiserver/pkg/request"
 	restclientwatch "github.com/yubo/apiserver/pkg/rest/watch"
-	"github.com/yubo/apiserver/pkg/watch"
+	"github.com/yubo/golib/watch"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/api/errors"
 	"github.com/yubo/golib/runtime"
