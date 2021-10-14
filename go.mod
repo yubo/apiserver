@@ -16,7 +16,6 @@ require (
 	github.com/go-openapi/spec v0.20.3
 	github.com/gogo/protobuf v1.3.2
 	github.com/golang/mock v1.4.1
-	github.com/golang/protobuf v1.5.2
 	github.com/google/go-cmp v0.5.5
 	github.com/google/gofuzz v1.2.0
 	github.com/google/uuid v1.2.0
@@ -37,11 +36,12 @@ require (
 	github.com/yubo/golib v0.0.0-20210816033817-49c454336790
 	github.com/yubo/goswagger v0.0.0-20210729084640-1f6e710ffaaf
 	go.uber.org/zap v1.13.0
-	golang.org/x/net v0.0.0-20210525063256-abc453219eb5
+	golang.org/x/net v0.0.0-20211013171255-e13a2654a71e
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/sync v0.0.0-20201207232520-09787c993a3a
-	google.golang.org/grpc v1.33.2
-	google.golang.org/protobuf v1.26.0
+	google.golang.org/grpc v1.41.0
+	google.golang.org/protobuf v1.27.1
+	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gopkg.in/square/go-jose.v2 v2.5.1
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/klog/v2 v2.9.0
@@ -54,5 +54,4 @@ replace (
 	github.com/docker/go-units => github.com/docker/go-units v0.4.0
 	github.com/docker/spdystream => github.com/docker/spdystream v0.0.0-20160310174837-449fdfce4d96
 	github.com/yubo/golib => ../golib
-	google.golang.org/grpc => google.golang.org/grpc v1.27.1
 )

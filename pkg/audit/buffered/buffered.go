@@ -23,6 +23,7 @@ import (
 
 	auditinternal "github.com/yubo/apiserver/pkg/api/audit"
 	"github.com/yubo/apiserver/pkg/audit"
+	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/util/flowcontrol"
 	"github.com/yubo/golib/util/runtime"
 	"github.com/yubo/golib/util/wait"
@@ -34,22 +35,22 @@ const PluginName = "buffered"
 // BatchConfig represents batching delegate audit backend configuration.
 type BatchConfig struct {
 	// BufferSize defines a size of the buffering queue.
-	BufferSize int
+	BufferSize int `json:"bufferSize" description:"-"`
 	// MaxBatchSize defines maximum size of a batch.
-	MaxBatchSize int
+	MaxBatchSize int `json:"maxBatchSize" description:"The maximum size of a batch. Only used in batch mode."`
 	// MaxBatchWait indicates the maximum interval between two batches.
-	MaxBatchWait time.Duration
+	MaxBatchWait api.Duration `json:"maxBatchWati" description:"The amount of time to wait before force writing the batch that hadn't reached the max size. Only used in batch mode."`
 
 	// ThrottleEnable defines whether throttling will be applied to the batching process.
-	ThrottleEnable bool
+	ThrottleEnable bool `json:"throttleEnable" description:"Whether batching throttling is enabled. Only used in batch mode."`
 	// ThrottleQPS defines the allowed rate of batches per second sent to the delegate backend.
-	ThrottleQPS float32
+	ThrottleQPS float32 `json:"throttleQPS" description:"Maximum average number of batches per second. "`
 	// ThrottleBurst defines the maximum number of requests sent to the delegate backend at the same moment in case
 	// the capacity defined by ThrottleQPS was not utilized.
-	ThrottleBurst int
+	ThrottleBurst int `json:"throttleBurst" description:"Maximum number of requests sent at the same moment if ThrottleQPS was not utilized before. Only used in batch mode."`
 
 	// Whether the delegate backend should be called asynchronously.
-	AsyncDelegate bool
+	AsyncDelegate bool `json:"asyncDelegate""`
 }
 
 type bufferedBackend struct {
@@ -95,7 +96,7 @@ func NewBackend(delegate audit.Backend, config BatchConfig) audit.Backend {
 		delegateBackend: delegate,
 		buffer:          make(chan *auditinternal.Event, config.BufferSize),
 		maxBatchSize:    config.MaxBatchSize,
-		maxBatchWait:    config.MaxBatchWait,
+		maxBatchWait:    config.MaxBatchWait.Duration,
 		asyncDelegate:   config.AsyncDelegate,
 		shutdownCh:      make(chan struct{}),
 		wg:              sync.WaitGroup{},

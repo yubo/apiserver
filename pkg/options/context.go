@@ -24,6 +24,7 @@ const (
 	authnKey          // Authentication
 	sessionManagerKey //
 	authzKey          // authorization
+	auditKey          // audit
 	rbacKey           // authz-rbac
 )
 
@@ -65,6 +66,18 @@ func WithAuthz(ctx context.Context, authz Authz) {
 // AuthzFrom returns the value of the authorizationInfo key on the ctx
 func AuthzFrom(ctx context.Context) (Authz, bool) {
 	authz, ok := proc.AttrMustFrom(ctx)[authzKey].(Authz)
+	return authz, ok
+}
+
+// WithAudit returns a copy of ctx in which the audit value is set
+func WithAudit(ctx context.Context, audit Audit) {
+	klog.V(5).Infof("attr with audit")
+	proc.AttrMustFrom(ctx)[auditKey] = audit
+}
+
+// AuditFrom returns the value of the audit key on the ctx
+func AuditFrom(ctx context.Context) (Audit, bool) {
+	authz, ok := proc.AttrMustFrom(ctx)[auditKey].(Audit)
 	return authz, ok
 }
 

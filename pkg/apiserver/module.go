@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	"github.com/go-openapi/spec"
+	"github.com/yubo/apiserver/pkg/audit"
+	auditpolicy "github.com/yubo/apiserver/pkg/audit/policy"
 	"github.com/yubo/apiserver/pkg/options"
 	apirequest "github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/rest"
@@ -47,6 +49,11 @@ type apiserver struct {
 
 	// handlerChainWaitGroup allows you to wait for all chain handlers exit after the server shutdown.
 	handlerChainWaitGroup *utilwaitgroup.SafeWaitGroup
+
+	// AuditBackend is where audit events are sent to.
+	AuditBackend audit.Backend
+	// AuditPolicyChecker makes the decision of whether and how to audit log a request.
+	AuditPolicyChecker auditpolicy.Checker
 
 	// Predicate which is true for paths of long-running http requests
 	longRunningFunc apirequest.LongRunningRequestCheck

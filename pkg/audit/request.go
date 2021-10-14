@@ -17,7 +17,7 @@ limitations under the License.
 package audit
 
 import (
-	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"reflect"
@@ -110,7 +110,7 @@ func LogImpersonatedUser(ae *auditinternal.Event, user user.Info) {
 
 // LogRequestObject fills in the request object into an audit event. The passed runtime.Object
 // will be converted to the given gv.
-func LogRequestObject(ae *auditinternal.Event, obj runtime.Object, subresource string, s runtime.NegotiatedSerializer) {
+func LogRequestObject(ae *auditinternal.Event, obj runtime.Object, subresource string) {
 	if ae == nil || ae.Level.Less(auditinternal.LevelMetadata) {
 		return
 	}
@@ -118,6 +118,10 @@ func LogRequestObject(ae *auditinternal.Event, obj runtime.Object, subresource s
 	// complete ObjectRef
 	if ae.ObjectRef == nil {
 		ae.ObjectRef = &auditinternal.ObjectReference{}
+	}
+
+	if len(ae.ObjectRef.Name) == 0 {
+		ae.ObjectRef.Name = reflect.TypeOf(reflect.Indirect(reflect.ValueOf(obj))).Name()
 	}
 
 	// meta.Accessor is more general than ObjectMetaAccessor, but if it fails, we can just skip setting these bits
@@ -148,7 +152,7 @@ func LogRequestObject(ae *auditinternal.Event, obj runtime.Object, subresource s
 
 	// TODO(audit): hook into the serializer to avoid double conversion
 	var err error
-	ae.RequestObject, err = encodeObject(obj, s)
+	ae.RequestObject, err = encodeObject(obj)
 	if err != nil {
 		// TODO(audit): add error slice to audit event struct
 		klog.Warningf("Auditing failed of %v request: %v", reflect.TypeOf(obj).Name(), err)
@@ -170,7 +174,7 @@ func LogRequestPatch(ae *auditinternal.Event, patch []byte) {
 
 // LogResponseObject fills in the response object into an audit event. The passed runtime.Object
 // will be converted to the given gv.
-func LogResponseObject(ae *auditinternal.Event, obj runtime.Object, s runtime.NegotiatedSerializer) {
+func LogResponseObject(ae *auditinternal.Event, obj runtime.Object) {
 	if ae == nil || ae.Level.Less(auditinternal.LevelMetadata) {
 		return
 	}
@@ -188,27 +192,22 @@ func LogResponseObject(ae *auditinternal.Event, obj runtime.Object, s runtime.Ne
 	}
 	// TODO(audit): hook into the serializer to avoid double conversion
 	var err error
-	ae.ResponseObject, err = encodeObject(obj, s)
+	ae.ResponseObject, err = encodeObject(obj)
 	if err != nil {
 		klog.Warningf("Audit failed for %q response: %v", reflect.TypeOf(obj).Name(), err)
 	}
 }
 
-func encodeObject(obj runtime.Object, serializer runtime.NegotiatedSerializer) (*runtime.Unknown, error) {
+func encodeObject(obj runtime.Object) (*runtime.Unknown, error) {
 	const mediaType = runtime.ContentTypeJSON
-	info, ok := runtime.SerializerInfoForMediaType(serializer.SupportedMediaTypes(), mediaType)
-	if !ok {
-		return nil, fmt.Errorf("unable to locate encoder -- %q is not a supported media type", mediaType)
-	}
 
-	enc := serializer.EncoderForVersion(info.Serializer)
-	var buf bytes.Buffer
-	if err := enc.Encode(obj, &buf); err != nil {
+	buf, err := json.Marshal(obj)
+	if err != nil {
 		return nil, fmt.Errorf("encoding failed: %v", err)
 	}
 
 	return &runtime.Unknown{
-		Raw:         buf.Bytes(),
+		Raw:         buf,
 		ContentType: runtime.ContentTypeJSON,
 	}, nil
 }

@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/yubo/apiserver/pkg/apiserver/httplog"
+	"github.com/yubo/apiserver/pkg/audit"
 	"github.com/yubo/apiserver/pkg/authentication/serviceaccount"
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
@@ -155,7 +156,8 @@ func WithImpersonation(handler http.Handler, a authorizer.Authorizer) http.Handl
 		oldUser, _ := request.UserFrom(ctx)
 		httplog.LogOf(req, w).Addf("%v is acting as %v", oldUser, newUser)
 
-		//ae := request.AuditEventFrom(ctx)
+		ae := request.AuditEventFrom(ctx)
+		audit.LogImpersonatedUser(ae, newUser)
 
 		// clear all the impersonation headers from the request
 		req.Header.Del(api.ImpersonateUserHeader)

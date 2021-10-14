@@ -72,6 +72,7 @@ func WithAuthentication(handler http.Handler, auth authenticator.Request, failed
 
 func Unauthorized() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+
 		responsewriters.Error(apierrors.NewUnauthorized("Unauthorized"), w, req)
 	})
 }

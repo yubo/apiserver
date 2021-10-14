@@ -25,10 +25,10 @@ import (
 	"time"
 
 	apirequest "github.com/yubo/apiserver/pkg/request"
+	"github.com/yubo/golib/util"
 	"github.com/yubo/golib/util/errors"
 	utilerrors "github.com/yubo/golib/util/errors"
 	"github.com/yubo/golib/util/sets"
-	"github.com/yubo/golib/util"
 	"k8s.io/klog/v2"
 )
 
@@ -108,6 +108,8 @@ type config struct {
 	// Requires generic profiling enabled
 	EnableContentionProfiling bool `json:"enableContentionProfiling" default:"true"`
 	EnableMetrics             bool `json:"enableMetrics" default:"true"`
+
+	// audit
 }
 
 func (s *config) String() string {

@@ -11,8 +11,8 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/rest"
-	"github.com/yubo/golib/scheme"
 	"github.com/yubo/golib/net/rpc"
+	"github.com/yubo/golib/scheme"
 	"k8s.io/klog/v2"
 )
 
@@ -151,7 +151,7 @@ func (p *Module) c(w http.ResponseWriter, req *http.Request) (string, error) {
 	delay()
 
 	//time.Sleep(time.Second * 1)
-	conn, _, err := rpc.DialRr(ctx, "127.0.0.1:8081", false)
+	conn, err := rpc.DialRr(ctx, "127.0.0.1:8081", false)
 	if err != nil {
 		klog.Errorf("Dial err %v\n", err)
 		return "", err
@@ -166,7 +166,9 @@ func (p *Module) c(w http.ResponseWriter, req *http.Request) (string, error) {
 	return resp.Message, nil
 }
 
-type grpcserver struct{}
+type grpcserver struct {
+	UnimplementedServiceServer
+}
 
 func (s *grpcserver) C1(ctx context.Context, in *Request) (*Response, error) {
 	klog.Infof("receive req : %s \n", in)

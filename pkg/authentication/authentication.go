@@ -15,6 +15,7 @@ import (
 	"github.com/yubo/apiserver/pkg/authentication/token/tokenfile"
 	tokenunion "github.com/yubo/apiserver/pkg/authentication/token/union"
 	"github.com/yubo/apiserver/pkg/options"
+	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/proc"
 	"github.com/yubo/golib/util/wait"
 	"k8s.io/klog/v2"
@@ -27,11 +28,9 @@ const (
 // config contains all authentication options for API Server
 type config struct {
 	//APIAudiences         []string      `json:"apiAudiences"`
-	TokenSuccessCacheTTL int  `json:"tokenSuccessCacheTTL" flag:"token-success-cache-ttl" default:"10" description:"The duration to cache success token."`
-	TokenFailureCacheTTL int  `json:"tokenFailureCacheTTL" flag:"token-failure-cache-ttl" description:"The duration to cache failure token."`
-	Anonymous            bool `json:"anonymous" flag:"anonymous-auth" default:"true" description:"Enables anonymous requests to the secure port of the API server. Requests that are not rejected by another authentication method are treated as anonymous requests. Anonymous requests have a username of system:anonymous, and a group name of system:unauthenticated."`
-	tokenSuccessCacheTTL time.Duration
-	tokenFailureCacheTTL time.Duration
+	TokenSuccessCacheTTL api.Duration `json:"tokenSuccessCacheTTL" flag:"token-success-cache-ttl" default:"10s" description:"The duration to cache success token."`
+	TokenFailureCacheTTL api.Duration `json:"tokenFailureCacheTTL" flag:"token-failure-cache-ttl" description:"The duration to cache failure token."`
+	Anonymous            bool         `json:"anonymous" flag:"anonymous-auth" default:"true" description:"Enables anonymous requests to the secure port of the API server. Requests that are not rejected by another authentication method are treated as anonymous requests. Anonymous requests have a username of system:anonymous, and a group name of system:unauthenticated."`
 }
 
 // TokenFileAuthenticationOptions contains token file authentication options for API Server
@@ -58,8 +57,6 @@ func newConfig() *config {
 
 // Validate checks invalid config combination
 func (p *config) Validate() error {
-	p.tokenSuccessCacheTTL = time.Duration(p.TokenSuccessCacheTTL) * time.Second
-	p.tokenFailureCacheTTL = time.Duration(p.TokenFailureCacheTTL) * time.Second
 	return nil
 }
 
@@ -114,9 +111,9 @@ func (p *authentication) initAuthentication() (err error) {
 
 	if len(tokenAuthenticators) > 0 {
 		tokenAuth := tokenunion.New(tokenAuthenticators...)
-		if c.TokenSuccessCacheTTL > 0 || c.TokenFailureCacheTTL > 0 {
+		if c.TokenSuccessCacheTTL.Duration > 0 || c.TokenFailureCacheTTL.Duration > 0 {
 			tokenAuth = tokencache.New(tokenAuth, true,
-				c.tokenSuccessCacheTTL, c.tokenFailureCacheTTL)
+				c.TokenSuccessCacheTTL.Duration, c.TokenFailureCacheTTL.Duration)
 		}
 		authns = append(authns,
 			bearertoken.New(tokenAuth),

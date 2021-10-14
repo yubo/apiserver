@@ -5,6 +5,8 @@ import (
 	"net/http"
 
 	"github.com/emicklei/go-restful"
+	"github.com/yubo/apiserver/pkg/audit"
+	"github.com/yubo/apiserver/pkg/audit/policy"
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 )
@@ -36,4 +38,9 @@ type Authn interface {
 
 type Authz interface {
 	Authorizer() authorizer.Authorizer
+}
+
+type Audit interface {
+	Checker() policy.Checker
+	Backend() audit.Backend
 }

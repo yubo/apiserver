@@ -40,12 +40,12 @@ const (
 type Config struct {
 	// MaxEventSize defines max allowed size of the event. If the event is larger,
 	// truncating will be performed.
-	MaxEventSize int64
+	MaxEventSize int64 `json:"maxEventSize" description:"Maximum size of the audit event sent to the underlying backend. If the size of an event is greater than this number, first request and response are removed, and if this doesn't reduce the size enough, event is discarded."`
 
 	// MaxBatchSize defined max allowed size of the batch of events, passed to the backend.
 	// If the total size of the batch is larger than this number, batch will be split. Actual
 	// size of the serialized request might be slightly higher, on the order of hundreds of bytes.
-	MaxBatchSize int64
+	MaxBatchSize int64 `json:"maxBatchSize" description:"Maximum size of the batch sent to the underlying backend. Actual serialized size can be several hundreds of bytes greater. If a batch exceeds this limit, it is split into several batches of smaller size."`
 }
 
 type backend struct {

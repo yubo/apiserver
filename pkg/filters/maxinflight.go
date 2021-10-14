@@ -16,18 +16,11 @@ limitations under the License.
 
 package filters
 
-import (
-	"fmt"
-	"net/http"
-
-	"k8s.io/klog/v2"
-)
-
-func handleError(w http.ResponseWriter, r *http.Request, err error) {
-	errorMsg := fmt.Sprintf("Internal Server Error: %#v", r.RequestURI)
-	http.Error(w, errorMsg, http.StatusInternalServerError)
-	klog.Errorf(err.Error())
-}
+//func handleError(w http.ResponseWriter, r *http.Request, err error) {
+//	errorMsg := fmt.Sprintf("Internal Server Error: %#v", r.RequestURI)
+//	http.Error(w, errorMsg, http.StatusInternalServerError)
+//	klog.Errorf(err.Error())
+//}
 
 /*
 

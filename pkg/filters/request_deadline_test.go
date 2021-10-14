@@ -26,6 +26,8 @@ import (
 	"testing"
 	"time"
 
+	auditinternal "github.com/yubo/apiserver/pkg/api/audit"
+	"github.com/yubo/apiserver/pkg/audit/policy"
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/golib/runtime"
 	"github.com/yubo/golib/runtime/serializer"
@@ -170,8 +172,9 @@ func TestWithRequestDeadline(t *testing.T) {
 				deadlineGot, hasDeadlineGot = deadline(req)
 			})
 
-			//fakeSink := &fakeAuditSink{}
-			withDeadline := WithRequestDeadline(handler,
+			fakeSink := &fakeAuditSink{}
+			fakeChecker := policy.FakeChecker(auditinternal.LevelRequestResponse, nil)
+			withDeadline := WithRequestDeadline(handler, fakeSink, fakeChecker,
 				func(_ *http.Request, _ *request.RequestInfo) bool { return test.longRunning },
 				requestTimeoutMaximum)
 			withDeadline = WithRequestInfo(withDeadline, &fakeRequestResolver{})
@@ -222,8 +225,9 @@ func TestWithRequestDeadlineWithClock(t *testing.T) {
 	receivedTimestampExpected := time.Now().Add(time.Minute)
 	fakeClock := utilclock.NewFakeClock(receivedTimestampExpected)
 
-	//fakeSink := &fakeAuditSink{}
-	withDeadline := withRequestDeadline(handler,
+	fakeSink := &fakeAuditSink{}
+	fakeChecker := policy.FakeChecker(auditinternal.LevelRequestResponse, nil)
+	withDeadline := withRequestDeadline(handler, fakeSink, fakeChecker,
 		func(_ *http.Request, _ *request.RequestInfo) bool { return false }, time.Minute, fakeClock)
 	withDeadline = WithRequestInfo(withDeadline, &fakeRequestResolver{})
 
@@ -256,8 +260,9 @@ func TestWithRequestDeadlineWithPanic(t *testing.T) {
 		panic(panicErrExpected)
 	})
 
-	//fakeSink := &fakeAuditSink{}
-	withDeadline := WithRequestDeadline(handler,
+	fakeSink := &fakeAuditSink{}
+	fakeChecker := policy.FakeChecker(auditinternal.LevelRequestResponse, nil)
+	withDeadline := WithRequestDeadline(handler, fakeSink, fakeChecker,
 		func(_ *http.Request, _ *request.RequestInfo) bool { return false }, 1*time.Minute)
 	withDeadline = WithRequestInfo(withDeadline, &fakeRequestResolver{})
 	withPanicRecovery := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
@@ -292,8 +297,9 @@ func TestWithRequestDeadlineWithRequestTimesOut(t *testing.T) {
 		}
 	})
 
-	//fakeSink := &fakeAuditSink{}
-	withDeadline := WithRequestDeadline(handler,
+	fakeSink := &fakeAuditSink{}
+	fakeChecker := policy.FakeChecker(auditinternal.LevelRequestResponse, nil)
+	withDeadline := WithRequestDeadline(handler, fakeSink, fakeChecker,
 		func(_ *http.Request, _ *request.RequestInfo) bool { return false }, 1*time.Minute)
 	withDeadline = WithRequestInfo(withDeadline, &fakeRequestResolver{})
 

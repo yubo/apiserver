@@ -109,8 +109,12 @@ func DefaultBuildHandlerChain(ctx context.Context, apiHandler http.Handler, p *a
 		handler = filters.TrackStarted(handler, "impersonation")
 	}
 
+	handler = filters.TrackCompleted(handler)
+	handler = filters.WithAudit(handler, p.AuditBackend, p.AuditPolicyChecker, p.longRunningFunc)
+	handler = filters.TrackStarted(handler, "audit")
+
 	failedHandler := filters.Unauthorized()
-	//failedHandler = filters.WithFailedAuthenticationAudit(failedHandler, c.AuditBackend, c.AuditPolicyChecker)
+	failedHandler = filters.WithFailedAuthenticationAudit(failedHandler, p.AuditBackend, p.AuditPolicyChecker)
 
 	failedHandler = filters.TrackCompleted(failedHandler)
 
@@ -130,14 +134,14 @@ func DefaultBuildHandlerChain(ctx context.Context, apiHandler http.Handler, p *a
 	// context with deadline. The go-routine can keep running, while the timeout logic will return a timeout to the client.
 	handler = filters.WithTimeoutForNonLongRunningRequests(handler, p.longRunningFunc)
 
-	handler = filters.WithRequestDeadline(handler, p.longRunningFunc, p.config.requestTimeout)
+	handler = filters.WithRequestDeadline(handler, p.AuditBackend, p.AuditPolicyChecker, p.longRunningFunc, p.config.requestTimeout)
 	handler = filters.WithWaitGroup(handler, p.longRunningFunc, p.handlerChainWaitGroup)
 	handler = filters.WithRequestInfo(handler, p.requestInfoResolver)
 	//if c.SecureServing != nil && c.GoawayChance > 0 {
 	//	handler = filters.WithProbabilisticGoaway(handler, c.GoawayChance)
 	//}
-	//handler = filters.WithAuditAnnotations(handler, c.AuditBackend, c.AuditPolicyChecker)
-	//handler = filters.WithWarningRecorder(handler)
+	handler = filters.WithAuditAnnotations(handler, p.AuditBackend, p.AuditPolicyChecker)
+	handler = filters.WithWarningRecorder(handler)
 	handler = filters.WithCacheControl(handler)
 	handler = filters.WithHSTS(handler, p.config.HSTSDirectives)
 	handler = filters.WithRequestReceivedTimestamp(handler)

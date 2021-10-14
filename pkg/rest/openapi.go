@@ -10,7 +10,9 @@ import (
 	"github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/go-openapi/spec"
+	"github.com/yubo/apiserver/pkg/audit"
 	"github.com/yubo/apiserver/pkg/metrics"
+	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/responsewriters"
 	"github.com/yubo/golib/encoding/urlencoded"
 	"github.com/yubo/golib/runtime"
@@ -350,6 +352,10 @@ func (p *RouteBuilder) registerHandle(b *restful.RouteBuilder, wr *WsRoute) erro
 				responsewriters.Error(err, resp.ResponseWriter, req.Request)
 				return
 			}
+
+			// audit
+			ae := request.AuditEventFrom(req.Request.Context())
+			audit.LogRequestObject(ae, body, "")
 
 			// TODO: use (w http.ResponseWriter, req *http.Request)
 			ret = v.Call([]reflect.Value{

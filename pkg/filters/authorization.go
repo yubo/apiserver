@@ -24,6 +24,7 @@ import (
 	"k8s.io/klog/v2"
 
 	"github.com/emicklei/go-restful"
+	"github.com/yubo/apiserver/pkg/audit"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/responsewriters"
@@ -50,7 +51,7 @@ func WithAuthorization(handler http.Handler, a authorizer.Authorizer) http.Handl
 		klog.V(10).Infof("entering filters.WithAuthorization")
 		defer klog.V(10).Infof("leaving filters.WithAuthorization")
 		ctx := req.Context()
-		//ae := request.AuditEventFrom(ctx)
+		ae := request.AuditEventFrom(ctx)
 
 		attributes, err := GetAuthorizerAttributes(ctx)
 		if err != nil {
@@ -60,20 +61,20 @@ func WithAuthorization(handler http.Handler, a authorizer.Authorizer) http.Handl
 		authorized, reason, err := a.Authorize(ctx, attributes)
 		// an authorizer like RBAC could encounter evaluation errors and still allow the request, so authorizer decision is checked before error here.
 		if authorized == authorizer.DecisionAllow {
-			//audit.LogAnnotation(ae, decisionAnnotationKey, decisionAllow)
-			//audit.LogAnnotation(ae, reasonAnnotationKey, reason)
+			audit.LogAnnotation(ae, decisionAnnotationKey, decisionAllow)
+			audit.LogAnnotation(ae, reasonAnnotationKey, reason)
 			handler.ServeHTTP(w, req)
 			return
 		}
 		if err != nil {
-			//audit.LogAnnotation(ae, reasonAnnotationKey, reasonError)
+			audit.LogAnnotation(ae, reasonAnnotationKey, reasonError)
 			responsewriters.InternalError(w, req, err)
 			return
 		}
 
 		klog.V(4).InfoS("Forbidden", "URI", req.RequestURI, "Reason", reason)
-		//audit.LogAnnotation(ae, decisionAnnotationKey, decisionForbid)
-		//audit.LogAnnotation(ae, reasonAnnotationKey, reason)
+		audit.LogAnnotation(ae, decisionAnnotationKey, decisionForbid)
+		audit.LogAnnotation(ae, reasonAnnotationKey, reason)
 		responsewriters.Forbidden(ctx, attributes, w, req, reason)
 	})
 }
@@ -87,6 +88,7 @@ func Authz(a authorizer.Authorizer) restful.FilterFunction {
 		defer klog.V(10).Infof("leaving filters.Authz")
 
 		ctx := req.Request.Context()
+		ae := request.AuditEventFrom(ctx)
 
 		attributes, err := GetAuthorizerAttributes(ctx)
 		if err != nil {
@@ -96,22 +98,22 @@ func Authz(a authorizer.Authorizer) restful.FilterFunction {
 		authorized, reason, err := a.Authorize(ctx, attributes)
 		// an authorizer like RBAC could encounter evaluation errors and still allow the request, so authorizer decision is checked before error here.
 		if authorized == authorizer.DecisionAllow {
-			//audit.LogAnnotation(ae, decisionAnnotationKey, decisionAllow)
-			//audit.LogAnnotation(ae, reasonAnnotationKey, reason)
+			audit.LogAnnotation(ae, decisionAnnotationKey, decisionAllow)
+			audit.LogAnnotation(ae, reasonAnnotationKey, reason)
 			//handler.ServeHTTP(w, req)
 			chain.ProcessFilter(req, resp)
 
 			return
 		}
 		if err != nil {
-			//audit.LogAnnotation(ae, reasonAnnotationKey, reasonError)
+			audit.LogAnnotation(ae, reasonAnnotationKey, reasonError)
 			responsewriters.InternalError(resp, req.Request, err)
 			return
 		}
 
 		klog.V(4).InfoS("Forbidden", "URI", req.Request.RequestURI, "Reason", reason)
-		//audit.LogAnnotation(ae, decisionAnnotationKey, decisionForbid)
-		//audit.LogAnnotation(ae, reasonAnnotationKey, reason)
+		audit.LogAnnotation(ae, decisionAnnotationKey, decisionForbid)
+		audit.LogAnnotation(ae, reasonAnnotationKey, reason)
 		responsewriters.Forbidden(ctx, attributes, resp, req.Request, reason)
 	}
 }
