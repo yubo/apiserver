@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
+	"github.com/yubo/apiserver/pkg/authorization/authorizerfactory"
+	"github.com/yubo/apiserver/pkg/authorization/path"
 	"github.com/yubo/apiserver/pkg/authorization/union"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/golib/configer"
@@ -56,6 +58,13 @@ func IsValidAuthorizationMode(authzMode string) bool {
 // config contains all build-in authorization options for API Server
 type config struct {
 	Modes []string `json:"modes" default:"AlwaysAllow" flag:"authorization-mode" description:"Ordered list of plug-ins to do authorization on secure port."`
+
+	// AlwaysAllowPaths are HTTP paths which are excluded from authorization. They can be plain
+	// paths or end in * in which case prefix-match is applied. A leading / is optional.
+	AlwaysAllowPaths []string `json:"alwaysAllowPaths" flag:"authorization-always-allow-paths" description:"A list of HTTP paths to skip during authorization, i.e. these are authorized without contacting the 'core' kubernetes server." default:"/healthz /readyz /livez"`
+
+	// AlwaysAllowGroups are groups which are allowed to take any actions.  In kube, this is system:masters.
+	AlwaysAllowGroups []string `json:"alwaysAllowGroups" flag:"authorization-always-allow-groups" description:"AlwaysAllowGroups are groups which are allowed to take any actions." default:"system:masters"`
 }
 
 func (p *config) tags() map[string]*configer.TagOpts {
@@ -99,17 +108,9 @@ func (o *config) Validate() error {
 	return utilerrors.NewAggregate(allErrors)
 }
 
-// addFlags returns flags of authorization for a API Server
-//func (o *config) addFlags(fs *pflag.FlagSet) {
-//	fs.StringSliceVar(&o.Modes, "authorization-mode", o.Modes, ""+
-//		"Ordered list of plug-ins to do authorization on secure port. Comma-delimited list of: "+
-//		strings.Join(AuthorizationModeChoices, ",")+".")
-//}
-
 type authorization struct {
 	name   string
 	config *config
-	//authorization *Authorization
 
 	authorizer    authorizer.Authorizer
 	authzFactorys map[string]authorizer.AuthorizerFactory
@@ -206,6 +207,19 @@ func (p *authorization) initAuthorization() (err error) {
 		authorizers = append(authorizers, authz)
 		klog.V(5).Infof("authz %s loaded", mode)
 	}
+
+	if len(c.AlwaysAllowGroups) > 0 {
+		authorizers = append(authorizers, authorizerfactory.NewPrivilegedGroups(c.AlwaysAllowGroups...))
+	}
+
+	if len(c.AlwaysAllowPaths) > 0 {
+		a, err := path.NewAuthorizer(c.AlwaysAllowPaths)
+		if err != nil {
+			return err
+		}
+		authorizers = append(authorizers, a)
+	}
+
 	p.authorizer = union.New(authorizers...)
 
 	return nil
