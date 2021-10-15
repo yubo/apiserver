@@ -89,12 +89,12 @@ func (c *config) Validate() error {
 	return errors.NewAggregate(allErrors)
 }
 
-func (p *config) Tags() map[string]*configer.TagOpts {
+func (p *config) tags() map[string]*configer.TagOpts {
 	tags := map[string]*configer.TagOpts{}
-	for k, v := range p.LogOptions.Tags() {
+	for k, v := range p.LogOptions.tags() {
 		tags["log."+k] = v
 	}
-	for k, v := range p.WebhookOptions.Tags() {
+	for k, v := range p.WebhookOptions.tags() {
 		tags["webhook."+k] = v
 	}
 
@@ -128,7 +128,7 @@ func flagf(format string, a ...interface{}) []string {
 	return []string{fmt.Sprintf(format, a...)}
 }
 
-func (o *AuditBatchOptions) Tags(pluginName string) map[string]*configer.TagOpts {
+func (o *AuditBatchOptions) tags(pluginName string) map[string]*configer.TagOpts {
 	return map[string]*configer.TagOpts{
 		"mode":           {Flag: flagf("audit-%s-mode", pluginName), Description: "Strategy for sending audit events. Blocking indicates sending events should block server responses. Batch causes the backend to buffer and write events asynchronously. Known modes are " + strings.Join(AllowedModes, ",") + "."},
 		"bufferSize":     {Flag: flagf("audit-%s-batch-buffer-size", pluginName)},
@@ -158,7 +158,7 @@ type AuditTruncateOptions struct {
 	TruncateConfig plugintruncate.Config `json:",inline"`
 }
 
-func (o *AuditTruncateOptions) Tags(pluginName string) map[string]*configer.TagOpts {
+func (o *AuditTruncateOptions) tags(pluginName string) map[string]*configer.TagOpts {
 	return map[string]*configer.TagOpts{
 		"enabled":      {Flag: flagf("audit-%s-truncate-enabled", pluginName)},
 		"maxBatchSize": {Flag: flagf("audit-%s-truncate-max-batch-size", pluginName)},
@@ -201,12 +201,12 @@ type AuditLogOptions struct {
 	//GroupVersionString string
 }
 
-func (p *AuditLogOptions) Tags() map[string]*configer.TagOpts {
+func (p *AuditLogOptions) tags() map[string]*configer.TagOpts {
 	tags := map[string]*configer.TagOpts{}
-	for k, v := range p.BatchOptions.Tags(pluginlog.PluginName) {
+	for k, v := range p.BatchOptions.tags(pluginlog.PluginName) {
 		tags["batch."+k] = v
 	}
-	for k, v := range p.TruncateOptions.Tags(pluginlog.PluginName) {
+	for k, v := range p.TruncateOptions.tags(pluginlog.PluginName) {
 		tags["truncate."+k] = v
 	}
 
@@ -331,12 +331,12 @@ type AuditWebhookOptions struct {
 	//GroupVersionString string
 }
 
-func (p *AuditWebhookOptions) Tags() map[string]*configer.TagOpts {
+func (p *AuditWebhookOptions) tags() map[string]*configer.TagOpts {
 	tags := map[string]*configer.TagOpts{}
-	for k, v := range p.BatchOptions.Tags(pluginwebhook.PluginName) {
+	for k, v := range p.BatchOptions.tags(pluginwebhook.PluginName) {
 		tags["batch."+k] = v
 	}
-	for k, v := range p.TruncateOptions.Tags(pluginwebhook.PluginName) {
+	for k, v := range p.TruncateOptions.tags(pluginwebhook.PluginName) {
 		tags["truncate."+k] = v
 	}
 
@@ -584,7 +584,5 @@ func Register() {
 	proc.RegisterHooks(hookOps)
 
 	cf := &config{}
-	tags := cf.Tags()
-	getter := func(path string) *configer.TagOpts { return tags[path] }
-	proc.RegisterFlags(moduleName, "audit", cf, configer.WithTagsGetter(getter))
+	proc.RegisterFlags(moduleName, "audit", cf, configer.WithTags(cf.tags()))
 }

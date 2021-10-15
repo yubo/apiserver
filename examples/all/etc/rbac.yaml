@@ -1,0 +1,61 @@
+kind: RoleBinding
+metadata:
+  name: apiserver-admin
+roleRef:
+  kind: Role
+  name: apiserver-admin
+subjects:
+  - kind: Group
+    name: apiserver:admin
+---
+kind: RoleBinding
+metadata:
+  name: apiserver-reporter
+roleRef:
+  kind: Role
+  name: apiserver-reporter
+subjects:
+  - kind: Group
+    name: apiserver:reporter
+  - kind: Group
+    name: apiserver:admin
+---
+kind: RoleBinding
+metadata:
+  name: apiserver-guest
+roleRef:
+  kind: Role
+  name: apiserver-guest
+subjects:
+  - kind: Group
+    name: "*"
+---
+kind: Role
+metadata:
+  name: apiserver-reporter
+rules:
+  - resources:
+      - users 
+      - status 
+    verbs: ["get", "list", "watch"]
+---
+kind: Role
+metadata:
+  name: apiserver-admin
+rules:
+  - resources:
+      - users
+      - status 
+    verbs: ["*"]
+---
+kind: Role
+metadata:
+  name: apiserver-guest
+rules:
+  - resources:
+      - users
+      - status 
+    nonResourceURLs:
+      - "/unauthenticated"
+    verbs: ["get", "list", "watch"]
+

@@ -105,11 +105,13 @@ func WithImpersonation(handler http.Handler, a authorizer.Authorizer) http.Handl
 				return
 			}
 
-			decision, reason, err := a.Authorize(ctx, actingAsAttributes)
-			if err != nil || decision != authorizer.DecisionAllow {
-				klog.V(4).InfoS("Forbidden", "URI", req.RequestURI, "Reason", reason, "Error", err)
-				responsewriters.Forbidden(ctx, actingAsAttributes, w, req, reason)
-				return
+			if a != nil {
+				decision, reason, err := a.Authorize(ctx, actingAsAttributes)
+				if err != nil || decision != authorizer.DecisionAllow {
+					klog.V(4).InfoS("Forbidden", "URI", req.RequestURI, "Reason", reason, "Error", err)
+					responsewriters.Forbidden(ctx, actingAsAttributes, w, req, reason)
+					return
+				}
 			}
 		}
 

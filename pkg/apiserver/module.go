@@ -7,6 +7,7 @@ import (
 	"github.com/go-openapi/spec"
 	"github.com/yubo/apiserver/pkg/audit"
 	auditpolicy "github.com/yubo/apiserver/pkg/audit/policy"
+	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	"github.com/yubo/apiserver/pkg/options"
 	apirequest "github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/rest"
@@ -54,6 +55,10 @@ type apiserver struct {
 	AuditBackend audit.Backend
 	// AuditPolicyChecker makes the decision of whether and how to audit log a request.
 	AuditPolicyChecker auditpolicy.Checker
+
+	// Authorizer determines whether the subject is allowed to make the request based only
+	// on the RequestURI
+	Authorizer authorizer.Authorizer
 
 	// Predicate which is true for paths of long-running http requests
 	longRunningFunc apirequest.LongRunningRequestCheck

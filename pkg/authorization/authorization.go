@@ -3,10 +3,12 @@ package authorization
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	"github.com/yubo/apiserver/pkg/authorization/union"
 	"github.com/yubo/apiserver/pkg/options"
+	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/proc"
 	"github.com/yubo/golib/util"
 	utilerrors "github.com/yubo/golib/util/errors"
@@ -54,6 +56,12 @@ func IsValidAuthorizationMode(authzMode string) bool {
 // config contains all build-in authorization options for API Server
 type config struct {
 	Modes []string `json:"modes" default:"AlwaysAllow" flag:"authorization-mode" description:"Ordered list of plug-ins to do authorization on secure port."`
+}
+
+func (p *config) tags() map[string]*configer.TagOpts {
+	return map[string]*configer.TagOpts{
+		"modes": {Description: "Ordered list of plug-ins to do authorization on secure port. Comma-delimited list of: " + strings.Join(AuthorizationModeChoices, ",") + "."},
+	}
 }
 
 // newConfig create a config with default value
@@ -155,7 +163,8 @@ func RegisterHooks() {
 }
 
 func RegisterFlags() {
-	proc.RegisterFlags(moduleName, moduleName, newConfig())
+	cf := newConfig()
+	proc.RegisterFlags(moduleName, moduleName, cf, configer.WithTags(cf.tags()))
 }
 
 func Register() {

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/yubo/apiserver/examples/all/authn"
@@ -17,10 +18,8 @@ import (
 	_ "github.com/yubo/apiserver/pkg/authorization/abac/register"
 	_ "github.com/yubo/apiserver/pkg/authorization/alwaysallow/register"
 	_ "github.com/yubo/apiserver/pkg/authorization/alwaysdeny/register"
+	_ "github.com/yubo/apiserver/pkg/authorization/rbac/register"
 	_ "github.com/yubo/apiserver/pkg/authorization/register"
-
-	// TODO
-	//_ "github.com/yubo/apiserver/pkg/authorization/rbac/register"
 	// TODO
 	//_ "github.com/yubo/apiserver/pkg/authorization/webhook/register"
 
@@ -30,10 +29,8 @@ import (
 	_ "github.com/yubo/apiserver/pkg/authentication/token/bootstrap/register"
 	_ "github.com/yubo/apiserver/pkg/authentication/token/oidc/register"
 	_ "github.com/yubo/apiserver/pkg/authentication/token/tokenfile/register"
-
 	// TODO
 	//_ "github.com/yubo/apiserver/pkg/authentication/serviceaccount/register"
-	// TODO
 	//_ "github.com/yubo/apiserver/pkg/authentication/webhook/register"
 
 	_ "github.com/yubo/apiserver/pkg/apiserver/register"
@@ -48,8 +45,8 @@ import (
 )
 
 const (
-	AppName    = "helo"
-	moduleName = "helo.main"
+	AppName    = "example-all"
+	moduleName = "example-all.main"
 )
 
 var (
@@ -71,7 +68,7 @@ func newServerCmd() *cobra.Command {
 	options.InstallReporter()
 
 	ctx := context.Background()
-	ctx = proc.WithName(ctx, AppName)
+	ctx = proc.WithName(ctx, os.Args[0])
 
 	cmd := proc.NewRootCmd(ctx)
 	cmd.AddCommand(options.NewVersionCmd())

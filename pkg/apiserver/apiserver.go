@@ -34,6 +34,7 @@ import (
 	"github.com/emicklei/go-restful"
 	"github.com/google/uuid"
 	"github.com/yubo/apiserver/pkg/apiserver/mux"
+	"github.com/yubo/apiserver/pkg/authorization/authorizerfactory"
 	"github.com/yubo/apiserver/pkg/filters"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/request"
@@ -89,25 +90,42 @@ func (p *apiserver) serverInit() (err error) {
 	p.longRunningFunc = filters.BasicLongRunningRequestCheck(sets.NewString("watch"), sets.NewString())
 	p.requestInfoResolver = NewRequestInfoResolver(c)
 
+	if authz, ok := options.AuthzFrom(p.ctx); ok {
+		p.Authorizer = authz.Authorizer()
+	} else {
+		p.Authorizer = authorizerfactory.NewAlwaysAllowAuthorizer()
+	}
+
+	if audit, ok := options.AuditFrom(p.ctx); ok {
+		p.AuditBackend = audit.Backend()
+		p.AuditPolicyChecker = audit.Checker()
+	}
+
 	p.handler = NewAPIServerHandler(p.ctx, func(handler http.Handler) http.Handler {
 		return DefaultBuildHandlerChain(p.ctx, handler, p)
 	})
-
 	return nil
 }
 
 func DefaultBuildHandlerChain(ctx context.Context, apiHandler http.Handler, p *apiserver) http.Handler {
 	handler := apiHandler
 
-	if authz, ok := options.AuthzFrom(ctx); ok {
-		handler = filters.TrackCompleted(apiHandler)
-		handler = filters.WithAuthorization(handler, authz.Authorizer())
-		handler = filters.TrackStarted(handler, "authorization")
+	handler = filters.TrackCompleted(apiHandler)
+	handler = filters.WithAuthorization(handler, p.Authorizer)
+	handler = filters.TrackStarted(handler, "authorization")
 
-		handler = filters.TrackCompleted(handler)
-		handler = filters.WithImpersonation(handler, authz.Authorizer())
-		handler = filters.TrackStarted(handler, "impersonation")
-	}
+	// TODO:
+	//if c.FlowControl != nil {
+	//	handler = filterlatency.TrackCompleted(handler)
+	//	handler = genericfilters.WithPriorityAndFairness(handler, c.LongRunningFunc, c.FlowControl)
+	//	handler = filterlatency.TrackStarted(handler, "priorityandfairness")
+	//} else {
+	//	handler = genericfilters.WithMaxInFlightLimit(handler, c.MaxRequestsInFlight, c.MaxMutatingRequestsInFlight, c.LongRunningFunc)
+	//}
+
+	handler = filters.TrackCompleted(handler)
+	handler = filters.WithImpersonation(handler, p.Authorizer)
+	handler = filters.TrackStarted(handler, "impersonation")
 
 	handler = filters.TrackCompleted(handler)
 	handler = filters.WithAudit(handler, p.AuditBackend, p.AuditPolicyChecker, p.longRunningFunc)
