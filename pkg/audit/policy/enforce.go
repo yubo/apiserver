@@ -19,7 +19,7 @@ package policy
 import (
 	"fmt"
 
-	"github.com/yubo/apiserver/pkg/api/audit"
+	"github.com/yubo/apiserver/pkg/apis/audit"
 )
 
 // EnforcePolicy drops any part of the event that doesn't conform to a policy level

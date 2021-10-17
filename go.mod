@@ -20,6 +20,7 @@ require (
 	github.com/google/gofuzz v1.2.0
 	github.com/google/uuid v1.2.0
 	github.com/hashicorp/golang-lru v0.5.1
+	github.com/imdario/mergo v0.3.11
 	github.com/moby/term v0.0.0-20201216013528-df9cb8a40635
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822
@@ -36,6 +37,7 @@ require (
 	github.com/yubo/golib v0.0.0-20210816033817-49c454336790
 	github.com/yubo/goswagger v0.0.0-20210729084640-1f6e710ffaaf
 	go.uber.org/zap v1.13.0
+	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
 	golang.org/x/net v0.0.0-20211013171255-e13a2654a71e
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/sync v0.0.0-20201207232520-09787c993a3a
@@ -45,6 +47,7 @@ require (
 	gopkg.in/square/go-jose.v2 v2.5.1
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/klog/v2 v2.9.0
+	sigs.k8s.io/yaml v1.2.0
 )
 
 replace (

@@ -19,7 +19,7 @@ package validation
 import (
 	"reflect"
 
-	"github.com/yubo/apiserver/pkg/api/rbac"
+	"github.com/yubo/apiserver/pkg/apis/rbac"
 )
 
 type simpleResource struct {

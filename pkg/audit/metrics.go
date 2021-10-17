@@ -22,7 +22,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	auditinternal "github.com/yubo/apiserver/pkg/api/audit"
+	auditinternal "github.com/yubo/apiserver/pkg/apis/audit"
 	"k8s.io/klog/v2"
 )
 

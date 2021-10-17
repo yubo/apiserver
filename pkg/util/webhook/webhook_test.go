@@ -38,7 +38,7 @@ package webhook
 //	"github.com/yubo/golib/runtime"
 //	"github.com/yubo/golib/scheme"
 //	"github.com/yubo/golib/util/wait"
-//	v1 "k8s.io/client-go/tools/clientcmd/api/v1"
+//	v1 "github.com/yubo/apiserver/tools/clientcmd/api/v1"
 //)
 //
 //const (

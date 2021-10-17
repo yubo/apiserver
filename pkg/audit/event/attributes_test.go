@@ -21,7 +21,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/yubo/apiserver/pkg/api/audit"
+	"github.com/yubo/apiserver/pkg/apis/audit"
 )
 
 func TestAttributes(t *testing.T) {

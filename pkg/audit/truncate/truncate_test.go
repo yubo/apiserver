@@ -22,7 +22,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	auditinternal "github.com/yubo/apiserver/pkg/api/audit"
+	auditinternal "github.com/yubo/apiserver/pkg/apis/audit"
 	"github.com/yubo/apiserver/pkg/audit/fake"
 	"github.com/yubo/golib/runtime"
 

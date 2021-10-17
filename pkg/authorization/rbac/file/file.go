@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"sort"
 
-	apirbac "github.com/yubo/apiserver/pkg/api/rbac"
+	apirbac "github.com/yubo/apiserver/pkg/apis/rbac"
 	"github.com/yubo/apiserver/pkg/authorization/rbac"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/runtime"

@@ -20,7 +20,8 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	auditinternal "github.com/yubo/apiserver/pkg/api/audit"
+	auditinternal "github.com/yubo/apiserver/pkg/apis/audit"
+	"github.com/yubo/apiserver/pkg/apis/audit/validation"
 	"github.com/yubo/golib/scheme"
 
 	"k8s.io/klog/v2"
@@ -57,9 +58,9 @@ func LoadPolicyFromBytes(policyDef []byte) (*auditinternal.Policy, error) {
 	//	return nil, fmt.Errorf("unknown group version field %v in policy", gvk)
 	//}
 
-	//if err := validation.ValidatePolicy(policy); err != nil {
-	//	return nil, err.ToAggregate()
-	//}
+	if err := validation.ValidatePolicy(policy); err != nil {
+		return nil, err.ToAggregate()
+	}
 
 	policyCnt := len(policy.Rules)
 	if policyCnt == 0 {

@@ -72,7 +72,7 @@ func getArgs(args, args2 *[]string, sample interface{}, depth int) error {
 		}
 
 		opt := configer.GetTagOpts(sf)
-		if opt.Skip {
+		if opt.Skip() {
 			continue
 		}
 
@@ -192,7 +192,7 @@ func cleanupArgs(fs *pflag.FlagSet, rv reflect.Value, rt reflect.Type, depth int
 
 		opt := configer.GetTagOpts(sf)
 
-		if opt.Skip {
+		if opt.Skip() {
 			continue
 		}
 

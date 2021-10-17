@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	auditinternal "github.com/yubo/apiserver/pkg/api/audit"
+	auditinternal "github.com/yubo/apiserver/pkg/apis/audit"
 	"github.com/yubo/apiserver/pkg/audit"
 	pluginbuffered "github.com/yubo/apiserver/pkg/audit/buffered"
 	pluginlog "github.com/yubo/apiserver/pkg/audit/log"
@@ -202,7 +202,9 @@ type AuditLogOptions struct {
 }
 
 func (p *AuditLogOptions) tags() map[string]*configer.TagOpts {
-	tags := map[string]*configer.TagOpts{}
+	tags := map[string]*configer.TagOpts{
+		"format": {Description: "Format of saved audits. \"legacy\" indicates 1-line text format for each event. \"json\" indicates structured json format. Known formats are " + strings.Join(pluginlog.AllowedFormats, ",") + "."},
+	}
 	for k, v := range p.BatchOptions.tags(pluginlog.PluginName) {
 		tags["batch."+k] = v
 	}

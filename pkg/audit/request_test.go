@@ -22,7 +22,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	auditinternal "github.com/yubo/apiserver/pkg/api/audit"
+	auditinternal "github.com/yubo/apiserver/pkg/apis/audit"
 )
 
 func TestLogAnnotation(t *testing.T) {

@@ -25,7 +25,7 @@ import (
 
 	"github.com/google/uuid"
 
-	auditinternal "github.com/yubo/apiserver/pkg/api/audit"
+	auditinternal "github.com/yubo/apiserver/pkg/apis/audit"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/runtime"
 	"github.com/yubo/golib/scheme"

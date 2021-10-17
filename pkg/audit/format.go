@@ -22,7 +22,7 @@ import (
 	"strings"
 	"time"
 
-	auditinternal "github.com/yubo/apiserver/pkg/api/audit"
+	auditinternal "github.com/yubo/apiserver/pkg/apis/audit"
 )
 
 // EventString creates a 1-line text representation of an audit event, using a subset of the

@@ -26,7 +26,7 @@ import (
 	"testing"
 	"time"
 
-	auditinternal "github.com/yubo/apiserver/pkg/api/audit"
+	auditinternal "github.com/yubo/apiserver/pkg/apis/audit"
 	"github.com/yubo/apiserver/pkg/audit/policy"
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/golib/runtime"

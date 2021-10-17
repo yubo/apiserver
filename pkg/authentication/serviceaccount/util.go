@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"strings"
 
-	apimachineryvalidation "github.com/yubo/apiserver/pkg/api/validation"
+	apimachineryvalidation "github.com/yubo/apiserver/pkg/apis/validation"
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/golib/api"
 )

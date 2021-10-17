@@ -19,7 +19,7 @@ package truncate
 import (
 	"fmt"
 
-	auditinternal "github.com/yubo/apiserver/pkg/api/audit"
+	auditinternal "github.com/yubo/apiserver/pkg/apis/audit"
 	"github.com/yubo/apiserver/pkg/audit"
 	"github.com/yubo/golib/runtime"
 	"github.com/yubo/golib/scheme"

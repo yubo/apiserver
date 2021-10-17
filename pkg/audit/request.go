@@ -26,7 +26,7 @@ import (
 	"github.com/google/uuid"
 	"k8s.io/klog/v2"
 
-	auditinternal "github.com/yubo/apiserver/pkg/api/audit"
+	auditinternal "github.com/yubo/apiserver/pkg/apis/audit"
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	"github.com/yubo/golib/api"

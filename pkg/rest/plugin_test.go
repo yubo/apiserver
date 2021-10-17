@@ -23,7 +23,7 @@ import (
 	"strconv"
 	"testing"
 
-	clientcmdapi "github.com/yubo/golib/api"
+	clientcmdapi "github.com/yubo/apiserver/tools/clientcmd/api"
 )
 
 func TestAuthPluginWrapTransport(t *testing.T) {

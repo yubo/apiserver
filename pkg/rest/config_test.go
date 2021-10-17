@@ -33,10 +33,10 @@ import (
 	"github.com/google/go-cmp/cmp"
 	fuzz "github.com/google/gofuzz"
 	"github.com/stretchr/testify/assert"
-	"github.com/yubo/golib/scheme"
 	"github.com/yubo/apiserver/pkg/rest/transport"
+	"github.com/yubo/apiserver/tools/clientcmd/api"
 	"github.com/yubo/golib/runtime"
-	"github.com/yubo/golib/api"
+	"github.com/yubo/golib/scheme"
 	"github.com/yubo/golib/util/flowcontrol"
 )
 

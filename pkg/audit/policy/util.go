@@ -17,7 +17,7 @@ limitations under the License.
 package policy
 
 import (
-	"github.com/yubo/apiserver/pkg/api/audit"
+	"github.com/yubo/apiserver/pkg/apis/audit"
 	"github.com/yubo/golib/util/sets"
 )
 

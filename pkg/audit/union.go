@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"strings"
 
-	auditinternal "github.com/yubo/apiserver/pkg/api/audit"
+	auditinternal "github.com/yubo/apiserver/pkg/apis/audit"
 	"github.com/yubo/golib/util/errors"
 )
 

@@ -17,7 +17,7 @@ limitations under the License.
 package audit
 
 import (
-	auditinternal "github.com/yubo/apiserver/pkg/api/audit"
+	auditinternal "github.com/yubo/apiserver/pkg/apis/audit"
 )
 
 type Sink interface {

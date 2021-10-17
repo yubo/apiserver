@@ -19,7 +19,7 @@ package validation
 import (
 	"testing"
 
-	"github.com/yubo/apiserver/pkg/api/rbac"
+	"github.com/yubo/apiserver/pkg/apis/rbac"
 	//"k8s.io/component-helpers/auth/rbac/validation"
 )
 

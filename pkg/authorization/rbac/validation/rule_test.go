@@ -23,7 +23,7 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/yubo/apiserver/pkg/api/rbac"
+	"github.com/yubo/apiserver/pkg/apis/rbac"
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/util/diff"

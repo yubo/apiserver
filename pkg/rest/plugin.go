@@ -21,7 +21,7 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/yubo/golib/api"
+	"github.com/yubo/apiserver/tools/clientcmd/api"
 	"k8s.io/klog/v2"
 )
 

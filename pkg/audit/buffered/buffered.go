@@ -21,7 +21,7 @@ import (
 	"sync"
 	"time"
 
-	auditinternal "github.com/yubo/apiserver/pkg/api/audit"
+	auditinternal "github.com/yubo/apiserver/pkg/apis/audit"
 	"github.com/yubo/apiserver/pkg/audit"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/util/flowcontrol"
@@ -35,7 +35,7 @@ const PluginName = "buffered"
 // BatchConfig represents batching delegate audit backend configuration.
 type BatchConfig struct {
 	// BufferSize defines a size of the buffering queue.
-	BufferSize int `json:"bufferSize" description:"-"`
+	BufferSize int `json:"bufferSize" description:"The size of the buffer to store events before batching and writing. Only used in batch mode."`
 	// MaxBatchSize defines maximum size of a batch.
 	MaxBatchSize int `json:"maxBatchSize" description:"The maximum size of a batch. Only used in batch mode."`
 	// MaxBatchWait indicates the maximum interval between two batches.
@@ -50,7 +50,7 @@ type BatchConfig struct {
 	ThrottleBurst int `json:"throttleBurst" description:"Maximum number of requests sent at the same moment if ThrottleQPS was not utilized before. Only used in batch mode."`
 
 	// Whether the delegate backend should be called asynchronously.
-	AsyncDelegate bool `json:"asyncDelegate""`
+	AsyncDelegate bool `json:"asyncDelegate"`
 }
 
 type bufferedBackend struct {

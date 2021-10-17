@@ -21,7 +21,7 @@ package webhook
 //
 //	"github.com/stretchr/testify/assert"
 //	"github.com/yubo/apiserver/pkg/rest"
-//	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
+//	clientcmdapi "github.com/yubo/apiserver/tools/clientcmd/api"
 //)
 //
 //func TestAuthenticationDetection(t *testing.T) {

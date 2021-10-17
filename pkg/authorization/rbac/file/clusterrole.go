@@ -3,7 +3,7 @@ package file
 import (
 	"sort"
 
-	"github.com/yubo/apiserver/pkg/api/rbac"
+	"github.com/yubo/apiserver/pkg/apis/rbac"
 	"github.com/yubo/apiserver/pkg/listers"
 	"github.com/yubo/golib/api/errors"
 	"github.com/yubo/golib/labels"

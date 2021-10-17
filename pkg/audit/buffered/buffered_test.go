@@ -25,8 +25,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	auditinternal "github.com/yubo/apiserver/pkg/api/audit"
+	auditinternal "github.com/yubo/apiserver/pkg/apis/audit"
 	"github.com/yubo/apiserver/pkg/audit/fake"
+	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/util/wait"
 )
 
@@ -47,7 +48,7 @@ func testBatchConfig() BatchConfig {
 	return BatchConfig{
 		BufferSize:     100,
 		MaxBatchSize:   10,
-		MaxBatchWait:   wait.ForeverTestTimeout,
+		MaxBatchWait:   api.Duration{Duration: wait.ForeverTestTimeout},
 		ThrottleEnable: false,
 		AsyncDelegate:  true,
 	}

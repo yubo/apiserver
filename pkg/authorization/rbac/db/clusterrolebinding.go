@@ -1,7 +1,7 @@
 package db
 
 import (
-	"github.com/yubo/apiserver/pkg/api/rbac"
+	"github.com/yubo/apiserver/pkg/apis/rbac"
 	"github.com/yubo/apiserver/pkg/listers"
 	"github.com/yubo/apiserver/pkg/storage"
 	"github.com/yubo/golib/labels"

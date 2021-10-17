@@ -34,6 +34,7 @@ import (
 	//_ "github.com/yubo/apiserver/pkg/authentication/webhook/register"
 
 	_ "github.com/yubo/apiserver/pkg/apiserver/register"
+	_ "github.com/yubo/apiserver/pkg/audit/register"
 	_ "github.com/yubo/apiserver/pkg/db/register"
 	_ "github.com/yubo/apiserver/pkg/debug/register"
 	_ "github.com/yubo/apiserver/pkg/grpcserver/register"

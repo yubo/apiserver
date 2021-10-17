@@ -32,9 +32,11 @@ import (
 
 	"github.com/yubo/apiserver/pkg/rest/transport"
 	"github.com/yubo/apiserver/pkg/version"
+	clientcmdapi "github.com/yubo/apiserver/tools/clientcmd/api"
 	"github.com/yubo/golib/runtime"
-	"github.com/yubo/golib/api"
+	certutil "github.com/yubo/golib/util/cert"
 	"github.com/yubo/golib/util/flowcontrol"
+	"k8s.io/klog/v2"
 )
 
 const (
@@ -77,13 +79,13 @@ type Config struct {
 	Impersonate ImpersonationConfig
 
 	// Server requires plugin-specified authentication.
-	AuthProvider *api.AuthProviderConfig
+	AuthProvider *clientcmdapi.AuthProviderConfig
 
 	// Callback to persist config for AuthProvider.
 	AuthConfigPersister AuthProviderConfigPersister
 
 	// Exec-based authentication provider.
-	//ExecProvider *clientcmdapi.ExecConfig
+	ExecProvider *clientcmdapi.ExecConfig
 
 	// TLSClientConfig contains settings to enable transport layer security
 	TLSClientConfig
@@ -188,9 +190,9 @@ func (c *Config) String() string {
 	if cc.AuthConfigPersister != nil {
 		cc.AuthConfigPersister = sanitizedAuthConfigPersister{cc.AuthConfigPersister}
 	}
-	//if cc.ExecProvider != nil && cc.ExecProvider.Config != nil {
-	//	cc.ExecProvider.Config = sanitizedObject{Object: cc.ExecProvider.Config}
-	//}
+	if cc.ExecProvider != nil && cc.ExecProvider.Config != nil {
+		cc.ExecProvider.Config = sanitizedObject{Object: cc.ExecProvider.Config}
+	}
 	return fmt.Sprintf("%#v", cc)
 }
 
@@ -459,6 +461,42 @@ func DefaultKubernetesUserAgent() string {
 		adjustCommit(version.Get().GitCommit))
 }
 
+// InClusterConfig returns a config object which uses the service account
+// kubernetes gives to pods. It's intended for clients that expect to be
+// running inside a pod running on kubernetes. It will return ErrNotInCluster
+// if called from a process not running in a kubernetes environment.
+func InClusterConfig() (*Config, error) {
+	const (
+		tokenFile  = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+		rootCAFile = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+	)
+	host, port := os.Getenv("KUBERNETES_SERVICE_HOST"), os.Getenv("KUBERNETES_SERVICE_PORT")
+	if len(host) == 0 || len(port) == 0 {
+		return nil, ErrNotInCluster
+	}
+
+	token, err := ioutil.ReadFile(tokenFile)
+	if err != nil {
+		return nil, err
+	}
+
+	tlsClientConfig := TLSClientConfig{}
+
+	if _, err := certutil.NewPool(rootCAFile); err != nil {
+		klog.Errorf("Expected to load root CA config from %s, but got err: %v", rootCAFile, err)
+	} else {
+		tlsClientConfig.CAFile = rootCAFile
+	}
+
+	return &Config{
+		// TODO: switch to using cluster DNS.
+		Host:            "https://" + net.JoinHostPort(host, port),
+		TLSClientConfig: tlsClientConfig,
+		BearerToken:     string(token),
+		BearerTokenFile: tokenFile,
+	}, nil
+}
+
 // IsConfigTransportTLS returns true if and only if the provided
 // config will result in a protected connection to the server when it
 // is passed to restclient.RESTClientFor().  Use to determine when to
@@ -560,7 +598,7 @@ func CopyConfig(config *Config) *Config {
 		},
 		AuthProvider:        config.AuthProvider,
 		AuthConfigPersister: config.AuthConfigPersister,
-		//ExecProvider:        config.ExecProvider,
+		ExecProvider:        config.ExecProvider,
 		TLSClientConfig: TLSClientConfig{
 			Insecure:   config.TLSClientConfig.Insecure,
 			ServerName: config.TLSClientConfig.ServerName,

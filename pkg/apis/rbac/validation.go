@@ -18,7 +18,7 @@ limitations under the License.
 package rbac
 
 import (
-	path "github.com/yubo/apiserver/pkg/api/validation"
+	path "github.com/yubo/apiserver/pkg/apis/validation"
 	"github.com/yubo/golib/util/validation/field"
 )
 

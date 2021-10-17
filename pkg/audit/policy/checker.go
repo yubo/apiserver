@@ -19,7 +19,7 @@ package policy
 import (
 	"strings"
 
-	"github.com/yubo/apiserver/pkg/api/audit"
+	"github.com/yubo/apiserver/pkg/apis/audit"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 )
 
