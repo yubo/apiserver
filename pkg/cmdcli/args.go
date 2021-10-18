@@ -76,31 +76,55 @@ func getArgs(args, args2 *[]string, sample interface{}, depth int) error {
 			continue
 		}
 
-		if opt.Arg == "1" {
-			in := fv.Interface()
-			if v, ok := in.([]string); ok {
+		//
+		if opt.Arg == "arg1" {
+			switch v := fv.Interface().(type) {
+			case []string:
 				*args = append(*args, v...)
-			} else if v, ok := in.(string); ok {
+			case string:
 				*args = append(*args, v)
-			} else if v, ok := in.(CmdArg); ok {
+			case CmdArg:
 				*args = append(*args, v.CmdArg("")...)
-			} else if v := fmt.Sprintf("%v", in); len(v) > 0 {
-				*args = append(*args, v)
+			default:
+				if s := fmt.Sprintf("%v", v); len(s) > 0 {
+					*args = append(*args, s)
+				}
 			}
+			//if v, ok := in.([]string); ok {
+			//	*args = append(*args, v...)
+			//} else if v, ok := in.(string); ok {
+			//	*args = append(*args, v)
+			//} else if v, ok := in.(CmdArg); ok {
+			//	*args = append(*args, v.CmdArg("")...)
+			//} else if v := fmt.Sprintf("%v", in); len(v) > 0 {
+			//	*args = append(*args, v)
+			//}
 			continue
 		}
 
-		if opt.Arg == "2" {
-			in := fv.Interface()
-			if v, ok := in.([]string); ok {
+		if opt.Arg == "arg2" {
+			switch v := fv.Interface().(type) {
+			case []string:
 				*args2 = append(*args2, v...)
-			} else if v, ok := in.(string); ok {
+			case string:
 				*args2 = append(*args2, v)
-			} else if v, ok := in.(CmdArg); ok {
+			case CmdArg:
 				*args2 = append(*args2, v.CmdArg("")...)
-			} else if v := fmt.Sprintf("%v", in); len(v) > 0 {
-				*args2 = append(*args2, v)
+			default:
+				if s := fmt.Sprintf("%v", v); len(s) > 0 {
+					*args2 = append(*args2, s)
+				}
 			}
+			//in := fv.Interface()
+			//if v, ok := in.([]string); ok {
+			//	*args2 = append(*args2, v...)
+			//} else if v, ok := in.(string); ok {
+			//	*args2 = append(*args2, v)
+			//} else if v, ok := in.(CmdArg); ok {
+			//	*args2 = append(*args2, v.CmdArg("")...)
+			//} else if v := fmt.Sprintf("%v", in); len(v) > 0 {
+			//	*args2 = append(*args2, v)
+			//}
 			continue
 		}
 

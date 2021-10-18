@@ -17,6 +17,7 @@ limitations under the License.
 package filters
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -31,7 +32,7 @@ import (
 // stores any such user found onto the provided context for the request. If authentication fails or returns an error
 // the failed handler is used. On success, "Authorization" header is removed from the request and handler
 // is invoked to serve the request.
-func WithAuthentication(handler http.Handler, auth authenticator.Request, failed http.Handler /*, apiAuds authenticator.Audiences*/) http.Handler {
+func WithAuthentication(handler http.Handler, auth authenticator.Request, failed http.Handler, apiAuds authenticator.Audiences) http.Handler {
 	if auth == nil {
 		klog.Warning("Authentication is disabled")
 		return handler
@@ -41,9 +42,9 @@ func WithAuthentication(handler http.Handler, auth authenticator.Request, failed
 		defer klog.V(5).Infof("leaving filters.WithAuthentication")
 		authenticationStart := time.Now()
 
-		//if len(apiAuds) > 0 {
-		//	req = req.WithContext(authenticator.WithAudiences(req.Context(), apiAuds))
-		//}
+		if len(apiAuds) > 0 {
+			req = req.WithContext(authenticator.WithAudiences(req.Context(), apiAuds))
+		}
 		resp, ok, err := auth.AuthenticateRequest(req)
 		defer recordAuthMetrics(req.Context(), resp, ok, err /*apiAuds,*/, authenticationStart)
 		if err != nil || !ok {
@@ -54,12 +55,12 @@ func WithAuthentication(handler http.Handler, auth authenticator.Request, failed
 			return
 		}
 
-		//if !audiencesAreAcceptable(apiAuds, resp.Audiences) {
-		//	err = fmt.Errorf("unable to match the audience: %v , accepted: %v", resp.Audiences, apiAuds)
-		//	klog.Error(err)
-		//	failed.ServeHTTP(w, req)
-		//	return
-		//}
+		if !audiencesAreAcceptable(apiAuds, resp.Audiences) {
+			err = fmt.Errorf("unable to match the audience: %v , accepted: %v", resp.Audiences, apiAuds)
+			klog.Error(err)
+			failed.ServeHTTP(w, req)
+			return
+		}
 
 		// authorization header is not required anymore in case of a successful authentication.
 		req.Header.Del("Authorization")

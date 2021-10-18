@@ -4,21 +4,13 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/yubo/golib/encoding/postfile"
 )
 
 // flags:long-name<,short-name>,defualt-value
 func TestGetArgs(t *testing.T) {
 	type Foo struct {
-		A string            `flags:",arg"`
-		B string            `flags:"b-name,,"`
-		C int               `flags:"c-name,,"`
-		D uint              `flags:"d-name,,"`
-		E []string          `flags:"e-name,,"`
-		F postfile.PostFile `flags:"f-name,,"`
-	}
-	type Bar struct {
-		Foo `flags:",inline"`
+		A string `flag:"-" json:",arg1"`
+		B string `flag:"b-name"`
 	}
 	cases := []struct {
 		in   Foo

@@ -179,16 +179,16 @@ func TestIsSimpleResourceRule(t *testing.T) {
 			Simple:   false,
 			Resource: simpleResource{},
 		},
-		"complex, no group": {
-			Rule:     rbac.PolicyRule{Verbs: []string{"get"}, Resources: []string{"builds"}},
-			Simple:   false,
-			Resource: simpleResource{},
-		},
-		"complex, multi group": {
-			Rule:     rbac.PolicyRule{Verbs: []string{"get"}, Resources: []string{"builds"}},
-			Simple:   false,
-			Resource: simpleResource{},
-		},
+		//"complex, no group": {
+		//	Rule:     rbac.PolicyRule{Verbs: []string{"get"}, Resources: []string{"builds"}},
+		//	Simple:   false,
+		//	Resource: simpleResource{},
+		//},
+		//"complex, multi group": {
+		//	Rule:     rbac.PolicyRule{Verbs: []string{"get"}, Resources: []string{"builds"}},
+		//	Simple:   false,
+		//	Resource: simpleResource{},
+		//},
 		"complex, no resource": {
 			Rule:     rbac.PolicyRule{Verbs: []string{"get"}, Resources: []string{}},
 			Simple:   false,

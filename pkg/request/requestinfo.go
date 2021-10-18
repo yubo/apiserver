@@ -23,7 +23,11 @@ import (
 	"strings"
 
 	"github.com/yubo/golib/api"
+	"github.com/yubo/golib/api/validation/path"
+	"github.com/yubo/golib/runtime"
+	"github.com/yubo/golib/scheme"
 	"github.com/yubo/golib/util/sets"
+	"k8s.io/klog/v2"
 )
 
 // LongRunningRequestCheck is a predicate which is true for long-running http requests.
@@ -205,11 +209,18 @@ func (r *RequestInfoFactory) NewRequestInfo(req *http.Request) (*RequestInfo, er
 	// if there's no name on the request and we thought it was a get before, then the actual verb is a list or a watch
 	if len(requestInfo.Name) == 0 && requestInfo.Verb == "get" {
 		opts := api.ListOptions{}
-		if values := req.URL.Query()["watch"]; len(values) > 0 {
-			switch strings.ToLower(values[0]) {
-			case "false", "0":
-			default:
-				opts.Watch = true
+		if err := scheme.ParameterCodec.DecodeParameters(&runtime.Parameters{Query: req.URL.Query()}, &opts); err != nil {
+			// An error in parsing request will result in default to "list" and not setting "name" field.
+			klog.ErrorS(err, "Couldn't parse request", "Request", req.URL.Query())
+			// Reset opts to not rely on partial results from parsing.
+			// However, if watch is set, let's report it.
+			opts = api.ListOptions{}
+			if values := req.URL.Query()["watch"]; len(values) > 0 {
+				switch strings.ToLower(values[0]) {
+				case "false", "0":
+				default:
+					opts.Watch = true
+				}
 			}
 		}
 
@@ -217,6 +228,14 @@ func (r *RequestInfoFactory) NewRequestInfo(req *http.Request) (*RequestInfo, er
 			requestInfo.Verb = "watch"
 		} else {
 			requestInfo.Verb = "list"
+		}
+
+		if opts.FieldSelector != nil {
+			if name, ok := opts.FieldSelector.RequiresExactMatch("metadata.name"); ok {
+				if len(path.IsValidPathSegmentName(name)) == 0 {
+					requestInfo.Name = name
+				}
+			}
 		}
 	}
 	// if there's no name on the request and we thought it was a delete before, then the actual verb is deletecollection
