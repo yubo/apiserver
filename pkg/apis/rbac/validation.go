@@ -18,6 +18,7 @@ limitations under the License.
 package rbac
 
 import (
+	"github.com/yubo/apiserver/pkg/apis/validation"
 	path "github.com/yubo/apiserver/pkg/apis/validation"
 	"github.com/yubo/golib/util/validation/field"
 )
@@ -180,6 +181,11 @@ func ValidateRoleBindingSubject(subject Subject, isNamespaced bool, fldPath *fie
 
 	switch subject.Kind {
 	case ServiceAccountKind:
+		if len(subject.Name) > 0 {
+			for _, msg := range validation.ValidateServiceAccountName(subject.Name, false) {
+				allErrs = append(allErrs, field.Invalid(fldPath.Child("name"), subject.Name, msg))
+			}
+		}
 		//if len(subject.APIGroup) > 0 {
 		//	allErrs = append(allErrs, field.NotSupported(fldPath.Child("apiGroup"), subject.APIGroup, []string{""}))
 		//}

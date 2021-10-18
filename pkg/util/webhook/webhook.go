@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/yubo/apiserver/pkg/rest"
+	"github.com/yubo/apiserver/tools/clientcmd"
 	"github.com/yubo/golib/api/errors"
 	"github.com/yubo/golib/runtime"
 	"github.com/yubo/golib/runtime/serializer"
@@ -81,16 +82,14 @@ func newGenericWebhook(codecFactory serializer.CodecFactory, kubeConfigFile stri
 	//	}
 	//}
 
-	//loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
-	//loadingRules.ExplicitPath = kubeConfigFile
-	//loader := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, &clientcmd.ConfigOverrides{})
+	loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
+	loadingRules.ExplicitPath = kubeConfigFile
+	loader := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, &clientcmd.ConfigOverrides{})
 
-	//clientConfig, err := loader.ClientConfig()
-	//if err != nil {
-	//	return nil, err
-	//}
-
-	clientConfig := &rest.Config{}
+	clientConfig, err := loader.ClientConfig()
+	if err != nil {
+		return nil, err
+	}
 
 	// Kubeconfigs can't set a timeout, this can only be set through a command line flag.
 	//

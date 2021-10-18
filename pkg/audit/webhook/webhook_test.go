@@ -90,7 +90,7 @@ func (t *testWebhookHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func newWebhook(t *testing.T, endpoint string) *backend {
 	config := clientcmdapi.Config{
 		Clusters: map[string]*clientcmdapi.Cluster{
-			endpoint: {Server: endpoint, InsecureSkipTLSVerify: true},
+			"": {Server: endpoint, InsecureSkipTLSVerify: true},
 		},
 	}
 	f, err := ioutil.TempFile("", "k8s_audit_webhook_test_")
