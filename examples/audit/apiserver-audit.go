@@ -7,7 +7,6 @@ import (
 	"os"
 
 	"github.com/yubo/apiserver/pkg/options"
-	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/golib/logs"
 	"github.com/yubo/golib/proc"
@@ -15,30 +14,15 @@ import (
 	// http
 	_ "github.com/yubo/apiserver/pkg/apiserver/register"
 
-	// authn
-	_ "github.com/yubo/apiserver/pkg/authentication/register"
-	_ "github.com/yubo/apiserver/pkg/authentication/token/tokenfile/register"
-	"github.com/yubo/apiserver/pkg/authentication/user"
+	// audit
+	_ "github.com/yubo/apiserver/pkg/audit/register"
 )
 
-// go run ./apiserver-authentication.go --token-auth-file=./tokens.cvs
+// go run ./apiserver-audit.go
 //
-// This example shows the minimal code needed to get a restful.WebService working.
-//
-// curl -H 'Content-Type:application/json' -H 'Authorization: bearer token-777' http://localhost:8080/hello
-// {
-//   "Name": "user3",
-//   "UID": "uid3",
-//   "Groups": [
-//     "group1",
-//     "group2",
-//     "system:authenticated"
-//   ],
-//   "Extra": null
-// }
 
 const (
-	moduleName = "authn.example.apiserver"
+	moduleName = "audit.example.apiserver"
 )
 
 var (
@@ -74,21 +58,15 @@ func installWs(http rest.GoRestfulContainer) {
 		GoRestfulContainer: http,
 		Routes: []rest.WsRoute{
 			{Method: "GET", SubPath: "/", Handle: hw},
+			{Method: "POST", SubPath: "/", Handle: hw},
+			{Method: "PUT", SubPath: "/", Handle: hw},
+			{Method: "DELETE", SubPath: "/", Handle: hw},
 		},
 	})
 }
 
-func hw(w http.ResponseWriter, req *http.Request) (*user.DefaultInfo, error) {
-	u, ok := request.UserFrom(req.Context())
-	if !ok {
-		return nil, fmt.Errorf("unable to get user info")
-	}
-	return &user.DefaultInfo{
-		Name:   u.GetName(),
-		UID:    u.GetUID(),
-		Groups: u.GetGroups(),
-		Extra:  u.GetExtra(),
-	}, nil
+func hw(w http.ResponseWriter, req *http.Request) (string, error) {
+	return "hello, world", nil
 }
 
 func init() {

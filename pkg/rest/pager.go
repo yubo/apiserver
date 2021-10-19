@@ -34,13 +34,13 @@ func SetLimitPage(def, max int) {
 }
 
 type Pagination struct {
-	Offset      int     `param:"query,hidden" flags:"-" description:"offset, priority is more than currentPage"`
-	Limit       int     `param:"query,hidden" flags:"-" description:"limit, priority is more than pageSize"`
-	PageSize    int     `param:"query" flags:"-" description:"page size"`
-	CurrentPage int     `param:"query" flags:"-" description:"current page number, start at 1(defualt)"`
-	Sorter      *string `param:"query" flags:"-" description:"column name"`
-	Order       *string `param:"query" flags:"-" description:"asc(default)/desc"`
-	Dump        bool    `param:"query,hidden" flags:"-" description:""`
+	Offset      int     `param:"query,hidden" description:"offset, priority is more than currentPage"`
+	Limit       int     `param:"query,hidden" description:"limit, priority is more than pageSize"`
+	PageSize    int     `param:"query" description:"page size"`
+	CurrentPage int     `param:"query" description:"current page number, start at 1(defualt)"`
+	Sorter      *string `param:"query" description:"column name"`
+	Order       *string `param:"query" description:"asc(default)/desc"`
+	Dump        bool    `param:"query,hidden" description:""`
 }
 
 func (p *Pagination) GetPageSize() int {

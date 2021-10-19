@@ -1,0 +1,10 @@
+kind: Policy
+rules:
+  - level: None
+    nonResourceURLs:
+      - /hello/*
+  - level: RequestResponse
+    verbs: ["patch", "delete", "create"]
+    resources:
+  - level: Metadata
+

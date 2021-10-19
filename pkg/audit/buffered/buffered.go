@@ -39,7 +39,7 @@ type BatchConfig struct {
 	// MaxBatchSize defines maximum size of a batch.
 	MaxBatchSize int `json:"maxBatchSize" description:"The maximum size of a batch. Only used in batch mode."`
 	// MaxBatchWait indicates the maximum interval between two batches.
-	MaxBatchWait api.Duration `json:"maxBatchWati" description:"The amount of time to wait before force writing the batch that hadn't reached the max size. Only used in batch mode."`
+	MaxBatchWait api.Duration `json:"maxBatchWait" description:"The amount of time to wait before force writing the batch that hadn't reached the max size. Only used in batch mode."`
 
 	// ThrottleEnable defines whether throttling will be applied to the batching process.
 	ThrottleEnable bool `json:"throttleEnable" description:"Whether batching throttling is enabled. Only used in batch mode."`

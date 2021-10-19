@@ -121,7 +121,7 @@ type AuditBatchOptions struct {
 	// Defaults to asynchronous batch events.
 	Mode string `json:"mode"`
 	// Configuration for batching backend. Only used in batch mode.
-	BatchConfig pluginbuffered.BatchConfig `json:",inline"`
+	pluginbuffered.BatchConfig
 }
 
 func flagf(format string, a ...interface{}) []string {
@@ -155,7 +155,7 @@ type AuditTruncateOptions struct {
 	Enabled bool `json:"enabled" description:"Whether event and batch truncating is enabled."`
 
 	// Truncating configuration.
-	TruncateConfig plugintruncate.Config `json:",inline"`
+	plugintruncate.Config
 }
 
 func (o *AuditTruncateOptions) tags(pluginName string) map[string]*configer.TagOpts {
@@ -167,7 +167,7 @@ func (o *AuditTruncateOptions) tags(pluginName string) map[string]*configer.TagO
 }
 
 func (o *AuditTruncateOptions) Validate(pluginName string) error {
-	config := o.TruncateConfig
+	config := o.Config
 	if config.MaxEventSize <= 0 {
 		return fmt.Errorf("invalid audit truncate %s max event size %v, must be a positive number", pluginName, config.MaxEventSize)
 	}
@@ -182,7 +182,7 @@ func (o *AuditTruncateOptions) wrapBackend(delegate audit.Backend) audit.Backend
 	if !o.Enabled {
 		return delegate
 	}
-	return plugintruncate.NewBackend(delegate, o.TruncateConfig)
+	return plugintruncate.NewBackend(delegate, o.Config)
 }
 
 // AuditLogOptions determines the output of the structured audit log by default.
@@ -415,7 +415,7 @@ func newConfig() *config {
 func NewAuditTruncateOptions() AuditTruncateOptions {
 	return AuditTruncateOptions{
 		Enabled: false,
-		TruncateConfig: plugintruncate.Config{
+		Config: plugintruncate.Config{
 			MaxBatchSize: 10 * 1024 * 1024, // 10MB
 			MaxEventSize: 100 * 1024,       // 100KB
 		},
@@ -586,8 +586,8 @@ func RegisterHooks() {
 }
 
 func RegisterConfig() {
-	cf := &config{}
-	proc.RegisterFlags(moduleName, "audit", cf, configer.WithTags(cf.tags()))
+	cf := newConfig()
+	proc.RegisterFlags(moduleName, "Audit", cf, configer.WithTags(cf.tags()))
 }
 
 func Register() {

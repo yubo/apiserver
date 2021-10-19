@@ -6,6 +6,8 @@
   * [Hello World](./examples/hello)
   * [All In One](./examples/all)
   * [List](./examples/list)
+- Audit
+  * [Audit](./examples/audit)
 - Auth
   * [Authentication](./examples/authn)
   * [Authentication Custom](./examples/authn-custom)
