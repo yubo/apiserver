@@ -67,7 +67,7 @@ type Preferences struct {
 type Cluster struct {
 	// LocationOfOrigin indicates where this object came from.  It is used for round tripping config post-merge, but never serialized.
 	// +k8s:conversion-gen=false
-	LocationOfOrigin string `json:"-"`
+	LocationOfOrigin string
 	// Server is the address of the kubernetes cluster (https://hostname:port).
 	Server string `json:"server"`
 	// TLSServerName is used to check server certificate. If TLSServerName is empty, the hostname used to contact the server is used.
@@ -102,7 +102,7 @@ type Cluster struct {
 type AuthInfo struct {
 	// LocationOfOrigin indicates where this object came from.  It is used for round tripping config post-merge, but never serialized.
 	// +k8s:conversion-gen=false
-	LocationOfOrigin string `json:"-"`
+	LocationOfOrigin string
 	// ClientCertificate is the path to a client cert file for TLS.
 	// +optional
 	ClientCertificate string `json:"client-certificate,omitempty"`
@@ -151,7 +151,7 @@ type AuthInfo struct {
 type Context struct {
 	// LocationOfOrigin indicates where this object came from.  It is used for round tripping config post-merge, but never serialized.
 	// +k8s:conversion-gen=false
-	LocationOfOrigin string `json:"-"`
+	LocationOfOrigin string
 	// Cluster is the name of the cluster for this context
 	Cluster string `json:"cluster"`
 	// AuthInfo is the name of the authInfo for this context

@@ -18,6 +18,7 @@ package responsewriters
 
 import (
 	"compress/gzip"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -30,11 +31,58 @@ import (
 
 	//"k8s.io/apiserver/pkg/features"
 
+	"github.com/yubo/apiserver/pkg/audit"
+	"github.com/yubo/apiserver/pkg/handlers/negotiation"
+	"github.com/yubo/apiserver/pkg/metrics"
+	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/golib/runtime"
+	"github.com/yubo/golib/util/flushwriter"
 	utilruntime "github.com/yubo/golib/util/runtime"
+	"github.com/yubo/golib/util/wsstream"
+
 	//utilfeature "github.com/yubo/golib/util/feature"
 	utiltrace "github.com/yubo/golib/util/trace"
 )
+
+// StreamObject performs input stream negotiation from a ResourceStreamer and writes that to the response.
+// If the client requests a websocket upgrade, negotiate for a websocket reader protocol (because many
+// browser clients cannot easily handle binary streaming protocols).
+func StreamObject(statusCode int, s runtime.NegotiatedSerializer, stream ResourceStreamer, w http.ResponseWriter, req *http.Request) {
+	out, flush, contentType, err := stream.InputStream(req.Context(), req.Header.Get("Accept"))
+	if err != nil {
+		ErrorNegotiated(err, s, w, req)
+		return
+	}
+	if out == nil {
+		// No output provided - return StatusNoContent
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	defer out.Close()
+
+	if wsstream.IsWebSocketRequest(req) {
+		r := wsstream.NewReader(out, true, wsstream.NewDefaultReaderProtocols())
+		if err := r.Copy(w, req); err != nil {
+			utilruntime.HandleError(fmt.Errorf("error encountered while streaming results via websocket: %v", err))
+		}
+		return
+	}
+
+	if len(contentType) == 0 {
+		contentType = "application/octet-stream"
+	}
+	w.Header().Set("Content-Type", contentType)
+	w.WriteHeader(statusCode)
+	// Flush headers, if possible
+	if flusher, ok := w.(http.Flusher); ok {
+		flusher.Flush()
+	}
+	writer := w.(io.Writer)
+	if flush {
+		writer = flushwriter.Wrap(w)
+	}
+	io.Copy(writer, out)
+}
 
 // SerializeObject renders an object in the content type negotiated by the client using the provided encoder.
 // The context is optional and can be nil. This method will perform optional content compression if requested by
@@ -205,9 +253,56 @@ func WriteObject(w http.ResponseWriter, req *http.Request, statusCode int, objec
 
 }
 
+// ResourceStreamer is an interface implemented by objects that prefer to be streamed from the server
+// instead of decoded directly.
+type ResourceStreamer interface {
+	// InputStream should return an io.ReadCloser if the provided object supports streaming. The desired
+	// api version and an accept header (may be empty) are passed to the call. If no error occurs,
+	// the caller may return a flag indicating whether the result should be flushed as writes occur
+	// and a content type string that indicates the type of the stream.
+	// If a null stream is returned, a StatusNoContent response wil be generated.
+	InputStream(ctx context.Context, acceptHeader string) (stream io.ReadCloser, flush bool, mimeType string, err error)
+}
+
+// WriteObjectNegotiated renders an object in the content type negotiated by the client.
+func WriteObjectNegotiated(s runtime.NegotiatedSerializer, w http.ResponseWriter, req *http.Request, statusCode int, object runtime.Object) {
+	stream, ok := object.(ResourceStreamer)
+	if ok {
+		requestInfo, _ := request.RequestInfoFrom(req.Context())
+		metrics.RecordLongRunning(req, requestInfo, metrics.APIServerComponent, func() {
+			StreamObject(statusCode, s, stream, w, req)
+		})
+		return
+	}
+
+	_, serializer, err := negotiation.NegotiateOutputMediaType(req, s)
+	if err != nil {
+		// if original statusCode was not successful we need to return the original error
+		// we cannot hide it behind negotiation problems
+		if statusCode < http.StatusOK || statusCode >= http.StatusBadRequest {
+			WriteRawJSON(int(statusCode), object, w)
+			return
+		}
+		status := ErrorToAPIStatus(err)
+		WriteRawJSON(int(status.Code), status, w)
+		return
+	}
+
+	if ae := request.AuditEventFrom(req.Context()); ae != nil {
+		audit.LogResponseObject(ae, object)
+	}
+
+	encoder := s.EncoderForVersion(serializer.Serializer)
+	SerializeObject(serializer.MediaType, encoder, w, req, statusCode, object)
+}
+
+func Error(err error, w http.ResponseWriter, req *http.Request) int {
+	return ErrorNegotiated(err, serializer, w, req)
+}
+
 // ErrorNegotiated renders an error to the response. Returns the HTTP status code of the error.
 // The context is optional and may be nil.
-func Error(err error, w http.ResponseWriter, req *http.Request) int {
+func ErrorNegotiated(err error, s runtime.NegotiatedSerializer, w http.ResponseWriter, req *http.Request) int {
 	status := ErrorToAPIStatus(err)
 	code := int(status.Code)
 	// when writing an error, check to see if the status indicates a retry after period
@@ -221,7 +316,7 @@ func Error(err error, w http.ResponseWriter, req *http.Request) int {
 		return code
 	}
 
-	WriteObject(w, req, code, status)
+	WriteObjectNegotiated(s, w, req, code, status)
 	return code
 }
 

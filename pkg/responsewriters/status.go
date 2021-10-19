@@ -52,8 +52,8 @@ func ErrorToAPIStatus(err error) *api.Status {
 				status.Code = http.StatusInternalServerError
 			}
 		}
-		status.Kind = "Status"
-		status.APIVersion = "v1"
+		//status.Kind = "Status"
+		//status.APIVersion = "v1"
 		//TODO: check for invalid responses
 		return &status
 	default:

@@ -44,19 +44,22 @@ func TestAPIStatus(t *testing.T) {
 			Status:  api.StatusFailure,
 			Code:    http.StatusNotFound,
 			Reason:  api.StatusReasonNotFound,
-			Message: "foos.legacy.kubernetes.io \"bar\" not found",
+			Message: "\"bar\" not found",
+			Details: &api.StatusDetails{Name: "bar"},
 		},
 		errors.NewAlreadyExists("bar"): {
 			Status:  api.StatusFailure,
 			Code:    http.StatusConflict,
 			Reason:  "AlreadyExists",
-			Message: "foos \"bar\" already exists",
+			Message: "\"bar\" already exists",
+			Details: &api.StatusDetails{Name: "bar"},
 		},
 		errors.NewConflict("bar", stderrs.New("failure")): {
 			Status:  api.StatusFailure,
 			Code:    http.StatusConflict,
 			Reason:  "Conflict",
-			Message: "Operation cannot be fulfilled on foos \"bar\": failure",
+			Message: "Operation cannot be fulfilled on \"bar\": failure",
+			Details: &api.StatusDetails{Name: "bar"},
 		},
 	}
 	for k, v := range cases {

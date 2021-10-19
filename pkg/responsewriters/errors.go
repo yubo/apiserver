@@ -24,11 +24,13 @@ import (
 
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	apierrors "github.com/yubo/golib/api/errors"
+	"github.com/yubo/golib/scheme"
 	utilruntime "github.com/yubo/golib/util/runtime"
 )
 
 // Avoid emitting errors that look like valid HTML. Quotes are okay.
 var sanitizer = strings.NewReplacer(`&`, "&amp;", `<`, "&lt;", `>`, "&gt;")
+var serializer = scheme.Codecs.WithoutConversion()
 
 // Forbidden renders a simple forbidden error
 func Forbidden(ctx context.Context, attributes authorizer.Attributes, w http.ResponseWriter, req *http.Request, reason string) {
@@ -41,7 +43,7 @@ func Forbidden(ctx context.Context, attributes authorizer.Attributes, w http.Res
 	} else {
 		errMsg = fmt.Sprintf("%s: %s", msg, reason)
 	}
-	Error(apierrors.NewForbidden(attributes.GetName(), fmt.Errorf(errMsg)), w, req)
+	ErrorNegotiated(apierrors.NewForbidden(attributes.GetName(), fmt.Errorf(errMsg)), serializer, w, req)
 }
 
 func forbiddenMessage(attributes authorizer.Attributes) string {

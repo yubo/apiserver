@@ -22,6 +22,7 @@ import (
 	"net/url"
 
 	"github.com/yubo/apiserver/pkg/apis/clientauthentication"
+	"k8s.io/klog/v2"
 )
 
 // This file contains Config logic related to exec credential plugins.
@@ -38,10 +39,12 @@ func ConfigToExecCluster(config *Config) (*clientauthentication.Cluster, error) 
 	if config.Proxy != nil {
 		req, err := http.NewRequest("", config.Host, nil)
 		if err != nil {
+			klog.Infof("--")
 			return nil, fmt.Errorf("failed to create proxy URL request for execProvider: %w", err)
 		}
 		url, err := config.Proxy(req)
 		if err != nil {
+			klog.Infof("--")
 			return nil, fmt.Errorf("failed to get proxy URL for execProvider: %w", err)
 		}
 		if url != nil {
