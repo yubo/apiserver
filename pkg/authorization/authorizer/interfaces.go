@@ -64,6 +64,10 @@ type Attributes interface {
 	GetPath() string
 }
 
+type Authz interface {
+	Authorizer() Authorizer
+}
+
 // Authorizer makes an authorization decision based on information gained by making
 // zero or more calls to methods of the Attributes interface.  It returns nil when an action is
 // authorized, otherwise it returns an error.

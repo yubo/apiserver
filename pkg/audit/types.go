@@ -18,7 +18,19 @@ package audit
 
 import (
 	auditinternal "github.com/yubo/apiserver/pkg/apis/audit"
+	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 )
+
+type Auditor interface {
+	Checker() Checker
+	Backend() Backend
+}
+
+// Checker exposes methods for checking the policy rules.
+type Checker interface {
+	// Check the audit level for a request with the given authorizer attributes.
+	LevelAndStages(authorizer.Attributes) (auditinternal.Level, []auditinternal.Stage)
+}
 
 type Sink interface {
 	// ProcessEvents handles events. Per audit ID it might be that ProcessEvents is called up to three times.

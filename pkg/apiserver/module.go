@@ -7,6 +7,7 @@ import (
 	"github.com/go-openapi/spec"
 	"github.com/yubo/apiserver/pkg/audit"
 	auditpolicy "github.com/yubo/apiserver/pkg/audit/policy"
+	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	"github.com/yubo/apiserver/pkg/options"
 	apirequest "github.com/yubo/apiserver/pkg/request"
@@ -51,10 +52,16 @@ type apiserver struct {
 	// handlerChainWaitGroup allows you to wait for all chain handlers exit after the server shutdown.
 	handlerChainWaitGroup *utilwaitgroup.SafeWaitGroup
 
-	// AuditBackend is where audit events are sent to.
+	// AuditBackend is where audit events are sent to.(option)
 	AuditBackend audit.Backend
-	// AuditPolicyChecker makes the decision of whether and how to audit log a request.
+	// AuditPolicyChecker makes the decision of whether and how to audit log a request.(option)
 	AuditPolicyChecker auditpolicy.Checker
+
+	// APIAudiences is a list of identifier that the API identifies as. This is
+	// used by some authenticators to validate audience bound credentials.
+	APIAudiences authenticator.Audiences
+	// Authenticator determines which subject is making the request
+	Authenticator authenticator.Request
 
 	// Authorizer determines whether the subject is allowed to make the request based only
 	// on the RequestURI

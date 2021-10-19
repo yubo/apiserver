@@ -476,7 +476,7 @@ type module struct {
 	backend audit.Backend
 }
 
-func (p *module) Checker() policy.Checker {
+func (p *module) Checker() audit.Checker {
 	return p.checker
 }
 
@@ -509,7 +509,6 @@ func (p *module) stop(ctx context.Context) error {
 }
 
 func (p *module) initAudit() error {
-
 	// 1. Build policy checker
 	checker, err := p.config.newPolicyChecker()
 	if err != nil {
@@ -582,9 +581,16 @@ func (c *config) newPolicyChecker() (policy.Checker, error) {
 	}
 }
 
-func Register() {
+func RegisterHooks() {
 	proc.RegisterHooks(hookOps)
+}
 
+func RegisterConfig() {
 	cf := &config{}
 	proc.RegisterFlags(moduleName, "audit", cf, configer.WithTags(cf.tags()))
+}
+
+func Register() {
+	RegisterHooks()
+	RegisterConfig()
 }

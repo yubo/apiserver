@@ -96,6 +96,11 @@ func (p *apiserver) serverInit() (err error) {
 		p.Authorizer = authorizerfactory.NewAlwaysAllowAuthorizer()
 	}
 
+	if authn, ok := options.AuthnFrom(p.ctx); ok {
+		p.APIAudiences = authn.APIAudiences()
+		p.Authenticator = authn.Authenticator()
+	}
+
 	if audit, ok := options.AuditFrom(p.ctx); ok {
 		p.AuditBackend = audit.Backend()
 		p.AuditPolicyChecker = audit.Checker()
@@ -136,11 +141,9 @@ func DefaultBuildHandlerChain(ctx context.Context, apiHandler http.Handler, p *a
 
 	failedHandler = filters.TrackCompleted(failedHandler)
 
-	if authn, ok := options.AuthnFrom(ctx); ok {
-		handler = filters.TrackCompleted(handler)
-		handler = filters.WithAuthentication(handler, authn.Authenticator(), failedHandler, nil)
-		handler = filters.TrackStarted(handler, "authentication")
-	}
+	handler = filters.TrackCompleted(handler)
+	handler = filters.WithAuthentication(handler, p.Authenticator, failedHandler, nil)
+	handler = filters.TrackStarted(handler, "authentication")
 
 	if sm, ok := options.SessionManagerFrom(ctx); ok {
 		handler = filters.WithSession(handler, sm)

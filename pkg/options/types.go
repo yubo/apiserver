@@ -5,10 +5,6 @@ import (
 	"net/http"
 
 	"github.com/emicklei/go-restful"
-	"github.com/yubo/apiserver/pkg/audit"
-	"github.com/yubo/apiserver/pkg/audit/policy"
-	"github.com/yubo/apiserver/pkg/authentication/authenticator"
-	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 )
 
 type Client interface {
@@ -30,17 +26,4 @@ type ApiServer interface {
 
 type Executer interface {
 	Execute(wr io.Writer, data interface{}) error
-}
-
-type Authn interface {
-	Authenticator() authenticator.Request
-}
-
-type Authz interface {
-	Authorizer() authorizer.Authorizer
-}
-
-type Audit interface {
-	Checker() policy.Checker
-	Backend() audit.Backend
 }

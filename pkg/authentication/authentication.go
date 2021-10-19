@@ -27,7 +27,7 @@ const (
 
 // config contains all authentication options for API Server
 type config struct {
-	//APIAudiences         []string      `json:"apiAudiences"`
+	APIAudiences         []string     `json:"apiAudiences" flag:"api-audiences" description:"Identifiers of the API. The service account token authenticator will validate that tokens used against the API are bound to at least one of these audiences. If the --service-account-issuer flag is configured and this flag is not, this field defaults to a single element list containing the issuer URL."`
 	TokenSuccessCacheTTL api.Duration `json:"tokenSuccessCacheTTL" flag:"token-success-cache-ttl" default:"10s" description:"The duration to cache success token."`
 	TokenFailureCacheTTL api.Duration `json:"tokenFailureCacheTTL" flag:"token-failure-cache-ttl" description:"The duration to cache failure token."`
 	Anonymous            bool         `json:"anonymous" flag:"anonymous-auth" default:"true" description:"Enables anonymous requests to the secure port of the API server. Requests that are not rejected by another authentication method are treated as anonymous requests. Anonymous requests have a username of system:anonymous, and a group name of system:unauthenticated."`
@@ -207,6 +207,10 @@ type authentication struct {
 
 func (p *authentication) Authenticator() authenticator.Request {
 	return p.authenticator
+}
+
+func (p *authentication) APIAudiences() authenticator.Audiences {
+	return authenticator.Audiences(p.config.APIAudiences)
 }
 
 func (p *authentication) init(ctx context.Context) (err error) {

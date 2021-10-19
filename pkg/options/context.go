@@ -5,6 +5,9 @@ import (
 
 	// authentication "github.com/yubo/apiserver/modules/authentication/lib"
 
+	"github.com/yubo/apiserver/pkg/audit"
+	"github.com/yubo/apiserver/pkg/authentication/authenticator"
+	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	"github.com/yubo/apiserver/pkg/authorization/rbac"
 	"github.com/yubo/golib/net/session"
 	"github.com/yubo/golib/orm"
@@ -46,38 +49,38 @@ func GrpcServerFrom(ctx context.Context) (*grpc.Server, bool) {
 }
 
 // WithAuthn returns a copy of ctx in which the authenticationInfo value is set
-func WithAuthn(ctx context.Context, authn Authn) {
+func WithAuthn(ctx context.Context, authn authenticator.Authn) {
 	klog.V(5).Infof("attr with authn")
 	proc.AttrMustFrom(ctx)[authnKey] = authn
 }
 
 // AuthnFrom returns the value of the authenticationInfo key on the ctx
-func AuthnFrom(ctx context.Context) (Authn, bool) {
-	authn, ok := proc.AttrMustFrom(ctx)[authnKey].(Authn)
+func AuthnFrom(ctx context.Context) (authenticator.Authn, bool) {
+	authn, ok := proc.AttrMustFrom(ctx)[authnKey].(authenticator.Authn)
 	return authn, ok
 }
 
 // WithAuthz returns a copy of ctx in which the authorizationInfo value is set
-func WithAuthz(ctx context.Context, authz Authz) {
+func WithAuthz(ctx context.Context, authz authorizer.Authz) {
 	klog.V(5).Infof("attr with authz")
 	proc.AttrMustFrom(ctx)[authzKey] = authz
 }
 
 // AuthzFrom returns the value of the authorizationInfo key on the ctx
-func AuthzFrom(ctx context.Context) (Authz, bool) {
-	authz, ok := proc.AttrMustFrom(ctx)[authzKey].(Authz)
+func AuthzFrom(ctx context.Context) (authorizer.Authz, bool) {
+	authz, ok := proc.AttrMustFrom(ctx)[authzKey].(authorizer.Authz)
 	return authz, ok
 }
 
 // WithAudit returns a copy of ctx in which the audit value is set
-func WithAudit(ctx context.Context, audit Audit) {
+func WithAudit(ctx context.Context, audit audit.Auditor) {
 	klog.V(5).Infof("attr with audit")
 	proc.AttrMustFrom(ctx)[auditKey] = audit
 }
 
 // AuditFrom returns the value of the audit key on the ctx
-func AuditFrom(ctx context.Context) (Audit, bool) {
-	authz, ok := proc.AttrMustFrom(ctx)[auditKey].(Audit)
+func AuditFrom(ctx context.Context) (audit.Auditor, bool) {
+	authz, ok := proc.AttrMustFrom(ctx)[auditKey].(audit.Auditor)
 	return authz, ok
 }
 
