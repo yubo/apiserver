@@ -34,7 +34,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/uber/jaeger-client-go v2.25.0+incompatible
 	github.com/uber/jaeger-lib v2.2.0+incompatible
-	github.com/yubo/golib v0.0.0-20210816033817-49c454336790
+	github.com/yubo/golib v0.0.0-20211019184716-0322e55b9f42
 	github.com/yubo/goswagger v0.0.0-20210729084640-1f6e710ffaaf
 	go.uber.org/zap v1.13.0
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
@@ -48,13 +48,4 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/klog/v2 v2.9.0
 	sigs.k8s.io/yaml v1.2.0
-)
-
-replace (
-	github.com/docker/distribution => github.com/docker/distribution v2.7.1+incompatible
-	github.com/docker/docker => github.com/docker/docker v17.12.0-ce-rc1.0.20200916142827-bd33bbf0497b+incompatible
-	github.com/docker/go-connections => github.com/docker/go-connections v0.4.0
-	github.com/docker/go-units => github.com/docker/go-units v0.4.0
-	github.com/docker/spdystream => github.com/docker/spdystream v0.0.0-20160310174837-449fdfce4d96
-	github.com/yubo/golib => ../golib
 )
