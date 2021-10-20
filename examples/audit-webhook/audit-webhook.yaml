@@ -1,0 +1,14 @@
+kind: Config
+preferences: {}
+clusters:
+  example-cluster:
+    server: http://127.0.0.1:8080/webhook/audit
+users:
+  example-user:
+    username: some-user
+    password: some-password
+contexts:
+  example-context:
+    cluster: example-cluster
+    user: example-user
+current-context: example-context

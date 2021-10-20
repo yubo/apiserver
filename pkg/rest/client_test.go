@@ -14,7 +14,6 @@ import (
 	"github.com/yubo/golib/runtime"
 	"github.com/yubo/golib/scheme"
 	"github.com/yubo/golib/util/diff"
-	"k8s.io/klog/v2"
 )
 
 type TestParam struct {
@@ -51,7 +50,6 @@ func TestDoRequestFailed(t *testing.T) {
 		Details: &api.StatusDetails{},
 	}
 	expectedBody, _ := runtime.Encode(scheme.Codecs.LegacyCodec(), status)
-	klog.Infof("-- %v", string(expectedBody))
 	fakeHandler := utiltesting.FakeHandler{
 		StatusCode:   404,
 		ResponseBody: string(expectedBody),

@@ -30,6 +30,7 @@ import (
 	utilnet "github.com/yubo/golib/util/net"
 	utiltrace "github.com/yubo/golib/util/trace"
 	"github.com/yubo/golib/util/wait"
+	"k8s.io/klog/v2"
 )
 
 const (
@@ -115,6 +116,7 @@ func (b *backend) processEvents(ev ...*auditinternal.Event) error {
 	for _, e := range ev {
 		list.Items = append(list.Items, *e)
 	}
+
 	return b.w.WithExponentialBackoff(context.Background(), func() rest.Result {
 		trace := utiltrace.New("Call Audit Events webhook",
 			utiltrace.Field{Key: "name", Value: b.name},
@@ -124,6 +126,7 @@ func (b *backend) processEvents(ev ...*auditinternal.Event) error {
 		// allow enough time for the serialization/deserialization of audit events, which
 		// contain nested request and response objects plus additional event fields.
 		defer trace.LogIfLong(time.Duration(50+25*len(list.Items)) * time.Millisecond)
+		klog.V(10).Infof("event list %+v", list)
 		return b.w.RestClient.Post().Body(&list).Do(context.TODO())
 	}).Error()
 }

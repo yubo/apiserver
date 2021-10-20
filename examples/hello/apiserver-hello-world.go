@@ -66,11 +66,11 @@ func hello(w http.ResponseWriter, req *http.Request) (string, error) {
 	return "hello, world", nil
 }
 
-func helloArray(w http.ResponseWriter, req *http.Request, _ *rest.NoneParam, s []string) (string, error) {
+func helloArray(w http.ResponseWriter, req *http.Request, _ *rest.NonParam, s []string) (string, error) {
 	return fmt.Sprintf("hello, %+v", s), nil
 }
 
-func helloMap(w http.ResponseWriter, req *http.Request, _ *rest.NoneParam, m map[string]string) (string, error) {
+func helloMap(w http.ResponseWriter, req *http.Request, _ *rest.NonParam, m map[string]string) (string, error) {
 	return fmt.Sprintf("hello, %+v", m), nil
 }
 

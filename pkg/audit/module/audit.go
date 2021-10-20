@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net"
 	"os"
 	"strings"
 	"time"
@@ -498,12 +499,23 @@ func (p *module) init(ctx context.Context) (err error) {
 		return err
 	}
 
+	if p.backend != nil {
+		if err = p.backend.Run(p.ctx.Done()); err != nil {
+			return err
+		}
+	}
+
 	options.WithAudit(ctx, p)
 	return
 }
 
 func (p *module) stop(ctx context.Context) error {
-	p.cancel()
+	if p.cancel != nil {
+		p.cancel()
+	}
+	if p.backend != nil {
+		p.backend.Shutdown()
+	}
 
 	return nil
 }
@@ -541,7 +553,8 @@ func (p *module) initAudit() error {
 			//	}
 			//	webhookBackend, err = o.WebhookOptions.newUntruncatedBackend(egressDialer)
 			//} else {
-			webhookBackend, err = c.WebhookOptions.newUntruncatedBackend(nil)
+			var d net.Dialer
+			webhookBackend, err = c.WebhookOptions.newUntruncatedBackend(d.DialContext)
 			//}
 			if err != nil {
 				return err

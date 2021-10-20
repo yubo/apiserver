@@ -82,7 +82,7 @@ func (p *Module) installWs() {
 	})
 }
 
-func (p *Module) createUser(w http.ResponseWriter, req *http.Request, _ *rest.NoneParam, in *CreateUserInput) (*User, error) {
+func (p *Module) createUser(w http.ResponseWriter, req *http.Request, _ *rest.NonParam, in *CreateUserInput) (*User, error) {
 	return createUser(p.db, in)
 }
 

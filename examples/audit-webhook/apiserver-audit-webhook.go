@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 
@@ -57,11 +58,15 @@ func installWs(http rest.GoRestfulContainer) {
 		Path:               "/",
 		GoRestfulContainer: http,
 		Routes: []rest.WsRoute{
-			{Method: "GET", SubPath: "/static/hw", Handle: hw},  // none
-			{Method: "POST", SubPath: "/api/users", Handle: hw}, // RequestResponse
-			{Method: "GET", SubPath: "/api/tokens", Handle: hw}, // metadata
+			{Method: "POST", SubPath: "/webhook/audit", Handle: echo},
+			{Method: "POST", SubPath: "/hello", Handle: hw},
 		},
 	})
+}
+
+func echo(w http.ResponseWriter, req *http.Request) {
+	body, _ := ioutil.ReadAll(req.Body)
+	fmt.Printf("%s\n", string(body))
 }
 
 func hw(w http.ResponseWriter, req *http.Request) (string, error) {

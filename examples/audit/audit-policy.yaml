@@ -2,9 +2,11 @@ kind: Policy
 rules:
   - level: None
     nonResourceURLs:
-      - /hello/*
+      - /static/*
   - level: RequestResponse
-    verbs: ["patch", "delete", "create"]
-    resources:
+    verbs: ["post", "delete"]
+    nonResourceURLs:
+      - /api/user
   - level: Metadata
-
+    nonResourceURLs:
+      - /api/*
