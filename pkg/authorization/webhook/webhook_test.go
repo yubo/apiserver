@@ -243,10 +243,10 @@ func NewV1TestServer(s V1Service, cert, key, caCert []byte) (*httptest.Server, e
 		}
 
 		// ensure we received the serialized review as expected
-		if review.APIVersion != "authorization.k8s.io/v1" {
-			http.Error(w, fmt.Sprintf("wrong api version: %s", string(bodyData)), http.StatusBadRequest)
-			return
-		}
+		//if review.APIVersion != "authorization.k8s.io/v1" {
+		//	http.Error(w, fmt.Sprintf("wrong api version: %s", string(bodyData)), http.StatusBadRequest)
+		//	return
+		//}
 		// once we have a successful request, always call the review to record that we were called
 		s.Review(&review)
 		if s.HTTPStatusCode() < 200 || s.HTTPStatusCode() >= 300 {

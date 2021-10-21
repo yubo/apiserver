@@ -8,6 +8,7 @@ require (
 	github.com/buger/goterm v1.0.1
 	github.com/containerd/containerd v1.5.5 // indirect
 	github.com/coreos/go-oidc v2.1.0+incompatible
+	github.com/davecgh/go-spew v1.1.1
 	github.com/docker/distribution v2.7.1+incompatible
 	github.com/docker/docker v17.12.0-ce-rc1.0.20200916142827-bd33bbf0497b+incompatible
 	github.com/docker/go-connections v0.4.0 // indirect

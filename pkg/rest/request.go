@@ -37,7 +37,6 @@ import (
 	"github.com/yubo/apiserver/pkg/metrics"
 	"github.com/yubo/apiserver/pkg/request"
 	restclientwatch "github.com/yubo/apiserver/pkg/rest/watch"
-	"github.com/yubo/golib/watch"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/api/errors"
 	"github.com/yubo/golib/runtime"
@@ -47,6 +46,7 @@ import (
 	utilclock "github.com/yubo/golib/util/clock"
 	"github.com/yubo/golib/util/flowcontrol"
 	"github.com/yubo/golib/util/net"
+	"github.com/yubo/golib/watch"
 	"golang.org/x/net/http2"
 
 	"k8s.io/klog/v2"
