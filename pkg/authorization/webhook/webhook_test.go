@@ -37,7 +37,7 @@ import (
 	authorization "github.com/yubo/apiserver/pkg/apis/authorization"
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
-	clientcmdapi "github.com/yubo/apiserver/tools/clientcmd/api"
+	v1 "github.com/yubo/apiserver/tools/clientcmd/api/v1"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/util/diff"
 	"github.com/yubo/golib/util/wait"
@@ -90,11 +90,13 @@ func TestV1NewFromConfig(t *testing.T) {
 			msg: "a single cluster and single user",
 			configTmpl: `
 clusters:
-  foobar:
+- cluster:
     certificate-authority: {{ .CA }}
     server: https://authz.example.com
+  name: foobar
 users:
-  "a cluster":
+- name: a cluster
+  user:
     client-certificate: {{ .Cert }}
     client-key: {{ .Key }}
 `,
@@ -104,14 +106,17 @@ users:
 			msg: "multiple clusters with no context",
 			configTmpl: `
 clusters:
-  foobar:
+- cluster:
     certificate-authority: {{ .CA }}
     server: https://authz.example.com
-  barfoo:
+  name: foobar
+- cluster:
     certificate-authority: a bad certificate path
     server: https://authz.example.com
+  name: barfoo
 users:
-  "a name":
+- name: a name
+  user:
     client-certificate: {{ .Cert }}
     client-key: {{ .Key }}
 `,
@@ -121,18 +126,22 @@ users:
 			msg: "multiple clusters with a context",
 			configTmpl: `
 clusters:
-  foobar:
+- cluster:
     certificate-authority: a bad certificate path
     server: https://authz.example.com
-  barfoo:
+  name: foobar
+- cluster:
     certificate-authority: {{ .CA }}
     server: https://authz.example.com
+  name: barfoo
 users:
-  "a name":
+- name: a name
+  user:
     client-certificate: {{ .Cert }}
     client-key: {{ .Key }}
 contexts:
-  default:
+- name: default
+  context:
     cluster: barfoo
     user: a name
 current-context: default
@@ -143,18 +152,22 @@ current-context: default
 			msg: "cluster with bad certificate path specified",
 			configTmpl: `
 clusters:
-  foobar:
+- cluster:
     certificate-authority: a bad certificate path
     server: https://authz.example.com
-  barfoo:
+  name: foobar
+- cluster:
     certificate-authority: {{ .CA }}
     server: https://authz.example.com
+  name: barfoo
 users:
-  "a name":
+- name: a name
+  user:
     client-certificate: {{ .Cert }}
     client-key: {{ .Key }}
 contexts:
-  default:
+- name: default
+  context:
     cluster: foobar
     user: a name
 current-context: default
@@ -305,12 +318,16 @@ func newV1Authorizer(callbackURL string, clientCert, clientKey, ca []byte, cache
 	}
 	p := tempfile.Name()
 	defer os.Remove(p)
-	config := clientcmdapi.Config{
-		Clusters: map[string]*clientcmdapi.Cluster{
-			"": {Server: callbackURL, CertificateAuthorityData: ca},
+	config := v1.Config{
+		Clusters: []v1.NamedCluster{
+			{
+				Cluster: v1.Cluster{Server: callbackURL, CertificateAuthorityData: ca},
+			},
 		},
-		AuthInfos: map[string]*clientcmdapi.AuthInfo{
-			"": {ClientCertificateData: clientCert, ClientKeyData: clientKey},
+		AuthInfos: []v1.NamedAuthInfo{
+			{
+				AuthInfo: v1.AuthInfo{ClientCertificateData: clientCert, ClientKeyData: clientKey},
+			},
 		},
 	}
 	if err := json.NewEncoder(tempfile).Encode(config); err != nil {
@@ -450,8 +467,8 @@ func TestV1Webhook(t *testing.T) {
 	}
 
 	expTypeMeta := api.TypeMeta{
-		APIVersion: "authorization.k8s.io/v1",
-		Kind:       "SubjectAccessReview",
+		//APIVersion: "authorization.k8s.io/v1",
+		//Kind:       "SubjectAccessReview",
 	}
 
 	tests := []struct {

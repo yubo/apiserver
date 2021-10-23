@@ -11,22 +11,12 @@ import (
 	"github.com/yubo/apiserver/pkg/authorization/rbac/file"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/golib/proc"
+	"github.com/yubo/golib/util/errors"
 )
 
 const (
-	moduleName       = "authorization.rbac"
-	noUsernamePrefix = "-"
-)
-
-var (
-	_auth   = &authModule{name: moduleName}
-	hookOps = []proc.HookOps{{
-		Hook:        _auth.init,
-		Owner:       moduleName,
-		HookNum:     proc.ACTION_START,
-		Priority:    proc.PRI_SYS_INIT,
-		SubPriority: options.PRI_M_AUTHZ - 1,
-	}}
+	modeName   = "RBAC"
+	configPath = "authorization.rbac"
 )
 
 type config struct {
@@ -35,60 +25,41 @@ type config struct {
 }
 
 func (o *config) Validate() error {
-	return nil
-}
+	allErrors := []error{}
 
-type authModule struct {
-	name   string
-	ctx    context.Context
-	config *config
+	if o.Provider != "file" && o.Provider != "db" {
+		allErrors = append(allErrors, fmt.Errorf("authorization-mode RBAC's authorization --rbac-provider must be set with 'file' or 'db'"))
+	}
+
+	if !authorization.IsValidAuthorizationMode(modeName) {
+		allErrors = append(allErrors, fmt.Errorf("cannot specify --rbac-provider without mode RBAC"))
+	}
+
+	return errors.NewAggregate(allErrors)
 }
 
 func newConfig() *config {
 	return &config{}
 }
 
-func (p *authModule) init(ctx context.Context) error {
-	c := proc.ConfigerMustFrom(ctx)
-
+func factory(ctx context.Context) (authorizer.Authorizer, error) {
 	cf := newConfig()
-	if err := c.Read(moduleName, cf); err != nil {
-		return err
-	}
-	p.config = cf
-	p.ctx = ctx
 
-	var rbacAuth *rbac.RBACAuthorizer
-	var err error
+	if err := proc.ConfigerMustFrom(ctx).Read(configPath, cf); err != nil {
+		return nil, err
+	}
+
 	switch cf.Provider {
 	case "file":
-		rbacAuth, err = file.NewRBAC(&cf.Config)
+		return file.NewRBAC(&cf.Config)
 	case "db":
-		rbacAuth, err = db.NewRBAC(options.DBMustFrom(ctx))
-	case "":
+		return db.NewRBAC(options.DBMustFrom(ctx))
 	default:
-		return fmt.Errorf("unsupported rbac provider %s", cf.Provider)
+		return nil, fmt.Errorf("unsupported rbac provider %s", cf.Provider)
 	}
-
-	if err != nil {
-		return err
-	}
-	options.WithRBAC(ctx, rbacAuth)
-
-	return nil
 }
 
 func init() {
-	proc.RegisterHooks(hookOps)
-	proc.RegisterFlags(moduleName, "authorization", newConfig())
-
-	factory := func() (authorizer.Authorizer, error) {
-		rbac, ok := options.RBACFrom(_auth.ctx)
-		if !ok {
-			return nil, fmt.Errorf("unable to get db from the context")
-		}
-
-		return rbac, nil
-	}
-	authorization.RegisterAuthz("RBAC", factory)
+	proc.RegisterFlags(configPath, "authorization", newConfig())
+	authorization.RegisterAuthz(modeName, factory)
 }

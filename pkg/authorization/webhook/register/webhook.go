@@ -2,49 +2,36 @@ package register
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/yubo/apiserver/pkg/authorization"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
-	"github.com/yubo/apiserver/pkg/options"
+	"github.com/yubo/apiserver/pkg/authorization/webhook"
+	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/proc"
 	utilerrors "github.com/yubo/golib/util/errors"
 	"github.com/yubo/golib/util/wait"
 )
 
 const (
-	moduleName       = "authorization.webhook"
-	noUsernamePrefix = "-"
-)
-
-var (
-	_auth   = &authModule{name: moduleName}
-	hookOps = []proc.HookOps{{
-		Hook:        _auth.init,
-		Owner:       moduleName,
-		HookNum:     proc.ACTION_START,
-		Priority:    proc.PRI_SYS_INIT,
-		SubPriority: options.PRI_M_AUTHZ - 1,
-	}}
-	_config *config
+	modeName   = "webhook"
+	configPath = "authorization.webhook"
 )
 
 type config struct {
-
 	// Kubeconfig file for Webhook authorization plugin.
 	WebhookConfigFile string `json:"webhookConfigFile" flag:"authorization-webhook-config-file" description:"File with webhook configuration in kubeconfig format, used with --authorization-mode=Webhook. "`
 
 	// API version of subject access reviews to send to the webhook (e.g. "v1", "v1beta1")
-	WebhookVersion string `json:"webhookVersion" default:"v1beta1" flag:"authorization-webhook-version" description:"The API version of the authorization.k8s.io SubjectAccessReview to send to and expect from the webhook."`
+	// WebhookVersion string `json:"webhookVersion" default:"v1beta1" flag:"authorization-webhook-version" description:"The API version of the authorization.k8s.io SubjectAccessReview to send to and expect from the webhook."`
 
 	// TTL for caching of authorized responses from the webhook server.
-	WebhookCacheAuthorizedTTL int `json:"webhookCacheAuthorizedTTL" default:"5m" flag:"authorization-webhook-cache-authorized-ttl" description:"The duration to cache 'authorized' responses from the webhook authorizer."`
-	webhookCacheAuthorizedTTL time.Duration
+	WebhookCacheAuthorizedTTL api.Duration `json:"webhookCacheAuthorizedTTL" default:"5m" flag:"authorization-webhook-cache-authorized-ttl" description:"The duration to cache 'authorized' responses from the webhook authorizer."`
 
 	// TTL for caching of unauthorized responses from the webhook server.
-	WebhookCacheUnauthorizedTTL int `json:"webhookCacheUnauthorizedTTL" default:"30s" flag:"authorization-webhook-cache-unauthorized-ttl" description:"The duration to cache 'unauthorized' responses from the webhook authorizer."`
-	webhookCacheUnauthorizedTTL time.Duration
+	WebhookCacheUnauthorizedTTL api.Duration `json:"webhookCacheUnauthorizedTTL" default:"30s" flag:"authorization-webhook-cache-unauthorized-ttl" description:"The duration to cache 'unauthorized' responses from the webhook authorizer."`
 
 	// WebhookRetryBackoff specifies the backoff parameters for the authorization webhook retry logic.
 	// This allows us to configure the sleep time at each iteration and the maximum number of retries allowed
@@ -56,25 +43,18 @@ func (o *config) Validate() error {
 	allErrors := []error{}
 
 	if o.WebhookConfigFile == "" {
-		return nil
+		allErrors = append(allErrors, fmt.Errorf("authorization-mode Webhook's authorization config file not passed"))
 	}
 
-	if o.WebhookConfigFile == "" {
-		allErrors = append(allErrors, fmt.Errorf("authorization-mode Webhook's authorization config file not passed"))
+	if !authorization.IsValidAuthorizationMode(modeName) {
+		allErrors = append(allErrors, fmt.Errorf("cannot specify --authorization-webhook-config-file without mode Webhook"))
 	}
 
 	if o.WebhookRetryBackoff != nil && o.WebhookRetryBackoff.Steps <= 0 {
 		allErrors = append(allErrors, fmt.Errorf("number of webhook retry attempts must be greater than 1, but is: %d", o.WebhookRetryBackoff.Steps))
 	}
-	o.webhookCacheAuthorizedTTL = time.Duration(o.WebhookCacheAuthorizedTTL) * time.Second
-	o.webhookCacheUnauthorizedTTL = time.Duration(o.WebhookCacheUnauthorizedTTL) * time.Second
 
 	return utilerrors.NewAggregate(allErrors)
-}
-
-type authModule struct {
-	name   string
-	config *config
 }
 
 func newConfig() *config {
@@ -92,27 +72,26 @@ func DefaultAuthWebhookRetryBackoff() *wait.Backoff {
 	}
 }
 
-func (p *authModule) init(ctx context.Context) error {
+func factory(ctx context.Context) (authorizer.Authorizer, error) {
 	c := proc.ConfigerMustFrom(ctx)
 
 	cf := newConfig()
-	if err := c.Read(moduleName, cf); err != nil {
-		return err
+	if err := c.Read(configPath, cf); err != nil {
+		return nil, err
 	}
-	p.config = cf
 
-	return nil
+	if cf.WebhookRetryBackoff == nil {
+		return nil, errors.New("retry backoff parameters for authorization webhook has not been specified")
+	}
+
+	return webhook.New(cf.WebhookConfigFile,
+		cf.WebhookCacheAuthorizedTTL.Duration,
+		cf.WebhookCacheUnauthorizedTTL.Duration,
+		*cf.WebhookRetryBackoff,
+		nil)
 }
 
 func init() {
-	proc.RegisterHooks(hookOps)
-	proc.RegisterFlags(moduleName, "authorization", newConfig())
-
-	factory := func() (authorizer.Authorizer, error) {
-		//cf := _auth.config
-		return nil, nil
-
-	}
-
-	authorization.RegisterAuthz(moduleName, factory)
+	proc.RegisterFlags(configPath, "authorization", newConfig())
+	authorization.RegisterAuthz(modeName, factory)
 }

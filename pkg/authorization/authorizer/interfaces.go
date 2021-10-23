@@ -75,7 +75,7 @@ type Authorizer interface {
 	Authorize(ctx context.Context, a Attributes) (authorized Decision, reason string, err error)
 }
 
-type AuthorizerFactory func() (Authorizer, error)
+type AuthorizerFactory func(context.Context) (Authorizer, error)
 
 type AuthorizerFunc func(a Attributes) (Decision, string, error)
 

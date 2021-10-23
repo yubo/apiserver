@@ -21,7 +21,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"runtime/debug"
 	"time"
 
 	"github.com/yubo/apiserver/pkg/apis/authorization"
@@ -87,7 +86,7 @@ func NewFromInterface(subjectAccessReview authorization.SubjectAccessReviewInter
 //
 // For additional HTTP configuration, refer to the kubeconfig documentation
 // https://kubernetes.io/docs/user-guide/kubeconfig-file/.
-func New(kubeConfigFile string, version string, authorizedTTL, unauthorizedTTL time.Duration, retryBackoff wait.Backoff, customDial utilnet.DialFunc) (*WebhookAuthorizer, error) {
+func New(kubeConfigFile string, authorizedTTL, unauthorizedTTL time.Duration, retryBackoff wait.Backoff, customDial utilnet.DialFunc) (*WebhookAuthorizer, error) {
 	subjectAccessReview, err := subjectAccessReviewInterfaceFromKubeconfig(kubeConfigFile, retryBackoff, customDial)
 	if err != nil {
 		return nil, err
@@ -196,7 +195,6 @@ func (w *WebhookAuthorizer) Authorize(ctx context.Context, attr authorizer.Attri
 			return sarErr
 		}, webhook.DefaultShouldRetry); err != nil {
 			klog.Errorf("Failed to make webhook authorizer request: %v", err)
-			debug.PrintStack()
 			return w.decisionOnError, "", err
 		}
 

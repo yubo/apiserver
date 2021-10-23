@@ -122,7 +122,8 @@ type authorization struct {
 
 func RegisterAuthz(name string, factory authorizer.AuthorizerFactory) error {
 	if _, ok := _authz.authzFactorys[name]; ok {
-		return fmt.Errorf("authz %q is already registered", name)
+		//return fmt.Errorf("authz %q is already registered", name)
+		panic(fmt.Sprintf("authz %q is already registered", name))
 	}
 	_authz.authzFactorys[name] = factory
 
@@ -192,20 +193,20 @@ func (p *authorization) initAuthorization() (err error) {
 	for _, mode := range c.Modes {
 		factory, ok := p.authzFactorys[mode]
 		if !ok {
-			return fmt.Errorf("unknown authz mode %s specified", mode)
+			return fmt.Errorf("unknown authz.%s specified", mode)
 		}
 
 		if factory == nil {
-			klog.V(5).Infof("authz factory %q is nil, skip", mode)
+			klog.V(5).Infof("authz.%s is nil, skip", mode)
 			continue
 		}
 
-		authz, err := factory()
+		authz, err := factory(p.ctx)
 		if err != nil {
-			return err
+			return fmt.Errorf("authz.%s error %s", mode, err)
 		}
 		authorizers = append(authorizers, authz)
-		klog.V(5).Infof("authz %s loaded", mode)
+		klog.V(5).Infof("authz.%s loaded", mode)
 	}
 
 	if len(c.AlwaysAllowGroups) > 0 {

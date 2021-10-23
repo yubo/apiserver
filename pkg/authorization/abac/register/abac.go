@@ -2,31 +2,22 @@ package register
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/yubo/apiserver/pkg/authorization"
 	"github.com/yubo/apiserver/pkg/authorization/abac"
 	"github.com/yubo/apiserver/pkg/authorization/abac/api"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
-	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/golib/proc"
+	"github.com/yubo/golib/util/errors"
 )
 
 const (
-	moduleName       = "authorization.ABAC"
-	modulePath       = "authorization"
-	noUsernamePrefix = "-"
+	modeName   = "ABAC"
+	configPath = "authorization"
 )
 
 var (
-	_auth   = &authModule{name: moduleName}
-	hookOps = []proc.HookOps{{
-		Hook:        _auth.init,
-		Owner:       moduleName,
-		HookNum:     proc.ACTION_START,
-		Priority:    proc.PRI_SYS_INIT,
-		SubPriority: options.PRI_M_AUTHZ - 1,
-	}}
-	_config    *config
 	PolicyList []*api.Policy
 )
 
@@ -35,44 +26,38 @@ type config struct {
 }
 
 func (o *config) Validate() error {
-	return nil
-}
+	allErrors := []error{}
 
-type authModule struct {
-	name   string
-	config *config
+	if o.PolicyFile == "" {
+		allErrors = append(allErrors, fmt.Errorf("authorization-mode ABAC's authorization config file not passed"))
+
+	}
+
+	if !authorization.IsValidAuthorizationMode(modeName) {
+		allErrors = append(allErrors, fmt.Errorf("cannot specify --authorization-policy-file without mode ABAC"))
+	}
+
+	return errors.NewAggregate(allErrors)
 }
 
 func newConfig() *config {
 	return &config{}
 }
 
-func (p *authModule) init(ctx context.Context) error {
-	c := proc.ConfigerMustFrom(ctx)
-
+func factory(ctx context.Context) (authorizer.Authorizer, error) {
 	cf := newConfig()
-	if err := c.Read(modulePath, cf); err != nil {
-		return err
+	if err := proc.ConfigerMustFrom(ctx).Read(configPath, cf); err != nil {
+		return nil, err
 	}
-	p.config = cf
 
-	return nil
+	p, err := abac.NewFromFile(cf.PolicyFile)
+	if err != nil {
+		return nil, err
+	}
+	return abac.PolicyList(append(PolicyList, p...)), nil
 }
 
 func init() {
-	proc.RegisterHooks(hookOps)
-	proc.RegisterFlags(modulePath, "authorization", newConfig())
-
-	factory := func() (authorizer.Authorizer, error) {
-		if _auth.config.PolicyFile != "" {
-			p, err := abac.NewFromFile(_auth.config.PolicyFile)
-			if err != nil {
-				return nil, err
-			}
-			return abac.PolicyList(append(PolicyList, p...)), nil
-		}
-		return abac.PolicyList(PolicyList), nil
-	}
-
-	authorization.RegisterAuthz("ABAC", factory)
+	proc.RegisterFlags(configPath, "authorization", newConfig())
+	authorization.RegisterAuthz(modeName, factory)
 }
