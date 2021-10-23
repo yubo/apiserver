@@ -19,7 +19,7 @@ package authenticatorfactory
 import (
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/pkg/authentication/request/bearertoken"
-	"github.com/yubo/apiserver/pkg/authentication/token/tokenfile"
+	"github.com/yubo/apiserver/plugin/authn/token/tokenfile"
 	"github.com/yubo/apiserver/pkg/authentication/user"
 )
 

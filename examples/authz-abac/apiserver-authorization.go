@@ -16,10 +16,10 @@ import (
 
 	// authn
 	_ "github.com/yubo/apiserver/pkg/authentication/register"
-	_ "github.com/yubo/apiserver/pkg/authentication/token/tokenfile/register"
+	_ "github.com/yubo/apiserver/plugin/authn/token/tokenfile/register"
 
 	// authz
-	_ "github.com/yubo/apiserver/pkg/authorization/abac/register"
+	_ "github.com/yubo/apiserver/plugin/authz/abac/register"
 	_ "github.com/yubo/apiserver/pkg/authorization/register"
 )
 
