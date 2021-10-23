@@ -8,7 +8,7 @@ import (
 	osruntime "runtime"
 
 	"github.com/yubo/apiserver/pkg/authentication"
-	"github.com/yubo/apiserver/plugin/authn/token/tokentest"
+	"github.com/yubo/apiserver/plugin/authenticator/token/tokentest"
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/request"

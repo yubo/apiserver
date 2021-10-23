@@ -7,7 +7,7 @@ import (
 
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	"github.com/yubo/apiserver/pkg/authorization/authorizerfactory"
-	"github.com/yubo/apiserver/plugin/authz/path"
+	"github.com/yubo/apiserver/plugin/authorizer/path"
 	"github.com/yubo/apiserver/pkg/authorization/union"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/golib/configer"

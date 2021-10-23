@@ -15,23 +15,23 @@ import (
 	"k8s.io/klog/v2"
 
 	// authz's submodule, should be loaded before the authz module
-	_ "github.com/yubo/apiserver/plugin/authz/abac/register"
-	_ "github.com/yubo/apiserver/plugin/authz/alwaysallow/register"
-	_ "github.com/yubo/apiserver/plugin/authz/alwaysdeny/register"
-	_ "github.com/yubo/apiserver/plugin/authz/rbac/register"
+	_ "github.com/yubo/apiserver/plugin/authorizer/abac/register"
+	_ "github.com/yubo/apiserver/plugin/authorizer/alwaysallow/register"
+	_ "github.com/yubo/apiserver/plugin/authorizer/alwaysdeny/register"
+	_ "github.com/yubo/apiserver/plugin/authorizer/rbac/register"
 	_ "github.com/yubo/apiserver/pkg/authorization/register"
 	// TODO
-	//_ "github.com/yubo/apiserver/plugin/authz/webhook/register"
+	//_ "github.com/yubo/apiserver/plugin/authorizer/webhook/register"
 
 	// authn
 	_ "github.com/yubo/apiserver/pkg/authentication/register"
-	_ "github.com/yubo/apiserver/plugin/authn/session/register"
-	_ "github.com/yubo/apiserver/plugin/authn/token/bootstrap/register"
-	_ "github.com/yubo/apiserver/plugin/authn/token/oidc/register"
-	_ "github.com/yubo/apiserver/plugin/authn/token/tokenfile/register"
+	_ "github.com/yubo/apiserver/plugin/authenticator/session/register"
+	_ "github.com/yubo/apiserver/plugin/authenticator/token/bootstrap/register"
+	_ "github.com/yubo/apiserver/plugin/authenticator/token/oidc/register"
+	_ "github.com/yubo/apiserver/plugin/authenticator/token/tokenfile/register"
 	// TODO
 	//_ "github.com/yubo/apiserver/pkg/authentication/serviceaccount/register"
-	//_ "github.com/yubo/apiserver/plugin/authn/webhook/register"
+	//_ "github.com/yubo/apiserver/plugin/authenticator/token/webhook/register"
 
 	_ "github.com/yubo/apiserver/pkg/apiserver/register"
 	_ "github.com/yubo/apiserver/pkg/audit/register"
