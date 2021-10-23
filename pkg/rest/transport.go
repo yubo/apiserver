@@ -111,7 +111,6 @@ func (c *Config) TransportConfig() (*transport.Config, error) {
 			return nil, err
 		}
 	}
-
 	if c.AuthProvider != nil {
 		provider, err := GetAuthProvider(c.Host, c.AuthProvider, c.AuthConfigPersister)
 		if err != nil {

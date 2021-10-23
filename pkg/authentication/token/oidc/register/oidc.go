@@ -12,15 +12,15 @@ import (
 )
 
 const (
-	moduleName       = "authentication.oidc"
+	configPath       = "authentication.oidc"
 	noUsernamePrefix = "-"
 )
 
 var (
-	_auth   = &authModule{name: moduleName}
+	_auth   = &authModule{name: configPath}
 	hookOps = []proc.HookOps{{
 		Hook:        _auth.init,
-		Owner:       moduleName,
+		Owner:       configPath,
 		HookNum:     proc.ACTION_START,
 		Priority:    proc.PRI_SYS_INIT,
 		SubPriority: options.PRI_M_AUTHN - 1,
@@ -81,13 +81,13 @@ func (p *authModule) init(ctx context.Context) error {
 	c := proc.ConfigerMustFrom(ctx)
 
 	cf := newConfig()
-	if err := c.Read(moduleName, cf); err != nil {
+	if err := c.Read(configPath, cf); err != nil {
 		return err
 	}
 	p.config = cf
 
 	if len(cf.IssuerURL) == 0 {
-		klog.Infof("%s.issuerURL is not set, skip", moduleName)
+		klog.Infof("%s.issuerURL is not set, skip", configPath)
 		return nil
 	}
 	klog.V(5).InfoS("authmodule init", "name", p.name, "IssuerURL", cf.IssuerURL)
@@ -112,5 +112,5 @@ func (p *authModule) init(ctx context.Context) error {
 
 func init() {
 	proc.RegisterHooks(hookOps)
-	proc.RegisterFlags(moduleName, "authentication", newConfig())
+	proc.RegisterFlags(configPath, "authentication", newConfig())
 }

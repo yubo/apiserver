@@ -11,15 +11,14 @@ import (
 )
 
 const (
-	moduleName       = "authentication.webhook"
-	noUsernamePrefix = "-"
+	configPath = "authentication.webhook"
 )
 
 var (
-	_auth   = &authModule{name: moduleName}
+	_auth   = &authModule{name: configPath}
 	hookOps = []proc.HookOps{{
 		Hook:        _auth.init,
-		Owner:       moduleName,
+		Owner:       configPath,
 		HookNum:     proc.ACTION_START,
 		Priority:    proc.PRI_SYS_INIT,
 		SubPriority: options.PRI_M_AUTHN - 1,
@@ -86,5 +85,5 @@ func DefaultAuthWebhookRetryBackoff() *wait.Backoff {
 
 func init() {
 	proc.RegisterHooks(hookOps)
-	proc.RegisterFlags(moduleName, "authentication", newConfig())
+	proc.RegisterFlags(configPath, "authentication", newConfig())
 }

@@ -551,7 +551,8 @@ func dataFromSliceOrFile(data []byte, file string) ([]byte, error) {
 }
 
 func AddUserAgent(config *Config, userAgent string) *Config {
-	config.UserAgent = userAgent
+	fullUserAgent := DefaultKubernetesUserAgent() + "/" + userAgent
+	config.UserAgent = fullUserAgent
 	return config
 }
 
@@ -622,5 +623,8 @@ func CopyConfig(config *Config) *Config {
 		Dial:               config.Dial,
 		Proxy:              config.Proxy,
 	}
+	//if config.ExecProvider != nil && config.ExecProvider.Config != nil {
+	//	c.ExecProvider.Config = config.ExecProvider.Config.DeepCopyObject()
+	//}
 	return c
 }
