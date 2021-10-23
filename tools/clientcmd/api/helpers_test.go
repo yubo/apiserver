@@ -226,24 +226,27 @@ func Example_minifyAndShorten() {
 	output, _ := yaml.Marshal(config)
 	fmt.Printf("%s", string(output))
 	// Output:
+	// apiVersion: v1
 	// clusters:
-	//   cow-cluster:
-	//     LocationOfOrigin: ""
+	// - cluster:
 	//     certificate-authority-data: DATA+OMITTED
 	//     server: http://cow.org:8080
+	//   name: cow-cluster
 	// contexts:
-	//   federal-context:
-	//     LocationOfOrigin: ""
+	// - context:
 	//     cluster: cow-cluster
 	//     user: red-user
+	//   name: federal-context
 	// current-context: federal-context
+	// kind: Config
 	// preferences: {}
 	// users:
-	//   red-user:
-	//     LocationOfOrigin: ""
+	// - name: red-user
+	//   user:
 	//     client-certificate-data: REDACTED
 	//     client-key-data: REDACTED
 	//     token: REDACTED
+
 }
 
 func TestShortenSuccess(t *testing.T) {

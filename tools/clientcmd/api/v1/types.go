@@ -14,21 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package api
+package v1
 
-import (
-	"encoding/json"
-	"fmt"
-
-	v1 "github.com/yubo/apiserver/tools/clientcmd/api/v1"
-	"github.com/yubo/golib/runtime"
-)
+import "github.com/yubo/golib/runtime"
 
 // Where possible, json tags match the cli argument names.
 // Top level config objects and all values required for proper functioning are not "omitempty".  Any truly optional piece of config is allowed to be omitted.
 
 // Config holds the information needed to build connect to remote kubernetes clusters as a given user
-// IMPORTANT if you add fields to this struct, please update IsConfigEmpty()
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 type Config struct {
 	// Legacy field from pkg/api/types.go TypeMeta.
@@ -44,56 +37,28 @@ type Config struct {
 	// Preferences holds general information to be use for cli interactions
 	Preferences Preferences `json:"preferences"`
 	// Clusters is a map of referencable names to cluster configs
-	Clusters map[string]*Cluster `json:"clusters"`
+	Clusters []NamedCluster `json:"clusters"`
 	// AuthInfos is a map of referencable names to user configs
-	AuthInfos map[string]*AuthInfo `json:"users"`
+	AuthInfos []NamedAuthInfo `json:"users"`
 	// Contexts is a map of referencable names to context configs
-	Contexts map[string]*Context `json:"contexts"`
+	Contexts []NamedContext `json:"contexts"`
 	// CurrentContext is the name of the context that you would like to use by default
 	CurrentContext string `json:"current-context"`
 	// Extensions holds additional information. This is useful for extenders so that reads and writes don't clobber unknown fields
 	// +optional
-	Extensions map[string]runtime.Object `json:"extensions,omitempty"`
+	Extensions []NamedExtension `json:"extensions,omitempty"`
 }
 
-func (p *Config) UnmarshalJSON(b []byte) error {
-	configV1 := &v1.Config{
-		Kind:       "Config",
-		APIVersion: "v1",
-	}
-	if err := json.Unmarshal(b, configV1); err != nil {
-		return err
-	}
-
-	return Convert_v1_Config_To_api_Config(configV1, p)
-}
-
-func (p Config) MarshalJSON() ([]byte, error) {
-	configV1 := &v1.Config{
-		Kind:       "Config",
-		APIVersion: "v1",
-	}
-	if err := Convert_api_Config_To_v1_Config(&p, configV1); err != nil {
-		return nil, err
-	}
-
-	return json.Marshal(configV1)
-}
-
-// IMPORTANT if you add fields to this struct, please update IsConfigEmpty()
 type Preferences struct {
 	// +optional
 	Colors bool `json:"colors,omitempty"`
 	// Extensions holds additional information. This is useful for extenders so that reads and writes don't clobber unknown fields
 	// +optional
-	Extensions map[string]runtime.Object `json:"extensions,omitempty"`
+	Extensions []NamedExtension `json:"extensions,omitempty"`
 }
 
 // Cluster contains information about how to communicate with a kubernetes cluster
 type Cluster struct {
-	// LocationOfOrigin indicates where this object came from.  It is used for round tripping config post-merge, but never serialized.
-	// +k8s:conversion-gen=false
-	LocationOfOrigin string
 	// Server is the address of the kubernetes cluster (https://hostname:port).
 	Server string `json:"server"`
 	// TLSServerName is used to check server certificate. If TLSServerName is empty, the hostname used to contact the server is used.
@@ -121,14 +86,11 @@ type Cluster struct {
 	ProxyURL string `json:"proxy-url,omitempty"`
 	// Extensions holds additional information. This is useful for extenders so that reads and writes don't clobber unknown fields
 	// +optional
-	Extensions map[string]runtime.Object `json:"extensions,omitempty"`
+	Extensions []NamedExtension `json:"extensions,omitempty"`
 }
 
 // AuthInfo contains information that describes identity information.  This is use to tell the kubernetes cluster who you are.
 type AuthInfo struct {
-	// LocationOfOrigin indicates where this object came from.  It is used for round tripping config post-merge, but never serialized.
-	// +k8s:conversion-gen=false
-	LocationOfOrigin string
 	// ClientCertificate is the path to a client cert file for TLS.
 	// +optional
 	ClientCertificate string `json:"client-certificate,omitempty"`
@@ -147,15 +109,15 @@ type AuthInfo struct {
 	// TokenFile is a pointer to a file that contains a bearer token (as described above).  If both Token and TokenFile are present, Token takes precedence.
 	// +optional
 	TokenFile string `json:"tokenFile,omitempty"`
-	// Impersonate is the username to act-as.
+	// Impersonate is the username to imperonate.  The name matches the flag.
 	// +optional
-	Impersonate string `json:"act-as,omitempty"`
+	Impersonate string `json:"as,omitempty"`
 	// ImpersonateGroups is the groups to imperonate.
 	// +optional
-	ImpersonateGroups []string `json:"act-as-groups,omitempty"`
+	ImpersonateGroups []string `json:"as-groups,omitempty"`
 	// ImpersonateUserExtra contains additional information for impersonated user.
 	// +optional
-	ImpersonateUserExtra map[string][]string `json:"act-as-user-extra,omitempty"`
+	ImpersonateUserExtra map[string][]string `json:"as-user-extra,omitempty"`
 	// Username is the username for basic authentication to the kubernetes cluster.
 	// +optional
 	Username string `json:"username,omitempty"`
@@ -170,14 +132,11 @@ type AuthInfo struct {
 	Exec *ExecConfig `json:"exec,omitempty"`
 	// Extensions holds additional information. This is useful for extenders so that reads and writes don't clobber unknown fields
 	// +optional
-	Extensions map[string]runtime.Object `json:"extensions,omitempty"`
+	Extensions []NamedExtension `json:"extensions,omitempty"`
 }
 
 // Context is a tuple of references to a cluster (how do I communicate with a kubernetes cluster), a user (how do I identify myself), and a namespace (what subset of resources do I want to work with)
 type Context struct {
-	// LocationOfOrigin indicates where this object came from.  It is used for round tripping config post-merge, but never serialized.
-	// +k8s:conversion-gen=false
-	LocationOfOrigin string
 	// Cluster is the name of the cluster for this context
 	Cluster string `json:"cluster"`
 	// AuthInfo is the name of the authInfo for this context
@@ -187,33 +146,45 @@ type Context struct {
 	Namespace string `json:"namespace,omitempty"`
 	// Extensions holds additional information. This is useful for extenders so that reads and writes don't clobber unknown fields
 	// +optional
-	Extensions map[string]runtime.Object `json:"extensions,omitempty"`
+	Extensions []NamedExtension `json:"extensions,omitempty"`
+}
+
+// NamedCluster relates nicknames to cluster information
+type NamedCluster struct {
+	// Name is the nickname for this Cluster
+	Name string `json:"name"`
+	// Cluster holds the cluster information
+	Cluster Cluster `json:"cluster"`
+}
+
+// NamedContext relates nicknames to context information
+type NamedContext struct {
+	// Name is the nickname for this Context
+	Name string `json:"name"`
+	// Context holds the context information
+	Context Context `json:"context"`
+}
+
+// NamedAuthInfo relates nicknames to auth information
+type NamedAuthInfo struct {
+	// Name is the nickname for this AuthInfo
+	Name string `json:"name"`
+	// AuthInfo holds the auth information
+	AuthInfo AuthInfo `json:"user"`
+}
+
+// NamedExtension relates nicknames to extension information
+type NamedExtension struct {
+	// Name is the nickname for this Extension
+	Name string `json:"name"`
+	// Extension holds the extension information
+	Extension runtime.RawExtension `json:"extension"`
 }
 
 // AuthProviderConfig holds the configuration for a specified auth provider.
 type AuthProviderConfig struct {
-	Name string `json:"name"`
-	// +optional
-	Config map[string]string `json:"config,omitempty"`
-}
-
-var _ fmt.Stringer = new(AuthProviderConfig)
-var _ fmt.GoStringer = new(AuthProviderConfig)
-
-// GoString implements fmt.GoStringer and sanitizes sensitive fields of
-// AuthProviderConfig to prevent accidental leaking via logs.
-func (c AuthProviderConfig) GoString() string {
-	return c.String()
-}
-
-// String implements fmt.Stringer and sanitizes sensitive fields of
-// AuthProviderConfig to prevent accidental leaking via logs.
-func (c AuthProviderConfig) String() string {
-	cfg := "<nil>"
-	if c.Config != nil {
-		cfg = "--- REDACTED ---"
-	}
-	return fmt.Sprintf("api.AuthProviderConfig{Name: %q, Config: map[string]string{%s}}", c.Name, cfg)
+	Name   string            `json:"name"`
+	Config map[string]string `json:"config"`
 }
 
 // ExecConfig specifies a command to provide client credentials. The command is exec'd
@@ -245,59 +216,9 @@ type ExecConfig struct {
 	// ProvideClusterInfo determines whether or not to provide cluster information,
 	// which could potentially contain very large CA data, to this exec plugin as a
 	// part of the KUBERNETES_EXEC_INFO environment variable. By default, it is set
-	// to false. Package github.com/yubo/apiserver/tools/auth/exec provides helper methods for
+	// to false. Package k8s.io/client-go/tools/auth/exec provides helper methods for
 	// reading this environment variable.
 	ProvideClusterInfo bool `json:"provideClusterInfo"`
-
-	// Config holds additional config data that is specific to the exec
-	// plugin with regards to the cluster being authenticated to.
-	//
-	// This data is sourced from the clientcmd Cluster object's extensions[exec] field:
-	//
-	// clusters:
-	// - name: my-cluster
-	//   cluster:
-	//     ...
-	//     extensions:
-	//     - name: client.authentication.k8s.io/exec  # reserved extension name for per cluster exec config
-	//       extension:
-	//         audience: 06e3fbd18de8  # arbitrary config
-	//
-	// In some environments, the user config may be exactly the same across many clusters
-	// (i.e. call this exec plugin) minus some details that are specific to each cluster
-	// such as the audience.  This field allows the per cluster config to be directly
-	// specified with the cluster info.  Using this field to store secret data is not
-	// recommended as one of the prime benefits of exec plugins is that no secrets need
-	// to be stored directly in the kubeconfig.
-	// +k8s:conversion-gen=false
-	Config runtime.Object
-}
-
-var _ fmt.Stringer = new(ExecConfig)
-var _ fmt.GoStringer = new(ExecConfig)
-
-// GoString implements fmt.GoStringer and sanitizes sensitive fields of
-// ExecConfig to prevent accidental leaking via logs.
-func (c ExecConfig) GoString() string {
-	return c.String()
-}
-
-// String implements fmt.Stringer and sanitizes sensitive fields of ExecConfig
-// to prevent accidental leaking via logs.
-func (c ExecConfig) String() string {
-	var args []string
-	if len(c.Args) > 0 {
-		args = []string{"--- REDACTED ---"}
-	}
-	env := "[]ExecEnvVar(nil)"
-	if len(c.Env) > 0 {
-		env = "[]ExecEnvVar{--- REDACTED ---}"
-	}
-	config := "runtime.Object(nil)"
-	if c.Config != nil {
-		config = "runtime.Object(--- REDACTED ---)"
-	}
-	return fmt.Sprintf("api.ExecConfig{Command: %q, Args: %#v, Env: %s, APIVersion: %q, ProvideClusterInfo: %t, Config: %s}", c.Command, args, env, c.APIVersion, c.ProvideClusterInfo, config)
 }
 
 // ExecEnvVar is used for setting environment variables when executing an exec-based
@@ -305,42 +226,4 @@ func (c ExecConfig) String() string {
 type ExecEnvVar struct {
 	Name  string `json:"name"`
 	Value string `json:"value"`
-}
-
-// NewConfig is a convenience function that returns a new Config object with non-nil maps
-func NewConfig() *Config {
-	return &Config{
-		Preferences: *NewPreferences(),
-		Clusters:    make(map[string]*Cluster),
-		AuthInfos:   make(map[string]*AuthInfo),
-		Contexts:    make(map[string]*Context),
-		Extensions:  make(map[string]runtime.Object),
-	}
-}
-
-// NewContext is a convenience function that returns a new Context
-// object with non-nil maps
-func NewContext() *Context {
-	return &Context{Extensions: make(map[string]runtime.Object)}
-}
-
-// NewCluster is a convenience function that returns a new Cluster
-// object with non-nil maps
-func NewCluster() *Cluster {
-	return &Cluster{Extensions: make(map[string]runtime.Object)}
-}
-
-// NewAuthInfo is a convenience function that returns a new AuthInfo
-// object with non-nil maps
-func NewAuthInfo() *AuthInfo {
-	return &AuthInfo{
-		Extensions:           make(map[string]runtime.Object),
-		ImpersonateUserExtra: make(map[string][]string),
-	}
-}
-
-// NewPreferences is a convenience function that returns a new
-// Preferences object with non-nil maps
-func NewPreferences() *Preferences {
-	return &Preferences{Extensions: make(map[string]runtime.Object)}
 }
