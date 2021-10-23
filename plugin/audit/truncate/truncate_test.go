@@ -23,11 +23,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	auditinternal "github.com/yubo/apiserver/pkg/apis/audit"
-	"github.com/yubo/apiserver/pkg/audit/fake"
+	"github.com/yubo/apiserver/plugin/audit/fake"
 	"github.com/yubo/golib/runtime"
 
 	// Importing just for the schema definitions.
-	_ "github.com/yubo/apiserver/pkg/audit/webhook"
+	_ "github.com/yubo/apiserver/plugin/audit/webhook"
 )
 
 var (
