@@ -19,6 +19,7 @@ require (
 	github.com/emicklei/go-restful-openapi v1.4.1
 	github.com/go-openapi/spec v0.20.3
 	github.com/gogo/protobuf v1.3.2
+	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e
 	github.com/golang/mock v1.4.1
 	github.com/google/go-cmp v0.5.5
 	github.com/google/gofuzz v1.2.0

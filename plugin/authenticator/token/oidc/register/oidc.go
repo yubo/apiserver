@@ -5,26 +5,16 @@ import (
 	"fmt"
 
 	"github.com/yubo/apiserver/pkg/authentication"
+	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/plugin/authenticator/token/oidc"
-	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/golib/proc"
 	"k8s.io/klog/v2"
 )
 
 const (
 	configPath       = "authentication.oidc"
+	moduleName       = "authentication.oidc"
 	noUsernamePrefix = "-"
-)
-
-var (
-	_auth   = &authModule{name: configPath}
-	hookOps = []proc.HookOps{{
-		Hook:        _auth.init,
-		Owner:       configPath,
-		HookNum:     proc.ACTION_START,
-		Priority:    proc.PRI_SYS_INIT,
-		SubPriority: options.PRI_M_AUTHN - 1,
-	}}
 )
 
 type config struct {
@@ -68,31 +58,25 @@ func (o *config) Validate() error {
 	return nil
 }
 
-type authModule struct {
-	name   string
-	config *config
-}
-
 func newConfig() *config {
 	return &config{}
 }
 
-func (p *authModule) init(ctx context.Context) error {
+func factory(ctx context.Context) (authenticator.Token, error) {
 	c := proc.ConfigerMustFrom(ctx)
 
 	cf := newConfig()
 	if err := c.Read(configPath, cf); err != nil {
-		return err
+		return nil, err
 	}
-	p.config = cf
 
 	if len(cf.IssuerURL) == 0 {
-		klog.Infof("%s.issuerURL is not set, skip", configPath)
-		return nil
+		klog.V(5).Infof("%s.issuerURL is not set, skip", configPath)
+		return nil, nil
 	}
-	klog.V(5).InfoS("authmodule init", "name", p.name, "IssuerURL", cf.IssuerURL)
+	klog.V(5).InfoS("authmodule init", "name", moduleName, "IssuerURL", cf.IssuerURL)
 
-	auth, err := oidc.New(oidc.Options{
+	return oidc.New(oidc.Options{
 		IssuerURL:            cf.IssuerURL,
 		ClientID:             cf.ClientID,
 		CAFile:               cf.CAFile,
@@ -103,14 +87,9 @@ func (p *authModule) init(ctx context.Context) error {
 		SupportedSigningAlgs: cf.SigningAlgs,
 		RequiredClaims:       cf.RequiredClaims,
 	})
-	if err != nil {
-		return err
-	}
-
-	return authentication.RegisterTokenAuthn(auth)
 }
 
 func init() {
-	proc.RegisterHooks(hookOps)
 	proc.RegisterFlags(configPath, "authentication", newConfig())
+	authentication.RegisterTokenAuthn(factory)
 }

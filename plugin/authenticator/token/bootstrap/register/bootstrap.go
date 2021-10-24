@@ -5,28 +5,17 @@ import (
 	"fmt"
 
 	"github.com/yubo/apiserver/pkg/authentication"
-	"github.com/yubo/apiserver/plugin/authenticator/token/bootstrap"
+	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/pkg/listers"
 	"github.com/yubo/apiserver/pkg/options"
+	"github.com/yubo/apiserver/plugin/authenticator/token/bootstrap"
 	"github.com/yubo/golib/proc"
 	"k8s.io/klog/v2"
 )
 
 const (
-	moduleName       = "authentication.bootstrapToken"
-	modulePath       = "authentication"
-	noUsernamePrefix = "-"
-)
-
-var (
-	_auth   = &authModule{name: moduleName}
-	hookOps = []proc.HookOps{{
-		Hook:        _auth.init,
-		Owner:       moduleName,
-		HookNum:     proc.ACTION_START,
-		Priority:    proc.PRI_SYS_INIT,
-		SubPriority: options.PRI_M_AUTHN - 1,
-	}}
+	moduleName = "authentication.bootstrapToken"
+	configPath = "authentication"
 )
 
 type config struct {
@@ -37,38 +26,31 @@ func (o *config) Validate() error {
 	return nil
 }
 
-type authModule struct {
-	name   string
-	config *config
-}
-
 func newConfig() *config { return &config{} }
 
-func (p *authModule) init(ctx context.Context) error {
+func factory(ctx context.Context) (authenticator.Token, error) {
 	c := proc.ConfigerMustFrom(ctx)
 
 	cf := newConfig()
-	if err := c.Read(modulePath, cf); err != nil {
-		return err
+	if err := c.Read(configPath, cf); err != nil {
+		return nil, err
 	}
-	p.config = cf
 
 	if !cf.BootstrapToken {
-		klog.InfoS("skip authModule", "name", p.name, "reason", "disabled")
-		return nil
+		klog.V(5).InfoS("skip authModule", "name", moduleName, "reason", "disabled")
+		return nil, nil
 	}
 
 	db, ok := options.DBFrom(ctx)
 	if !ok {
-		return fmt.Errorf("unable to get db from the context")
+		return nil, fmt.Errorf("unable to get db from the context")
 	}
-	klog.V(5).InfoS("authmodule init", "name", p.name)
+	klog.V(5).InfoS("authmodule init", "name", moduleName)
 
-	return authentication.RegisterTokenAuthn(bootstrap.NewTokenAuthenticator(
-		listers.NewSecretLister(db)))
+	return bootstrap.NewTokenAuthenticator(listers.NewSecretLister(db)), nil
 }
 
 func init() {
-	proc.RegisterHooks(hookOps)
-	proc.RegisterFlags(modulePath, "authentication", newConfig())
+	proc.RegisterFlags(configPath, "authentication", newConfig())
+	authentication.RegisterTokenAuthn(factory)
 }

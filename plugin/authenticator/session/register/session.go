@@ -23,7 +23,7 @@ var (
 		Owner:       moduleName,
 		HookNum:     proc.ACTION_START,
 		Priority:    proc.PRI_SYS_INIT,
-		SubPriority: options.PRI_M_AUTHN - 1,
+		SubPriority: options.PRI_M_AUTHN_MODE,
 	}}
 )
 

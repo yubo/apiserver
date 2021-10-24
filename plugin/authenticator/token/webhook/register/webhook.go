@@ -5,24 +5,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/yubo/apiserver/pkg/options"
+	"github.com/yubo/apiserver/pkg/authentication"
+	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/golib/proc"
 	"github.com/yubo/golib/util/wait"
 )
 
 const (
 	configPath = "authentication.webhook"
-)
-
-var (
-	_auth   = &authModule{name: configPath}
-	hookOps = []proc.HookOps{{
-		Hook:        _auth.init,
-		Owner:       configPath,
-		HookNum:     proc.ACTION_START,
-		Priority:    proc.PRI_SYS_INIT,
-		SubPriority: options.PRI_M_AUTHN - 1,
-	}}
 )
 
 type config struct {
@@ -48,28 +38,22 @@ func (o *config) Validate() error {
 	return nil
 }
 
-type authModule struct {
-	name   string
-	config *config
-}
-
 func newConfig() *config {
 	return &config{
 		RetryBackoff: DefaultAuthWebhookRetryBackoff(),
 	}
 }
 
-func (p *authModule) init(ctx context.Context) error {
+func factory(ctx context.Context) (authenticator.Token, error) {
 	c := proc.ConfigerMustFrom(ctx)
 
 	cf := newConfig()
-	if err := c.Read(p.name, cf); err != nil {
-		return err
+	if err := c.Read(configPath, cf); err != nil {
+		return nil, err
 	}
-	p.config = cf
 
 	// TODO
-	return nil
+	return nil, nil
 }
 
 // DefaultAuthWebhookRetryBackoff is the default backoff parameters for
@@ -84,6 +68,6 @@ func DefaultAuthWebhookRetryBackoff() *wait.Backoff {
 }
 
 func init() {
-	proc.RegisterHooks(hookOps)
 	proc.RegisterFlags(configPath, "authentication", newConfig())
+	authentication.RegisterTokenAuthn(factory)
 }

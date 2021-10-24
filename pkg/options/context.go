@@ -5,9 +5,11 @@ import (
 
 	// authentication "github.com/yubo/apiserver/modules/authentication/lib"
 
+	"github.com/yubo/apiserver/pkg/apiserver"
 	"github.com/yubo/apiserver/pkg/audit"
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
+	"github.com/yubo/apiserver/pkg/dynamiccertificates"
 	"github.com/yubo/golib/net/session"
 	"github.com/yubo/golib/orm"
 	"github.com/yubo/golib/proc"
@@ -27,6 +29,7 @@ const (
 	sessionManagerKey //
 	authzKey          // authorization
 	auditKey          // audit
+	clientCAKey       // clientCA
 )
 
 // WithValue returns a copy of parent in which the value associated with key is val.
@@ -82,20 +85,20 @@ func AuditFrom(ctx context.Context) (audit.Auditor, bool) {
 	return authz, ok
 }
 
-// WithApiServer returns a copy of ctx in which the http value is set
-func WithApiServer(ctx context.Context, server ApiServer) {
+// WithAPIServer returns a copy of ctx in which the http value is set
+func WithAPIServer(ctx context.Context, server apiserver.APIServer) {
 	klog.V(5).Infof("attr with apiserver")
 	proc.AttrMustFrom(ctx)[apiServerKey] = server
 }
 
-// ApiServerFrom returns the value of the http key on the ctx
-func ApiServerFrom(ctx context.Context) (ApiServer, bool) {
-	server, ok := proc.AttrMustFrom(ctx)[apiServerKey].(ApiServer)
+// APIServerFrom returns the value of the http key on the ctx
+func APIServerFrom(ctx context.Context) (apiserver.APIServer, bool) {
+	server, ok := proc.AttrMustFrom(ctx)[apiServerKey].(apiserver.APIServer)
 	return server, ok
 }
 
-func ApiServerMustFrom(ctx context.Context) ApiServer {
-	server, ok := proc.AttrMustFrom(ctx)[apiServerKey].(ApiServer)
+func APIServerMustFrom(ctx context.Context) apiserver.APIServer {
+	server, ok := proc.AttrMustFrom(ctx)[apiServerKey].(apiserver.APIServer)
 	if !ok {
 		panic("unable get genericServer")
 	}
@@ -128,4 +131,14 @@ func DBMustFrom(ctx context.Context) orm.DB {
 		panic("unable get db")
 	}
 	return db
+}
+
+func WithClientCA(ctx context.Context, clientCA dynamiccertificates.CAContentProvider) {
+	klog.V(5).Infof("attr with clientCA")
+	proc.AttrMustFrom(ctx)[clientCAKey] = clientCA
+}
+
+func ClientCAFrom(ctx context.Context) (dynamiccertificates.CAContentProvider, bool) {
+	clientCA, ok := proc.AttrMustFrom(ctx)[clientCAKey].(dynamiccertificates.CAContentProvider)
+	return clientCA, ok
 }

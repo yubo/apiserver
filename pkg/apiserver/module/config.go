@@ -22,9 +22,9 @@ import (
 	"net"
 	"os"
 	"strings"
-	"time"
 
 	apirequest "github.com/yubo/apiserver/pkg/request"
+	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/util"
 	"github.com/yubo/golib/util/errors"
 	utilerrors "github.com/yubo/golib/util/errors"
@@ -60,15 +60,15 @@ type config struct {
 
 	MaxMutatingRequestsInFlight int `json:"maxMutatingRequestsInFlight" default:"200" flag:"max-mutating-requests-inflight" description:"The maximum number of mutating requests in flight at a given time. When the server exceeds this, it rejects requests. Zero for no limit."`
 
-	RequestTimeout int `json:"requestTimeout" default:"60" flag:"request-timeout" description:"An optional field indicating the duration a handler must keep a request open before timing it out. This is the default request timeout for requests but may be overridden by flags such as --min-request-timeout for specific types of requests."`
+	RequestTimeout api.Duration `json:"requestTimeout" default:"60s" flag:"request-timeout" description:"An optional field indicating the duration a handler must keep a request open before timing it out. This is the default request timeout for requests but may be overridden by flags such as --min-request-timeout for specific types of requests."`
 
 	GoawayChance float64 `json:"goawayChance" flag:"goaway-chance" description:"To prevent HTTP/2 clients from getting stuck on a single apiserver, randomly close a connection (GOAWAY). The client's other in-flight requests won't be affected, and the client will reconnect, likely landing on a different apiserver after going through the load balancer again. This argument sets the fraction of requests that will be sent a GOAWAY. Clusters with single apiservers, or which don't use a load balancer, should NOT enable this. Min is 0 (off), Max is .02 (1/50 requests); .001 (1/1000) is a recommended starting point."`
 
-	LivezGracePeriod  int `json:"livezGracePeriod" flag:"livez-grace-period" description:"This option represents the maximum amount of time it should take for apiserver to complete its startup sequence and become live. From apiserver's start time to when this amount of time has elapsed, /livez will assume that unfinished post-start hooks will complete successfully and therefore return true."`
-	MinRequestTimeout int `json:"minRequestTimeout" default:"1800" flag:"min-request-timeout" description:"An optional field indicating the minimum number of seconds a handler must keep a request open before timing it out. Currently only honored by the watch request handler, which picks a randomized value above this number as the connection timeout, to spread out load."`
+	LivezGracePeriod  api.Duration `json:"livezGracePeriod" flag:"livez-grace-period" description:"This option represents the maximum amount of time it should take for apiserver to complete its startup sequence and become live. From apiserver's start time to when this amount of time has elapsed, /livez will assume that unfinished post-start hooks will complete successfully and therefore return true."`
+	MinRequestTimeout api.Duration `json:"minRequestTimeout" default:"1800s" flag:"min-request-timeout" description:"An optional field indicating the minimum number of seconds a handler must keep a request open before timing it out. Currently only honored by the watch request handler, which picks a randomized value above this number as the connection timeout, to spread out load."`
 
-	ShutdownTimeout       int `json:"shutdownTimeout" default:"60" description:"ShutdownTimeout is the timeout used for server shutdown. This specifies the timeout before server gracefully shutdown returns."`
-	ShutdownDelayDuration int `json:"shutdownDelayDuration" flag:"shutdown-delay-duration" description:"Time to delay the termination. During that time the server keeps serving requests normally. The endpoints /healthz and /livez will return success, but /readyz immediately returns failure. Graceful termination starts after this delay has elapsed. This can be used to allow load balancer to stop sending traffic to this server."`
+	ShutdownTimeout       api.Duration `json:"shutdownTimeout" default:"60s" description:"ShutdownTimeout is the timeout used for server shutdown. This specifies the timeout before server gracefully shutdown returns."`
+	ShutdownDelayDuration api.Duration `json:"shutdownDelayDuration" flag:"shutdown-delay-duration" description:"Time to delay the termination. During that time the server keeps serving requests normally. The endpoints /healthz and /livez will return success, but /readyz immediately returns failure. Graceful termination starts after this delay has elapsed. This can be used to allow load balancer to stop sending traffic to this server."`
 
 	// The limit on the request body size that would be accepted and
 	// decoded in a write request. 0 means no limit.
@@ -86,12 +86,6 @@ type config struct {
 	// either Listener or BindAddress/BindPort/BindNetwork is set,
 	// if Listener is set, use it and omit BindAddress/BindPort/BindNetwork.
 	Listener net.Listener `json:"-"`
-
-	requestTimeout        time.Duration
-	livezGracePeriod      time.Duration
-	minRequestTimeout     time.Duration
-	shutdownTimeout       time.Duration
-	shutdownDelayDuration time.Duration
 
 	// EgressSelector provides a lookup mechanism for dialing outbound connections.
 	// It does so based on a EgressSelectorConfiguration which was read at startup.
@@ -129,7 +123,7 @@ func (c *config) Validate() error {
 
 	errors := []error{}
 
-	if c.LivezGracePeriod < 0 {
+	if c.LivezGracePeriod.Duration < 0 {
 		errors = append(errors, fmt.Errorf("--livez-grace-period can not be a negative value"))
 	}
 
@@ -140,7 +134,7 @@ func (c *config) Validate() error {
 		errors = append(errors, fmt.Errorf("--max-mutating-requests-inflight can not be negative value"))
 	}
 
-	if c.RequestTimeout < 0 {
+	if c.RequestTimeout.Duration < 0 {
 		errors = append(errors, fmt.Errorf("--request-timeout can not be negative value"))
 	}
 
@@ -148,11 +142,11 @@ func (c *config) Validate() error {
 		errors = append(errors, fmt.Errorf("--goaway-chance can not be less than 0 or greater than 0.02"))
 	}
 
-	if c.MinRequestTimeout < 0 {
+	if c.MinRequestTimeout.Duration < 0 {
 		errors = append(errors, fmt.Errorf("--min-request-timeout can not be negative value"))
 	}
 
-	if c.ShutdownDelayDuration < 0 {
+	if c.ShutdownDelayDuration.Duration < 0 {
 		errors = append(errors, fmt.Errorf("--shutdown-delay-duration can not be negative value"))
 	}
 
@@ -167,12 +161,6 @@ func (c *config) Validate() error {
 	if c.Port < 1 || c.Port > 65535 {
 		errors = append(errors, fmt.Errorf("--bind-port %v must be between 1 and 65535, inclusive. It cannot be turned off with 0", c.Port))
 	}
-
-	c.requestTimeout = duration(c.RequestTimeout)
-	c.livezGracePeriod = duration(c.LivezGracePeriod)
-	c.minRequestTimeout = duration(c.MinRequestTimeout)
-	c.shutdownTimeout = duration(c.ShutdownTimeout)
-	c.shutdownDelayDuration = duration(c.ShutdownDelayDuration)
 
 	c.ExternalAddress = net.ParseIP(c.Host)
 
@@ -203,8 +191,4 @@ func validateHSTSDirectives(hstsDirectives []string) error {
 		}
 	}
 	return errors.NewAggregate(allErrors)
-}
-
-func duration(second int) time.Duration {
-	return time.Duration(second) * time.Second
 }

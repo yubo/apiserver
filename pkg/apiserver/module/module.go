@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/go-openapi/spec"
+	"github.com/yubo/apiserver/pkg/apiserver"
 	"github.com/yubo/apiserver/pkg/audit"
 	auditpolicy "github.com/yubo/apiserver/pkg/audit/policy"
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
@@ -23,7 +24,7 @@ const (
 )
 
 var (
-	_module = &apiserver{name: moduleName}
+	_module = &module{name: moduleName}
 	hookOps = []proc.HookOps{{
 		Hook:        _module.init,
 		Owner:       moduleName,
@@ -45,9 +46,13 @@ var (
 	}}
 )
 
-type apiserver struct {
+var _ apiserver.APIServer = &module{}
+
+type module struct {
 	name   string
 	config *config
+
+	serverInfo apiserver.ServingInfo
 
 	// handlerChainWaitGroup allows you to wait for all chain handlers exit after the server shutdown.
 	handlerChainWaitGroup *utilwaitgroup.SafeWaitGroup
@@ -85,7 +90,7 @@ type apiserver struct {
 	stoppedCh chan struct{}
 }
 
-func (p *apiserver) init(ctx context.Context) (err error) {
+func (p *module) init(ctx context.Context) (err error) {
 	c := proc.ConfigerMustFrom(ctx)
 
 	p.ctx, p.cancel = context.WithCancel(ctx)
@@ -100,16 +105,16 @@ func (p *apiserver) init(ctx context.Context) (err error) {
 		return err
 	}
 
-	options.WithApiServer(ctx, p)
+	options.WithAPIServer(ctx, p)
 
 	return nil
 }
 
-func (p *apiserver) Address() string {
+func (p *module) Address() string {
 	return fmt.Sprintf("%s:%d", p.config.Host, p.config.Port)
 }
 
-func (p *apiserver) start(ctx context.Context) error {
+func (p *module) start(ctx context.Context) error {
 	rest.InstallApiDocs(
 		p.handler.GoRestfulContainer,
 		spec.InfoProps{Title: proc.NameFrom(ctx)},
@@ -125,7 +130,7 @@ func (p *apiserver) start(ctx context.Context) error {
 	return nil
 }
 
-func (p *apiserver) stop(ctx context.Context) error {
+func (p *module) stop(ctx context.Context) error {
 	if p.cancel == nil {
 		return nil
 	}
@@ -137,7 +142,7 @@ func (p *apiserver) stop(ctx context.Context) error {
 	return nil
 }
 
-func (p *apiserver) Info() {
+func (p *module) Info() {
 	if !klog.V(10).Enabled() {
 		return
 	}

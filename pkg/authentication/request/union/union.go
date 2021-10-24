@@ -70,15 +70,15 @@ func (authHandler *unionAuthRequestHandler) AuthenticateRequest(req *http.Reques
 	return nil, false, utilerrors.NewAggregate(errlist)
 }
 
-func (a *unionAuthRequestHandler) Name() string {
-	return "union authenticator"
-}
-func (a *unionAuthRequestHandler) Priority() int {
-	if len(a.Handlers) > 0 {
-		return a.Handlers[0].Priority()
-	}
-	return 0
-}
-func (a *unionAuthRequestHandler) Available() bool {
-	return len(a.Handlers) > 0
-}
+//func (a *unionAuthRequestHandler) Name() string {
+//	return "union authenticator"
+//}
+//func (a *unionAuthRequestHandler) Priority() int {
+//	if len(a.Handlers) > 0 {
+//		return a.Handlers[0].Priority()
+//	}
+//	return 0
+//}
+//func (a *unionAuthRequestHandler) Available() bool {
+//	return len(a.Handlers) > 0
+//}

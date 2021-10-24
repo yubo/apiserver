@@ -1,7 +1,7 @@
 package register
 
 import (
-	"github.com/yubo/apiserver/pkg/apiserver"
+	apiserver "github.com/yubo/apiserver/pkg/apiserver/module"
 )
 
 func init() {

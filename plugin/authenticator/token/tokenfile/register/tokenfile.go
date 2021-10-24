@@ -4,26 +4,15 @@ import (
 	"context"
 
 	"github.com/yubo/apiserver/pkg/authentication"
+	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/plugin/authenticator/token/tokenfile"
-	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/golib/proc"
 	"k8s.io/klog/v2"
 )
 
 const (
 	moduleName = "authentication.tokenAuthFile"
-	modulePath = "authentication"
-)
-
-var (
-	_auth   = &authModule{name: moduleName}
-	hookOps = []proc.HookOps{{
-		Hook:        _auth.init,
-		Owner:       moduleName,
-		HookNum:     proc.ACTION_START,
-		Priority:    proc.PRI_SYS_INIT,
-		SubPriority: options.PRI_M_AUTHN - 1,
-	}}
+	configPath = "authentication"
 )
 
 type config struct {
@@ -43,30 +32,24 @@ func newConfig() *config {
 	return &config{}
 }
 
-func (p *authModule) init(ctx context.Context) error {
+func factory(ctx context.Context) (authenticator.Token, error) {
 	c := proc.ConfigerMustFrom(ctx)
-
 	cf := newConfig()
-	if err := c.Read(modulePath, cf); err != nil {
-		return err
+
+	if err := c.Read(configPath, cf); err != nil {
+		return nil, err
 	}
-	p.config = cf
 
 	if len(cf.TokenAuthFile) == 0 {
-		klog.InfoS("skip authModule", "name", p.name, "reason", "tokenfile not set")
-		return nil
+		klog.V(5).InfoS("skip authModule", "name", moduleName, "reason", "tokenfile not set")
+		return nil, nil
 	}
-	klog.V(5).InfoS("authmodule init", "name", p.name, "file", cf.TokenAuthFile)
+	klog.V(5).InfoS("authmodule init", "name", moduleName, "file", cf.TokenAuthFile)
 
-	auth, err := tokenfile.NewCSV(cf.TokenAuthFile)
-	if err != nil {
-		return err
-	}
-
-	return authentication.RegisterTokenAuthn(auth)
+	return tokenfile.NewCSV(cf.TokenAuthFile)
 }
 
 func init() {
-	proc.RegisterHooks(hookOps)
-	proc.RegisterFlags(modulePath, "authentication", newConfig())
+	authentication.RegisterTokenAuthn(factory)
+	proc.RegisterFlags(configPath, "authentication", newConfig())
 }

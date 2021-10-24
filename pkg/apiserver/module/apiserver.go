@@ -1,22 +1,3 @@
-/*
-Copyright 2014 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
-// Package app does all of the work necessary to create a Kubernetes
-// APIServer by binding together the API, master and APIServer infrastructure.
-// It can be configured and called directly or via the hyperkube framework.
 package apiserver
 
 import (
@@ -33,6 +14,7 @@ import (
 
 	"github.com/emicklei/go-restful"
 	"github.com/google/uuid"
+	"github.com/yubo/apiserver/pkg/apiserver"
 	"github.com/yubo/apiserver/pkg/apiserver/mux"
 	"github.com/yubo/apiserver/pkg/authorization/authorizerfactory"
 	"github.com/yubo/apiserver/pkg/filters"
@@ -52,28 +34,32 @@ const (
 )
 
 // same as http.Handle()
-func (p *apiserver) Handle(pattern string, handler http.Handler) {
+func (p *module) Handle(pattern string, handler http.Handler) {
 	p.handler.GoRestfulContainer.Handle(pattern, handler)
 }
-func (p *apiserver) HandleFunc(pattern string, handler func(http.ResponseWriter, *http.Request)) {
+func (p *module) HandleFunc(pattern string, handler func(http.ResponseWriter, *http.Request)) {
 	p.Handle(pattern, http.HandlerFunc(handler))
 }
-func (p *apiserver) UnlistedHandle(pattern string, handler http.Handler) {
+func (p *module) UnlistedHandle(pattern string, handler http.Handler) {
 	p.handler.NonGoRestfulMux.UnlistedHandle(pattern, handler)
 }
-func (p *apiserver) UnlistedHandleFunc(pattern string, handler func(http.ResponseWriter, *http.Request)) {
+func (p *module) UnlistedHandleFunc(pattern string, handler func(http.ResponseWriter, *http.Request)) {
 	p.UnlistedHandle(pattern, http.HandlerFunc(handler))
 }
 
-func (p *apiserver) Add(service *restful.WebService) *restful.Container {
+func (p *module) Add(service *restful.WebService) *restful.Container {
 	return p.handler.GoRestfulContainer.Add(service)
 }
 
-func (p *apiserver) Filter(filter restful.FilterFunction) {
+func (p *module) Filter(filter restful.FilterFunction) {
 	p.handler.GoRestfulContainer.Filter(filter)
 }
 
-func (p *apiserver) serverInit() (err error) {
+func (p *module) ServerInfo() *apiserver.ServingInfo {
+	return &p.serverInfo
+}
+
+func (p *module) serverInit() (err error) {
 	c := p.config
 
 	if c.Enabled {
@@ -112,7 +98,7 @@ func (p *apiserver) serverInit() (err error) {
 	return nil
 }
 
-func DefaultBuildHandlerChain(ctx context.Context, apiHandler http.Handler, p *apiserver) http.Handler {
+func DefaultBuildHandlerChain(ctx context.Context, apiHandler http.Handler, p *module) http.Handler {
 	handler := apiHandler
 
 	handler = filters.TrackCompleted(apiHandler)
@@ -155,7 +141,7 @@ func DefaultBuildHandlerChain(ctx context.Context, apiHandler http.Handler, p *a
 	// context with deadline. The go-routine can keep running, while the timeout logic will return a timeout to the client.
 	handler = filters.WithTimeoutForNonLongRunningRequests(handler, p.longRunningFunc)
 
-	handler = filters.WithRequestDeadline(handler, p.AuditBackend, p.AuditPolicyChecker, p.longRunningFunc, p.config.requestTimeout)
+	handler = filters.WithRequestDeadline(handler, p.AuditBackend, p.AuditPolicyChecker, p.longRunningFunc, p.config.RequestTimeout.Duration)
 	handler = filters.WithWaitGroup(handler, p.longRunningFunc, p.handlerChainWaitGroup)
 	handler = filters.WithRequestInfo(handler, p.requestInfoResolver)
 	//if c.SecureServing != nil && c.GoawayChance > 0 {
@@ -254,7 +240,7 @@ func logStackOnRecover(panicReason interface{}, w http.ResponseWriter) {
 		http.StatusInternalServerError, "", "", "", 0, false),
 		w, &http.Request{Header: headers})
 }
-func (s *apiserver) Start(stopCh <-chan struct{}, done chan struct{}) error {
+func (s *module) Start(stopCh <-chan struct{}, done chan struct{}) error {
 	if !s.config.Enabled {
 		klog.Infof("apiserver is disabled")
 		close(done)
@@ -264,14 +250,14 @@ func (s *apiserver) Start(stopCh <-chan struct{}, done chan struct{}) error {
 	delayedStopCh := make(chan struct{})
 
 	// close socket after delayed stopCh
-	stoppedCh, err := s.Serve(s.handler, s.config.shutdownTimeout, delayedStopCh)
+	stoppedCh, err := s.Serve(s.handler, s.config.ShutdownTimeout.Duration, delayedStopCh)
 	if err != nil {
 		return err
 	}
 
 	go func() {
 		<-stopCh
-		time.Sleep(s.config.shutdownDelayDuration)
+		time.Sleep(s.config.ShutdownDelayDuration.Duration)
 		close(delayedStopCh)
 	}()
 
@@ -294,7 +280,7 @@ func (s *apiserver) Start(stopCh <-chan struct{}, done chan struct{}) error {
 // Serve runs the secure http server. It fails only if certificates cannot be loaded or the initial listen call fails.
 // The actual server loop (stoppable by closing stopCh) runs in a go routine, i.e. Serve does not block.
 // It returns a stoppedCh that is closed when all non-hijacked active requests have been processed.
-func (s *apiserver) Serve(handler http.Handler, shutdownTimeout time.Duration, stopCh <-chan struct{}) (<-chan struct{}, error) {
+func (s *module) Serve(handler http.Handler, shutdownTimeout time.Duration, stopCh <-chan struct{}) (<-chan struct{}, error) {
 	if s.config.Listener == nil {
 		return nil, fmt.Errorf("listener must not be nil")
 	}
