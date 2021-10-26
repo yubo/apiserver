@@ -50,9 +50,9 @@ var _ apiserver.APIServer = &module{}
 
 type module struct {
 	name   string
-	config *config
+	config *Config
 
-	serverInfo apiserver.ServingInfo
+	servingInfo apiserver.ServingInfo
 
 	// handlerChainWaitGroup allows you to wait for all chain handlers exit after the server shutdown.
 	handlerChainWaitGroup *utilwaitgroup.SafeWaitGroup
@@ -95,7 +95,7 @@ func (p *module) init(ctx context.Context) (err error) {
 
 	p.ctx, p.cancel = context.WithCancel(ctx)
 
-	cf := newConfig()
+	cf := NewConfig()
 	if err := c.Read(moduleName, cf); err != nil {
 		return err
 	}
@@ -156,7 +156,7 @@ func RegisterHooks() {
 }
 
 func RegisterFlags() {
-	proc.RegisterFlags(moduleName, "apiserver", newConfig())
+	proc.RegisterFlags(moduleName, "apiserver", NewConfig())
 }
 
 func Register() {

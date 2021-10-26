@@ -55,20 +55,20 @@ func (p *module) Filter(filter restful.FilterFunction) {
 	p.handler.GoRestfulContainer.Filter(filter)
 }
 
-func (p *module) ServerInfo() *apiserver.ServingInfo {
-	return &p.serverInfo
+func (p *module) ServingInfo() *apiserver.ServingInfo {
+	return &p.servingInfo
 }
 
 func (p *module) serverInit() (err error) {
 	c := p.config
 
-	if c.Enabled {
-		addr := net.JoinHostPort(c.Host, strconv.Itoa(c.Port))
-		c.Listener, c.Port, err = createListener(c.Network, addr, net.ListenConfig{})
-		if err != nil {
-			return fmt.Errorf("failed to create listener: %v", err)
-		}
+	//if c.Enabled {
+	addr := net.JoinHostPort(c.Host, strconv.Itoa(c.Port))
+	c.Listener, c.Port, err = createListener(c.Network, addr, net.ListenConfig{})
+	if err != nil {
+		return fmt.Errorf("failed to create listener: %v", err)
 	}
+	//}
 
 	p.stoppedCh = make(chan struct{})
 	p.apiServerID = proc.NameFrom(p.ctx) + "-" + uuid.New().String()
@@ -241,11 +241,11 @@ func logStackOnRecover(panicReason interface{}, w http.ResponseWriter) {
 		w, &http.Request{Header: headers})
 }
 func (s *module) Start(stopCh <-chan struct{}, done chan struct{}) error {
-	if !s.config.Enabled {
-		klog.Infof("apiserver is disabled")
-		close(done)
-		return nil
-	}
+	//if !s.config.Enabled {
+	//	klog.Infof("apiserver is disabled")
+	//	close(done)
+	//	return nil
+	//}
 
 	delayedStopCh := make(chan struct{})
 

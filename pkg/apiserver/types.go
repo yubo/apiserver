@@ -1,6 +1,7 @@
 package apiserver
 
 import (
+	"net"
 	"net/http"
 
 	"github.com/emicklei/go-restful"
@@ -19,6 +20,14 @@ type APIServer interface {
 }
 
 type ServingInfo struct {
+	Listener net.Listener
+
+	// generic info
+	// ExternalAddress is the address advertised, even if BindAddress is a loopback. By default this
+	// is set to BindAddress if the later no loopback, or to the first host interface address.
+	ExternalAddress net.IP
+
+	// ###### securityServingInfo
 	// Cert is the main server cert which is used if SNI does not match. Cert must be non-nil and is
 	// allowed to be in SNICerts.
 	Cert dynamiccertificates.CertKeyContentProvider
