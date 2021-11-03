@@ -8,10 +8,10 @@ import (
 
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/rest"
-	"github.com/yubo/golib/proc"
 	"github.com/yubo/golib/logs"
+	"github.com/yubo/golib/proc"
 
-	_ "github.com/yubo/apiserver/pkg/apiserver/register"
+	_ "github.com/yubo/apiserver/pkg/server/register"
 )
 
 // This example shows the minimal code needed to get a restful.WebService working.
@@ -41,7 +41,7 @@ func main() {
 }
 
 func start(ctx context.Context) error {
-	http, ok := options.ApiServerFrom(ctx)
+	http, ok := options.APIServerFrom(ctx)
 	if !ok {
 		return fmt.Errorf("unable to get http server from the context")
 	}
@@ -66,11 +66,11 @@ func hello(w http.ResponseWriter, req *http.Request) (string, error) {
 	return "hello, world", nil
 }
 
-func helloArray(w http.ResponseWriter, req *http.Request, _ *rest.NonParam, s []string) (string, error) {
+func helloArray(w http.ResponseWriter, req *http.Request, _ *rest.NonParam, s *[]string) (string, error) {
 	return fmt.Sprintf("hello, %+v", s), nil
 }
 
-func helloMap(w http.ResponseWriter, req *http.Request, _ *rest.NonParam, m map[string]string) (string, error) {
+func helloMap(w http.ResponseWriter, req *http.Request, _ *rest.NonParam, m *map[string]string) (string, error) {
 	return fmt.Sprintf("hello, %+v", m), nil
 }
 
