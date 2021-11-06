@@ -36,6 +36,8 @@ func main() {
 	logs.InitLogs()
 	defer logs.FlushLogs()
 
+	proc.RegisterHooks(hookOps)
+
 	if err := proc.NewRootCmd(server.InsecureServingOption()).Execute(); err != nil {
 		os.Exit(1)
 	}
@@ -73,8 +75,4 @@ func helloArray(w http.ResponseWriter, req *http.Request, _ *rest.NonParam, s *[
 
 func helloMap(w http.ResponseWriter, req *http.Request, _ *rest.NonParam, m *map[string]string) (string, error) {
 	return fmt.Sprintf("hello, %+v", m), nil
-}
-
-func init() {
-	proc.RegisterHooks(hookOps)
 }
