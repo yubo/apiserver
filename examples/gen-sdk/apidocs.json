@@ -1,7 +1,7 @@
 {
  "swagger": "2.0",
  "info": {
-  "title": "apiserver.swagger"
+  "title": "apiserver-gen-sdk"
  },
  "paths": {
   "/api/user": {
