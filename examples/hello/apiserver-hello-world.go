@@ -11,12 +11,11 @@ import (
 	"github.com/yubo/golib/logs"
 	"github.com/yubo/golib/proc"
 
-	server "github.com/yubo/apiserver/pkg/server/module"
 	_ "github.com/yubo/apiserver/pkg/server/register"
 )
 
 // This example shows the minimal code needed to get a restful.WebService working.
-//
+// go run ./apiserver-hello-world.go --secure-serving=false --insecure-serving
 // GET http://localhost:8080/hello
 
 const (
@@ -38,7 +37,7 @@ func main() {
 
 	proc.RegisterHooks(hookOps)
 
-	if err := proc.NewRootCmd(server.InsecureServingOption()).Execute(); err != nil {
+	if err := proc.NewRootCmd().Execute(); err != nil {
 		os.Exit(1)
 	}
 }
