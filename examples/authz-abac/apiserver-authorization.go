@@ -12,15 +12,15 @@ import (
 	"github.com/yubo/golib/proc"
 
 	// http
-	_ "github.com/yubo/apiserver/pkg/apiserver/register"
+	_ "github.com/yubo/apiserver/pkg/server/register"
 
 	// authn
 	_ "github.com/yubo/apiserver/pkg/authentication/register"
 	_ "github.com/yubo/apiserver/plugin/authenticator/token/tokenfile/register"
 
 	// authz
-	_ "github.com/yubo/apiserver/plugin/authorizer/abac/register"
 	_ "github.com/yubo/apiserver/pkg/authorization/register"
+	_ "github.com/yubo/apiserver/plugin/authorizer/abac/register"
 )
 
 // go run ./apiserver-authorization.go --token-auth-file=./tokens.cvs --authorization-mode=ABAC  --authorization-policy-file=./abac.json
@@ -69,13 +69,13 @@ func main() {
 	logs.InitLogs()
 	defer logs.FlushLogs()
 
-	if err := proc.NewRootCmd(context.Background()).Execute(); err != nil {
+	if err := proc.NewRootCmd().Execute(); err != nil {
 		os.Exit(1)
 	}
 }
 
 func start(ctx context.Context) error {
-	http, ok := options.ApiServerFrom(ctx)
+	http, ok := options.APIServerFrom(ctx)
 	if !ok {
 		return fmt.Errorf("unable to get http server from the context")
 	}

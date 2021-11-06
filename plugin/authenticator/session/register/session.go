@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/yubo/apiserver/pkg/authentication"
+	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/session"
 	"github.com/yubo/golib/proc"
@@ -23,7 +24,7 @@ var (
 		Owner:       moduleName,
 		HookNum:     proc.ACTION_START,
 		Priority:    proc.PRI_SYS_INIT,
-		SubPriority: options.PRI_M_AUTHN_MODE,
+		SubPriority: options.PRI_M_AUTHN,
 	}}
 )
 
@@ -42,6 +43,10 @@ type authModule struct {
 
 func newConfig() *config { return &config{} }
 
+func factory(ctx context.Context) (authenticator.Request, error) {
+	return session.NewAuthenticator(), nil
+}
+
 func (p *authModule) init(ctx context.Context) error {
 	c := proc.ConfigerMustFrom(ctx)
 
@@ -57,7 +62,7 @@ func (p *authModule) init(ctx context.Context) error {
 	}
 	klog.V(5).InfoS("authmodule init", "name", p.name)
 
-	return authentication.RegisterAuthn(session.NewAuthenticator())
+	return authentication.RegisterAuthn(factory)
 }
 
 func init() {

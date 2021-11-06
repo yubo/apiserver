@@ -71,13 +71,13 @@ func getArgs(args, args2 *[]string, sample interface{}, depth int) error {
 			fv = fv.Elem()
 		}
 
-		opt := configer.GetTagOpts(sf)
-		if opt.Skip() {
+		tag := configer.GetFieldTag(sf)
+		if tag.Skip() {
 			continue
 		}
 
 		//
-		if opt.Arg == "arg1" {
+		if tag.Arg == "arg1" {
 			switch v := fv.Interface().(type) {
 			case []string:
 				*args = append(*args, v...)
@@ -102,7 +102,7 @@ func getArgs(args, args2 *[]string, sample interface{}, depth int) error {
 			continue
 		}
 
-		if opt.Arg == "arg2" {
+		if tag.Arg == "arg2" {
 			switch v := fv.Interface().(type) {
 			case []string:
 				*args2 = append(*args2, v...)
@@ -136,7 +136,7 @@ func getArgs(args, args2 *[]string, sample interface{}, depth int) error {
 			continue
 		}
 
-		if err := _getArgs(args, "--"+opt.Flag[0], fv); err != nil {
+		if err := _getArgs(args, "--"+tag.Flag[0], fv); err != nil {
 			return fmt.Errorf("%s.%s %s", rt.Name(), sf.Name, err.Error())
 		}
 	}
@@ -214,9 +214,9 @@ func cleanupArgs(fs *pflag.FlagSet, rv reflect.Value, rt reflect.Type, depth int
 		fv := rv.Field(i)
 		ft := sf.Type
 
-		opt := configer.GetTagOpts(sf)
+		tag := configer.GetFieldTag(sf)
 
-		if opt.Skip() {
+		if tag.Skip() {
 			continue
 		}
 
@@ -229,7 +229,7 @@ func cleanupArgs(fs *pflag.FlagSet, rv reflect.Value, rt reflect.Type, depth int
 			continue
 		}
 
-		if opt.Default == "" && !fs.Changed(opt.Flag[0]) &&
+		if tag.Default == "" && !fs.Changed(tag.Flag[0]) &&
 			(fv.Kind() == reflect.Ptr ||
 				fv.Kind() == reflect.Map ||
 				fv.Kind() == reflect.Slice) {

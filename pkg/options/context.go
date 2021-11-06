@@ -5,11 +5,9 @@ import (
 
 	// authentication "github.com/yubo/apiserver/modules/authentication/lib"
 
-	"github.com/yubo/apiserver/pkg/apiserver"
 	"github.com/yubo/apiserver/pkg/audit"
-	"github.com/yubo/apiserver/pkg/authentication/authenticator"
-	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	"github.com/yubo/apiserver/pkg/dynamiccertificates"
+	"github.com/yubo/apiserver/pkg/server"
 	"github.com/yubo/golib/net/session"
 	"github.com/yubo/golib/orm"
 	"github.com/yubo/golib/proc"
@@ -50,26 +48,26 @@ func GrpcServerFrom(ctx context.Context) (*grpc.Server, bool) {
 }
 
 // WithAuthn returns a copy of ctx in which the authenticationInfo value is set
-func WithAuthn(ctx context.Context, authn authenticator.Authn) {
+func WithAuthn(ctx context.Context, authn *server.AuthenticationInfo) {
 	klog.V(5).Infof("attr with authn")
 	proc.AttrMustFrom(ctx)[authnKey] = authn
 }
 
 // AuthnFrom returns the value of the authenticationInfo key on the ctx
-func AuthnFrom(ctx context.Context) (authenticator.Authn, bool) {
-	authn, ok := proc.AttrMustFrom(ctx)[authnKey].(authenticator.Authn)
+func AuthnFrom(ctx context.Context) (*server.AuthenticationInfo, bool) {
+	authn, ok := proc.AttrMustFrom(ctx)[authnKey].(*server.AuthenticationInfo)
 	return authn, ok
 }
 
 // WithAuthz returns a copy of ctx in which the authorizationInfo value is set
-func WithAuthz(ctx context.Context, authz authorizer.Authz) {
+func WithAuthz(ctx context.Context, authz *server.AuthorizationInfo) {
 	klog.V(5).Infof("attr with authz")
 	proc.AttrMustFrom(ctx)[authzKey] = authz
 }
 
 // AuthzFrom returns the value of the authorizationInfo key on the ctx
-func AuthzFrom(ctx context.Context) (authorizer.Authz, bool) {
-	authz, ok := proc.AttrMustFrom(ctx)[authzKey].(authorizer.Authz)
+func AuthzFrom(ctx context.Context) (*server.AuthorizationInfo, bool) {
+	authz, ok := proc.AttrMustFrom(ctx)[authzKey].(*server.AuthorizationInfo)
 	return authz, ok
 }
 
@@ -86,19 +84,19 @@ func AuditFrom(ctx context.Context) (audit.Auditor, bool) {
 }
 
 // WithAPIServer returns a copy of ctx in which the http value is set
-func WithAPIServer(ctx context.Context, server apiserver.APIServer) {
-	klog.V(5).Infof("attr with apiserver")
+func WithAPIServer(ctx context.Context, server server.APIServer) {
+	klog.V(5).Infof("attr with server")
 	proc.AttrMustFrom(ctx)[apiServerKey] = server
 }
 
 // APIServerFrom returns the value of the http key on the ctx
-func APIServerFrom(ctx context.Context) (apiserver.APIServer, bool) {
-	server, ok := proc.AttrMustFrom(ctx)[apiServerKey].(apiserver.APIServer)
+func APIServerFrom(ctx context.Context) (server.APIServer, bool) {
+	server, ok := proc.AttrMustFrom(ctx)[apiServerKey].(server.APIServer)
 	return server, ok
 }
 
-func APIServerMustFrom(ctx context.Context) apiserver.APIServer {
-	server, ok := proc.AttrMustFrom(ctx)[apiServerKey].(apiserver.APIServer)
+func APIServerMustFrom(ctx context.Context) server.APIServer {
+	server, ok := proc.AttrMustFrom(ctx)[apiServerKey].(server.APIServer)
 	if !ok {
 		panic("unable get genericServer")
 	}

@@ -25,7 +25,7 @@ var (
 		Owner:       moduleName,
 		HookNum:     proc.ACTION_START,
 		Priority:    proc.PRI_SYS_INIT,
-		SubPriority: options.PRI_M_SESSION,
+		SubPriority: options.PRI_M_AUTHN - 1,
 	}}
 )
 
@@ -67,7 +67,7 @@ func startSession(cf *session.Config, ctx context.Context) (session.SessionManag
 		opts = append(opts, session.WithDB(db))
 	}
 	if cf.CookieName == session.DefCookieName {
-		cf.CookieName = fmt.Sprintf("%s-sid", proc.NameFrom(ctx))
+		cf.CookieName = fmt.Sprintf("%s-sid", proc.Name())
 	}
 	return session.StartSession(cf, opts...)
 }

@@ -112,7 +112,7 @@ func (p *tracing) init(ctx context.Context) (err error) {
 	}
 
 	if cf.Jaeger.ServiceName == "" {
-		cf.Jaeger.ServiceName = proc.NameFrom(ctx)
+		cf.Jaeger.ServiceName = proc.Name()
 	}
 	p.config = cf
 	return
@@ -142,11 +142,11 @@ func (p *tracing) start(ctx context.Context) (err error) {
 	}()
 
 	// add tracer filter
-	http, ok := options.ApiServerFrom(p.ctx)
+	server, ok := options.APIServerFrom(p.ctx)
 	if !ok {
 		return fmt.Errorf("unable to get http server")
 	}
-	http.Filter(WithTrace(cf.HttpHeader, cf.HttpBody, cf.RespTraceId))
+	server.Filter(WithTrace(cf.HttpHeader, cf.HttpBody, cf.RespTraceId))
 
 	opentracing.SetGlobalTracer(p.tracer)
 

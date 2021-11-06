@@ -9,6 +9,7 @@ import (
 	"github.com/yubo/apiserver/pkg/authorization/authorizerfactory"
 	"github.com/yubo/apiserver/pkg/authorization/union"
 	"github.com/yubo/apiserver/pkg/options"
+	"github.com/yubo/apiserver/pkg/server"
 	"github.com/yubo/apiserver/plugin/authorizer/path"
 	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/proc"
@@ -67,8 +68,8 @@ type config struct {
 	AlwaysAllowGroups []string `json:"alwaysAllowGroups" flag:"authorization-always-allow-groups" description:"AlwaysAllowGroups are groups which are allowed to take any actions." default:"system:masters"`
 }
 
-func (p *config) tags() map[string]*configer.TagOpts {
-	return map[string]*configer.TagOpts{
+func (p *config) tags() map[string]*configer.FieldTag {
+	return map[string]*configer.FieldTag{
 		"modes": {Description: "Ordered list of plug-ins to do authorization on secure port. Comma-delimited list of: " + strings.Join(AuthorizationModeChoices, ",") + "."},
 	}
 }
@@ -131,10 +132,6 @@ func RegisterAuthz(name string, factory authorizer.AuthorizerFactory) error {
 	return nil
 }
 
-func (p *authorization) Authorizer() authorizer.Authorizer {
-	return p.authorizer
-}
-
 func (p *authorization) init(ctx context.Context) error {
 	c := proc.ConfigerMustFrom(ctx)
 	p.ctx, p.cancel = context.WithCancel(ctx)
@@ -149,7 +146,12 @@ func (p *authorization) init(ctx context.Context) error {
 		return err
 	}
 
-	options.WithAuthz(ctx, p)
+	authz := &server.AuthorizationInfo{
+		Authorizer: p.authorizer,
+		Modes:      sets.NewString(AuthorizationModeChoices...),
+	}
+
+	options.WithAuthz(ctx, authz)
 
 	return nil
 }

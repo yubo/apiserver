@@ -11,6 +11,7 @@ import (
 	"github.com/yubo/golib/logs"
 	"github.com/yubo/golib/proc"
 
+	server "github.com/yubo/apiserver/pkg/server/module"
 	_ "github.com/yubo/apiserver/pkg/server/register"
 )
 
@@ -35,7 +36,7 @@ func main() {
 	logs.InitLogs()
 	defer logs.FlushLogs()
 
-	if err := proc.NewRootCmd(context.Background()).Execute(); err != nil {
+	if err := proc.NewRootCmd(server.InsecureServingOption()).Execute(); err != nil {
 		os.Exit(1)
 	}
 }
@@ -62,8 +63,8 @@ func installWs(http rest.GoRestfulContainer) {
 	})
 }
 
-func hello(w http.ResponseWriter, req *http.Request) (string, error) {
-	return "hello, world", nil
+func hello(w http.ResponseWriter, req *http.Request) ([]byte, error) {
+	return []byte("hello, world\n"), nil
 }
 
 func helloArray(w http.ResponseWriter, req *http.Request, _ *rest.NonParam, s *[]string) (string, error) {

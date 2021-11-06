@@ -24,11 +24,24 @@ type config struct {
 	// CAContentProvider are the options for verifying incoming connections using mTLS and directly assigning to users.
 	// Generally this is the CA bundle file used to authenticate client certificates
 	// If non-nil, this takes priority over the ClientCA file.
-	// CAContentProvider dynamiccertificates.CAContentProvider ``
+	CAContentProvider dynamiccertificates.CAContentProvider ``
 }
 
 func (s *config) Validate() error {
 	return nil
+}
+
+// GetClientVerifyOptionFn provides verify options for your authenticator while respecting the preferred order of verifiers.
+func (s *config) GetClientCAContentProvider() (dynamiccertificates.CAContentProvider, error) {
+	if s.CAContentProvider != nil {
+		return s.CAContentProvider, nil
+	}
+
+	if len(s.ClientCA) == 0 {
+		return nil, nil
+	}
+
+	return dynamiccertificates.NewDynamicCAContentFromFile("client-ca-bundle", s.ClientCA)
 }
 
 func newConfig() *config { return &config{} }
@@ -46,7 +59,7 @@ func factory(ctx context.Context) (authenticator.Request, error) {
 		return nil, nil
 	}
 
-	servingInfo := options.APIServerMustFrom(ctx).ServingInfo()
+	servingInfo := options.APIServerMustFrom(ctx).Config().SecureServing
 	if servingInfo == nil || servingInfo.ClientCA == nil {
 		klog.V(5).InfoS("authnModule x509 ignore", "reason", "clientCA was not found")
 		return nil, nil

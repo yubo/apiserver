@@ -12,6 +12,7 @@ import (
 	tokencache "github.com/yubo/apiserver/pkg/authentication/token/cache"
 	tokenunion "github.com/yubo/apiserver/pkg/authentication/token/union"
 	"github.com/yubo/apiserver/pkg/options"
+	"github.com/yubo/apiserver/pkg/server"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/proc"
 )
@@ -141,15 +142,7 @@ type authentication struct {
 	stoppedCh                   chan struct{}
 }
 
-func (p *authentication) Authenticator() authenticator.Request {
-	return p.authenticator
-}
-
-func (p *authentication) APIAudiences() authenticator.Audiences {
-	return authenticator.Audiences(p.config.APIAudiences)
-}
-
-func (p *authentication) init(ctx context.Context) (err error) {
+func (p *authentication) init(ctx context.Context) error {
 	c := proc.ConfigerMustFrom(ctx)
 	p.ctx, p.cancel = context.WithCancel(ctx)
 
@@ -159,11 +152,17 @@ func (p *authentication) init(ctx context.Context) (err error) {
 	}
 	p.config = cf
 
-	if err = p.initAuthentication(); err != nil {
+	if err := p.initAuthentication(); err != nil {
 		return err
 	}
 
-	options.WithAuthn(ctx, p)
+	authn := &server.AuthenticationInfo{
+		APIAudiences:  authenticator.Audiences(p.config.APIAudiences),
+		Authenticator: p.authenticator,
+		Anonymous:     p.config.Anonymous,
+	}
+
+	options.WithAuthn(ctx, authn)
 	return nil
 }
 

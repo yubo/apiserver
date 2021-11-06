@@ -8,19 +8,20 @@ import (
 	osruntime "runtime"
 
 	"github.com/yubo/apiserver/pkg/authentication"
-	"github.com/yubo/apiserver/plugin/authenticator/token/tokentest"
+	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/rest"
-	"github.com/yubo/golib/proc"
+	"github.com/yubo/apiserver/plugin/authenticator/token/tokentest"
 	"github.com/yubo/golib/logs"
+	"github.com/yubo/golib/proc"
 	"github.com/yubo/golib/util/runtime"
 	"github.com/yubo/golib/util/wsstream"
 	"golang.org/x/net/websocket"
 
-	_ "github.com/yubo/apiserver/pkg/apiserver/register"
 	_ "github.com/yubo/apiserver/pkg/authentication/register"
+	_ "github.com/yubo/apiserver/pkg/server/register"
 )
 
 // This example shows the minimal code needed to get a restful.WebService working.
@@ -45,13 +46,13 @@ func main() {
 	defer logs.FlushLogs()
 
 	osruntime.GOMAXPROCS(2)
-	if err := proc.NewRootCmd(context.Background()).Execute(); err != nil {
+	if err := proc.NewRootCmd().Execute(); err != nil {
 		os.Exit(1)
 	}
 }
 
 func start(ctx context.Context) error {
-	http, ok := options.ApiServerFrom(ctx)
+	http, ok := options.APIServerFrom(ctx)
 	if !ok {
 		return fmt.Errorf("unable to get http server from the context")
 	}
@@ -103,10 +104,12 @@ func _wsHandle(ws *websocket.Conn) {
 func init() {
 	proc.RegisterHooks(hookOps)
 
-	authentication.RegisterTokenAuthn(&tokentest.TokenAuthenticator{
-		Tokens: map[string]*user.DefaultInfo{
-			fakeToken: &user.DefaultInfo{Name: fakeUser},
-		},
+	authentication.RegisterTokenAuthn(func(context.Context) (authenticator.Token, error) {
+		return &tokentest.TokenAuthenticator{
+			Tokens: map[string]*user.DefaultInfo{
+				fakeToken: {Name: fakeUser},
+			},
+		}, nil
 	})
 
 }

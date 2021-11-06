@@ -11,13 +11,13 @@ import (
 
 	auditinternal "github.com/yubo/apiserver/pkg/apis/audit"
 	"github.com/yubo/apiserver/pkg/audit"
-	pluginbuffered "github.com/yubo/apiserver/plugin/audit/buffered"
-	pluginlog "github.com/yubo/apiserver/plugin/audit/log"
 	"github.com/yubo/apiserver/pkg/audit/policy"
-	plugintruncate "github.com/yubo/apiserver/plugin/audit/truncate"
-	pluginwebhook "github.com/yubo/apiserver/plugin/audit/webhook"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/util/webhook"
+	pluginbuffered "github.com/yubo/apiserver/plugin/audit/buffered"
+	pluginlog "github.com/yubo/apiserver/plugin/audit/log"
+	plugintruncate "github.com/yubo/apiserver/plugin/audit/truncate"
+	pluginwebhook "github.com/yubo/apiserver/plugin/audit/webhook"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/proc"
@@ -90,8 +90,8 @@ func (c *config) Validate() error {
 	return errors.NewAggregate(allErrors)
 }
 
-func (p *config) tags() map[string]*configer.TagOpts {
-	tags := map[string]*configer.TagOpts{}
+func (p *config) tags() map[string]*configer.FieldTag {
+	tags := map[string]*configer.FieldTag{}
 	for k, v := range p.LogOptions.tags() {
 		tags["log."+k] = v
 	}
@@ -129,8 +129,8 @@ func flagf(format string, a ...interface{}) []string {
 	return []string{fmt.Sprintf(format, a...)}
 }
 
-func (o *AuditBatchOptions) tags(pluginName string) map[string]*configer.TagOpts {
-	return map[string]*configer.TagOpts{
+func (o *AuditBatchOptions) tags(pluginName string) map[string]*configer.FieldTag {
+	return map[string]*configer.FieldTag{
 		"mode":           {Flag: flagf("audit-%s-mode", pluginName), Description: "Strategy for sending audit events. Blocking indicates sending events should block server responses. Batch causes the backend to buffer and write events asynchronously. Known modes are " + strings.Join(AllowedModes, ",") + "."},
 		"bufferSize":     {Flag: flagf("audit-%s-batch-buffer-size", pluginName)},
 		"maxBatchSize":   {Flag: flagf("audit-%s-batch-max-size", pluginName)},
@@ -159,8 +159,8 @@ type AuditTruncateOptions struct {
 	plugintruncate.Config
 }
 
-func (o *AuditTruncateOptions) tags(pluginName string) map[string]*configer.TagOpts {
-	return map[string]*configer.TagOpts{
+func (o *AuditTruncateOptions) tags(pluginName string) map[string]*configer.FieldTag {
+	return map[string]*configer.FieldTag{
 		"enabled":      {Flag: flagf("audit-%s-truncate-enabled", pluginName)},
 		"maxBatchSize": {Flag: flagf("audit-%s-truncate-max-batch-size", pluginName)},
 		"maxEventSize": {Flag: flagf("audit-%s-truncate-max-event-size", pluginName)},
@@ -202,8 +202,8 @@ type AuditLogOptions struct {
 	//GroupVersionString string
 }
 
-func (p *AuditLogOptions) tags() map[string]*configer.TagOpts {
-	tags := map[string]*configer.TagOpts{
+func (p *AuditLogOptions) tags() map[string]*configer.FieldTag {
+	tags := map[string]*configer.FieldTag{
 		"format": {Description: "Format of saved audits. \"legacy\" indicates 1-line text format for each event. \"json\" indicates structured json format. Known formats are " + strings.Join(pluginlog.AllowedFormats, ",") + "."},
 	}
 	for k, v := range p.BatchOptions.tags(pluginlog.PluginName) {
@@ -334,8 +334,8 @@ type AuditWebhookOptions struct {
 	//GroupVersionString string
 }
 
-func (p *AuditWebhookOptions) tags() map[string]*configer.TagOpts {
-	tags := map[string]*configer.TagOpts{}
+func (p *AuditWebhookOptions) tags() map[string]*configer.FieldTag {
+	tags := map[string]*configer.FieldTag{}
 	for k, v := range p.BatchOptions.tags(pluginwebhook.PluginName) {
 		tags["batch."+k] = v
 	}

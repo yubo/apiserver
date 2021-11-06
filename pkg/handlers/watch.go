@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/yubo/apiserver/pkg/apiserver/httplog"
+	"github.com/yubo/apiserver/pkg/server/httplog"
 	"github.com/yubo/apiserver/pkg/handlers/negotiation"
 	"github.com/yubo/golib/watch"
 	"github.com/yubo/golib/api/errors"

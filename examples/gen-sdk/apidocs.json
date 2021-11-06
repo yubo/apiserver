@@ -192,6 +192,23 @@
      }
     }
    }
+  },
+  "/version": {
+   "get": {
+    "consumes": [
+     "application/json"
+    ],
+    "produces": [
+     "application/json"
+    ],
+    "summary": "get the code version",
+    "operationId": "getCodeVersion",
+    "responses": {
+     "200": {
+      "description": "OK"
+     }
+    }
+   }
   }
  },
  "definitions": {
@@ -277,6 +294,48 @@
      "type": "string"
     },
     "phone": {
+     "type": "string"
+    }
+   }
+  },
+  "version.Info": {
+   "required": [
+    "major",
+    "minor",
+    "gitVersion",
+    "gitCommit",
+    "gitTreeState",
+    "buildDate",
+    "goVersion",
+    "compiler",
+    "platform"
+   ],
+   "properties": {
+    "buildDate": {
+     "type": "string"
+    },
+    "compiler": {
+     "type": "string"
+    },
+    "gitCommit": {
+     "type": "string"
+    },
+    "gitTreeState": {
+     "type": "string"
+    },
+    "gitVersion": {
+     "type": "string"
+    },
+    "goVersion": {
+     "type": "string"
+    },
+    "major": {
+     "type": "string"
+    },
+    "minor": {
+     "type": "string"
+    },
+    "platform": {
      "type": "string"
     }
    }

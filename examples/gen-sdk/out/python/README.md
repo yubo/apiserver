@@ -49,12 +49,7 @@ Please follow the [installation procedure](#installation--usage) and then run th
 import time
 import openapi_client
 from pprint import pprint
-from openapi_client.api import user_api
-from openapi_client.model.main_create_user_input import MainCreateUserInput
-from openapi_client.model.main_create_user_output import MainCreateUserOutput
-from openapi_client.model.main_get_users_output import MainGetUsersOutput
-from openapi_client.model.main_update_user_body import MainUpdateUserBody
-from openapi_client.model.main_user import MainUser
+from openapi_client.api import default_api
 # Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
 configuration = openapi_client.Configuration(
@@ -66,19 +61,13 @@ configuration = openapi_client.Configuration(
 # Enter a context with an instance of the API client
 with openapi_client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = user_api.UserApi(api_client)
-    body = MainCreateUserInput(
-        name="name_example",
-        nick_name="nick_name_example",
-        phone="phone_example",
-    ) # MainCreateUserInput | 
-
+    api_instance = default_api.DefaultApi(api_client)
+    
     try:
-        # create user
-        api_response = api_instance.func1(body)
-        pprint(api_response)
+        # get the code version
+        api_instance.get_code_version()
     except openapi_client.ApiException as e:
-        print("Exception when calling UserApi->func1: %s\n" % e)
+        print("Exception when calling DefaultApi->get_code_version: %s\n" % e)
 ```
 
 ## Documentation for API Endpoints
@@ -87,6 +76,7 @@ All URIs are relative to *http://localhost*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
+*DefaultApi* | [**get_code_version**](docs/DefaultApi.md#get_code_version) | **GET** /version | get the code version
 *UserApi* | [**func1**](docs/UserApi.md#func1) | **POST** /api/user | create user
 *UserApi* | [**func2**](docs/UserApi.md#func2) | **GET** /api/user | search/list users
 *UserApi* | [**func3**](docs/UserApi.md#func3) | **GET** /api/user/{user-name} | get user
@@ -101,6 +91,7 @@ Class | Method | HTTP request | Description
  - [MainGetUsersOutput](docs/MainGetUsersOutput.md)
  - [MainUpdateUserBody](docs/MainUpdateUserBody.md)
  - [MainUser](docs/MainUser.md)
+ - [VersionInfo](docs/VersionInfo.md)
 
 
 ## Documentation For Authorization

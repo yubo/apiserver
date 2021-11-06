@@ -11,12 +11,12 @@ import (
 	"github.com/yubo/apiserver/pkg/handlers"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/rest"
-	"github.com/yubo/golib/watch"
 	"github.com/yubo/golib/logs"
 	"github.com/yubo/golib/proc"
+	"github.com/yubo/golib/watch"
 	"k8s.io/klog/v2"
 
-	_ "github.com/yubo/apiserver/pkg/apiserver/register"
+	_ "github.com/yubo/apiserver/pkg/server/register"
 )
 
 // This example shows the minimal code needed to get a restful.WebService working.
@@ -44,13 +44,13 @@ func main() {
 
 	osruntime.GOMAXPROCS(2)
 
-	if err := proc.NewRootCmd(context.Background()).Execute(); err != nil {
+	if err := proc.NewRootCmd().Execute(); err != nil {
 		os.Exit(1)
 	}
 }
 
 func start(ctx context.Context) error {
-	http, ok := options.ApiServerFrom(ctx)
+	http, ok := options.APIServerFrom(ctx)
 	if !ok {
 		return fmt.Errorf("unable to get http server from the context")
 	}

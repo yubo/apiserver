@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/yubo/apiserver/examples/all/authn"
@@ -43,12 +42,11 @@ import (
 	// 9. webhook
 	_ "github.com/yubo/apiserver/plugin/authenticator/token/webhook/register"
 
-	_ "github.com/yubo/apiserver/pkg/apiserver/register"
 	_ "github.com/yubo/apiserver/pkg/audit/register"
 	_ "github.com/yubo/apiserver/pkg/db/register"
-	_ "github.com/yubo/apiserver/pkg/debug/register"
 	_ "github.com/yubo/apiserver/pkg/grpcserver/register"
 	_ "github.com/yubo/apiserver/pkg/rest/swagger/register"
+	_ "github.com/yubo/apiserver/pkg/server/register"
 	_ "github.com/yubo/apiserver/pkg/session/register"
 	_ "github.com/yubo/apiserver/pkg/tracing/register"
 	_ "github.com/yubo/golib/logs/register"
@@ -78,10 +76,7 @@ func newServerCmd() *cobra.Command {
 	proc.RegisterHooks(hookOps)
 	options.InstallReporter()
 
-	ctx := context.Background()
-	ctx = proc.WithName(ctx, os.Args[0])
-
-	cmd := proc.NewRootCmd(ctx)
+	cmd := proc.NewRootCmd()
 	cmd.AddCommand(options.NewVersionCmd())
 
 	return cmd

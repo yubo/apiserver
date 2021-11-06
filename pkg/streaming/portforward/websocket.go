@@ -26,7 +26,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/yubo/apiserver/pkg/apiserver/httplog"
+	"github.com/yubo/apiserver/pkg/server/httplog"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/types"
 	"github.com/yubo/golib/util/runtime"

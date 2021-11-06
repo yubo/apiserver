@@ -761,11 +761,11 @@ class Endpoint(object):
         """ This method is invoked when endpoints are called
         Example:
 
-        api_instance = UserApi()
-        api_instance.func1  # this is an instance of the class Endpoint
-        api_instance.func1()  # this invokes api_instance.func1.__call__()
+        api_instance = DefaultApi()
+        api_instance.get_code_version  # this is an instance of the class Endpoint
+        api_instance.get_code_version()  # this invokes api_instance.get_code_version.__call__()
         which then invokes the callable functions stored in that endpoint at
-        api_instance.func1.callable or self.callable in this class
+        api_instance.get_code_version.callable or self.callable in this class
 
         """
         return self.callable(self, *args, **kwargs)
@@ -826,9 +826,10 @@ class Endpoint(object):
 
         content_type_headers_list = self.headers_map['content_type']
         if content_type_headers_list:
-            header_list = self.api_client.select_header_content_type(
-                content_type_headers_list)
-            params['header']['Content-Type'] = header_list
+            if params['body'] != "":
+                header_list = self.api_client.select_header_content_type(
+                    content_type_headers_list)
+                params['header']['Content-Type'] = header_list
 
         return self.api_client.call_api(
             self.settings['endpoint_path'], self.settings['http_method'],

@@ -6,10 +6,9 @@ import (
 
 	"github.com/yubo/apiserver/pkg/authorization"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
-	"github.com/yubo/apiserver/plugin/authorizer/rbac"
+	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/plugin/authorizer/rbac/db"
 	"github.com/yubo/apiserver/plugin/authorizer/rbac/file"
-	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/golib/proc"
 	"github.com/yubo/golib/util/errors"
 )

@@ -38,7 +38,7 @@ func (p *Module) init(ctx context.Context) (err error) {
 	p.config = cf
 	// klog.Infof("config %s", c)
 
-	goswagger.New(cf).Install(options.ApiServerMustFrom(ctx), rest.SecuritySchemeRegister)
+	goswagger.New(cf).Install(options.APIServerMustFrom(ctx), rest.SecuritySchemeRegister)
 
 	return
 }

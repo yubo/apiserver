@@ -10,12 +10,13 @@ import (
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/rest"
+	"github.com/yubo/apiserver/pkg/server"
 	"github.com/yubo/golib/net/session"
 )
 
 type module struct {
 	Name    string
-	http    options.ApiServer
+	http    server.APIServer
 	session session.SessionManager
 	ctx     context.Context
 }
@@ -29,7 +30,7 @@ func New(ctx context.Context) *module {
 func (p *module) Start() error {
 	var ok bool
 
-	p.http, ok = options.ApiServerFrom(p.ctx)
+	p.http, ok = options.APIServerFrom(p.ctx)
 	if !ok {
 		return fmt.Errorf("unable to get http server from the context")
 	}

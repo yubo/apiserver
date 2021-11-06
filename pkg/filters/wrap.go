@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/yubo/apiserver/pkg/apiserver/httplog"
+	"github.com/yubo/apiserver/pkg/server/httplog"
 	"github.com/yubo/apiserver/pkg/metrics"
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/golib/util/runtime"

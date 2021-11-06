@@ -23,7 +23,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/yubo/apiserver/pkg/apiserver/httplog"
+	"github.com/yubo/apiserver/pkg/server/httplog"
 	"github.com/yubo/apiserver/pkg/audit"
 	"github.com/yubo/apiserver/pkg/authentication/serviceaccount"
 	"github.com/yubo/apiserver/pkg/authentication/user"

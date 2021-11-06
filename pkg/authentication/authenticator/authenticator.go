@@ -16,8 +16,3 @@ const (
 	PRI_TOKEN_OIDC
 	PRI_TOKEN_CUSTOM
 )
-
-type Authn interface {
-	APIAudiences() Audiences
-	Authenticator() Request
-}
