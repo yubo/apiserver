@@ -13,6 +13,9 @@ import (
 	"github.com/yubo/golib/proc"
 	"k8s.io/klog/v2"
 
+	_ "github.com/yubo/golib/orm/mysql"
+	_ "github.com/yubo/golib/orm/sqlite"
+
 	// authz's submodule, should be loaded before the authz module
 	_ "github.com/yubo/apiserver/pkg/authorization/register"
 	_ "github.com/yubo/apiserver/plugin/authorizer/abac/register"
@@ -50,7 +53,6 @@ import (
 	_ "github.com/yubo/apiserver/pkg/session/register"
 	_ "github.com/yubo/apiserver/pkg/tracing/register"
 	_ "github.com/yubo/golib/logs/register"
-	_ "github.com/yubo/golib/orm/sqlite"
 )
 
 const (

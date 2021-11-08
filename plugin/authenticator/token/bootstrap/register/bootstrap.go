@@ -41,7 +41,7 @@ func factory(ctx context.Context) (authenticator.Token, error) {
 		return nil, nil
 	}
 
-	db, ok := options.DBFrom(ctx)
+	db, ok := options.DBFrom(ctx, "")
 	if !ok {
 		return nil, fmt.Errorf("unable to get db from the context")
 	}

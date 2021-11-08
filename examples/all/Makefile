@@ -2,7 +2,7 @@
 
 VERSION=0.0.1
 RELEASE=1
-APP_NAME=example-all
+APP_NAME=all
 FILE_NAME=$(APP_NAME)-$(VERSION)-$(RELEASE).$(shell uname -s).$(shell uname -m)
 DEP_OBJS=$(shell find . -name "*.go" -type f) \
 	 ./tracing/tracing.pb.go

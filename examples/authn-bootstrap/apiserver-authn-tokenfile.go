@@ -6,22 +6,23 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/golib/logs"
 	"github.com/yubo/golib/proc"
 
-	// http
+	// api server
+	server "github.com/yubo/apiserver/pkg/server/module"
 	_ "github.com/yubo/apiserver/pkg/server/register"
 
 	// authn
 	_ "github.com/yubo/apiserver/pkg/authentication/register"
-	"github.com/yubo/apiserver/pkg/authentication/user"
 	_ "github.com/yubo/apiserver/plugin/authenticator/token/tokenfile/register"
 )
 
-// go run ./apiserver-authentication.go --token-auth-file=./tokens.cvs
+// go run ./apiserver-authn-tokenfile.go --token-auth-file=./tokens.cvs
 //
 // This example shows the minimal code needed to get a restful.WebService working.
 //
@@ -54,7 +55,9 @@ func main() {
 	logs.InitLogs()
 	defer logs.FlushLogs()
 
-	if err := proc.NewRootCmd().Execute(); err != nil {
+	proc.RegisterHooks(hookOps)
+
+	if err := proc.NewRootCmd(server.WithInsecureServing()).Execute(); err != nil {
 		os.Exit(1)
 	}
 }
@@ -89,8 +92,4 @@ func hw(w http.ResponseWriter, req *http.Request) (*user.DefaultInfo, error) {
 		Groups: u.GetGroups(),
 		Extra:  u.GetExtra(),
 	}, nil
-}
-
-func init() {
-	proc.RegisterHooks(hookOps)
 }

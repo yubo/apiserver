@@ -6,10 +6,10 @@ import (
 	// authentication "github.com/yubo/apiserver/modules/authentication/lib"
 
 	"github.com/yubo/apiserver/pkg/audit"
+	"github.com/yubo/apiserver/pkg/db"
 	"github.com/yubo/apiserver/pkg/dynamiccertificates"
 	"github.com/yubo/apiserver/pkg/server"
 	"github.com/yubo/golib/net/session"
-	"github.com/yubo/golib/orm"
 	"github.com/yubo/golib/proc"
 	"google.golang.org/grpc"
 	"k8s.io/klog/v2"
@@ -113,20 +113,30 @@ func SessionManagerFrom(ctx context.Context) (session.SessionManager, bool) {
 	return sm, ok
 }
 
-func WithDB(ctx context.Context, db orm.DB) {
+func WithDB(ctx context.Context, db db.DB) {
 	klog.V(5).Infof("attr with db")
 	proc.AttrMustFrom(ctx)[dbKey] = db
 }
 
-func DBFrom(ctx context.Context) (orm.DB, bool) {
-	db, ok := proc.AttrMustFrom(ctx)[dbKey].(orm.DB)
-	return db, ok
+func DBFrom(ctx context.Context, name string) (db.DB, bool) {
+	d, ok := proc.AttrMustFrom(ctx)[dbKey].(db.DB)
+	if !ok {
+		return nil, false
+	}
+	if name == "" {
+		name = db.DefaultName
+	}
+
+	if d = d.GetDB(name); d == nil {
+		return nil, false
+	}
+	return d, true
 }
 
-func DBMustFrom(ctx context.Context) orm.DB {
-	db, ok := proc.AttrMustFrom(ctx)[dbKey].(orm.DB)
+func DBMustFrom(ctx context.Context, name string) db.DB {
+	db, ok := DBFrom(ctx, name)
 	if !ok {
-		panic("unable get db")
+		panic("unable get db." + name)
 	}
 	return db
 }

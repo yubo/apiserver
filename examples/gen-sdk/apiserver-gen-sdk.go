@@ -109,7 +109,7 @@ func main() {
 
 	proc.RegisterHooks(hookOps)
 
-	if err := proc.NewRootCmd(server.InsecureServingOption()).Execute(); err != nil {
+	if err := proc.NewRootCmd(server.WithInsecureServing()).Execute(); err != nil {
 		os.Exit(1)
 	}
 }

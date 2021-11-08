@@ -60,7 +60,7 @@ func (p *module) init(ctx context.Context) error {
 func startSession(cf *session.Config, ctx context.Context) (session.SessionManager, error) {
 	opts := []session.Option{session.WithCtx(ctx)}
 	if cf.Storage == "db" && cf.Dsn == "" {
-		db, ok := options.DBFrom(ctx)
+		db, ok := options.DBFrom(ctx, "")
 		if !ok {
 			return nil, fmt.Errorf("can not found db from context")
 		}

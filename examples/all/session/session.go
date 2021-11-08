@@ -42,7 +42,7 @@ func (p *module) Start() error {
 
 	// init database
 	{
-		db, ok := options.DBFrom(p.ctx)
+		db, ok := options.DBFrom(p.ctx, "")
 		if !ok {
 			return fmt.Errorf("unable to get db")
 		}

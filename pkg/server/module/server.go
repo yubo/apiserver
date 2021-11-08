@@ -293,7 +293,7 @@ func (p *module) Start(stopCh <-chan struct{}, done chan struct{}) error {
 	return nil
 }
 
-func InsecureServingOption() proc.ProcessOption {
+func WithInsecureServing() proc.ProcessOption {
 	cf := config.NewConfig()
 	cf.SecureServing.Enabled = false
 	cf.InsecureServing.Enabled = true

@@ -6,18 +6,18 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/yubo/apiserver/pkg/db"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/apiserver/pkg/server"
-	"github.com/yubo/golib/orm"
 	"k8s.io/klog/v2"
 )
 
 type Module struct {
 	Name   string
 	server server.APIServer
-	db     orm.DB
+	db     db.DB
 	ctx    context.Context
 }
 
@@ -34,7 +34,7 @@ func (p *Module) Start() error {
 		return fmt.Errorf("unable to get API server from the context")
 	}
 
-	p.db, ok = options.DBFrom(p.ctx)
+	p.db, ok = options.DBFrom(p.ctx, db.DefaultName)
 	if !ok {
 		return fmt.Errorf("unable to get db from the context")
 	}

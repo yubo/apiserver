@@ -52,7 +52,7 @@ func factory(ctx context.Context) (authorizer.Authorizer, error) {
 	case "file":
 		return file.NewRBAC(&cf.Config)
 	case "db":
-		return db.NewRBAC(options.DBMustFrom(ctx))
+		return db.NewRBAC(options.DBMustFrom(ctx, ""))
 	default:
 		return nil, fmt.Errorf("unsupported rbac provider %s", cf.Provider)
 	}

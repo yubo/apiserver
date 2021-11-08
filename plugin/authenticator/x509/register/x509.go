@@ -24,7 +24,7 @@ type config struct {
 	// CAContentProvider are the options for verifying incoming connections using mTLS and directly assigning to users.
 	// Generally this is the CA bundle file used to authenticate client certificates
 	// If non-nil, this takes priority over the ClientCA file.
-	CAContentProvider dynamiccertificates.CAContentProvider ``
+	CAContentProvider dynamiccertificates.CAContentProvider `json:"-"`
 }
 
 func (s *config) Validate() error {
