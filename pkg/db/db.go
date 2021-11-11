@@ -5,6 +5,7 @@ import (
 
 	"github.com/yubo/golib/orm"
 	"github.com/yubo/golib/util/errors"
+	"k8s.io/klog/v2"
 )
 
 const (
@@ -33,6 +34,7 @@ func NewDB(ctx context.Context, config *Config) (DB, error) {
 
 	for _, cf := range config.Databases {
 		if cf.Dsn == "" || cf.Driver == "" {
+			klog.Warningf("database[%s].dsn is empty, skiped", cf.Name)
 			continue
 		}
 		opts := []orm.Option{
@@ -93,7 +95,8 @@ func (p *serverDB) GetDB(name string) DB {
 	}
 
 	if db, ok := p.dbs[name]; !ok {
-		panic("nil db")
+		klog.Infof("dbs %+v %s", p.dbs, name)
+		panic("v nil db")
 	} else {
 		return &serverDB{
 			name: name,

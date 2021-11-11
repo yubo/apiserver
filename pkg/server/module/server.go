@@ -19,7 +19,6 @@ import (
 	"github.com/yubo/apiserver/pkg/server/config"
 	"github.com/yubo/apiserver/pkg/server/routes"
 	"github.com/yubo/apiserver/pkg/version"
-	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/logs"
 	"github.com/yubo/golib/proc"
 	"github.com/yubo/golib/scheme"
@@ -140,6 +139,10 @@ func (p *module) servingInit(c *config.Config) error {
 	if err := c.SecureServing.ApplyToWithLoopback(&s.SecureServing, &s.LoopbackClientConfig); err != nil {
 		return err
 	}
+
+	klog.Infof("%+v", c.InsecureServing)
+	klog.Infof("%+v", c.SecureServing)
+	klog.Infof("%+v", s.LoopbackClientConfig)
 
 	s.LoopbackClientConfig.ContentConfig = rest.ContentConfig{
 		NegotiatedSerializer: scheme.Codecs,
@@ -291,14 +294,4 @@ func (p *module) Start(stopCh <-chan struct{}, done chan struct{}) error {
 		close(done)
 	}()
 	return nil
-}
-
-func WithInsecureServing() proc.ProcessOption {
-	cf := config.NewConfig()
-	cf.SecureServing.Enabled = false
-	cf.InsecureServing.Enabled = true
-
-	return proc.WithConfigOptions(
-		configer.WithDefault(moduleName, cf),
-	)
 }

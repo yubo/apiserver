@@ -25,18 +25,19 @@ devrun:
 		-f ./etc/${APP_NAME}.yaml \
 		--token-auth-file=./etc/tokens.cvs \
 		-v 10 \
-		--anonymous-auth \
 		--logtostderr"
 		#--authorization-mode=AlwaysAllow \
 		#--tls-cert-file=./run/pki/apiserver.crt \
 		#--tls-private-key-file=./run/pki/apiserver.key \
 
 run:
-	./${APP_NAME} \
-		-f ./etc/${APP_NAME}.yml \
-		-v 10 \
-		--anonymous-auth \
+	./all \
+		-f ./etc/all.yaml \
+		-v 9 \
+		--cert-dir /tmp/all \
+		--add-dir-header \
 		--logtostderr 2>&1
+		# --debug-config --dry-run \
 		#--token-auth-file=./run/tokens.cvs \
 		## --authorization-mode=AlwaysAllow \
 		#--authorization-mode=RBAC \

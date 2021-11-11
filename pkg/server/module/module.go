@@ -112,7 +112,7 @@ func RegisterHooks() {
 
 func RegisterFlags() {
 	cf := config.NewConfig()
-	proc.RegisterFlags(moduleName, "APIServer", cf, configer.WithTags(cf.Tags()))
+	proc.RegisterFlags(moduleName, "APIServer", cf, configer.WithTags(cf.Tags))
 }
 
 func Register() {

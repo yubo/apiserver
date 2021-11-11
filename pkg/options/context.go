@@ -114,11 +114,12 @@ func SessionManagerFrom(ctx context.Context) (session.SessionManager, bool) {
 }
 
 func WithDB(ctx context.Context, db db.DB) {
-	klog.V(5).Infof("attr with db")
+	klog.V(5).Infof("attr with db %v attr %p", db, proc.AttrMustFrom(ctx))
 	proc.AttrMustFrom(ctx)[dbKey] = db
 }
 
 func DBFrom(ctx context.Context, name string) (db.DB, bool) {
+	klog.V(5).Infof("attr with name %v attr %p", name, proc.AttrMustFrom(ctx))
 	d, ok := proc.AttrMustFrom(ctx)[dbKey].(db.DB)
 	if !ok {
 		return nil, false

@@ -29,7 +29,7 @@ import (
 // No one should be using these anymore.
 // DEPRECATED: all insecure serving options are removed in a future version
 type DeprecatedInsecureServingOptions struct {
-	Enabled     bool   `json:"enabled" flag:"insecure-serving" default:"false" description:"enable the insecure serving"`
+	Enabled     *bool  `json:"enabled" flag:"insecure-serving" default:"false" description:"enable the insecure serving"`
 	BindAddress net.IP `json:"bindAddress" flag:"address" description:"The IP address on which to serve the --port (set to 0.0.0.0 or :: for listening in all interfaces and IP families)." deprecated:"This flag will be removed in a future version."`
 	BindPort    int    `json:"bindPort" flag:"port" description:"The port on which to serve unsecured, unauthenticated access." deprecated:"This flag will be removed in a future version."`
 	// BindNetwork is the type of network to bind to - defaults to "tcp", accepts "tcp",

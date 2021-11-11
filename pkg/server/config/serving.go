@@ -35,7 +35,7 @@ func NewSecureServingOptions() *SecureServingOptions {
 }
 
 type SecureServingOptions struct {
-	Enabled     bool   `json:"enabled" flag:"secure-serving" default:"true" description:"enable the secure serving"`
+	Enabled     *bool  `json:"enabled" flag:"secure-serving" default:"true" description:"enable the secure serving"`
 	BindAddress net.IP `json:"bindAddress" default:"0.0.0.0" flag:"bind-address" description:"The IP address on which to listen for the --secure-port port. The associated interface(s) must be reachable by the rest of the cluster, and by CLI/web clients. If blank or an unspecified address (0.0.0.0 or ::), all interfaces will be used."`
 	BindPort    int    `json:"bindPort" default:"443" flag:"secure-port" description:"BindPort is ignored when Listener is set, will serve https even with 0."`
 	BindNetwork string `json:"bindNework" default:"tcp" description:"BindNetwork is the type of network to bind to - accepts \"tcp\", \"tcp4\", and \"tcp6\"."`

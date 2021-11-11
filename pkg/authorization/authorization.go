@@ -3,6 +3,7 @@ package authorization
 import (
 	"context"
 	"fmt"
+	"runtime/debug"
 	"strings"
 
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
@@ -97,6 +98,7 @@ func (o *config) Validate() error {
 	modes := sets.NewString(o.Modes...)
 	for _, mode := range o.Modes {
 		if !IsValidAuthorizationMode(mode) {
+			debug.PrintStack()
 			allErrors = append(allErrors,
 				fmt.Errorf("authorization-mode %q is not a valid mode, modes %+v", mode, AuthorizationModeChoices))
 		}
@@ -219,7 +221,7 @@ func RegisterHooks() {
 
 func RegisterFlags() {
 	cf := newConfig()
-	proc.RegisterFlags(moduleName, moduleName, cf, configer.WithTags(cf.tags()))
+	proc.RegisterFlags(moduleName, moduleName, cf, configer.WithTags(cf.tags))
 }
 
 func Register() {

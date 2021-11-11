@@ -600,7 +600,7 @@ func RegisterHooks() {
 
 func RegisterConfig() {
 	cf := newConfig()
-	proc.RegisterFlags(moduleName, "Audit", cf, configer.WithTags(cf.tags()))
+	proc.RegisterFlags(moduleName, "Audit", cf, configer.WithTags(cf.tags))
 }
 
 func Register() {

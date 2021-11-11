@@ -14,7 +14,6 @@ import (
 	"github.com/yubo/golib/proc"
 
 	// api server
-	server "github.com/yubo/apiserver/pkg/server/module"
 	_ "github.com/yubo/apiserver/pkg/server/register"
 
 	// authn
@@ -57,7 +56,7 @@ func main() {
 
 	proc.RegisterHooks(hookOps)
 
-	if err := proc.NewRootCmd(server.WithInsecureServing()).Execute(); err != nil {
+	if err := proc.NewRootCmd().Execute(); err != nil {
 		os.Exit(1)
 	}
 }

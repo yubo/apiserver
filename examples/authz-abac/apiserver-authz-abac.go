@@ -1,6 +1,7 @@
 package main
 
 import (
+	// set default config, must before the other modules
 	"context"
 	"fmt"
 	"net/http"
@@ -8,52 +9,22 @@ import (
 
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/rest"
+	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/logs"
 	"github.com/yubo/golib/proc"
 
 	// http
 	_ "github.com/yubo/apiserver/pkg/server/register"
-
 	// authn
 	_ "github.com/yubo/apiserver/pkg/authentication/register"
 	_ "github.com/yubo/apiserver/plugin/authenticator/token/tokenfile/register"
-
 	// authz
 	_ "github.com/yubo/apiserver/pkg/authorization/register"
 	_ "github.com/yubo/apiserver/plugin/authorizer/abac/register"
 )
 
-// go run ./apiserver-authorization.go --token-auth-file=./tokens.cvs --authorization-mode=ABAC  --authorization-policy-file=./abac.json
-//
-// This example shows the minimal code needed to get a restful.WebService working.
-
-// curl -XGET -H 'Authorization: bearer token-777' http://localhost:8080/ro -I
-// HTTP/1.1 200 OK
-// Cache-Control: no-cache, private
-// Date: Tue, 27 Jul 2021 11:33:54 GMT
-// Content-Length: 0
-
-// curl -XGET  -Ss -i http://localhost:8080/ro
-// HTTP/1.1 403 Forbidden
-// Cache-Control: no-cache, private
-// Content-Type: application/json
-// X-Content-Type-Options: nosniff
-// Date: Tue, 27 Jul 2021 13:41:45 GMT
-// Content-Length: 239
-//
-// {
-//   "kind": "Status",
-//   "apiVersion": "v1",
-//   "metadata": {},
-//   "status": "Failure",
-//   "message": "forbidden: User \"system:anonymous\" cannot get path \"/ro\": No policy matched.",
-//   "reason": "Forbidden",
-//   "details": {},
-//   "code": 403
-// }
-
 const (
-	moduleName = "apiserver.authentication"
+	moduleName = "apiserver.authentication.abac"
 )
 
 var (
@@ -63,13 +34,25 @@ var (
 		HookNum:  proc.ACTION_START,
 		Priority: proc.PRI_MODULE,
 	}}
+	defaultConfig = `
+apiserver:
+  secureServing:
+    enabled: false
+  insecureServing:
+    enabled: true
+authorization:
+  mode: ABAC
+`
 )
 
 func main() {
 	logs.InitLogs()
 	defer logs.FlushLogs()
 
-	if err := proc.NewRootCmd().Execute(); err != nil {
+	proc.RegisterHooks(hookOps)
+
+	if err := proc.NewRootCmd(proc.WithConfigOptions(
+		configer.WithDefaultYaml("", defaultConfig))).Execute(); err != nil {
 		os.Exit(1)
 	}
 }
@@ -86,20 +69,16 @@ func start(ctx context.Context) error {
 
 func installWs(http rest.GoRestfulContainer) {
 	rest.WsRouteBuild(&rest.WsOption{
-		Path:               "/",
+		Path:               "/hello",
 		GoRestfulContainer: http,
 		Routes: []rest.WsRoute{
 			{Method: "GET", SubPath: "/ro", Handle: handle},
-			{Method: "POST", SubPath: "/rw", Handle: handle},
+			{Method: "GET", SubPath: "/rw", Handle: handle},
 			{Method: "GET", SubPath: "/unauthenticated", Handle: handle},
 		},
 	})
 }
 
-func handle(w http.ResponseWriter, req *http.Request) error {
-	return nil
-}
-
-func init() {
-	proc.RegisterHooks(hookOps)
+func handle(w http.ResponseWriter, req *http.Request) ([]byte, error) {
+	return []byte("hello\n"), nil
 }

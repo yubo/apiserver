@@ -23,25 +23,43 @@ tracing:
       logSpans: false
 
 apiserver:
-  externalHost:
-  bindAddress: 0.0.0.0
-  bindPort: 8080
-  corsAllowedOriginList:
-  hstsDirectives:
-  maxRequestsInFlight: 400
-  maxMutatingRequestsInFlight: 200
-  requestTimeout: 60
-  livezGracePeriod: 0
-  minRequestTimeout: 1800
-  #shutdownTimeout: 60s
-  shutdownDelayDuration: 0
-  maxRequestBodyBytes: 3145728
+  generic:
+    enablePriorityAndFairness: true
+    goawayChance: 0
+    livezGracePeriod: 0
+    maxMutatingRequestsInFlight: 200
+    maxRequestBodyBytes: 3145728
+    maxRequestsInFlight: 400
+    minRequestTimeout: 30m0s
+    requestTimeout: 1m0s
+    shutdownDelayDuration: 0
+  insecureServing:
+    bindAddress: 0.0.0.0
+    bindNework: tcp
+    bindPort: 8080
+    enabled: false
+  secureServing:
+    PermitAddressSharing: false
+    bindAddress: 0.0.0.0
+    bindNework: tcp
+    bindPort: 8443
+    enabled: true
+    http2MaxStreamsPerConnection: 0
+    permitPortSharing: false
+    serverCert:
+      certDir: /var/run/all
+      pairName: apiserver
+  enableContentionProfiling: true
+  enableIndex: false
+  enableMetrics: false
   enablePriorityAndFairness: true
+  enableProfiling: true
+
 
 authentication:
   session: true                   # --enable-session-auth
   bootstrapToken: true            # --enable-bootstrap-token-auth
-  anonymous: true                 # --anonymous-auth
+  anonymous: false                # --anonymous-auth
   tokenAuthFile: ./etc/tokens.cvs # --token-auth-file={file-path}
   oidc:
     issuerURL:                    # --oidc-issuer-url
@@ -51,9 +69,7 @@ authorization:
   policyFile: ./etc/abac.json     # --authorization-policy-file={file-path}
   modes:                          # --modes=ABAC,AlwaysAllow
     - ABAC
-    #- AlwaysAllow
 
-  
 session:
   enabled: true
   storage: "db" # mem | db

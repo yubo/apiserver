@@ -61,5 +61,5 @@ func Register() {
 	proc.RegisterHooks(hookOps)
 
 	cf := &db.Config{}
-	proc.RegisterFlags("db", "db", cf, configer.WithTags(cf.Tags()))
+	proc.RegisterFlags("db", "db", cf, configer.WithTags(cf.Tags))
 }

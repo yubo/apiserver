@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	moduleName = "authorization.AlwaysAllow"
+	modeName = "AlwaysAllow"
 )
 
 func factory(_ context.Context) (authorizer.Authorizer, error) {
@@ -17,5 +17,5 @@ func factory(_ context.Context) (authorizer.Authorizer, error) {
 }
 
 func init() {
-	authorization.RegisterAuthz("AlwaysAllow", factory)
+	authorization.RegisterAuthz(modeName, factory)
 }
