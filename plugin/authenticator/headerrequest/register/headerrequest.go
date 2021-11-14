@@ -9,6 +9,7 @@ import (
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/pkg/authentication/request/headerrequest"
 	"github.com/yubo/apiserver/pkg/dynamiccertificates"
+	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/proc"
 	"github.com/yubo/golib/util/errors"
 	"k8s.io/klog/v2"
@@ -61,7 +62,7 @@ func checkForWhiteSpaceOnly(flag string, headerNames ...string) error {
 func newConfig() *config { return &config{} }
 
 func factory(ctx context.Context) (authenticator.Request, error) {
-	c := proc.ConfigerMustFrom(ctx)
+	c := configer.ConfigerMustFrom(ctx)
 
 	cf := newConfig()
 	if err := c.Read(configPath, cf); err != nil {

@@ -135,7 +135,7 @@ func RegisterAuthz(name string, factory authorizer.AuthorizerFactory) error {
 }
 
 func (p *authorization) init(ctx context.Context) error {
-	c := proc.ConfigerMustFrom(ctx)
+	c := configer.ConfigerMustFrom(ctx)
 	p.ctx, p.cancel = context.WithCancel(ctx)
 
 	cf := newConfig()

@@ -5,9 +5,10 @@ import (
 	"fmt"
 
 	"github.com/yubo/apiserver/pkg/authorization"
+	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	"github.com/yubo/apiserver/plugin/authorizer/abac"
 	"github.com/yubo/apiserver/plugin/authorizer/abac/api"
-	"github.com/yubo/apiserver/pkg/authorization/authorizer"
+	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/proc"
 	"github.com/yubo/golib/util/errors"
 )
@@ -46,7 +47,7 @@ func newConfig() *config {
 
 func factory(ctx context.Context) (authorizer.Authorizer, error) {
 	cf := newConfig()
-	if err := proc.ConfigerMustFrom(ctx).Read(configPath, cf); err != nil {
+	if err := configer.ConfigerMustFrom(ctx).Read(configPath, cf); err != nil {
 		return nil, err
 	}
 

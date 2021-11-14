@@ -14,6 +14,7 @@ import (
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/server"
 	"github.com/yubo/golib/api"
+	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/proc"
 )
 
@@ -143,7 +144,7 @@ type authentication struct {
 }
 
 func (p *authentication) init(ctx context.Context) error {
-	c := proc.ConfigerMustFrom(ctx)
+	c := configer.ConfigerMustFrom(ctx)
 	p.ctx, p.cancel = context.WithCancel(ctx)
 
 	cf := &config{}

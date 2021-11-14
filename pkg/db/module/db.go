@@ -38,10 +38,10 @@ var (
 // Because some configuration may be stored in the database,
 // set the db.connect into sys.db.prestart
 func (p *dbModule) init(ctx context.Context) (err error) {
-	configer := proc.ConfigerMustFrom(ctx)
+	c := configer.ConfigerMustFrom(ctx)
 
 	cf := &db.Config{}
-	if err := configer.Read(p.name, cf); err != nil {
+	if err := c.Read(p.name, cf); err != nil {
 		return err
 	}
 

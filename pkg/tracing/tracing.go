@@ -11,6 +11,7 @@ import (
 	jaegercfg "github.com/uber/jaeger-client-go/config"
 	"github.com/uber/jaeger-lib/metrics/prometheus"
 	"github.com/yubo/apiserver/pkg/options"
+	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/proc"
 	"github.com/yubo/golib/util"
 	"gopkg.in/yaml.v2"
@@ -102,7 +103,7 @@ var (
 )
 
 func (p *tracing) init(ctx context.Context) (err error) {
-	c := proc.ConfigerMustFrom(ctx)
+	c := configer.ConfigerMustFrom(ctx)
 	p.ctx, p.cancel = context.WithCancel(ctx)
 
 	cf := newConfig()

@@ -51,7 +51,7 @@ type module struct {
 }
 
 func (p *module) init(ctx context.Context) (err error) {
-	c := proc.ConfigerMustFrom(ctx)
+	c := configer.ConfigerMustFrom(ctx)
 
 	p.ctx, p.cancel = context.WithCancel(ctx)
 

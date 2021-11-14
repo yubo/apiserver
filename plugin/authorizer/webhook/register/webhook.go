@@ -10,6 +10,7 @@ import (
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	"github.com/yubo/apiserver/plugin/authorizer/webhook"
 	"github.com/yubo/golib/api"
+	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/proc"
 	utilerrors "github.com/yubo/golib/util/errors"
 	"github.com/yubo/golib/util/wait"
@@ -73,7 +74,7 @@ func DefaultAuthWebhookRetryBackoff() *wait.Backoff {
 }
 
 func factory(ctx context.Context) (authorizer.Authorizer, error) {
-	c := proc.ConfigerMustFrom(ctx)
+	c := configer.ConfigerMustFrom(ctx)
 
 	cf := newConfig()
 	if err := c.Read(configPath, cf); err != nil {

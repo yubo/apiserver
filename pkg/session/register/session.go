@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/yubo/apiserver/pkg/options"
+	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/net/session"
 	"github.com/yubo/golib/proc"
 )
@@ -39,7 +40,7 @@ func newConfig() *session.Config {
 }
 
 func (p *module) init(ctx context.Context) error {
-	c := proc.ConfigerMustFrom(ctx)
+	c := configer.ConfigerMustFrom(ctx)
 
 	cf := newConfig()
 	if err := c.Read(p.name, cf); err != nil {

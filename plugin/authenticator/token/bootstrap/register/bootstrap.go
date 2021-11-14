@@ -9,6 +9,7 @@ import (
 	"github.com/yubo/apiserver/pkg/listers"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/plugin/authenticator/token/bootstrap"
+	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/proc"
 	"k8s.io/klog/v2"
 )
@@ -29,7 +30,7 @@ func (o *config) Validate() error {
 func newConfig() *config { return &config{} }
 
 func factory(ctx context.Context) (authenticator.Token, error) {
-	c := proc.ConfigerMustFrom(ctx)
+	c := configer.ConfigerMustFrom(ctx)
 
 	cf := newConfig()
 	if err := c.Read(configPath, cf); err != nil {

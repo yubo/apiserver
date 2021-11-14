@@ -6,6 +6,7 @@ import (
 	"github.com/yubo/apiserver/pkg/authentication"
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/plugin/authenticator/token/tokenfile"
+	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/proc"
 	"k8s.io/klog/v2"
 )
@@ -33,7 +34,7 @@ func newConfig() *config {
 }
 
 func factory(ctx context.Context) (authenticator.Token, error) {
-	c := proc.ConfigerMustFrom(ctx)
+	c := configer.ConfigerMustFrom(ctx)
 	cf := newConfig()
 
 	if err := c.Read(configPath, cf); err != nil {
