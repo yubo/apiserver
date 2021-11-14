@@ -21,7 +21,7 @@ func New(ctx context.Context) *authn {
 }
 
 func (p *authn) Start() error {
-	http, ok := options.ApiServerFrom(p.ctx)
+	http, ok := options.APIServerFrom(p.ctx)
 	if !ok {
 		return fmt.Errorf("unable to get http server from the context")
 	}

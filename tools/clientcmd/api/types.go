@@ -17,8 +17,10 @@ limitations under the License.
 package api
 
 import (
+	"encoding/json"
 	"fmt"
 
+	v1 "github.com/yubo/apiserver/tools/clientcmd/api/v1"
 	"github.com/yubo/golib/runtime"
 )
 
@@ -54,6 +56,30 @@ type Config struct {
 	Extensions map[string]runtime.Object `json:"extensions,omitempty"`
 }
 
+func (p *Config) UnmarshalJSON(b []byte) error {
+	configV1 := &v1.Config{
+		Kind:       "Config",
+		APIVersion: "v1",
+	}
+	if err := json.Unmarshal(b, configV1); err != nil {
+		return err
+	}
+
+	return Convert_v1_Config_To_api_Config(configV1, p)
+}
+
+func (p Config) MarshalJSON() ([]byte, error) {
+	configV1 := &v1.Config{
+		Kind:       "Config",
+		APIVersion: "v1",
+	}
+	if err := Convert_api_Config_To_v1_Config(&p, configV1); err != nil {
+		return nil, err
+	}
+
+	return json.Marshal(configV1)
+}
+
 // IMPORTANT if you add fields to this struct, please update IsConfigEmpty()
 type Preferences struct {
 	// +optional
@@ -69,7 +95,7 @@ type Cluster struct {
 	// +k8s:conversion-gen=false
 	LocationOfOrigin string
 	// Server is the address of the kubernetes cluster (https://hostname:port).
-	Server string `json:"server"`
+	Server string `json:"server,omitempty"`
 	// TLSServerName is used to check server certificate. If TLSServerName is empty, the hostname used to contact the server is used.
 	// +optional
 	TLSServerName string `json:"tls-server-name,omitempty"`

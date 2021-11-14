@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/proc"
 	"github.com/yubo/golib/util"
 	"go.uber.org/zap"
@@ -83,7 +84,7 @@ var (
 
 // TODO
 func (p *Module) start(ctx context.Context) error {
-	c := proc.ConfigerMustFrom(ctx)
+	c := configer.ConfigerMustFrom(ctx)
 	cf := &Config{}
 	if err := c.Read("kv", cf); err != nil {
 		return err

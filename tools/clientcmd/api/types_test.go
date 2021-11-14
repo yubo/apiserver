@@ -32,11 +32,13 @@ func Example_emptyConfig() {
 
 	fmt.Printf("%v", string(output))
 	// Output:
-	// clusters: {}
-	// contexts: {}
+	// apiVersion: v1
+	// clusters: null
+	// contexts: null
 	// current-context: ""
+	// kind: Config
 	// preferences: {}
-	// users: {}
+	// users: null
 }
 
 func Example_ofOptionsConfig() {
@@ -90,46 +92,48 @@ func Example_ofOptionsConfig() {
 
 	fmt.Printf("%v", string(output))
 	// Output:
+	// apiVersion: v1
 	// clusters:
-	//   alfa:
-	//     LocationOfOrigin: ""
+	// - cluster:
 	//     certificate-authority: path/to/my/cert-ca-filename
 	//     insecure-skip-tls-verify: true
 	//     server: https://alfa.org:8080
-	//   bravo:
-	//     LocationOfOrigin: ""
+	//   name: alfa
+	// - cluster:
 	//     server: https://bravo.org:8080
+	//   name: bravo
 	// contexts:
-	//   alfa-as-black-mage:
-	//     LocationOfOrigin: ""
+	// - context:
 	//     cluster: alfa
 	//     namespace: zulu
 	//     user: black-mage-via-auth-provider
-	//   alfa-as-white-mage:
-	//     LocationOfOrigin: ""
+	//   name: alfa-as-black-mage
+	// - context:
 	//     cluster: alfa
 	//     user: white-mage-via-cert
-	//   bravo-as-black-mage:
-	//     LocationOfOrigin: ""
+	//   name: alfa-as-white-mage
+	// - context:
 	//     cluster: bravo
 	//     namespace: yankee
 	//     user: black-mage-via-auth-provider
+	//   name: bravo-as-black-mage
 	// current-context: alfa-as-white-mage
+	// kind: Config
 	// preferences:
 	//   colors: true
 	// users:
-	//   black-mage-via-auth-provider:
-	//     LocationOfOrigin: ""
+	// - name: black-mage-via-auth-provider
+	//   user:
 	//     auth-provider:
 	//       config:
 	//         foo: bar
 	//         token: s3cr3t-t0k3n
 	//       name: gcp
-	//   red-mage-via-token:
-	//     LocationOfOrigin: ""
+	// - name: red-mage-via-token
+	//   user:
 	//     token: my-secret-token
-	//   white-mage-via-cert:
-	//     LocationOfOrigin: ""
+	// - name: white-mage-via-cert
+	//   user:
 	//     client-certificate: path/to/my/client-cert-filename
 	//     client-key: path/to/my/client-key-filename
 }

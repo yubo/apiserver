@@ -15,7 +15,7 @@ import (
 	"github.com/yubo/golib/proc"
 	"github.com/yubo/golib/util"
 
-	_ "github.com/yubo/apiserver/pkg/apiserver/register"
+	_ "github.com/yubo/apiserver/pkg/server/register"
 )
 
 // https://github.com/openapitools/openapi-generator
@@ -108,27 +108,27 @@ func main() {
 
 	proc.RegisterHooks(hookOps)
 
-	if err := proc.NewRootCmd(proc.WithName(context.Background(), moduleName)).Execute(); err != nil {
+	if err := proc.NewRootCmd().Execute(); err != nil {
 		os.Exit(1)
 	}
 }
 
 func start(ctx context.Context) error {
-	http, ok := options.ApiServerFrom(ctx)
+	server, ok := options.APIServerFrom(ctx)
 	if !ok {
-		return fmt.Errorf("unable to get http server from the context")
+		return fmt.Errorf("unable to get API server from the context")
 	}
 
-	module.installWs(http)
+	module.installWs(server)
 	return nil
 }
 
 func postStart(ctx context.Context) error {
-	defer proc.Stop()
+	defer proc.Shutdown()
 
-	http, ok := options.ApiServerFrom(ctx)
+	server, ok := options.APIServerFrom(ctx)
 	if !ok {
-		return fmt.Errorf("unable to get http server from the context")
+		return fmt.Errorf("unable to get API server from the context")
 	}
 
 	fd, err := os.Create("./apidocs.json")
@@ -137,7 +137,8 @@ func postStart(ctx context.Context) error {
 	}
 	defer fd.Close()
 
-	req, err := cmdcli.NewRequest(http.Address(),
+	req, err := cmdcli.NewRequestWithConfig(
+		server.Config().LoopbackClientConfig,
 		cmdcli.WithPrefix("/apidocs.json"),
 		cmdcli.WithOutput(fd))
 	if err != nil {
@@ -153,7 +154,7 @@ func postStart(ctx context.Context) error {
 		return err
 	}
 
-	cmd := exec.Command("sudo", "docker", "run", "--rm",
+	cmd := exec.Command("docker", "run", "--rm",
 		"-v", pwd+":/local",
 		"openapitools/openapi-generator-cli",
 		"generate",
@@ -200,7 +201,7 @@ func (p *Module) installWs(http rest.GoRestfulContainer) {
 	})
 }
 
-func (p *Module) createUser(w http.ResponseWriter, req *http.Request, _ *rest.NoneParam, in *CreateUserInput) (CreateUserOutput, error) {
+func (p *Module) createUser(w http.ResponseWriter, req *http.Request, _ *rest.NonParam, in *CreateUserInput) (CreateUserOutput, error) {
 	user := User{
 		Name:     in.Name,
 		NickName: in.NickName,

@@ -46,7 +46,7 @@ var (
 		prometheus.CounterOpts{
 			Name: "apiserver_request_total",
 			//Help: "Counter of apiserver requests broken out for each verb, dry run value, group, version, resource, scope, component, and HTTP response contentType and code.",
-			Help: "Counter of apiserver requests broken out for each method, dry run value, path, component, and HTTP response contentType and code.",
+			Help: "Counter of apiserver requests broken out for each verb, dry run value, path, component, and HTTP response contentType and code.",
 		},
 		// The label_name contentType doesn't follow the label_name convention defined here:
 		// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-instrumentation/instrumentation.md
@@ -251,6 +251,9 @@ const (
 	// on requests made to deprecated API versions with a target removal release
 	removedReleaseAnnotationKey = "k8s.io/removed-release"
 )
+
+// nothing
+func Register() {}
 
 // Reset all metrics.
 func Reset() {

@@ -30,12 +30,12 @@ type ExecCredential struct {
 
 	// Spec holds information passed to the plugin by the transport. This contains
 	// request and runtime specific information, such as if the session is interactive.
-	Spec ExecCredentialSpec
+	Spec ExecCredentialSpec `json:"spec,omitempty"`
 
 	// Status is filled in by the plugin and holds the credentials that the transport
 	// should use to contact the API.
 	// +optional
-	Status *ExecCredentialStatus
+	Status *ExecCredentialStatus `json:"status,omitempty"`
 }
 
 // ExecCredentialSpec holds request and runtime specific information provided by
@@ -44,44 +44,44 @@ type ExecCredentialSpec struct {
 	// Response is populated when the transport encounters HTTP status codes, such as 401,
 	// suggesting previous credentials were invalid.
 	// +optional
-	Response *Response
+	Response *Response `json:"response,omitempty"`
 
 	// Interactive is true when the transport detects the command is being called from an
 	// interactive prompt.
 	// +optional
-	Interactive bool
+	Interactive bool `json:"interactive,omitempty"`
 
 	// Cluster contains information to allow an exec plugin to communicate with the
 	// kubernetes cluster being authenticated to. Note that Cluster is non-nil only
 	// when provideClusterInfo is set to true in the exec provider config (i.e.,
 	// ExecConfig.ProvideClusterInfo).
 	// +optional
-	Cluster *Cluster
+	Cluster *Cluster `json:"cluster,omitempty"`
 }
 
 // ExecCredentialStatus holds credentials for the transport to use.
 type ExecCredentialStatus struct {
 	// ExpirationTimestamp indicates a time when the provided credentials expire.
 	// +optional
-	ExpirationTimestamp *api.Time
+	ExpirationTimestamp *api.Time `json:"expirationTimestamp,omitempty"`
 	// Token is a bearer token used by the client for request authentication.
 	// +optional
-	Token string `datapolicy:"token"`
+	Token string `json:"token,omitempty" datapolicy:"token"`
 	// PEM-encoded client TLS certificate.
 	// +optional
-	ClientCertificateData string
+	ClientCertificateData string `json:"clientCertificateData,omitempty"`
 	// PEM-encoded client TLS private key.
 	// +optional
-	ClientKeyData string `datapolicy:"secret-key"`
+	ClientKeyData string `json:"clientKeyData,omitempty" datapolicy:"secret-key"`
 }
 
 // Response defines metadata about a failed request, including HTTP status code and
 // response headers.
 type Response struct {
 	// Headers holds HTTP headers returned by the server.
-	Header map[string][]string
+	Header map[string][]string `json:"header,omitempty"`
 	// Code is the HTTP status code returned by the server.
-	Code int32
+	Code int32 `json:"code,omitempty"`
 }
 
 // Cluster contains information to allow an exec plugin to communicate
@@ -93,7 +93,7 @@ type Response struct {
 // of CertificateAuthority, since CA data will always be passed to the plugin as bytes.
 type Cluster struct {
 	// Server is the address of the kubernetes cluster (https://hostname:port).
-	Server string `json:"server"`
+	Server string `json:"server,omitempty"`
 	// TLSServerName is passed to the server for SNI and is used in the client to
 	// check server certificates against. If ServerName is empty, the hostname
 	// used to contact the server is used.

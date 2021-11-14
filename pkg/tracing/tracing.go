@@ -11,6 +11,7 @@ import (
 	jaegercfg "github.com/uber/jaeger-client-go/config"
 	"github.com/uber/jaeger-lib/metrics/prometheus"
 	"github.com/yubo/apiserver/pkg/options"
+	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/proc"
 	"github.com/yubo/golib/util"
 	"gopkg.in/yaml.v2"
@@ -102,7 +103,7 @@ var (
 )
 
 func (p *tracing) init(ctx context.Context) (err error) {
-	c := proc.ConfigerMustFrom(ctx)
+	c := configer.ConfigerMustFrom(ctx)
 	p.ctx, p.cancel = context.WithCancel(ctx)
 
 	cf := newConfig()
@@ -112,7 +113,7 @@ func (p *tracing) init(ctx context.Context) (err error) {
 	}
 
 	if cf.Jaeger.ServiceName == "" {
-		cf.Jaeger.ServiceName = proc.NameFrom(ctx)
+		cf.Jaeger.ServiceName = proc.Name()
 	}
 	p.config = cf
 	return
@@ -142,11 +143,11 @@ func (p *tracing) start(ctx context.Context) (err error) {
 	}()
 
 	// add tracer filter
-	http, ok := options.ApiServerFrom(p.ctx)
+	server, ok := options.APIServerFrom(p.ctx)
 	if !ok {
 		return fmt.Errorf("unable to get http server")
 	}
-	http.Filter(WithTrace(cf.HttpHeader, cf.HttpBody, cf.RespTraceId))
+	server.Filter(WithTrace(cf.HttpHeader, cf.HttpBody, cf.RespTraceId))
 
 	opentracing.SetGlobalTracer(p.tracer)
 

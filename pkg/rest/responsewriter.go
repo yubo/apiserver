@@ -15,7 +15,7 @@ func DefaultRespWrite(resp *restful.Response, req *http.Request, data interface{
 		return
 	}
 
-	if _, ok := data.(NoneParam); ok {
+	if _, ok := data.(NonParam); ok {
 		resp.WriteHeader(http.StatusOK)
 		return
 	}

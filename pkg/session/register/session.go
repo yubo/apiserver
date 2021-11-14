@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/yubo/apiserver/pkg/options"
+	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/net/session"
 	"github.com/yubo/golib/proc"
 )
@@ -25,7 +26,7 @@ var (
 		Owner:       moduleName,
 		HookNum:     proc.ACTION_START,
 		Priority:    proc.PRI_SYS_INIT,
-		SubPriority: options.PRI_M_SESSION,
+		SubPriority: options.PRI_M_AUTHN - 1,
 	}}
 )
 
@@ -39,7 +40,7 @@ func newConfig() *session.Config {
 }
 
 func (p *module) init(ctx context.Context) error {
-	c := proc.ConfigerMustFrom(ctx)
+	c := configer.ConfigerMustFrom(ctx)
 
 	cf := newConfig()
 	if err := c.Read(p.name, cf); err != nil {
@@ -60,14 +61,14 @@ func (p *module) init(ctx context.Context) error {
 func startSession(cf *session.Config, ctx context.Context) (session.SessionManager, error) {
 	opts := []session.Option{session.WithCtx(ctx)}
 	if cf.Storage == "db" && cf.Dsn == "" {
-		db, ok := options.DBFrom(ctx)
+		db, ok := options.DBFrom(ctx, "")
 		if !ok {
 			return nil, fmt.Errorf("can not found db from context")
 		}
 		opts = append(opts, session.WithDB(db))
 	}
 	if cf.CookieName == session.DefCookieName {
-		cf.CookieName = fmt.Sprintf("%s-sid", proc.NameFrom(ctx))
+		cf.CookieName = fmt.Sprintf("%s-sid", proc.Name())
 	}
 	return session.StartSession(cf, opts...)
 }

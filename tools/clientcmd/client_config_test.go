@@ -27,6 +27,7 @@ import (
 
 	restclient "github.com/yubo/apiserver/pkg/rest"
 	clientcmdapi "github.com/yubo/apiserver/tools/clientcmd/api"
+	"github.com/yubo/golib/runtime"
 )
 
 func TestMergoSemantics(t *testing.T) {
@@ -832,21 +833,25 @@ func TestAuthConfigMerge(t *testing.T) {
 	content := `
 apiVersion: v1
 clusters:
-  foo-cluster:
+- cluster:
     server: https://localhost:8080
     extensions:
-      client.authentication.k8s.io/exec:
+    - name: client.authentication.k8s.io/exec
+      extension:
         audience: foo
         other: bar
+  name: foo-cluster
 contexts:
-  foo-context:
+- context:
     cluster: foo-cluster
     user: foo-user
     namespace: bar
+  name: foo-context
 current-context: foo-context
 kind: Config
 users:
-  foo-user:
+- name: foo-user
+  user:
     exec:
       apiVersion: client.authentication.k8s.io/v1alpha1
       args:
@@ -873,7 +878,10 @@ users:
 	if !config.ExecProvider.ProvideClusterInfo {
 		t.Error("Wanted provider cluster info to be true")
 	}
-	want := map[string]interface{}{"audience": "foo", "other": "bar"}
+	want := &runtime.Unknown{
+		Raw:         []byte(`{"audience":"foo","other":"bar"}`),
+		ContentType: "application/json",
+	}
 	if !reflect.DeepEqual(config.ExecProvider.Config, want) {
 		t.Errorf("Got config %v when it should be %v\n", config.ExecProvider.Config, want)
 	}

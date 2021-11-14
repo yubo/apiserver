@@ -50,15 +50,15 @@ func (g *TokenGroupAdder) AuthenticateToken(ctx context.Context, token string) (
 	return r, true, nil
 }
 
-func (a *TokenGroupAdder) Name() string {
-	return "tokenGroupAdder authenticator"
-}
-func (a *TokenGroupAdder) Priority() int {
-	if a.Authenticator != nil {
-		return a.Authenticator.Priority()
-	}
-	return 0
-}
-func (a *TokenGroupAdder) Available() bool {
-	return a.Authenticator != nil
-}
+//func (a *TokenGroupAdder) Name() string {
+//	return "tokenGroupAdder authenticator"
+//}
+//func (a *TokenGroupAdder) Priority() int {
+//	if a.Authenticator != nil {
+//		return a.Authenticator.Priority()
+//	}
+//	return 0
+//}
+//func (a *TokenGroupAdder) Available() bool {
+//	return a.Authenticator != nil
+//}

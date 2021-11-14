@@ -19,8 +19,6 @@ package authenticator
 import (
 	"context"
 	"net/http"
-	"reflect"
-	"runtime"
 
 	"github.com/yubo/apiserver/pkg/authentication/user"
 )
@@ -28,18 +26,18 @@ import (
 // Token checks a string value against a backing authentication store and
 // returns a Response or an error if the token could not be checked.
 type Token interface {
-	Name() string
-	Priority() int
-	Available() bool
+	//Name() string
+	//Priority() int
+	//Available() bool
 	AuthenticateToken(ctx context.Context, token string) (*Response, bool, error)
 }
 
 // Request attempts to extract authentication information from a request and
 // returns a Response or an error if the request could not be checked.
 type Request interface {
-	Name() string
-	Priority() int
-	Available() bool
+	//Name() string
+	//Priority() int
+	//Available() bool
 	AuthenticateRequest(req *http.Request) (*Response, bool, error)
 }
 
@@ -50,9 +48,10 @@ type TokenFunc func(ctx context.Context, token string) (*Response, bool, error)
 func (f TokenFunc) AuthenticateToken(ctx context.Context, token string) (*Response, bool, error) {
 	return f(ctx, token)
 }
-func (f TokenFunc) Name() string    { return runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name() }
-func (f TokenFunc) Priority() int   { return 0 }
-func (f TokenFunc) Available() bool { return true }
+
+//func (f TokenFunc) Name() string    { return runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name() }
+//func (f TokenFunc) Priority() int   { return 0 }
+//func (f TokenFunc) Available() bool { return true }
 
 // RequestFunc is a function that implements the Request interface.
 type RequestFunc func(req *http.Request) (*Response, bool, error)
@@ -62,9 +61,9 @@ func (f RequestFunc) AuthenticateRequest(req *http.Request) (*Response, bool, er
 	return f(req)
 }
 
-func (f RequestFunc) Name() string    { return runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name() }
-func (f RequestFunc) Priority() int   { return 0 }
-func (f RequestFunc) Available() bool { return true }
+//func (f RequestFunc) Name() string    { return runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name() }
+//func (f RequestFunc) Priority() int   { return 0 }
+//func (f RequestFunc) Available() bool { return true }
 
 // Response is the struct returned by authenticator interfaces upon successful
 // authentication. It contains information about whether the authenticator

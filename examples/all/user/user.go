@@ -6,18 +6,19 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/yubo/apiserver/pkg/db"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/rest"
-	"github.com/yubo/golib/orm"
+	"github.com/yubo/apiserver/pkg/server"
 	"k8s.io/klog/v2"
 )
 
 type Module struct {
-	Name string
-	http options.ApiServer
-	db   orm.DB
-	ctx  context.Context
+	Name   string
+	server server.APIServer
+	db     db.DB
+	ctx    context.Context
 }
 
 func New(ctx context.Context) *Module {
@@ -28,12 +29,12 @@ func New(ctx context.Context) *Module {
 
 func (p *Module) Start() error {
 	var ok bool
-	p.http, ok = options.ApiServerFrom(p.ctx)
+	p.server, ok = options.APIServerFrom(p.ctx)
 	if !ok {
-		return fmt.Errorf("unable to get http server from the context")
+		return fmt.Errorf("unable to get API server from the context")
 	}
 
-	p.db, ok = options.DBFrom(p.ctx)
+	p.db, ok = options.DBFrom(p.ctx, db.DefaultName)
 	if !ok {
 		return fmt.Errorf("unable to get db from the context")
 	}
@@ -57,7 +58,7 @@ func (p *Module) installWs() {
 		Produces:           []string{rest.MIME_JSON},
 		Consumes:           []string{rest.MIME_JSON},
 		Tags:               []string{"user"},
-		GoRestfulContainer: p.http,
+		GoRestfulContainer: p.server,
 		Routes: []rest.WsRoute{{
 			Method: "POST", SubPath: "/",
 			Desc:   "create user",
@@ -82,7 +83,7 @@ func (p *Module) installWs() {
 	})
 }
 
-func (p *Module) createUser(w http.ResponseWriter, req *http.Request, _ *rest.NoneParam, in *CreateUserInput) (*User, error) {
+func (p *Module) createUser(w http.ResponseWriter, req *http.Request, _ *rest.NonParam, in *CreateUserInput) (*User, error) {
 	return createUser(p.db, in)
 }
 

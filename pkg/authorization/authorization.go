@@ -3,13 +3,15 @@ package authorization
 import (
 	"context"
 	"fmt"
+	"runtime/debug"
 	"strings"
 
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	"github.com/yubo/apiserver/pkg/authorization/authorizerfactory"
-	"github.com/yubo/apiserver/pkg/authorization/path"
 	"github.com/yubo/apiserver/pkg/authorization/union"
 	"github.com/yubo/apiserver/pkg/options"
+	"github.com/yubo/apiserver/pkg/server"
+	"github.com/yubo/apiserver/plugin/authorizer/path"
 	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/proc"
 	"github.com/yubo/golib/util"
@@ -29,8 +31,8 @@ const (
 
 var (
 	_authz = &authorization{
-		name:          moduleName,
-		authzFactorys: map[string]authorizer.AuthorizerFactory{},
+		name:                moduleName,
+		authorizerFactories: map[string]authorizer.AuthorizerFactory{},
 	}
 	hookOps = []proc.HookOps{{
 		Hook:        _authz.init,
@@ -67,8 +69,8 @@ type config struct {
 	AlwaysAllowGroups []string `json:"alwaysAllowGroups" flag:"authorization-always-allow-groups" description:"AlwaysAllowGroups are groups which are allowed to take any actions." default:"system:masters"`
 }
 
-func (p *config) tags() map[string]*configer.TagOpts {
-	return map[string]*configer.TagOpts{
+func (p *config) tags() map[string]*configer.FieldTag {
+	return map[string]*configer.FieldTag{
 		"modes": {Description: "Ordered list of plug-ins to do authorization on secure port. Comma-delimited list of: " + strings.Join(AuthorizationModeChoices, ",") + "."},
 	}
 }
@@ -96,6 +98,7 @@ func (o *config) Validate() error {
 	modes := sets.NewString(o.Modes...)
 	for _, mode := range o.Modes {
 		if !IsValidAuthorizationMode(mode) {
+			debug.PrintStack()
 			allErrors = append(allErrors,
 				fmt.Errorf("authorization-mode %q is not a valid mode, modes %+v", mode, AuthorizationModeChoices))
 		}
@@ -112,8 +115,8 @@ type authorization struct {
 	name   string
 	config *config
 
-	authorizer    authorizer.Authorizer
-	authzFactorys map[string]authorizer.AuthorizerFactory
+	authorizer          authorizer.Authorizer
+	authorizerFactories map[string]authorizer.AuthorizerFactory
 
 	ctx       context.Context
 	cancel    context.CancelFunc
@@ -121,21 +124,18 @@ type authorization struct {
 }
 
 func RegisterAuthz(name string, factory authorizer.AuthorizerFactory) error {
-	if _, ok := _authz.authzFactorys[name]; ok {
-		return fmt.Errorf("authz %q is already registered", name)
+	if _, ok := _authz.authorizerFactories[name]; ok {
+		//return fmt.Errorf("authz %q is already registered", name)
+		panic(fmt.Sprintf("authz %q is already registered", name))
 	}
-	_authz.authzFactorys[name] = factory
+	_authz.authorizerFactories[name] = factory
 
 	AuthorizationModeChoices = append(AuthorizationModeChoices, name)
 	return nil
 }
 
-func (p *authorization) Authorizer() authorizer.Authorizer {
-	return p.authorizer
-}
-
 func (p *authorization) init(ctx context.Context) error {
-	c := proc.ConfigerMustFrom(ctx)
+	c := configer.ConfigerMustFrom(ctx)
 	p.ctx, p.cancel = context.WithCancel(ctx)
 
 	cf := newConfig()
@@ -148,7 +148,12 @@ func (p *authorization) init(ctx context.Context) error {
 		return err
 	}
 
-	options.WithAuthz(ctx, p)
+	authz := &server.AuthorizationInfo{
+		Authorizer: p.authorizer,
+		Modes:      sets.NewString(AuthorizationModeChoices...),
+	}
+
+	options.WithAuthz(ctx, authz)
 
 	return nil
 }
@@ -157,20 +162,6 @@ func (p *authorization) stop(ctx context.Context) error {
 	p.cancel()
 
 	return nil
-}
-
-func RegisterHooks() {
-	proc.RegisterHooks(hookOps)
-}
-
-func RegisterFlags() {
-	cf := newConfig()
-	proc.RegisterFlags(moduleName, moduleName, cf, configer.WithTags(cf.tags()))
-}
-
-func Register() {
-	RegisterHooks()
-	RegisterFlags()
 }
 
 func (p *authorization) initAuthorization() (err error) {
@@ -182,7 +173,7 @@ func (p *authorization) initAuthorization() (err error) {
 	}
 
 	if klog.V(6).Enabled() {
-		for k := range p.authzFactorys {
+		for k := range p.authorizerFactories {
 			klog.Infof("authz %s is valid", k)
 		}
 	}
@@ -190,22 +181,22 @@ func (p *authorization) initAuthorization() (err error) {
 	var authorizers []authorizer.Authorizer
 
 	for _, mode := range c.Modes {
-		factory, ok := p.authzFactorys[mode]
+		factory, ok := p.authorizerFactories[mode]
 		if !ok {
-			return fmt.Errorf("unknown authz mode %s specified", mode)
+			return fmt.Errorf("unknown authz.%s specified", mode)
 		}
 
 		if factory == nil {
-			klog.V(5).Infof("authz factory %q is nil, skip", mode)
+			klog.V(5).Infof("authz.%s is nil, skip", mode)
 			continue
 		}
 
-		authz, err := factory()
+		authz, err := factory(p.ctx)
 		if err != nil {
-			return err
+			return fmt.Errorf("authz.%s error %s", mode, err)
 		}
 		authorizers = append(authorizers, authz)
-		klog.V(5).Infof("authz %s loaded", mode)
+		klog.V(5).Infof("authz.%s loaded", mode)
 	}
 
 	if len(c.AlwaysAllowGroups) > 0 {
@@ -223,4 +214,17 @@ func (p *authorization) initAuthorization() (err error) {
 	p.authorizer = union.New(authorizers...)
 
 	return nil
+}
+func RegisterHooks() {
+	proc.RegisterHooks(hookOps)
+}
+
+func RegisterFlags() {
+	cf := newConfig()
+	proc.RegisterFlags(moduleName, moduleName, cf, configer.WithTags(cf.tags))
+}
+
+func Register() {
+	RegisterHooks()
+	RegisterFlags()
 }

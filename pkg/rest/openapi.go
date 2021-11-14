@@ -118,7 +118,7 @@ func (p *WsOption) build() error {
 
 }
 
-type NoneParam struct{}
+type NonParam struct{}
 
 // opt.Filter > opt.Filters > route.acl > route.filter > route.filters
 func routeFilters(route *WsRoute, opt *WsOption) (filters []restful.FilterFunction) {
@@ -391,7 +391,7 @@ func (p *RouteBuilder) registerHandle(b *restful.RouteBuilder, wr *WsRoute) erro
 		}
 
 		if numOut == 1 {
-			wr.RespWrite(resp, req.Request, NoneParam{}, toError(ret[0]))
+			wr.RespWrite(resp, req.Request, NonParam{}, toError(ret[0]))
 		}
 	}
 

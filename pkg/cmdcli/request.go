@@ -11,11 +11,17 @@ import (
 
 // host: 127.0.0.1:8080
 func NewRequest(host string, opts ...RequestOption) (*Request, error) {
-	client, err := rest.RESTClientFor(&rest.Config{
-		Host:          host,
-		ContentConfig: rest.ContentConfig{NegotiatedSerializer: scheme.Codecs},
-	})
+	config := &rest.Config{
+		Host: host,
+		ContentConfig: rest.ContentConfig{
+			NegotiatedSerializer: scheme.Codecs,
+		},
+	}
+	return NewRequestWithConfig(config)
+}
 
+func NewRequestWithConfig(config *rest.Config, opts ...RequestOption) (*Request, error) {
+	client, err := rest.RESTClientFor(config)
 	if err != nil {
 		return nil, err
 	}

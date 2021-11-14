@@ -17,7 +17,6 @@ limitations under the License.
 package group
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
@@ -53,15 +52,15 @@ func (g *GroupAdder) AuthenticateRequest(req *http.Request) (*authenticator.Resp
 	return r, true, nil
 }
 
-func (a *GroupAdder) Name() string {
-	return fmt.Sprintf("groupAdder authenticator %v", a.Groups)
-}
-func (a *GroupAdder) Priority() int {
-	if a.Authenticator != nil {
-		return a.Authenticator.Priority()
-	}
-	return 0
-}
-func (a *GroupAdder) Available() bool {
-	return a.Authenticator != nil
-}
+//func (a *GroupAdder) Name() string {
+//	return fmt.Sprintf("groupAdder authenticator %v", a.Groups)
+//}
+//func (a *GroupAdder) Priority() int {
+//	if a.Authenticator != nil {
+//		return a.Authenticator.Priority()
+//	}
+//	return 0
+//}
+//func (a *GroupAdder) Available() bool {
+//	return a.Authenticator != nil
+//}

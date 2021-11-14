@@ -6,11 +6,10 @@ import (
 	// authentication "github.com/yubo/apiserver/modules/authentication/lib"
 
 	"github.com/yubo/apiserver/pkg/audit"
-	"github.com/yubo/apiserver/pkg/authentication/authenticator"
-	"github.com/yubo/apiserver/pkg/authorization/authorizer"
-	"github.com/yubo/apiserver/pkg/authorization/rbac"
+	"github.com/yubo/apiserver/pkg/db"
+	"github.com/yubo/apiserver/pkg/dynamiccertificates"
+	"github.com/yubo/apiserver/pkg/server"
 	"github.com/yubo/golib/net/session"
-	"github.com/yubo/golib/orm"
 	"github.com/yubo/golib/proc"
 	"google.golang.org/grpc"
 	"k8s.io/klog/v2"
@@ -28,7 +27,7 @@ const (
 	sessionManagerKey //
 	authzKey          // authorization
 	auditKey          // audit
-	rbacKey           // authz-rbac
+	clientCAKey       // clientCA
 )
 
 // WithValue returns a copy of parent in which the value associated with key is val.
@@ -49,26 +48,26 @@ func GrpcServerFrom(ctx context.Context) (*grpc.Server, bool) {
 }
 
 // WithAuthn returns a copy of ctx in which the authenticationInfo value is set
-func WithAuthn(ctx context.Context, authn authenticator.Authn) {
+func WithAuthn(ctx context.Context, authn *server.AuthenticationInfo) {
 	klog.V(5).Infof("attr with authn")
 	proc.AttrMustFrom(ctx)[authnKey] = authn
 }
 
 // AuthnFrom returns the value of the authenticationInfo key on the ctx
-func AuthnFrom(ctx context.Context) (authenticator.Authn, bool) {
-	authn, ok := proc.AttrMustFrom(ctx)[authnKey].(authenticator.Authn)
+func AuthnFrom(ctx context.Context) (*server.AuthenticationInfo, bool) {
+	authn, ok := proc.AttrMustFrom(ctx)[authnKey].(*server.AuthenticationInfo)
 	return authn, ok
 }
 
 // WithAuthz returns a copy of ctx in which the authorizationInfo value is set
-func WithAuthz(ctx context.Context, authz authorizer.Authz) {
+func WithAuthz(ctx context.Context, authz *server.AuthorizationInfo) {
 	klog.V(5).Infof("attr with authz")
 	proc.AttrMustFrom(ctx)[authzKey] = authz
 }
 
 // AuthzFrom returns the value of the authorizationInfo key on the ctx
-func AuthzFrom(ctx context.Context) (authorizer.Authz, bool) {
-	authz, ok := proc.AttrMustFrom(ctx)[authzKey].(authorizer.Authz)
+func AuthzFrom(ctx context.Context) (*server.AuthorizationInfo, bool) {
+	authz, ok := proc.AttrMustFrom(ctx)[authzKey].(*server.AuthorizationInfo)
 	return authz, ok
 }
 
@@ -84,20 +83,20 @@ func AuditFrom(ctx context.Context) (audit.Auditor, bool) {
 	return authz, ok
 }
 
-// WithApiServer returns a copy of ctx in which the http value is set
-func WithApiServer(ctx context.Context, server ApiServer) {
-	klog.V(5).Infof("attr with apiserver")
+// WithAPIServer returns a copy of ctx in which the http value is set
+func WithAPIServer(ctx context.Context, server server.APIServer) {
+	klog.V(5).Infof("attr with server")
 	proc.AttrMustFrom(ctx)[apiServerKey] = server
 }
 
-// ApiServerFrom returns the value of the http key on the ctx
-func ApiServerFrom(ctx context.Context) (ApiServer, bool) {
-	server, ok := proc.AttrMustFrom(ctx)[apiServerKey].(ApiServer)
+// APIServerFrom returns the value of the http key on the ctx
+func APIServerFrom(ctx context.Context) (server.APIServer, bool) {
+	server, ok := proc.AttrMustFrom(ctx)[apiServerKey].(server.APIServer)
 	return server, ok
 }
 
-func ApiServerMustFrom(ctx context.Context) ApiServer {
-	server, ok := proc.AttrMustFrom(ctx)[apiServerKey].(ApiServer)
+func APIServerMustFrom(ctx context.Context) server.APIServer {
+	server, ok := proc.AttrMustFrom(ctx)[apiServerKey].(server.APIServer)
 	if !ok {
 		panic("unable get genericServer")
 	}
@@ -114,38 +113,41 @@ func SessionManagerFrom(ctx context.Context) (session.SessionManager, bool) {
 	return sm, ok
 }
 
-func WithDB(ctx context.Context, db orm.DB) {
-	klog.V(5).Infof("attr with db")
+func WithDB(ctx context.Context, db db.DB) {
+	klog.V(5).Infof("attr with db %v attr %p", db, proc.AttrMustFrom(ctx))
 	proc.AttrMustFrom(ctx)[dbKey] = db
 }
 
-func DBFrom(ctx context.Context) (orm.DB, bool) {
-	db, ok := proc.AttrMustFrom(ctx)[dbKey].(orm.DB)
-	return db, ok
+func DBFrom(ctx context.Context, name string) (db.DB, bool) {
+	klog.V(5).Infof("attr with name %v attr %p", name, proc.AttrMustFrom(ctx))
+	d, ok := proc.AttrMustFrom(ctx)[dbKey].(db.DB)
+	if !ok {
+		return nil, false
+	}
+	if name == "" {
+		name = db.DefaultName
+	}
+
+	if d = d.GetDB(name); d == nil {
+		return nil, false
+	}
+	return d, true
 }
 
-func DBMustFrom(ctx context.Context) orm.DB {
-	db, ok := proc.AttrMustFrom(ctx)[dbKey].(orm.DB)
+func DBMustFrom(ctx context.Context, name string) db.DB {
+	db, ok := DBFrom(ctx, name)
 	if !ok {
-		panic("unable get db")
+		panic("unable get db." + name)
 	}
 	return db
 }
 
-func WithRBAC(ctx context.Context, r *rbac.RBACAuthorizer) {
-	klog.V(5).Infof("attr with rbac")
-	proc.AttrMustFrom(ctx)[rbacKey] = r
+func WithClientCA(ctx context.Context, clientCA dynamiccertificates.CAContentProvider) {
+	klog.V(5).Infof("attr with clientCA")
+	proc.AttrMustFrom(ctx)[clientCAKey] = clientCA
 }
 
-func RBACFrom(ctx context.Context) (*rbac.RBACAuthorizer, bool) {
-	v, ok := proc.AttrMustFrom(ctx)[rbacKey].(*rbac.RBACAuthorizer)
-	return v, ok
-}
-
-func RBACMustFrom(ctx context.Context) *rbac.RBACAuthorizer {
-	v, ok := proc.AttrMustFrom(ctx)[rbacKey].(*rbac.RBACAuthorizer)
-	if !ok {
-		panic("unable get RBACAuthorizer")
-	}
-	return v
+func ClientCAFrom(ctx context.Context) (dynamiccertificates.CAContentProvider, bool) {
+	clientCA, ok := proc.AttrMustFrom(ctx)[clientCAKey].(dynamiccertificates.CAContentProvider)
+	return clientCA, ok
 }

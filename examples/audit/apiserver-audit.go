@@ -12,7 +12,7 @@ import (
 	"github.com/yubo/golib/proc"
 
 	// http
-	_ "github.com/yubo/apiserver/pkg/apiserver/register"
+	_ "github.com/yubo/apiserver/pkg/server/register"
 
 	// audit
 	_ "github.com/yubo/apiserver/pkg/audit/register"
@@ -38,13 +38,13 @@ func main() {
 	logs.InitLogs()
 	defer logs.FlushLogs()
 
-	if err := proc.NewRootCmd(context.Background()).Execute(); err != nil {
+	if err := proc.NewRootCmd().Execute(); err != nil {
 		os.Exit(1)
 	}
 }
 
 func start(ctx context.Context) error {
-	http, ok := options.ApiServerFrom(ctx)
+	http, ok := options.APIServerFrom(ctx)
 	if !ok {
 		return fmt.Errorf("unable to get http server from the context")
 	}
@@ -54,13 +54,12 @@ func start(ctx context.Context) error {
 
 func installWs(http rest.GoRestfulContainer) {
 	rest.WsRouteBuild(&rest.WsOption{
-		Path:               "/hello",
+		Path:               "/",
 		GoRestfulContainer: http,
 		Routes: []rest.WsRoute{
-			{Method: "GET", SubPath: "/", Handle: hw},
-			{Method: "POST", SubPath: "/", Handle: hw},
-			{Method: "PUT", SubPath: "/", Handle: hw},
-			{Method: "DELETE", SubPath: "/", Handle: hw},
+			{Method: "GET", SubPath: "/static/hw", Handle: hw},  // none
+			{Method: "POST", SubPath: "/api/users", Handle: hw}, // RequestResponse
+			{Method: "GET", SubPath: "/api/tokens", Handle: hw}, // metadata
 		},
 	})
 }

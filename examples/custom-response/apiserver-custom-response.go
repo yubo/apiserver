@@ -13,8 +13,8 @@ import (
 	"github.com/yubo/golib/proc"
 	"github.com/yubo/golib/util"
 
-	_ "github.com/yubo/apiserver/pkg/apiserver/register"
 	_ "github.com/yubo/apiserver/pkg/rest/swagger/register"
+	_ "github.com/yubo/apiserver/pkg/server/register"
 )
 
 // This example shows the minimal code needed to get a restful.WebService working.
@@ -74,13 +74,13 @@ func main() {
 
 	proc.RegisterHooks(hookOps)
 
-	if err := proc.NewRootCmd(proc.WithName(context.Background(), moduleName)).Execute(); err != nil {
+	if err := proc.NewRootCmd().Execute(); err != nil {
 		os.Exit(1)
 	}
 }
 
 func start(ctx context.Context) error {
-	http, ok := options.ApiServerFrom(ctx)
+	http, ok := options.APIServerFrom(ctx)
 	if !ok {
 		return fmt.Errorf("unable to get http server from the context")
 	}

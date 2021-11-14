@@ -3,90 +3,105 @@ package db
 import (
 	"context"
 
-	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/golib/orm"
-	"github.com/yubo/golib/proc"
-	"github.com/yubo/golib/util"
+	"github.com/yubo/golib/util/errors"
+	"k8s.io/klog/v2"
 )
 
 const (
-	moduleName = "db"
+	DefaultName = "__default__"
 )
 
-type config struct {
-	Driver string `json:"driver" flag:"db-driver" default:"mysql" description:"default: mysql"`
-	Dsn    string `json:"dsn" flag:"db-dsn" description:"db is disabled when empty dsn"`
+type DB interface {
+	orm.DB
+
+	GetDB(name string) DB // panic if db[name] is not exist
 }
 
-func (p config) String() string {
-	return util.Prettify(p)
-}
-
-func (p *config) Validate() error {
-	if p.Dsn == "" {
-		return nil
-	}
-	if p.Driver == "" {
-		p.Driver = "mysql"
-	}
-	return nil
-}
-
-type dbModule struct {
-	config *config
-	name   string
-	db     orm.DB
+type serverDB struct {
+	name string
+	orm.DB
+	dbs    map[string]orm.DB
 	ctx    context.Context
 	cancel context.CancelFunc
 }
 
-var (
-	_module = &dbModule{name: moduleName}
-	hookOps = []proc.HookOps{{
-		Hook:        _module.init,
-		Owner:       moduleName,
-		HookNum:     proc.ACTION_START,
-		Priority:    proc.PRI_SYS_INIT,
-		SubPriority: options.PRI_M_DB,
-	}, {
-		Hook:        _module.stop,
-		Owner:       moduleName,
-		HookNum:     proc.ACTION_STOP,
-		Priority:    proc.PRI_SYS_INIT,
-		SubPriority: options.PRI_M_DB,
-	}}
-)
-
-// Because some configuration may be stored in the database,
-// set the db.connect into sys.db.prestart
-func (p *dbModule) init(ctx context.Context) (err error) {
-	configer := proc.ConfigerMustFrom(ctx)
-	p.ctx, p.cancel = context.WithCancel(ctx)
-
-	cf := &config{}
-	if err := configer.Read(p.name, cf); err != nil {
-		return err
+func NewDB(ctx context.Context, config *Config) (DB, error) {
+	ret := &serverDB{
+		dbs: make(map[string]orm.DB),
 	}
+	ret.ctx, ret.cancel = context.WithCancel(ctx)
 
-	p.config = cf
-
-	// db
-	if cf.Driver != "" && cf.Dsn != "" {
-		if p.db, err = orm.Open(cf.Driver, cf.Dsn, orm.WithContext(p.ctx)); err != nil {
-			return err
+	for _, cf := range config.Databases {
+		if cf.Dsn == "" || cf.Driver == "" {
+			klog.Warningf("database[%s].dsn is empty, skiped", cf.Name)
+			continue
 		}
-		options.WithDB(ctx, p.db)
+		opts := []orm.Option{
+			orm.WithContext(ctx),
+		}
+
+		if cf.WithoutPing {
+			opts = append(opts, orm.WithoutPing())
+		}
+		if cf.IgnoreNotFound {
+			opts = append(opts, orm.WithIgnoreNotFound())
+		}
+		if cf.MaxRows > 0 {
+			opts = append(opts, orm.WithMaxRows(cf.MaxRows))
+		}
+		if cf.MaxIdleCount > 0 {
+			opts = append(opts, orm.WithMaxIdleCount(cf.MaxIdleCount))
+		}
+		if cf.MaxOpenConns > 0 {
+			opts = append(opts, orm.WithMaxOpenConns(cf.MaxOpenConns))
+		}
+		if !cf.ConnMaxLifetime.IsZero() {
+			opts = append(opts, orm.WithConnMaxLifetime(cf.ConnMaxLifetime.Duration))
+		}
+		if !cf.ConnMaxIdletime.IsZero() {
+			opts = append(opts, orm.WithConnMaxLifetime(cf.ConnMaxIdletime.Duration))
+		}
+
+		if db, err := orm.Open(cf.Driver, cf.Dsn, opts...); err != nil {
+			ret.cancel()
+			return nil, err
+		} else {
+			ret.dbs[cf.Name] = db
+		}
 	}
 
-	return nil
+	if db, ok := ret.dbs[DefaultName]; ok {
+		ret.name = DefaultName
+		ret.DB = db
+	}
+
+	return ret, nil
 }
 
-func (p *dbModule) stop(ctx context.Context) error {
-	p.cancel()
-	return nil
+func (p *serverDB) Close() error {
+	var errs []error
+	for _, db := range p.dbs {
+		if err := db.Close(); err != nil {
+			errs = append(errs, err)
+		}
+	}
+	return errors.NewAggregate(errs)
 }
 
-func Register() {
-	proc.RegisterHooks(hookOps)
-	proc.RegisterFlags("db", "db", &config{})
+func (p *serverDB) GetDB(name string) DB {
+	if p == nil {
+		panic("nil db")
+	}
+
+	if db, ok := p.dbs[name]; !ok {
+		klog.Infof("dbs %+v %s", p.dbs, name)
+		panic("v nil db")
+	} else {
+		return &serverDB{
+			name: name,
+			DB:   db,
+			dbs:  p.dbs,
+		}
+	}
 }

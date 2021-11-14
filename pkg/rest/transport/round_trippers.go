@@ -444,8 +444,6 @@ func (rt *debuggingRoundTripper) RoundTrip(req *http.Request) (*http.Response, e
 		}
 	}
 
-	if rt.delegatedRoundTripper == nil {
-	}
 	startTime := time.Now()
 	response, err := rt.delegatedRoundTripper.RoundTrip(req)
 	reqInfo.Duration = time.Since(startTime)

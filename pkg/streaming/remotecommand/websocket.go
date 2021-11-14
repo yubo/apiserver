@@ -21,7 +21,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/yubo/apiserver/pkg/apiserver/httplog"
+	"github.com/yubo/apiserver/pkg/server/httplog"
 	"github.com/yubo/golib/util/runtime"
 	"github.com/yubo/golib/util/wsstream"
 )

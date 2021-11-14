@@ -18,8 +18,11 @@ package rest
 
 import (
 	"crypto/tls"
+	"errors"
 	"net/http"
 
+	"github.com/yubo/apiserver/pkg/apis/clientauthentication"
+	"github.com/yubo/apiserver/pkg/client/auth/exec"
 	"github.com/yubo/apiserver/pkg/rest/transport"
 )
 
@@ -87,6 +90,27 @@ func (c *Config) TransportConfig() (*transport.Config, error) {
 		Proxy: c.Proxy,
 	}
 
+	if c.ExecProvider != nil && c.AuthProvider != nil {
+		return nil, errors.New("execProvider and authProvider cannot be used in combination")
+	}
+
+	if c.ExecProvider != nil {
+		var cluster *clientauthentication.Cluster
+		if c.ExecProvider.ProvideClusterInfo {
+			var err error
+			cluster, err = ConfigToExecCluster(c)
+			if err != nil {
+				return nil, err
+			}
+		}
+		provider, err := exec.GetAuthenticator(c.ExecProvider, cluster)
+		if err != nil {
+			return nil, err
+		}
+		if err := provider.UpdateTransportConfig(conf); err != nil {
+			return nil, err
+		}
+	}
 	if c.AuthProvider != nil {
 		provider, err := GetAuthProvider(c.Host, c.AuthProvider, c.AuthConfigPersister)
 		if err != nil {

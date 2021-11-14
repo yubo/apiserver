@@ -37,18 +37,18 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/yubo/golib/scheme"
 	utiltesting "github.com/yubo/apiserver/pkg/rest/testing"
 	restclientwatch "github.com/yubo/apiserver/pkg/rest/watch"
-	"github.com/yubo/golib/runtime"
-	"github.com/yubo/golib/runtime/serializer/streaming"
-	"github.com/yubo/golib/watch"
 	"github.com/yubo/golib/api"
 	apierrors "github.com/yubo/golib/api/errors"
+	"github.com/yubo/golib/runtime"
+	"github.com/yubo/golib/runtime/serializer/streaming"
+	"github.com/yubo/golib/scheme"
 	"github.com/yubo/golib/util/clock"
 	"github.com/yubo/golib/util/diff"
 	"github.com/yubo/golib/util/flowcontrol"
 	"github.com/yubo/golib/util/httpstream"
+	"github.com/yubo/golib/watch"
 	"k8s.io/klog/v2"
 )
 
@@ -802,6 +802,7 @@ func TestTransformUnstructuredError(t *testing.T) {
 		Req *http.Request
 		Res *http.Response
 
+		id       string
 		Resource string
 		Name     string
 
@@ -809,6 +810,7 @@ func TestTransformUnstructuredError(t *testing.T) {
 		Transformed error
 	}{
 		{
+			id:       "1",
 			Resource: "foo",
 			Name:     "bar",
 			Req: &http.Request{
@@ -821,6 +823,7 @@ func TestTransformUnstructuredError(t *testing.T) {
 			ErrFn: apierrors.IsAlreadyExists,
 		},
 		{
+			id:       "2",
 			Resource: "foo",
 			Name:     "bar",
 			Req: &http.Request{
@@ -833,6 +836,7 @@ func TestTransformUnstructuredError(t *testing.T) {
 			ErrFn: apierrors.IsConflict,
 		},
 		{
+			id:       "3",
 			Resource: "foo",
 			Name:     "bar",
 			Req:      &http.Request{},
@@ -843,6 +847,7 @@ func TestTransformUnstructuredError(t *testing.T) {
 			ErrFn: apierrors.IsNotFound,
 		},
 		{
+			id:  "4",
 			Req: &http.Request{},
 			Res: &http.Response{
 				StatusCode: http.StatusBadRequest,
@@ -851,6 +856,7 @@ func TestTransformUnstructuredError(t *testing.T) {
 			ErrFn: apierrors.IsBadRequest,
 		},
 		{
+			id: "5",
 			// status in response overrides transformed result
 			Req:   &http.Request{},
 			Res:   &http.Response{StatusCode: http.StatusBadRequest, Body: ioutil.NopCloser(bytes.NewReader([]byte(`{"status":"Failure","code":404}`)))},
@@ -860,18 +866,21 @@ func TestTransformUnstructuredError(t *testing.T) {
 			},
 		},
 		{
+			id: "6",
 			// successful status is ignored
 			Req:   &http.Request{},
 			Res:   &http.Response{StatusCode: http.StatusBadRequest, Body: ioutil.NopCloser(bytes.NewReader([]byte(`{"status":"Success","code":404}`)))},
 			ErrFn: apierrors.IsBadRequest,
 		},
 		{
+			id: "7",
 			// empty object does not change result
 			Req:   &http.Request{},
 			Res:   &http.Response{StatusCode: http.StatusBadRequest, Body: ioutil.NopCloser(bytes.NewReader([]byte(`{}`)))},
 			ErrFn: apierrors.IsBadRequest,
 		},
 		{
+			id: "8",
 			// we default apiVersion for backwards compatibility with old clients
 			// TODO: potentially remove in 1.7
 			Req:   &http.Request{},
@@ -881,7 +890,9 @@ func TestTransformUnstructuredError(t *testing.T) {
 				ErrStatus: api.Status{Status: api.StatusFailure, Code: http.StatusNotFound},
 			},
 		},
+		//  unsupported kind
 		//{
+		//	id: "9",
 		//	// we do not default kind
 		//	Req:   &http.Request{},
 		//	Res:   &http.Response{StatusCode: http.StatusBadRequest, Body: ioutil.NopCloser(bytes.NewReader([]byte(`{"status":"Failure","code":404}`)))},
@@ -890,7 +901,7 @@ func TestTransformUnstructuredError(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		t.Run("", func(t *testing.T) {
+		t.Run(testCase.id, func(t *testing.T) {
 			r := &Request{
 				c: &RESTClient{
 					content: defaultContentConfig(),
@@ -938,8 +949,10 @@ func TestTransformUnstructuredError(t *testing.T) {
 			//}
 
 			// verify result.Raw leaves the error in the untransformed state
-			_, err = result.Raw()
-			assert.Equal(t, result.err, err)
+			{
+				_, err := result.Raw()
+				assert.Equal(t, result.err, err)
+			}
 			//if _, err := result.Raw(); !reflect.DeepEqual(result.err, err) {
 			//	t.Errorf("unexpected error on Raw(): %s", diff.ObjectReflectDiff(expect, err))
 			//}

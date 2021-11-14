@@ -7,6 +7,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/yubo/apiserver/pkg/options"
+	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/net/rpc"
 	"github.com/yubo/golib/proc"
 	"github.com/yubo/golib/util"
@@ -57,7 +58,7 @@ var (
 )
 
 func (p *grpcServer) init(ctx context.Context) (err error) {
-	c := proc.ConfigerMustFrom(ctx)
+	c := configer.ConfigerMustFrom(ctx)
 	p.ctx, p.cancel = context.WithCancel(ctx)
 
 	cf := &config{}

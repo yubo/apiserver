@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/yubo/apiserver/examples/all/authn"
@@ -14,35 +13,46 @@ import (
 	"github.com/yubo/golib/proc"
 	"k8s.io/klog/v2"
 
+	_ "github.com/yubo/golib/orm/mysql"
+	_ "github.com/yubo/golib/orm/sqlite"
+
 	// authz's submodule, should be loaded before the authz module
-	_ "github.com/yubo/apiserver/pkg/authorization/abac/register"
-	_ "github.com/yubo/apiserver/pkg/authorization/alwaysallow/register"
-	_ "github.com/yubo/apiserver/pkg/authorization/alwaysdeny/register"
-	_ "github.com/yubo/apiserver/pkg/authorization/rbac/register"
 	_ "github.com/yubo/apiserver/pkg/authorization/register"
+	_ "github.com/yubo/apiserver/plugin/authorizer/abac/register"
+	_ "github.com/yubo/apiserver/plugin/authorizer/alwaysallow/register"
+	_ "github.com/yubo/apiserver/plugin/authorizer/alwaysdeny/register"
+	_ "github.com/yubo/apiserver/plugin/authorizer/rbac/register"
+
 	// TODO
-	//_ "github.com/yubo/apiserver/pkg/authorization/webhook/register"
+	//_ "github.com/yubo/apiserver/plugin/authorizer/webhook/register"
 
 	// authn
 	_ "github.com/yubo/apiserver/pkg/authentication/register"
-	_ "github.com/yubo/apiserver/pkg/authentication/session/register"
-	_ "github.com/yubo/apiserver/pkg/authentication/token/bootstrap/register"
-	_ "github.com/yubo/apiserver/pkg/authentication/token/oidc/register"
-	_ "github.com/yubo/apiserver/pkg/authentication/token/tokenfile/register"
-	// TODO
-	//_ "github.com/yubo/apiserver/pkg/authentication/serviceaccount/register"
-	//_ "github.com/yubo/apiserver/pkg/authentication/webhook/register"
+	// 1. headerrequest
+	_ "github.com/yubo/apiserver/plugin/authenticator/headerrequest/register"
+	// 2. x509
+	_ "github.com/yubo/apiserver/plugin/authenticator/x509/register"
+	// 3.session
+	_ "github.com/yubo/apiserver/plugin/authenticator/session/register"
+	// 4. tokenfile
+	_ "github.com/yubo/apiserver/plugin/authenticator/token/tokenfile/register"
+	// 5. service account file <TODO>
+	// 6. service account issuer <TODO>
+	// 7. bootstrap
+	_ "github.com/yubo/apiserver/plugin/authenticator/token/bootstrap/register"
+	// 8. OIDC
+	_ "github.com/yubo/apiserver/plugin/authenticator/token/oidc/register"
+	// 9. webhook
+	_ "github.com/yubo/apiserver/plugin/authenticator/token/webhook/register"
 
-	_ "github.com/yubo/apiserver/pkg/apiserver/register"
 	_ "github.com/yubo/apiserver/pkg/audit/register"
 	_ "github.com/yubo/apiserver/pkg/db/register"
-	_ "github.com/yubo/apiserver/pkg/debug/register"
 	_ "github.com/yubo/apiserver/pkg/grpcserver/register"
 	_ "github.com/yubo/apiserver/pkg/rest/swagger/register"
+	_ "github.com/yubo/apiserver/pkg/server/register"
 	_ "github.com/yubo/apiserver/pkg/session/register"
 	_ "github.com/yubo/apiserver/pkg/tracing/register"
 	_ "github.com/yubo/golib/logs/register"
-	_ "github.com/yubo/golib/orm/sqlite"
 )
 
 const (
@@ -68,10 +78,7 @@ func newServerCmd() *cobra.Command {
 	proc.RegisterHooks(hookOps)
 	options.InstallReporter()
 
-	ctx := context.Background()
-	ctx = proc.WithName(ctx, os.Args[0])
-
-	cmd := proc.NewRootCmd(ctx)
+	cmd := proc.NewRootCmd()
 	cmd.AddCommand(options.NewVersionCmd())
 
 	return cmd

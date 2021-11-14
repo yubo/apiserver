@@ -37,7 +37,6 @@ import (
 	"github.com/yubo/apiserver/pkg/metrics"
 	"github.com/yubo/apiserver/pkg/request"
 	restclientwatch "github.com/yubo/apiserver/pkg/rest/watch"
-	"github.com/yubo/golib/watch"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/api/errors"
 	"github.com/yubo/golib/runtime"
@@ -47,6 +46,7 @@ import (
 	utilclock "github.com/yubo/golib/util/clock"
 	"github.com/yubo/golib/util/flowcontrol"
 	"github.com/yubo/golib/util/net"
+	"github.com/yubo/golib/watch"
 	"golang.org/x/net/http2"
 
 	"k8s.io/klog/v2"
@@ -1335,7 +1335,7 @@ type Result struct {
 
 // Raw returns the raw result.
 func (r Result) Raw() ([]byte, error) {
-	return r.body, r.Error()
+	return r.body, r.err
 }
 
 // Get returns the result as an object, which means it passes through the decoder.
@@ -1411,6 +1411,7 @@ func (r Result) Error() error {
 		klog.V(5).Infof("body was not decodable (unable to check for Status): %v", err)
 		return r.err
 	}
+
 	// because we default the kind, we *must* check for StatusFailure
 	if out.Status == api.StatusFailure {
 		return errors.FromObject(out)

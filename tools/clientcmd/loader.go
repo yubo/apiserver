@@ -207,7 +207,6 @@ func (rules *ClientConfigLoadingRules) Load() (*clientcmdapi.Config, error) {
 
 		if err != nil {
 			errlist = append(errlist, fmt.Errorf("error loading config file \"%s\": %v", filename, err))
-			klog.Infof("errors %d", len(errlist))
 			continue
 		}
 
@@ -242,7 +241,6 @@ func (rules *ClientConfigLoadingRules) Load() (*clientcmdapi.Config, error) {
 	if rules.ResolvePaths() {
 		if err := ResolveLocalPaths(config); err != nil {
 			errlist = append(errlist, err)
-			klog.Infof("errors %d", len(errlist))
 		}
 	}
 	return config, utilerrors.NewAggregate(errlist)
@@ -405,11 +403,12 @@ func Load(data []byte) (*clientcmdapi.Config, error) {
 		return config, nil
 	}
 
-	decoded, err := clientcmdapi.Codec.Decode(data, config)
+	_, err := clientcmdapi.Codec.Decode(data, config)
 	if err != nil {
 		return nil, err
 	}
-	return decoded.(*clientcmdapi.Config), nil
+
+	return config, nil
 }
 
 // WriteToFile serializes the config to yaml and writes it out to a file.  If not present, it creates the file with the mode 0600.  If it is present

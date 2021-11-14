@@ -12,25 +12,31 @@ kind: Policy
 rules:
   - level: None
     nonResourceURLs:
-      - /hello/*
+      - /static/*
   - level: RequestResponse
     verbs: ["patch", "delete", "create"]
-    resources:
+    nonResourceURLs:
+      - /api/user
   - level: Metadata
+      - /api/*
 ```
 
 
 test
 
-```
-curl -X POST http://localhost:8080/hello
-```
+```shell
+# None
+$ curl -X POST http://localhost:8080/hello
 
-stdout
+# RequestResponse
+$ curl -X POST http://localhost:8080/api/users -d '{"name":"tom", "age": 16}'
+{"level":"Metadata","auditID":"09fb2bd8-6281-4a22-a88d-7fa6017f6e1c","stage":"RequestReceived","requestURI":"/api/users","verb":"post","user":{},"sourceIPs":["::1"],"userAgent":"curl/7.64.1","requestReceivedTimestamp":"2021-10-21T05:42:11.210783Z","stageTimestamp":"2021-10-21T05:42:11.210783Z"}
+{"level":"Metadata","auditID":"09fb2bd8-6281-4a22-a88d-7fa6017f6e1c","stage":"ResponseComplete","requestURI":"/api/users","verb":"post","user":{},"sourceIPs":["::1"],"userAgent":"curl/7.64.1","responseStatus":{"metadata":{},"code":200},"requestReceivedTimestamp":"2021-10-21T05:42:11.210783Z","stageTimestamp":"2021-10-21T05:42:11.211230Z","annotations":{"authorization.k8s.io/decision":"allow","authorization.k8s.io/reason":""}}
 
-```json
-{"level":"Metadata","auditID":"09ba5922-0e9c-44cb-a600-139df7437ce3","stage":"RequestReceived","requestURI":"/hello","verb":"post","user":{},"sourceIPs":["::1"],"userAgent":"curl/7.29.0","requestReceivedTimestamp":"2021-10-19T18:43:06.711056Z","stageTimestamp":"2021-10-19T18:43:06.711056Z"}
-{"level":"Metadata","auditID":"09ba5922-0e9c-44cb-a600-139df7437ce3","stage":"ResponseComplete","requestURI":"/hello","verb":"post","user":{},"sourceIPs":["::1"],"userAgent":"curl/7.29.0","responseStatus":{"metadata":{},"code":200},"requestReceivedTimestamp":"2021-10-19T18:43:06.711056Z","stageTimestamp":"2021-10-19T18:43:06.711258Z","annotations":{"authorization.k8s.io/decision":"allow","authorization.k8s.io/reason":""}}
 
+# Metadata
+$ curl http://localhost:8080/api/tokens
+{"level":"Metadata","auditID":"13af54a7-7ae3-49e8-8dee-a4b7867a9122","stage":"RequestReceived","requestURI":"/api/tokens","verb":"get","user":{},"sourceIPs":["::1"],"userAgent":"curl/7.64.1","requestReceivedTimestamp":"2021-10-21T05:42:40.964340Z","stageTimestamp":"2021-10-21T05:42:40.964340Z"}
+{"level":"Metadata","auditID":"13af54a7-7ae3-49e8-8dee-a4b7867a9122","stage":"ResponseComplete","requestURI":"/api/tokens","verb":"get","user":{},"sourceIPs":["::1"],"userAgent":"curl/7.64.1","responseStatus":{"metadata":{},"code":200},"requestReceivedTimestamp":"2021-10-21T05:42:40.964340Z","stageTimestamp":"2021-10-21T05:42:40.964561Z","annotations":{"authorization.k8s.io/decision":"allow","authorization.k8s.io/reason":""}}
 ```
 

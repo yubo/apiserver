@@ -11,6 +11,7 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/rest"
+	"github.com/yubo/apiserver/pkg/server"
 	"github.com/yubo/golib/net/rpc"
 	"github.com/yubo/golib/scheme"
 	"k8s.io/klog/v2"
@@ -22,7 +23,7 @@ const (
 
 type Module struct {
 	Name   string
-	http   options.ApiServer
+	server server.APIServer
 	ctx    context.Context
 	client *rest.RESTClient
 }
@@ -35,8 +36,8 @@ func New(ctx context.Context) *Module {
 
 func (p *Module) Start() error {
 	var ok bool
-	if p.http, ok = options.ApiServerFrom(p.ctx); !ok {
-		return fmt.Errorf("unable to get http server from the context")
+	if p.server, ok = options.APIServerFrom(p.ctx); !ok {
+		return fmt.Errorf("unable to get API server from the context")
 	}
 
 	if grpc, ok := options.GrpcServerFrom(p.ctx); !ok {
@@ -61,7 +62,7 @@ func (p *Module) installWs() {
 		Produces:           []string{"*/*"},
 		Consumes:           []string{"*/*"},
 		Tags:               []string{"tracing"},
-		GoRestfulContainer: p.http,
+		GoRestfulContainer: p.server,
 		Routes: []rest.WsRoute{{
 			Method: "GET", SubPath: "/a",
 			Desc:   "a -> a1",

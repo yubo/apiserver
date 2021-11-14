@@ -1,0 +1,117 @@
+global:
+  logLevel: 10
+  logFlushFrequency: 5
+  watchdogSec: 10
+
+logging:
+  level: info
+
+debug:
+  address: "127.0.0.1:6831"
+  pprof: true
+  expvar: true
+  metrics: true
+
+tracing:
+  httpBody: true       # log http request body
+  httpHeader: true     # log http request header
+  respTraceId: true    # inject trace id into response header
+  jaeger:
+    serviceName: example-all
+    reporter:
+      localAgentHostPort: 127.0.0.1:6831
+      logSpans: false
+
+apiserver:
+  generic:
+    enablePriorityAndFairness: true
+    goawayChance: 0
+    livezGracePeriod: 0
+    maxMutatingRequestsInFlight: 200
+    maxRequestBodyBytes: 3145728
+    maxRequestsInFlight: 400
+    minRequestTimeout: 30m0s
+    requestTimeout: 1m0s
+    shutdownDelayDuration: 0
+  insecureServing:
+    bindAddress: 0.0.0.0
+    bindNework: tcp
+    bindPort: 8080
+    enabled: false
+  secureServing:
+    PermitAddressSharing: false
+    bindAddress: 0.0.0.0
+    bindNework: tcp
+    bindPort: 8443
+    enabled: true
+    http2MaxStreamsPerConnection: 0
+    permitPortSharing: false
+    serverCert:
+      certDir: /var/run/all
+      pairName: apiserver
+  enableContentionProfiling: true
+  enableIndex: false
+  enableMetrics: false
+  enablePriorityAndFairness: true
+  enableProfiling: true
+
+
+authentication:
+  session: true                   # --enable-session-auth
+  bootstrapToken: true            # --enable-bootstrap-token-auth
+  anonymous: false                # --anonymous-auth
+  tokenAuthFile: ./etc/tokens.cvs # --token-auth-file={file-path}
+  oidc:
+    issuerURL:                    # --oidc-issuer-url
+    clientID:                     # --oidc-client-id
+
+authorization:
+  policyFile: ./etc/abac.json     # --authorization-policy-file={file-path}
+  modes:                          # --modes=ABAC,AlwaysAllow
+    - ABAC
+
+session:
+  enabled: true
+  storage: "db" # mem | db
+  storageExtra: "session"
+  cookieName: "golib-example-sid"
+  sidLength: 24
+  httpOnly: true
+  domain:
+  gcInterval: 60
+  cookieLifetime: 57600 # 16 * 3600
+
+swagger: # depend http
+  enabled: true
+  name: "example-all"
+  url: "/apidocs.json"
+  clientId: "1234"
+  clientSecret: "1234"
+  schemes:
+    - name: "BearerToken"
+      type: "apiKey"
+      fieldName: "authorization"
+      valueSource: "header" # can be "header", "query" or "cookie"
+#    - name: "OAuth2"
+#      type: "accessCode"
+#      authorizationURL: "http://localhost/o/oauth2/authorize"
+#      tokenURL: "http://localhost/o/oauth2/token"
+#    - name: "Base"
+#      type: "base"
+
+grpc:
+  addr: ":8081"
+  maxRecvMsgSize: 1024000
+
+db:
+  driver: "sqlite3"
+  dsn: "file:example-all.db?cache=shared&mode=memory"
+  databases:
+    - name: "apiserver" 
+      driver: "sqlite3"
+      dsn: "file:example-all-apiserver.db?cache=shared&mode=memory"
+  #driver: "mysql"
+  #dsn: "root:1234@tcp(localhost:3306)/test?loc=Local&parseTime=true"
+
+auth:
+  name: "example-all.auth"
