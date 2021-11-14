@@ -37,15 +37,18 @@ func (p *Module) init(ctx context.Context) (err error) {
 		return err
 	}
 	p.config = cf
-	// klog.Infof("config %s", c)
 
-	goswagger.New(cf).Install(options.APIServerMustFrom(ctx), rest.SecuritySchemeRegister)
-
-	return
+	return goswagger.New(cf).Install(options.APIServerMustFrom(ctx).
+		Config().Handler.NonGoRestfulMux.UnlistedHandlePrefix,
+		rest.SecuritySchemeRegister)
 }
 
 func newConfig() *goswagger.Config {
-	return &goswagger.Config{}
+	return &goswagger.Config{
+		Enabled: true,
+		Name:    "go-swagger",
+		Url:     "/apidocs.json",
+	}
 }
 
 func Register() {

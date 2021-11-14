@@ -17,7 +17,7 @@ require (
 	github.com/docker/go-units v0.4.0 // indirect
 	github.com/emicklei/go-restful v2.15.0+incompatible
 	github.com/emicklei/go-restful-openapi v1.4.1
-	github.com/go-openapi/spec v0.20.3
+	github.com/go-openapi/spec v0.20.4
 	github.com/gogo/protobuf v1.3.2
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e
 	github.com/golang/mock v1.4.1
@@ -26,6 +26,7 @@ require (
 	github.com/google/uuid v1.2.0
 	github.com/hashicorp/golang-lru v0.5.1
 	github.com/imdario/mergo v0.3.5
+	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
 	github.com/moby/term v0.0.0-20201216013528-df9cb8a40635
 	github.com/morikuni/aec v1.0.0 // indirect
@@ -44,10 +45,10 @@ require (
 	github.com/uber/jaeger-client-go v2.25.0+incompatible
 	github.com/uber/jaeger-lib v2.2.0+incompatible
 	github.com/yubo/golib v0.0.2-0.20211114094711-541fb5329deb
-	github.com/yubo/goswagger v0.0.0-20210729084640-1f6e710ffaaf
+	github.com/yubo/goswagger v0.0.0-20211114152643-2762ca8d22bd
 	go.uber.org/zap v1.13.0
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
-	golang.org/x/net v0.0.0-20211013171255-e13a2654a71e
+	golang.org/x/net v0.0.0-20211112202133-69e39bad7dc2
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/sync v0.0.0-20201207232520-09787c993a3a
 	golang.org/x/sys v0.0.0-20211013075003-97ac67df715c
@@ -58,6 +59,6 @@ require (
 	gopkg.in/square/go-jose.v2 v2.5.1
 	gopkg.in/yaml.v2 v2.4.0
 	gotest.tools v2.2.0+incompatible // indirect
-	k8s.io/klog/v2 v2.9.0
+	k8s.io/klog/v2 v2.30.0
 	sigs.k8s.io/yaml v1.2.0
 )

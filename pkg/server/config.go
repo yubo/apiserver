@@ -113,10 +113,6 @@ type Config struct {
 type APIServer interface {
 	Config() *Config
 
-	Handle(string, http.Handler)
-	HandleFunc(string, func(http.ResponseWriter, *http.Request))
-	UnlistedHandle(string, http.Handler)
-	UnlistedHandleFunc(string, func(http.ResponseWriter, *http.Request))
 	Add(*restful.WebService) *restful.Container
 	Filter(restful.FilterFunction)
 }

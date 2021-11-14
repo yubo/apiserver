@@ -32,18 +32,6 @@ func (p *module) Config() *server.Config {
 }
 
 // same as http.Handle()
-func (p *module) Handle(pattern string, handler http.Handler) {
-	p.config.Handler.GoRestfulContainer.Handle(pattern, handler)
-}
-func (p *module) HandleFunc(pattern string, handler func(http.ResponseWriter, *http.Request)) {
-	p.Handle(pattern, http.HandlerFunc(handler))
-}
-func (p *module) UnlistedHandle(pattern string, handler http.Handler) {
-	p.config.Handler.NonGoRestfulMux.UnlistedHandle(pattern, handler)
-}
-func (p *module) UnlistedHandleFunc(pattern string, handler func(http.ResponseWriter, *http.Request)) {
-	p.UnlistedHandle(pattern, http.HandlerFunc(handler))
-}
 func (p *module) Add(service *restful.WebService) *restful.Container {
 	return p.config.Handler.GoRestfulContainer.Add(service)
 }
