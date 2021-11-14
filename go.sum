@@ -508,8 +508,8 @@ github.com/uber/jaeger-lib v2.2.0+incompatible/go.mod h1:ComeNDZlWwrWnDv8aPp0Ba6
 github.com/urfave/cli v1.20.0/go.mod h1:70zkFmudgCuE/ngEzBv17Jvp/497gISqfk5gWijbERA=
 github.com/urfave/cli v1.22.1/go.mod h1:Gos4lmkARVdJ6EkW0WaNv/tZAAMe9V7XWyB60NtXRu0=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
-github.com/yubo/golib v0.0.0-20211019184716-0322e55b9f42 h1:V1R7QAhFyAlLCmPL2D3ZQPMATdxMI6rTdVqZyx5Hse8=
-github.com/yubo/golib v0.0.0-20211019184716-0322e55b9f42/go.mod h1:9X68yW2p1h5xhsPICx9Eb4T0LUo0CcohnDYfY3NfLQU=
+github.com/yubo/golib v0.0.2-0.20211114094711-541fb5329deb h1:iMD85IFczGSDO7bBXq1Hx3WWBb1rROKQ6S3wYFo30Ag=
+github.com/yubo/golib v0.0.2-0.20211114094711-541fb5329deb/go.mod h1:9X68yW2p1h5xhsPICx9Eb4T0LUo0CcohnDYfY3NfLQU=
 github.com/yubo/goswagger v0.0.0-20210729084640-1f6e710ffaaf h1:7zNlVHUBYhSCZo1CFpFWi1gZBB7r4EBBbP1nLQMtPWg=
 github.com/yubo/goswagger v0.0.0-20210729084640-1f6e710ffaaf/go.mod h1:gAX7WMxJB3z/fcLwP8VCrkZh0Dj0X/5vaJlXtq/f5qo=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
