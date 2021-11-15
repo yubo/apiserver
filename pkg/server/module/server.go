@@ -12,6 +12,7 @@ import (
 	"github.com/emicklei/go-restful"
 	"github.com/go-openapi/spec"
 	"github.com/google/uuid"
+	"github.com/spf13/cobra"
 	"github.com/yubo/apiserver/pkg/authorization/authorizerfactory"
 	"github.com/yubo/apiserver/pkg/filters"
 	"github.com/yubo/apiserver/pkg/options"
@@ -396,4 +397,15 @@ func RegisterFlags() {
 func Register() {
 	RegisterHooks()
 	RegisterFlags()
+}
+
+// for example
+func NewRootCmdWithoutTLS(opts ...proc.ProcessOption) *cobra.Command {
+	return proc.NewRootCmd(append(opts, proc.WithConfigOptions(
+		configer.WithDefaultYaml("apiserver", `
+secureServing:
+  enabled: false
+insecureServing:
+  enabled: true`),
+	))...)
 }

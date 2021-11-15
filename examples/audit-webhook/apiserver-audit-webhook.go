@@ -23,7 +23,7 @@ import (
 //
 
 const (
-	moduleName = "audit.example.apiserver"
+	moduleName = "example.webhook.audit.apiserver"
 )
 
 var (

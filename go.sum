@@ -510,6 +510,8 @@ github.com/urfave/cli v1.22.1/go.mod h1:Gos4lmkARVdJ6EkW0WaNv/tZAAMe9V7XWyB60NtX
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
 github.com/yubo/golib v0.0.2-0.20211114094711-541fb5329deb h1:iMD85IFczGSDO7bBXq1Hx3WWBb1rROKQ6S3wYFo30Ag=
 github.com/yubo/golib v0.0.2-0.20211114094711-541fb5329deb/go.mod h1:9X68yW2p1h5xhsPICx9Eb4T0LUo0CcohnDYfY3NfLQU=
+github.com/yubo/golib v0.0.2-0.20211115102216-bf30239e3310 h1:aK+9qOLF15z0psDOMXC2aeEoqZHIcvdVI0PlFaNKbOk=
+github.com/yubo/golib v0.0.2-0.20211115102216-bf30239e3310/go.mod h1:9X68yW2p1h5xhsPICx9Eb4T0LUo0CcohnDYfY3NfLQU=
 github.com/yubo/goswagger v0.0.0-20211114152643-2762ca8d22bd h1:g0PHaJGUzfu3YP4Q3vyArj7kNf1adqrd0B+loFtqAF8=
 github.com/yubo/goswagger v0.0.0-20211114152643-2762ca8d22bd/go.mod h1:gAX7WMxJB3z/fcLwP8VCrkZh0Dj0X/5vaJlXtq/f5qo=
 github.com/yubo/goswagger v0.0.0-20211115071236-bbeda335e7c1 h1:Ka2LKothlpuSxCpaKF5tIjfvOtqXTYUnRapEumqKDx0=

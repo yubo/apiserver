@@ -1,10 +1,16 @@
 ## audit
 
+- https://kubernetes.io/docs/tasks/debug-application-cluster/audit/
+
 server
 
 ```sh
-go run ./apiserver-audit.go  --audit-policy-file ./audit-policy.yaml  --audit-log-path -
+go run ./apiserver-audit.go \
+	--secure-serving=false --insecure-serving \
+	--audit-policy-file ./audit-policy.yaml  \
+	--audit-log-path -
 ```
+
 
 policy
 ```yaml
@@ -21,12 +27,17 @@ rules:
       - /api/*
 ```
 
+Log level
+  - None: don't log events that match this rule.
+  - Metadata - log request metadata (requesting user, timestamp, resource, verb, etc.) but not request or response body.
+  - Request - log event metadata and request body but not response body. This does not apply for non-resource requests.
+  - RequestResponse - log event metadata, request and response bodies. This does not apply for non-resource requests.
 
 test
 
 ```shell
 # None
-$ curl -X POST http://localhost:8080/hello
+$ curl -X GET http://localhost:8080/static/hw
 
 # RequestResponse
 $ curl -X POST http://localhost:8080/api/users -d '{"name":"tom", "age": 16}'

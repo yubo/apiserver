@@ -14,17 +14,19 @@ import (
 	"github.com/yubo/golib/proc"
 
 	// http
+	server "github.com/yubo/apiserver/pkg/server/module"
 	_ "github.com/yubo/apiserver/pkg/server/register"
 	// authn
 	_ "github.com/yubo/apiserver/pkg/authentication/register"
 	_ "github.com/yubo/apiserver/plugin/authenticator/token/tokenfile/register"
+
 	// authz
 	_ "github.com/yubo/apiserver/pkg/authorization/register"
 	_ "github.com/yubo/apiserver/plugin/authorizer/abac/register"
 )
 
 const (
-	moduleName = "apiserver.authentication.abac"
+	moduleName = "example.abac.authz"
 )
 
 var (
@@ -34,15 +36,6 @@ var (
 		HookNum:  proc.ACTION_START,
 		Priority: proc.PRI_MODULE,
 	}}
-	defaultConfig = `
-apiserver:
-  secureServing:
-    enabled: false
-  insecureServing:
-    enabled: true
-authorization:
-  mode: ABAC
-`
 )
 
 func main() {
@@ -51,8 +44,7 @@ func main() {
 
 	proc.RegisterHooks(hookOps)
 
-	if err := proc.NewRootCmd(proc.WithConfigOptions(
-		configer.WithDefaultYaml("", defaultConfig))).Execute(); err != nil {
+	if err := server.NewRootCmdWithoutTLS().Execute(); err != nil {
 		os.Exit(1)
 	}
 }

@@ -55,8 +55,8 @@ import (
 )
 
 const (
-	AppName    = "example-all"
-	moduleName = "example-all.main"
+	AppName    = "all.example.apiserver"
+	moduleName = "all.example.apiserver"
 )
 
 var (

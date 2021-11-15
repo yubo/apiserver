@@ -9,19 +9,20 @@ import (
 
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/rest"
-	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/logs"
 	"github.com/yubo/golib/proc"
 
 	// http
+	server "github.com/yubo/apiserver/pkg/server/module"
 	_ "github.com/yubo/apiserver/pkg/server/register"
+
 	// authz
 	_ "github.com/yubo/apiserver/pkg/authorization/register"
 	_ "github.com/yubo/apiserver/plugin/authorizer/alwaysdeny/register"
 )
 
 const (
-	moduleName = "apiserver.authentication.abac"
+	moduleName = "example.path.authz"
 )
 
 var (
@@ -31,26 +32,13 @@ var (
 		HookNum:  proc.ACTION_START,
 		Priority: proc.PRI_MODULE,
 	}}
-	defaultConfig = `
-apiserver:
-  secureServing:
-    enabled: false
-  insecureServing:
-    enabled: true
-authorization:
-  modes:
-    - AlwaysDeny
-  alwaysAllowPaths:
-    - /hello/ro
-`
 )
 
 func main() {
 	logs.InitLogs()
 	defer logs.FlushLogs()
 
-	if err := proc.NewRootCmd(proc.WithConfigOptions(
-		configer.WithDefaultYaml("", defaultConfig))).Execute(); err != nil {
+	if err := server.NewRootCmdWithoutTLS().Execute(); err != nil {
 		os.Exit(1)
 	}
 }

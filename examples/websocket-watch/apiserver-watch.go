@@ -26,7 +26,7 @@ import (
 // go run ./apiserver-watch.go --request-timeout=10
 
 const (
-	moduleName = "apiserver.hello"
+	moduleName = "example.watch.websocket"
 )
 
 var (

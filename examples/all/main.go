@@ -1,8 +1,9 @@
 package main
 
 import (
+	"os"
+
 	"github.com/yubo/golib/logs"
-	"k8s.io/klog/v2"
 )
 
 func main() {
@@ -10,6 +11,6 @@ func main() {
 	defer logs.FlushLogs()
 
 	if err := newServerCmd().Execute(); err != nil {
-		klog.Error(err)
+		os.Exit(1)
 	}
 }

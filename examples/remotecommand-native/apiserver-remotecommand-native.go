@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	osruntime "runtime"
 
 	"github.com/emicklei/go-restful"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/rest"
+	servermodule "github.com/yubo/apiserver/pkg/server/module"
 	"github.com/yubo/apiserver/pkg/streaming"
 	"github.com/yubo/apiserver/pkg/streaming/api"
 	"github.com/yubo/apiserver/pkg/streaming/portforward"
@@ -29,7 +29,7 @@ import (
 // go run ./apiserver-watch.go --request-timeout=10
 
 const (
-	moduleName = "apiserver.hello"
+	moduleName = "example.native.remotecommand"
 )
 
 var (
@@ -50,11 +50,9 @@ func main() {
 	logs.InitLogs()
 	defer logs.FlushLogs()
 
-	osruntime.GOMAXPROCS(2)
-
 	restful.EnableTracing(true)
 
-	if err := proc.NewRootCmd().Execute(); err != nil {
+	if err := servermodule.NewRootCmdWithoutTLS().Execute(); err != nil {
 		os.Exit(1)
 	}
 }

@@ -27,7 +27,7 @@ import (
 // This example shows the minimal code needed to get a restful.WebService working.
 
 const (
-	moduleName = "apiserver.hello"
+	moduleName = "example.authn.websocket"
 	fakeUser   = "test"
 	fakeToken  = "1234"
 )

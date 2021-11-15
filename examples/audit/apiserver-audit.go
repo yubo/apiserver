@@ -12,6 +12,7 @@ import (
 	"github.com/yubo/golib/proc"
 
 	// http
+	server "github.com/yubo/apiserver/pkg/server/module"
 	_ "github.com/yubo/apiserver/pkg/server/register"
 
 	// audit
@@ -22,7 +23,7 @@ import (
 //
 
 const (
-	moduleName = "audit.example.apiserver"
+	moduleName = "example.audit.apiserver"
 )
 
 var (
@@ -38,7 +39,7 @@ func main() {
 	logs.InitLogs()
 	defer logs.FlushLogs()
 
-	if err := proc.NewRootCmd().Execute(); err != nil {
+	if err := server.NewRootCmdWithoutTLS().Execute(); err != nil {
 		os.Exit(1)
 	}
 }
@@ -54,18 +55,25 @@ func start(ctx context.Context) error {
 
 func installWs(http rest.GoRestfulContainer) {
 	rest.WsRouteBuild(&rest.WsOption{
-		Path:               "/",
+		Path:               "/api",
 		GoRestfulContainer: http,
 		Routes: []rest.WsRoute{
-			{Method: "GET", SubPath: "/static/hw", Handle: hw},  // none
-			{Method: "POST", SubPath: "/api/users", Handle: hw}, // RequestResponse
-			{Method: "GET", SubPath: "/api/tokens", Handle: hw}, // metadata
+			{Method: "POST", SubPath: "/users", Handle: hw}, // RequestResponse
+			{Method: "GET", SubPath: "/tokens", Handle: hw}, // metadata
 		},
 	})
+	rest.WsRouteBuild(&rest.WsOption{
+		Path:               "/static",
+		GoRestfulContainer: http,
+		Routes: []rest.WsRoute{
+			{Method: "GET", SubPath: "/hw", Handle: hw}, // none
+		},
+	})
+
 }
 
-func hw(w http.ResponseWriter, req *http.Request) (string, error) {
-	return "hello, world", nil
+func hw(w http.ResponseWriter, req *http.Request) ([]byte, error) {
+	return []byte(req.URL.Path + ": hello, world\n"), nil
 }
 
 func init() {

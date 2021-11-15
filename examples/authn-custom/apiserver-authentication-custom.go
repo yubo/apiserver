@@ -16,6 +16,7 @@ import (
 	"github.com/yubo/golib/proc"
 
 	// http
+	server "github.com/yubo/apiserver/pkg/server/module"
 	_ "github.com/yubo/apiserver/pkg/server/register"
 
 	// authn
@@ -50,7 +51,7 @@ import (
 // }
 
 const (
-	moduleName = "apiserver.authentication"
+	moduleName = "example.custom.authn"
 )
 
 var (
@@ -71,7 +72,7 @@ func main() {
 		return &TokenAuthenticator{}, nil
 	})
 
-	if err := proc.NewRootCmd().Execute(); err != nil {
+	if err := server.NewRootCmdWithoutTLS().Execute(); err != nil {
 		os.Exit(1)
 	}
 }

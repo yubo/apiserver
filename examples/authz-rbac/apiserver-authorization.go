@@ -12,10 +12,12 @@ import (
 	"github.com/yubo/golib/proc"
 
 	// http
+	server "github.com/yubo/apiserver/pkg/server/module"
 	_ "github.com/yubo/apiserver/pkg/server/register"
 	// authn
 	_ "github.com/yubo/apiserver/pkg/authentication/register"
 	_ "github.com/yubo/apiserver/plugin/authenticator/token/tokenfile/register"
+
 	// authz
 	_ "github.com/yubo/apiserver/pkg/authorization/register"
 	_ "github.com/yubo/apiserver/plugin/authorizer/rbac/register"
@@ -25,7 +27,7 @@ import (
 // curl -X POST http://localhost:8080/api/v1/namespaces/test/users -H "Authorization: Bearer token-admin"
 
 const (
-	moduleName = "apiserver.authentication"
+	moduleName = "example.rbac.authz"
 )
 
 var (
@@ -41,7 +43,7 @@ func main() {
 	logs.InitLogs()
 	defer logs.FlushLogs()
 
-	if err := proc.NewRootCmd().Execute(); err != nil {
+	if err := server.NewRootCmdWithoutTLS().Execute(); err != nil {
 		os.Exit(1)
 	}
 }

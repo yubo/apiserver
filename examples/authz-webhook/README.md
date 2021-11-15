@@ -1,9 +1,6 @@
 # apiserver authz webhook
 - https://kubernetes.io/zh/docs/reference/access-authn-authz/webhook/
 
-```
-```
-
 ## Authentication
 [tokens.cvs](./tokens.cvs)
 ```csv

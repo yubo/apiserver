@@ -27,7 +27,7 @@ import (
 // curl -X POST http://localhost:8080/api/v1/namespaces/test/users -H "Authorization: Bearer token-admin"
 
 const (
-	moduleName = "apiserver.authentication"
+	moduleName = "example.webhook.authz"
 )
 
 var (

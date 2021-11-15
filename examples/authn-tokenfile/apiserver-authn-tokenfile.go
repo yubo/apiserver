@@ -14,6 +14,7 @@ import (
 	"github.com/yubo/golib/proc"
 
 	// api server
+	server "github.com/yubo/apiserver/pkg/server/module"
 	_ "github.com/yubo/apiserver/pkg/server/register"
 	// authn
 	_ "github.com/yubo/apiserver/pkg/authentication/register"
@@ -37,7 +38,7 @@ import (
 // }
 
 const (
-	moduleName = "authn.example.apiserver"
+	moduleName = "example.tokenfile.authn"
 )
 
 var (
@@ -55,7 +56,7 @@ func main() {
 
 	proc.RegisterHooks(hookOps)
 
-	if err := proc.NewRootCmd().Execute(); err != nil {
+	if err := server.NewRootCmdWithoutTLS().Execute(); err != nil {
 		os.Exit(1)
 	}
 }

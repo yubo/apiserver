@@ -59,7 +59,7 @@ func IsValidAuthorizationMode(authzMode string) bool {
 
 // config contains all build-in authorization options for API Server
 type config struct {
-	Modes []string `json:"modes" default:"AlwaysAllow" flag:"authorization-mode" description:"Ordered list of plug-ins to do authorization on secure port."`
+	Modes []string `json:"modes" flag:"authorization-mode" description:"Ordered list of plug-ins to do authorization on secure port."`
 
 	// AlwaysAllowPaths are HTTP paths which are excluded from authorization. They can be plain
 	// paths or end in * in which case prefix-match is applied. A leading / is optional.
@@ -70,8 +70,15 @@ type config struct {
 }
 
 func (p *config) tags() map[string]*configer.FieldTag {
+	defaultMode := "AlwaysAllow"
+	if len(AuthorizationModeChoices) > 0 && !IsValidAuthorizationMode("AlwaysAllow") {
+		defaultMode = AuthorizationModeChoices[0]
+	}
 	return map[string]*configer.FieldTag{
-		"modes": {Description: "Ordered list of plug-ins to do authorization on secure port. Comma-delimited list of: " + strings.Join(AuthorizationModeChoices, ",") + "."},
+		"modes": {
+			Description: "Ordered list of plug-ins to do authorization on secure port. Comma-delimited list of: " + strings.Join(AuthorizationModeChoices, ",") + ".",
+			Default:     defaultMode,
+		},
 	}
 }
 

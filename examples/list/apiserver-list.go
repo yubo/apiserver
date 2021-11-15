@@ -11,6 +11,7 @@ import (
 	"github.com/yubo/golib/logs"
 	"github.com/yubo/golib/proc"
 
+	server "github.com/yubo/apiserver/pkg/server/module"
 	_ "github.com/yubo/apiserver/pkg/server/register"
 )
 
@@ -19,7 +20,7 @@ import (
 // GET http://localhost:8080/hello
 
 const (
-	moduleName = "apiserver.hello"
+	moduleName = "example.list.request"
 )
 
 var (
@@ -35,7 +36,7 @@ func main() {
 	logs.InitLogs()
 	defer logs.FlushLogs()
 
-	if err := proc.NewRootCmd().Execute(); err != nil {
+	if err := server.NewRootCmdWithoutTLS().Execute(); err != nil {
 		os.Exit(1)
 	}
 }

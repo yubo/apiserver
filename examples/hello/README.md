@@ -13,7 +13,8 @@ hello, world
 #### HTTP
 ```sh
 # server
-$ go run ./apiserver-hello-world.go --secure-serving=false --insecure-serving
+$ go run ./apiserver-hello-world.go  \
+	--secure-serving=false --insecure-serving
 
 # client
 $ curl http://localhost:8080/hello

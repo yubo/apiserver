@@ -341,6 +341,13 @@
    }
   }
  },
+ "securityDefinitions": {
+  "BearerToken": {
+   "type": "apiKey",
+   "name": "authorization",
+   "in": "header"
+  }
+ },
  "tags": [
   {
    "description": "user Api - swagger api sample",

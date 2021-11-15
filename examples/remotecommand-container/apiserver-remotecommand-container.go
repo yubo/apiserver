@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	osruntime "runtime"
 	"time"
 
 	"github.com/emicklei/go-restful"
@@ -20,6 +19,7 @@ import (
 	"github.com/yubo/golib/proc"
 	"k8s.io/klog/v2"
 
+	servermodule "github.com/yubo/apiserver/pkg/server/module"
 	_ "github.com/yubo/apiserver/pkg/server/register"
 )
 
@@ -30,7 +30,7 @@ import (
 // go run ./apiserver-watch.go --request-timeout=10
 
 const (
-	moduleName = "apiserver.hello"
+	moduleName = "example.container.remotecommand"
 )
 
 var (
@@ -55,11 +55,9 @@ func main() {
 	logs.InitLogs()
 	defer logs.FlushLogs()
 
-	osruntime.GOMAXPROCS(2)
-
 	restful.EnableTracing(true)
 
-	if err := proc.NewRootCmd().Execute(); err != nil {
+	if err := servermodule.NewRootCmdWithoutTLS().Execute(); err != nil {
 		os.Exit(1)
 	}
 }

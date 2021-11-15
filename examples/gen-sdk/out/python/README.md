@@ -96,7 +96,13 @@ Class | Method | HTTP request | Description
 
 ## Documentation For Authorization
 
- All endpoints do not require authorization.
+
+## BearerToken
+
+- **Type**: API key
+- **API key parameter name**: authorization
+- **Location**: HTTP header
+
 
 ## Author
 

@@ -9,11 +9,11 @@ import (
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/golib/api/errors"
-	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/logs"
 	"github.com/yubo/golib/proc"
 	"github.com/yubo/golib/util"
 
+	server "github.com/yubo/apiserver/pkg/server/module"
 	_ "github.com/yubo/apiserver/pkg/server/register"
 )
 
@@ -22,15 +22,7 @@ import (
 // Open in browser http://localhost:8080/swagger
 
 const (
-	moduleName    = "example.swagger"
-	defaultConfig = `
-apiserver:
-  enableSwagger: true
-  secureServing:
-    enabled: false
-  insecureServing:
-    enabled: true
-`
+	moduleName = "example.swagger"
 )
 
 type User struct {
@@ -109,9 +101,7 @@ func main() {
 
 	proc.RegisterHooks(hookOps)
 
-	if err := proc.NewRootCmd(proc.WithConfigOptions(
-		configer.WithDefaultYaml("", defaultConfig),
-	)).Execute(); err != nil {
+	if err := server.NewRootCmdWithoutTLS().Execute(); err != nil {
 		os.Exit(1)
 	}
 }
