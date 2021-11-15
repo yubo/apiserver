@@ -48,7 +48,6 @@ import (
 	_ "github.com/yubo/apiserver/pkg/audit/register"
 	_ "github.com/yubo/apiserver/pkg/db/register"
 	_ "github.com/yubo/apiserver/pkg/grpcserver/register"
-	_ "github.com/yubo/apiserver/pkg/rest/swagger/register"
 	_ "github.com/yubo/apiserver/pkg/server/register"
 	_ "github.com/yubo/apiserver/pkg/session/register"
 	_ "github.com/yubo/apiserver/pkg/tracing/register"

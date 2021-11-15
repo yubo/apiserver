@@ -39,6 +39,8 @@ const (
 
 	// APIGroupPrefix is where non-legacy API group will be located.
 	APIGroupPrefix = "/apis"
+
+	APIDocsPath = "/apidocs.json"
 )
 
 // runtime config
@@ -108,6 +110,9 @@ type Config struct {
 	Handler *APIServerHandler
 	// ListedPathProvider is a lister which provides the set of paths to show at /
 	ListedPathProvider routes.ListedPathProvider
+
+	EnableOpenAPI   bool
+	SecuritySchemes []rest.SchemeConfig
 }
 
 type APIServer interface {

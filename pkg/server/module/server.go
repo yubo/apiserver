@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"net/http"
@@ -19,6 +20,7 @@ import (
 	"github.com/yubo/apiserver/pkg/server/config"
 	"github.com/yubo/apiserver/pkg/server/routes"
 	"github.com/yubo/apiserver/pkg/version"
+	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/logs"
 	"github.com/yubo/golib/proc"
 	"github.com/yubo/golib/scheme"
@@ -27,19 +29,112 @@ import (
 	"k8s.io/klog/v2"
 )
 
-func (p *module) Config() *server.Config {
+const (
+	moduleName = "apiserver"
+)
+
+var (
+	_module = &serverModule{name: moduleName}
+	hookOps = []proc.HookOps{{
+		Hook:        _module.init,
+		Owner:       moduleName,
+		HookNum:     proc.ACTION_START,
+		Priority:    proc.PRI_SYS_INIT,
+		SubPriority: options.PRI_M_HTTP,
+	}, {
+		Hook:        _module.start,
+		Owner:       moduleName,
+		HookNum:     proc.ACTION_START,
+		Priority:    proc.PRI_SYS_START,
+		SubPriority: options.PRI_M_HTTP,
+	}, {
+		Hook:        _module.stop,
+		Owner:       moduleName,
+		HookNum:     proc.ACTION_STOP,
+		Priority:    proc.PRI_SYS_START,
+		SubPriority: options.PRI_M_HTTP,
+	}}
+)
+
+var _ server.APIServer = &serverModule{}
+
+type serverModule struct {
+	name   string
+	config *server.Config
+
+	ctx       context.Context
+	cancel    context.CancelFunc
+	stoppedCh chan struct{}
+}
+
+func (p *serverModule) init(ctx context.Context) (err error) {
+	c := configer.ConfigerMustFrom(ctx)
+
+	p.ctx, p.cancel = context.WithCancel(ctx)
+
+	cf := config.NewConfig()
+	if err := c.Read(moduleName, cf); err != nil {
+		return err
+	}
+
+	p.config = cf.NewServerConfig()
+
+	if err := p.serverInit(cf); err != nil {
+		return err
+	}
+
+	options.WithAPIServer(ctx, p)
+
+	return nil
+}
+
+func (p *serverModule) Address() string {
+	return p.config.SecureServing.Listener.Addr().String()
+}
+
+func (p *serverModule) start(ctx context.Context) error {
+	if err := p.Start(p.ctx.Done(), p.stoppedCh); err != nil {
+		return err
+	}
+
+	p.Info()
+
+	return nil
+}
+
+func (p *serverModule) stop(ctx context.Context) error {
+	if p.cancel == nil {
+		return nil
+	}
+
+	p.cancel()
+
+	<-p.stoppedCh
+
+	return nil
+}
+
+func (p *serverModule) Info() {
+	if !klog.V(10).Enabled() {
+		return
+	}
+	for _, path := range p.config.Handler.ListedPaths() {
+		klog.Infof("apiserver path %s", path)
+	}
+}
+func (p *serverModule) Config() *server.Config {
 	return p.config
 }
 
 // same as http.Handle()
-func (p *module) Add(service *restful.WebService) *restful.Container {
+func (p *serverModule) Add(service *restful.WebService) *restful.Container {
 	return p.config.Handler.GoRestfulContainer.Add(service)
 }
-func (p *module) Filter(filter restful.FilterFunction) {
+func (p *serverModule) Filter(filter restful.FilterFunction) {
 	p.config.Handler.GoRestfulContainer.Filter(filter)
 }
 
-func (p *module) serverInit(c *config.Config) (err error) {
+func (p *serverModule) serverInit(c *config.Config) (err error) {
 	if p == nil || p.config == nil || c == nil {
 		return nil
 	}
@@ -67,7 +162,7 @@ func (p *module) serverInit(c *config.Config) (err error) {
 	return nil
 }
 
-func (p *module) prepare(c *config.Config) error {
+func (p *serverModule) prepare(c *config.Config) error {
 	s := p.config
 
 	if err := c.GenericServerRunOptions.DefaultAdvertiseAddress(c.SecureServing); err != nil {
@@ -118,7 +213,7 @@ func (p *module) prepare(c *config.Config) error {
 }
 
 // servingInit initialize secureServing / insecureServing/ loopbackClientConfig
-func (p *module) servingInit(c *config.Config) error {
+func (p *serverModule) servingInit(c *config.Config) error {
 	s := p.config
 
 	if err := c.InsecureServing.ApplyToWithLoopback(&s.InsecureServing, &s.LoopbackClientConfig); err != nil {
@@ -127,10 +222,6 @@ func (p *module) servingInit(c *config.Config) error {
 	if err := c.SecureServing.ApplyToWithLoopback(&s.SecureServing, &s.LoopbackClientConfig); err != nil {
 		return err
 	}
-
-	klog.Infof("%+v", c.InsecureServing)
-	klog.Infof("%+v", c.SecureServing)
-	klog.Infof("%+v", s.LoopbackClientConfig)
 
 	s.LoopbackClientConfig.ContentConfig = rest.ContentConfig{
 		NegotiatedSerializer: scheme.Codecs,
@@ -142,7 +233,7 @@ func (p *module) servingInit(c *config.Config) error {
 	return nil
 }
 
-func (p *module) authInit(c *config.Config) error {
+func (p *serverModule) authInit(c *config.Config) error {
 	s := p.config
 
 	// Deprecated
@@ -184,7 +275,7 @@ func (p *module) authInit(c *config.Config) error {
 	return nil
 }
 
-func (p *module) handlerInit() error {
+func (p *serverModule) handlerInit() error {
 	s := p.config
 	handlerChainBuilder := func(handler http.Handler) http.Handler {
 		return s.BuildHandlerChainFunc(handler, s)
@@ -196,7 +287,7 @@ func (p *module) handlerInit() error {
 	return nil
 }
 
-func (p *module) installAPI(c *config.Config) error {
+func (p *serverModule) installAPI(c *config.Config) error {
 	s := p.config
 
 	if c.EnableIndex {
@@ -212,6 +303,7 @@ func (p *module) installAPI(c *config.Config) error {
 		routes.DebugFlags{}.Install(s.Handler.NonGoRestfulMux, "v", routes.StringFlagPutHandler(logs.GlogSetter))
 
 	}
+
 	if c.EnableMetrics {
 		if c.EnableProfiling {
 			routes.MetricsWithReset{}.Install(s.Handler.NonGoRestfulMux)
@@ -220,23 +312,31 @@ func (p *module) installAPI(c *config.Config) error {
 		}
 
 	}
+
 	routes.Version{Version: s.Version}.Install(s.Handler.GoRestfulContainer)
 
 	if c.EnableExpvar {
 		routes.Expvar{}.Install(s.Handler.NonGoRestfulMux)
 	}
 
+	if c.EnableSwagger && c.EnableOpenAPI {
+		routes.Swagger{}.Install(s.Handler.NonGoRestfulMux, server.APIDocsPath)
+	}
+
 	return nil
 }
 
-func (p *module) Start(stopCh <-chan struct{}, done chan struct{}) error {
+func (p *serverModule) Start(stopCh <-chan struct{}, done chan struct{}) error {
 	s := p.config
 
-	rest.InstallApiDocs(
-		p.config.Handler.GoRestfulContainer,
-		spec.InfoProps{Title: proc.Name()},
-		APIPath,
-	)
+	if s.EnableOpenAPI {
+		routes.OpenAPI{}.Install(
+			server.APIDocsPath,
+			p.config.Handler.GoRestfulContainer,
+			spec.InfoProps{Title: proc.Name()},
+			s.SecuritySchemes,
+		)
+	}
 
 	delayedStopCh := make(chan struct{})
 
@@ -282,4 +382,18 @@ func (p *module) Start(stopCh <-chan struct{}, done chan struct{}) error {
 		close(done)
 	}()
 	return nil
+}
+
+func RegisterHooks() {
+	proc.RegisterHooks(hookOps)
+}
+
+func RegisterFlags() {
+	cf := config.NewConfig()
+	proc.RegisterFlags(moduleName, "APIServer", cf, configer.WithTags(cf.Tags))
+}
+
+func Register() {
+	RegisterHooks()
+	RegisterFlags()
 }

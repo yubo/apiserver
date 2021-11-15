@@ -13,7 +13,6 @@ import (
 	"github.com/yubo/golib/proc"
 	"github.com/yubo/golib/util"
 
-	_ "github.com/yubo/apiserver/pkg/rest/swagger/register"
 	_ "github.com/yubo/apiserver/pkg/server/register"
 )
 

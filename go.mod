@@ -44,7 +44,7 @@ require (
 	github.com/uber/jaeger-client-go v2.25.0+incompatible
 	github.com/uber/jaeger-lib v2.2.0+incompatible
 	github.com/yubo/golib v0.0.2-0.20211114094711-541fb5329deb
-	github.com/yubo/goswagger v0.0.0-20211114152643-2762ca8d22bd
+	github.com/yubo/goswagger v0.0.0-20211115071236-bbeda335e7c1
 	go.uber.org/zap v1.13.0
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
 	golang.org/x/net v0.0.0-20211013171255-e13a2654a71e

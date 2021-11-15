@@ -514,20 +514,30 @@ func SwaggerTagRegister(name, desc string) {
 	}})
 }
 
-type httpServer interface {
-	RegisteredWebServices() []*restful.WebService
-	Add(service *restful.WebService) *restful.Container
-}
+func InstallApiDocs(apiPath string, container *restful.Container,
+	infoProps spec.InfoProps, securitySchemes []SchemeConfig) error {
+	// register scheme to openapi
+	for _, v := range securitySchemes {
+		scheme, err := v.SecurityScheme()
+		if err != nil {
+			return err
+		}
 
-func InstallApiDocs(http httpServer, infoProps spec.InfoProps, apiPath string) {
-	wss := http.RegisteredWebServices()
+		if err := SecuritySchemeRegister(v.Name, scheme); err != nil {
+			return err
+		}
+	}
+
+	// apidocs
+	wss := container.RegisteredWebServices()
 	ws := restfulspec.NewOpenAPIService(restfulspec.Config{
 		// you control what services are visible
 		WebServices:                   wss,
 		APIPath:                       apiPath,
 		PostBuildSwaggerObjectHandler: getSwaggerHandler(wss, infoProps),
 	})
-	http.Add(ws)
+	container.Add(ws)
+	return nil
 }
 
 func getSwaggerHandler(wss []*restful.WebService, infoProps spec.InfoProps) func(*spec.Swagger) {
@@ -590,7 +600,7 @@ func getSwaggerHandler(wss []*restful.WebService, infoProps spec.InfoProps) func
 				}
 
 				// update the pOption with security entry
-				for k, _ := range s.SecurityDefinitions {
+				for k := range s.SecurityDefinitions {
 					pOption.SecuredWith(k, scope)
 				}
 			}
@@ -598,4 +608,64 @@ func getSwaggerHandler(wss []*restful.WebService, infoProps spec.InfoProps) func
 
 	}
 
+}
+
+type SchemeConfig struct {
+	Name             string       `json:"name"`
+	Type             SecurityType `json:"type" description:"base|apiKey|implicit|password|application|accessCode"`
+	FieldName        string       `json:"fieldName" description:"used for apiKey"`
+	ValueSource      string       `json:"valueSource" description:"used for apiKey, header|query|cookie"`
+	AuthorizationURL string       `json:"authorizationURL" description:"used for OAuth2"`
+	TokenURL         string       `json:"tokenURL" description:"used for OAuth2"`
+}
+
+func (p *SchemeConfig) SecurityScheme() (*spec.SecurityScheme, error) {
+	if p.Name == "" {
+		return nil, fmt.Errorf("name must be set")
+	}
+	switch p.Type {
+	case SecurityTypeBase:
+		return spec.BasicAuth(), nil
+	case SecurityTypeApiKey:
+		if p.FieldName == "" {
+			return nil, fmt.Errorf("fieldName must be set for %s", p.Type)
+		}
+		if p.ValueSource == "" {
+			return nil, fmt.Errorf("valueSource must be set for %s", p.Type)
+		}
+		return spec.APIKeyAuth(p.FieldName, p.ValueSource), nil
+	case SecurityTypeImplicit:
+		if p.AuthorizationURL == "" {
+			return nil, fmt.Errorf("authorizationURL must be set for %s", p.Type)
+		}
+		return spec.OAuth2Implicit(p.AuthorizationURL), nil
+	case SecurityTypePassword:
+		if p.TokenURL == "" {
+			return nil, fmt.Errorf("tokenURL must be set for %s", p.Type)
+		}
+		return spec.OAuth2Password(p.TokenURL), nil
+	case SecurityTypeApplication:
+		if p.TokenURL == "" {
+			return nil, fmt.Errorf("tokenURL must be set for %s", p.Type)
+		}
+		return spec.OAuth2Application(p.TokenURL), nil
+	case SecurityTypeAccessCode:
+		if p.TokenURL == "" {
+			return nil, fmt.Errorf("tokenURL must be set for %s", p.Type)
+		}
+		if p.AuthorizationURL == "" {
+			return nil, fmt.Errorf("authorizationURL must be set for %s", p.Type)
+		}
+		return spec.OAuth2AccessToken(p.AuthorizationURL, p.TokenURL), nil
+	default:
+		return nil, fmt.Errorf("scheme.type %s is invalid, should be one of %s", p.Type,
+			strings.Join([]string{
+				string(SecurityTypeBase),
+				string(SecurityTypeApiKey),
+				string(SecurityTypeImplicit),
+				string(SecurityTypePassword),
+				string(SecurityTypeApplication),
+				string(SecurityTypeAccessCode),
+			}, ", "))
+	}
 }

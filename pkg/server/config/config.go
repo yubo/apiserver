@@ -3,6 +3,7 @@ package config
 import (
 	"net"
 
+	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/apiserver/pkg/server"
 	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/scheme"
@@ -25,6 +26,7 @@ func NewConfig() *Config {
 		EnableIndex:               true,
 		EnableProfiling:           false,
 		EnableMetrics:             true,
+		EnableOpenAPI:             true,
 	}
 }
 
@@ -41,16 +43,18 @@ type Config struct {
 	//ServiceAccountIssuer             serviceaccount.TokenGenerator
 	//ServiceAccountTokenMaxExpiration time.Duration
 
-	//Host    string `json:"host" default:"0.0.0.0" flag:"bind-host" description:"The IP address on which to listen for the --bind-port port. The associated interface(s) must be reachable by the rest of the cluster, and by CLI/web clients. If blank or an unspecified address (0.0.0.0 or ::), all interfaces will be used."` // BindAddress
-	//Port    int    `json:"port" default:"8080" flag:"bind-port" description:"The port on which to serve HTTPS with authentication and authorization. It cannot be switched off with 0."`                                                                                                                                         // BindPort is ignored when Listener is set, will serve https even with 0.
-	//Network string `json:"bindNetwork" flag:"cors-allowed-origins" description:"List of allowed origins for CORS, comma separated.  An allowed origin can be a regular expression to support subdomain matching. If this list is empty CORS will not be enabled."`                                                               // BindNetwork is the type of network to bind to - defaults to "tcp", accepts "tcp", "tcp4", and "tcp6".
-
 	EnableIndex     bool `json:"enableIndex"`
 	EnableProfiling bool `json:"enableProfiling"`
 	// EnableDiscovery bool
 	// Requires generic profiling enabled
 	EnableContentionProfiling bool `json:"enableContentionProfiling"`
 	EnableMetrics             bool `json:"enableMetrics"`
+
+	// swagger
+	//Swagger         goswagger.Config         `json:"swagger"`
+	EnableOpenAPI   bool                `json:"enableOpenAPI" flag:"openapi"`
+	EnableSwagger   bool                `json:"enableSwagger" flag:"swagger"`
+	SecuritySchemes []rest.SchemeConfig `json:"securitySchemes"`
 
 	EnableExpvar bool `json:"enableExpvar"`
 }
@@ -64,6 +68,8 @@ func (p *Config) NewServerConfig() *server.Config {
 		ShutdownDelayDuration:  p.GenericServerRunOptions.ShutdownDelayDuration.Duration,
 		LegacyAPIGroupPrefixes: sets.NewString(server.DefaultLegacyAPIPrefix),
 		Serializer:             scheme.Codecs.WithoutConversion(),
+		EnableOpenAPI:          p.EnableOpenAPI,
+		SecuritySchemes:        p.SecuritySchemes,
 	}
 }
 
@@ -104,6 +110,15 @@ func (p *Config) Validate() error {
 	}
 	if err := p.InsecureServing.Validate(); err != nil {
 		errors = append(errors, err)
+	}
+
+	if len(p.SecuritySchemes) == 0 {
+		p.SecuritySchemes = []rest.SchemeConfig{{
+			Name:        "BearerToken",
+			Type:        "apiKey",
+			FieldName:   "authorization",
+			ValueSource: "header",
+		}}
 	}
 
 	return utilerrors.NewAggregate(errors)
