@@ -5,15 +5,15 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/yubo/golib/labels"
 	"github.com/yubo/golib/orm"
+	"github.com/yubo/golib/queries"
 )
 
 const (
 	MAX_ROWS = 200
 )
 
-func List(db orm.DB, kind string, selector labels.Selector, dst interface{}) error {
+func List(db orm.DB, kind string, selector queries.Selector, dst interface{}) error {
 	return nil
 }
 

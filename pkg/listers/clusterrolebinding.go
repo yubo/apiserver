@@ -2,7 +2,7 @@ package listers
 
 import (
 	"github.com/yubo/apiserver/pkg/apis/rbac"
-	"github.com/yubo/golib/labels"
+	"github.com/yubo/golib/queries"
 )
 
 // ClusterRoleBindingLister helps list Roles.
@@ -10,6 +10,6 @@ import (
 type ClusterRoleBindingLister interface {
 	// List lists all Roles in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*rbac.ClusterRoleBinding, err error)
+	List(selector queries.Selector) (ret []*rbac.ClusterRoleBinding, err error)
 	Get(name string) (*rbac.ClusterRoleBinding, error)
 }

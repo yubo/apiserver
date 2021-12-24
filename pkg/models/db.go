@@ -1,4 +1,4 @@
-package db
+package models
 
 import (
 	"github.com/yubo/apiserver/plugin/authorizer/rbac"

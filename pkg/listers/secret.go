@@ -3,8 +3,8 @@ package listers
 import (
 	"github.com/yubo/apiserver/pkg/storage"
 	"github.com/yubo/golib/api"
-	"github.com/yubo/golib/labels"
 	"github.com/yubo/golib/orm"
+	"github.com/yubo/golib/queries"
 )
 
 // SecretLister helps list Secrets.
@@ -12,7 +12,7 @@ import (
 type SecretLister interface {
 	// List lists all Secrets in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*api.Secret, err error)
+	List(selector queries.Selector) (ret []*api.Secret, err error)
 	// Get retrieves the Secret from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
 	Get(name string) (*api.Secret, error)
@@ -29,7 +29,7 @@ func NewSecretLister(db orm.DB) SecretLister {
 }
 
 // List lists all Secrets in the indexer.
-func (s *secretLister) List(selector labels.Selector) (ret []*api.Secret, err error) {
+func (s *secretLister) List(selector queries.Selector) (ret []*api.Secret, err error) {
 	err = storage.List(s.db, "secret", selector, &ret)
 	return
 }
