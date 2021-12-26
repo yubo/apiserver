@@ -29,7 +29,7 @@ import (
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	"github.com/yubo/apiserver/pkg/listers"
 	rbacregistryvalidation "github.com/yubo/apiserver/plugin/authorizer/rbac/validation"
-	"github.com/yubo/golib/labels"
+	"github.com/yubo/golib/queries"
 	utilerrors "github.com/yubo/golib/util/errors"
 )
 
@@ -216,7 +216,7 @@ type RoleBindingLister struct {
 }
 
 func (l *RoleBindingLister) ListRoleBindings(namespace string) ([]*rbac.RoleBinding, error) {
-	return l.Lister.List(labels.Everything())
+	return l.Lister.List(queries.Everything())
 }
 
 type ClusterRoleGetter struct {
@@ -232,5 +232,5 @@ type ClusterRoleBindingLister struct {
 }
 
 func (l *ClusterRoleBindingLister) ListClusterRoleBindings() ([]*rbac.ClusterRoleBinding, error) {
-	return l.Lister.List(labels.Everything())
+	return l.Lister.List(queries.Everything())
 }

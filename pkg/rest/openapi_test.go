@@ -10,7 +10,6 @@ import (
 
 	"github.com/emicklei/go-restful"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/yubo/golib/scheme"
 	"github.com/yubo/golib/util"
 	"k8s.io/klog/v2"
@@ -146,8 +145,8 @@ func TestWsRouteBuild(t *testing.T) {
 				Method: "PUT", SubPath: "/namespaces/{namespace}/users/{name}",
 				Desc: "update user",
 				Handle: func(w http.ResponseWriter, req *http.Request, p *UpdateInput, b *UpdateUserInput) {
-					require.Equalf(t, param, p, "case-%d", i)
-					require.Equalf(t, body, b, "case-%d", i)
+					assert.Equalf(t, param, p, "case-%d", i)
+					assert.Equalf(t, body, b, "case-%d", i)
 					return
 				}},
 			},
@@ -204,8 +203,8 @@ func TestWsRouteBuildWithResponse(t *testing.T) {
 				Method: "PUT", SubPath: "/namespaces/{namespace}/users/{name}",
 				Desc: "update user",
 				Handle: func(w http.ResponseWriter, req *http.Request, p *UpdateInput, b *UpdateUserInput) (*User, error) {
-					require.Equalf(t, param, p, "case-%d", i)
-					require.Equalf(t, body, b, "case-%d", i)
+					assert.Equalf(t, param, p, "case-%d", i)
+					assert.Equalf(t, body, b, "case-%d", i)
 					return user, nil
 				}},
 			},

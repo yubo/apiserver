@@ -1,0 +1,155 @@
+package db
+
+import (
+	"context"
+	"errors"
+	"strings"
+
+	"github.com/yubo/apiserver/pkg/storage"
+	"github.com/yubo/golib/orm"
+	"github.com/yubo/golib/queries"
+	"github.com/yubo/golib/runtime"
+)
+
+// k8s.io/apiserver/pkg/registry/generic/registry/store.go
+
+type store struct {
+	db orm.Interface
+}
+
+func New(db orm.DB) storage.Interface {
+	return newStore(db)
+}
+
+func newStore(db orm.DB) *store {
+	return &store{db: db}
+}
+
+func (p store) getdb(ctx context.Context) orm.Interface {
+	// for transaction (tx)
+	if db, ok := orm.InterfaceFrom(ctx); ok {
+		return db
+	}
+
+	return p.db
+}
+
+// {table}/{namespace}/{name}
+// {table}/{name}
+// {table}
+func parseKey(key string) (table, namespace, name string) {
+	f := strings.Split(key, "/")
+	if l := len(f); l >= 3 {
+		return f[0], f[1], f[2]
+	} else if l == 2 {
+		return f[0], "", f[1]
+	} else if l == 1 {
+		return f[0], "", ""
+	} else {
+		return "", "", ""
+	}
+}
+
+func parseKeyWithSelector(key string, selector queries.Selector) (string, queries.Selector, error) {
+	table, namespace, name := parseKey(key)
+
+	if selector != nil || !selector.Empty() {
+		return table, selector, nil
+	}
+
+	if name == "" {
+		return "", nil, errors.New("key.name is empty")
+	}
+
+	q := "name=" + name
+
+	if namespace != "" {
+		q += ",namespace" + namespace
+	}
+
+	if query, err := queries.Parse(q); err != nil {
+		return "", nil, err
+	} else {
+		return table, query, nil
+	}
+}
+
+func (p store) Create(ctx context.Context, key string, obj, out runtime.Object) error {
+	db := p.getdb(ctx)
+	table, _, _ := parseKey(key)
+
+	return db.Insert(obj, orm.WithTable(table))
+}
+
+func (p store) Delete(ctx context.Context, key string, out runtime.Object) error {
+	db := p.getdb(ctx)
+
+	table, selector, err := parseKeyWithSelector(key, nil)
+	if err != nil {
+		return err
+	}
+
+	if out != nil {
+		if err := p.get(db, table, selector, false, out); err != nil {
+			return err
+		}
+	}
+
+	return db.Delete(nil, orm.WithTable(table), orm.WithSelector(selector))
+}
+
+func (p store) Update(ctx context.Context, key string, obj, out runtime.Object) error {
+	db := p.getdb(ctx)
+
+	table, selector, err := parseKeyWithSelector(key, nil)
+	if err != nil {
+		return err
+	}
+
+	if out != nil {
+		if err := p.get(db, table, selector, false, out); err != nil {
+			return err
+		}
+	}
+
+	return db.Update(obj, orm.WithTable(table))
+}
+
+func (p store) Get(ctx context.Context, key string, opts storage.GetOptions, out runtime.Object) error {
+	db := p.getdb(ctx)
+
+	table, selector, err := parseKeyWithSelector(key, nil)
+	if err != nil {
+		return err
+	}
+
+	return p.get(db, table, selector, opts.IgnoreNotFound, out)
+}
+
+func (p store) get(db orm.Interface, table string, selector queries.Selector, ignoreNotFound bool, out runtime.Object) error {
+	opts := []orm.SqlOption{orm.WithTable(table), orm.WithSelector(selector)}
+	if ignoreNotFound {
+		opts = append(opts, orm.WithIgnoreNotFoundErr())
+	}
+
+	return db.Get(out, opts...)
+}
+
+func (p store) List(ctx context.Context, key string, opts storage.ListOptions, out runtime.Object, count *int64) error {
+	db := p.getdb(ctx)
+
+	table, _, _ := parseKey(key)
+	o := []orm.SqlOption{
+		orm.WithTable(table),
+		orm.WithSelector(opts.Query),
+		orm.WithTotal(count),
+		orm.WithOrderby(opts.Orderby...),
+	}
+
+	if opts.Offset != nil && opts.Limit != nil {
+		o = append(o, orm.WithLimit(*opts.Offset, *opts.Limit))
+	}
+
+	return db.List(out, o...)
+
+}
