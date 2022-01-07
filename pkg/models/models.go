@@ -1,51 +1,109 @@
 package models
 
 import (
-	"context"
-	"errors"
+	"fmt"
+	"sync"
 
 	"github.com/yubo/apiserver/pkg/storage"
 	"github.com/yubo/golib/runtime"
+	"github.com/yubo/golib/util/errors"
 )
 
 var (
-	catalog        = map[string]Model{}
-	_storage       storage.Interface
-	ErrUnsupported = errors.New("Unsupported")
+	defaultModels = NewModels()
 )
 
+func SetStorage(s storage.Interface, prefix string) {
+	defaultModels.SetStorage(s, prefix)
+}
+
+func Register(ms ...Model) {
+	for _, m := range ms {
+		defaultModels.Register(m)
+	}
+}
+
+func Prepare() error {
+	return defaultModels.Prepare()
+}
+
+func AutoMigrate(name string, obj runtime.Object) error {
+	return defaultModels.AutoMigrate(name, obj)
+}
+
 func NewStore(kind string) Store {
-	// TODO: check
-	// - kind
-	// - _storeage
+	return defaultModels.NewStore(kind)
+}
+
+func NewModels() *models {
+	return &models{
+		registry: map[string]Model{},
+		models:   []Model{},
+	}
+}
+
+type models struct {
+	storage  storage.Interface
+	prefix   string
+	registry map[string]Model
+	models   []Model
+	prepare  sync.Once
+}
+
+func (p *models) SetStorage(s storage.Interface, prefix string) {
+	p.storage = s
+	p.prefix = prefix
+}
+
+func (p *models) Register(ms ...Model) {
+	for _, m := range ms {
+		name := m.Name()
+		if _, ok := p.registry[name]; ok {
+			panic(fmt.Sprintf("%s has already been registered", name))
+		}
+
+		p.registry[name] = m
+		p.models = append(p.models, m)
+	}
+}
+
+func (p *models) NewStore(kind string) Store {
+	if _, ok := p.registry[kind]; !ok {
+		panic(fmt.Sprintf("model %s that has not been registered", kind))
+	}
+
+	if p.storage == nil {
+		panic("storage that has not been set")
+	}
+
 	return Store{
-		s:        _storage,
+		s:        p.storage,
+		prefix:   p.prefix,
 		resource: kind,
 	}
 }
 
-// k8s.io/apiserver/pkg/registry/generic/registry/store.go
-// k8s.io/apiserver/pkg/storage/interfaces.go
-type Store struct {
-	s        storage.Interface
-	resource string
+// Prepare: check/autoMigrate all models are available
+func (p *models) Prepare() (err error) {
+	p.prepare.Do(func() {
+		if p.storage == nil {
+			err = fmt.Errorf("storage that has not been set")
+			return
+		}
+
+		var errs []error
+		for _, m := range p.models {
+			if err := p.AutoMigrate(m.Name(), m.NewObj()); err != nil {
+				errs = append(errs, err)
+			}
+		}
+
+		err = errors.NewAggregate(errs)
+	})
+
+	return
 }
 
-func (p Store) Create(ctx context.Context, name string, obj, out runtime.Object) error {
-	return p.s.Create(ctx, p.resource+"/"+name, obj, out)
-}
-func (p Store) Get(ctx context.Context, name string, ignoreNotFound bool, out runtime.Object) error {
-	return p.s.Get(ctx, p.resource+"/"+name, storage.GetOptions{IgnoreNotFound: ignoreNotFound}, out)
-}
-
-func (p Store) List(ctx context.Context, opts storage.ListOptions, out runtime.Object, count *int64) error {
-	return p.s.List(ctx, p.resource, opts, out, count)
-}
-
-func (p Store) Update(ctx context.Context, name string, obj, out runtime.Object) error {
-	return p.s.Update(ctx, p.resource+"/"+name, obj, out)
-}
-
-func (p Store) Delete(ctx context.Context, name string, out runtime.Object) error {
-	return p.s.Delete(ctx, p.resource+"/"+name, out)
+func (p *models) AutoMigrate(name string, obj runtime.Object) error {
+	return p.storage.AutoMigrate(p.prefix+name, obj)
 }
