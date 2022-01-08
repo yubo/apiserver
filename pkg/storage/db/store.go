@@ -7,7 +7,6 @@ import (
 
 	"github.com/yubo/apiserver/pkg/storage"
 	"github.com/yubo/golib/orm"
-	"github.com/yubo/golib/queries"
 	"github.com/yubo/golib/runtime"
 )
 
@@ -50,15 +49,15 @@ func parseKey(key string) (table, namespace, name string) {
 	}
 }
 
-func parseKeyWithSelector(key string, selector queries.Selector) (string, queries.Selector, error) {
+func parseKeyWithSelector(key, selector string) (string, string, error) {
 	table, namespace, name := parseKey(key)
 
-	if selector != nil || !selector.Empty() {
+	if selector != "" {
 		return table, selector, nil
 	}
 
 	if name == "" {
-		return "", nil, errors.New("key.name is empty")
+		return "", "", errors.New("key.name is empty")
 	}
 
 	q := "name=" + name
@@ -67,24 +66,48 @@ func parseKeyWithSelector(key string, selector queries.Selector) (string, querie
 		q += ",namespace" + namespace
 	}
 
-	if query, err := queries.Parse(q); err != nil {
-		return "", nil, err
-	} else {
-		return table, query, nil
-	}
+	return table, q, nil
+}
+
+// AutoMigrate create table if not exist
+func (p store) AutoMigrate(key string, obj runtime.Object) error {
+	db := p.getdb(context.TODO())
+	table, _, _ := parseKey(key)
+
+	return db.AutoMigrate(obj, orm.WithTable(table))
+}
+
+// drop table if exist
+func (p store) Drop(key string) error {
+	db := p.getdb(context.TODO())
+	table, _, _ := parseKey(key)
+
+	return db.DropTable(orm.NewOptions(orm.WithTable(table)))
 }
 
 func (p store) Create(ctx context.Context, key string, obj, out runtime.Object) error {
 	db := p.getdb(ctx)
-	table, _, _ := parseKey(key)
 
-	return db.Insert(obj, orm.WithTable(table))
+	table, selector, err := parseKeyWithSelector(key, "")
+	if err != nil {
+		return err
+	}
+
+	if err := db.Insert(obj, orm.WithTable(table)); err != nil {
+		return err
+	}
+
+	if out == nil {
+		return nil
+	}
+
+	return p.get(db, table, selector, false, out)
 }
 
 func (p store) Delete(ctx context.Context, key string, out runtime.Object) error {
 	db := p.getdb(ctx)
 
-	table, selector, err := parseKeyWithSelector(key, nil)
+	table, selector, err := parseKeyWithSelector(key, "")
 	if err != nil {
 		return err
 	}
@@ -101,24 +124,26 @@ func (p store) Delete(ctx context.Context, key string, out runtime.Object) error
 func (p store) Update(ctx context.Context, key string, obj, out runtime.Object) error {
 	db := p.getdb(ctx)
 
-	table, selector, err := parseKeyWithSelector(key, nil)
+	table, selector, err := parseKeyWithSelector(key, "")
 	if err != nil {
 		return err
 	}
 
-	if out != nil {
-		if err := p.get(db, table, selector, false, out); err != nil {
-			return err
-		}
+	if err := db.Update(obj, orm.WithTable(table)); err != nil {
+		return err
 	}
 
-	return db.Update(obj, orm.WithTable(table))
+	if out == nil {
+		return nil
+	}
+
+	return p.get(db, table, selector, false, out)
 }
 
 func (p store) Get(ctx context.Context, key string, opts storage.GetOptions, out runtime.Object) error {
 	db := p.getdb(ctx)
 
-	table, selector, err := parseKeyWithSelector(key, nil)
+	table, selector, err := parseKeyWithSelector(key, "")
 	if err != nil {
 		return err
 	}
@@ -126,7 +151,7 @@ func (p store) Get(ctx context.Context, key string, opts storage.GetOptions, out
 	return p.get(db, table, selector, opts.IgnoreNotFound, out)
 }
 
-func (p store) get(db orm.Interface, table string, selector queries.Selector, ignoreNotFound bool, out runtime.Object) error {
+func (p store) get(db orm.Interface, table, selector string, ignoreNotFound bool, out runtime.Object) error {
 	opts := []orm.SqlOption{orm.WithTable(table), orm.WithSelector(selector)}
 	if ignoreNotFound {
 		opts = append(opts, orm.WithIgnoreNotFoundErr())
@@ -135,14 +160,14 @@ func (p store) get(db orm.Interface, table string, selector queries.Selector, ig
 	return db.Get(out, opts...)
 }
 
-func (p store) List(ctx context.Context, key string, opts storage.ListOptions, out runtime.Object, count *int64) error {
+func (p store) List(ctx context.Context, key string, opts storage.ListOptions, out runtime.Object, total *int64) error {
 	db := p.getdb(ctx)
 
 	table, _, _ := parseKey(key)
 	o := []orm.SqlOption{
 		orm.WithTable(table),
+		orm.WithTotal(total),
 		orm.WithSelector(opts.Query),
-		orm.WithTotal(count),
 		orm.WithOrderby(opts.Orderby...),
 	}
 
@@ -151,5 +176,4 @@ func (p store) List(ctx context.Context, key string, opts storage.ListOptions, o
 	}
 
 	return db.List(out, o...)
-
 }

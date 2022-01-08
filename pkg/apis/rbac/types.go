@@ -97,7 +97,7 @@ type RoleRef struct {
 type Role struct {
 	api.TypeMeta
 	// Standard object's metadata.
-	api.ObjectMeta `json:"metadata"`
+	api.ObjectMeta `json:"metadata" sql:",inline"`
 
 	// Rules holds all the PolicyRules for this Role
 	Rules []PolicyRule
@@ -110,7 +110,7 @@ type Role struct {
 // namespace only have effect in that namespace.
 type RoleBinding struct {
 	api.TypeMeta
-	api.ObjectMeta `json:"metadata"`
+	api.ObjectMeta `json:"metadata" json:",inline"`
 
 	// Subjects holds references to the objects the role applies to.
 	Subjects []Subject
@@ -150,7 +150,7 @@ type RoleList struct {
 type ClusterRole struct {
 	api.TypeMeta
 	// Standard object's metadata.
-	api.ObjectMeta `json:"metadata"`
+	api.ObjectMeta `json:"metadata" sql:",inline"`
 
 	// Rules holds all the PolicyRules for this ClusterRole
 	Rules []PolicyRule
@@ -175,7 +175,7 @@ type AggregationRule struct {
 type ClusterRoleBinding struct {
 	api.TypeMeta
 	// Standard object's metadata.
-	api.ObjectMeta `json:"metadata"`
+	api.ObjectMeta `json:"metadata" sql:",inline"`
 
 	// Subjects holds references to the objects the role applies to.
 	Subjects []Subject

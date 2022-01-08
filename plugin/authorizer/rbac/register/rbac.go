@@ -6,6 +6,8 @@ import (
 
 	"github.com/yubo/apiserver/pkg/authorization"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
+	"github.com/yubo/apiserver/pkg/authorization/rbac/db"
+	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/plugin/authorizer/rbac/file"
 	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/proc"
@@ -51,10 +53,8 @@ func factory(ctx context.Context) (authorizer.Authorizer, error) {
 		return file.NewRBAC(&cf.Config)
 	}
 
-	// TODO:
 	// if not set file, try find rbac provider from storage
-
-	//return db.NewRBAC(options.DBMustFrom(ctx, ""))
+	return db.NewRBAC(options.DBMustFrom(ctx, ""))
 
 	return nil, fmt.Errorf("no available rbac provider were found")
 }

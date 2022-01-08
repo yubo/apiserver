@@ -1,8 +1,10 @@
 package listers
 
 import (
+	"context"
+
 	"github.com/yubo/apiserver/pkg/apis/rbac"
-	"github.com/yubo/golib/queries"
+	"github.com/yubo/apiserver/pkg/storage"
 )
 
 // RoleBindingLister helps list Roles.
@@ -10,6 +12,6 @@ import (
 type RoleBindingLister interface {
 	// List lists all Roles in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector queries.Selector) (ret []*rbac.RoleBinding, err error)
-	Get(name string) (*rbac.RoleBinding, error)
+	List(ctx context.Context, opts storage.ListOptions) (total int64, list []*rbac.RoleBinding, err error)
+	Get(ctx context.Context, name string) (*rbac.RoleBinding, error)
 }

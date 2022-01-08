@@ -1,8 +1,10 @@
 package listers
 
 import (
+	"context"
+
 	"github.com/yubo/apiserver/pkg/apis/rbac"
-	"github.com/yubo/golib/queries"
+	"github.com/yubo/apiserver/pkg/storage"
 )
 
 // ClusterRoleLister helps list Roles.
@@ -10,6 +12,6 @@ import (
 type ClusterRoleLister interface {
 	// List lists all Roles in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector queries.Selector) (ret []*rbac.ClusterRole, err error)
-	Get(name string) (*rbac.ClusterRole, error)
+	List(ctx context.Context, opts storage.ListOptions) (total int64, list []*rbac.ClusterRole, err error)
+	Get(ctx context.Context, name string) (*rbac.ClusterRole, error)
 }

@@ -1,12 +1,13 @@
 package file
 
 import (
+	"context"
 	"sort"
 
 	"github.com/yubo/apiserver/pkg/apis/rbac"
 	"github.com/yubo/apiserver/pkg/listers"
+	"github.com/yubo/apiserver/pkg/storage"
 	"github.com/yubo/golib/api/errors"
-	"github.com/yubo/golib/labels"
 )
 
 // roleBindingLister implements the RoleBindingLister interface.
@@ -20,12 +21,12 @@ func NewRoleBindingLister(f *FileStorage) listers.RoleBindingLister {
 }
 
 // List lists all RoleBindings in the indexer.
-func (p *roleBindingLister) List(selector labels.Selector) (ret []*rbac.RoleBinding, err error) {
-	return p.roleBindings, nil
+func (p *roleBindingLister) List(ctx context.Context, opts storage.ListOptions) (total int64, ret []*rbac.RoleBinding, err error) {
+	return int64(len(p.roleBindings)), p.roleBindings, nil
 }
 
 // Get retrieves the RoleBinding from the db for a given name.
-func (p *roleBindingLister) Get(name string) (ret *rbac.RoleBinding, err error) {
+func (p *roleBindingLister) Get(ctx context.Context, name string) (ret *rbac.RoleBinding, err error) {
 	a := p.roleBindings
 	if i := sort.Search(len(a), func(i int) bool { return a[i].Name >= name }); i < len(a) {
 		if ret = a[i]; ret.Name == name {

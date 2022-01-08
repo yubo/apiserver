@@ -1,9 +1,7 @@
 package listers
 
 import (
-	"github.com/yubo/apiserver/pkg/storage"
 	"github.com/yubo/golib/api"
-	"github.com/yubo/golib/orm"
 	"github.com/yubo/golib/queries"
 )
 
@@ -19,22 +17,22 @@ type SecretLister interface {
 }
 
 // secretLister implements the SecretLister interface.
-type secretLister struct {
-	db orm.DB
-}
-
-// NewSecretLister returns a new SecretLister.
-func NewSecretLister(db orm.DB) SecretLister {
-	return &secretLister{db: db}
-}
-
-// List lists all Secrets in the indexer.
-func (s *secretLister) List(selector queries.Selector) (ret []*api.Secret, err error) {
-	err = storage.List(s.db, "secret", selector, &ret)
-	return
-}
-
-func (s *secretLister) Get(name string) (ret *api.Secret, err error) {
-	err = storage.Get(s.db, "secret", name, &ret)
-	return
-}
+//type secretLister struct {
+//	db orm.DB
+//}
+//
+//// NewSecretLister returns a new SecretLister.
+//func NewSecretLister(db orm.DB) SecretLister {
+//	return &secretLister{db: db}
+//}
+//
+//// List lists all Secrets in the indexer.
+//func (s *secretLister) List(selector queries.Selector) (ret []*api.Secret, err error) {
+//	err = storage.List(s.db, "secret", selector, &ret)
+//	return
+//}
+//
+//func (s *secretLister) Get(name string) (ret *api.Secret, err error) {
+//	err = storage.Get(s.db, "secret", name, &ret)
+//	return
+//}

@@ -28,8 +28,8 @@ import (
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	"github.com/yubo/apiserver/pkg/listers"
+	"github.com/yubo/apiserver/pkg/storage"
 	rbacregistryvalidation "github.com/yubo/apiserver/plugin/authorizer/rbac/validation"
-	"github.com/yubo/golib/queries"
 	utilerrors "github.com/yubo/golib/util/errors"
 )
 
@@ -208,7 +208,7 @@ type RoleGetter struct {
 }
 
 func (g *RoleGetter) GetRole(namespace, name string) (*rbac.Role, error) {
-	return g.Lister.Get(name)
+	return g.Lister.Get(context.TODO(), name)
 }
 
 type RoleBindingLister struct {
@@ -216,7 +216,8 @@ type RoleBindingLister struct {
 }
 
 func (l *RoleBindingLister) ListRoleBindings(namespace string) ([]*rbac.RoleBinding, error) {
-	return l.Lister.List(queries.Everything())
+	_, list, err := l.Lister.List(context.TODO(), storage.ListOptions{})
+	return list, err
 }
 
 type ClusterRoleGetter struct {
@@ -224,7 +225,7 @@ type ClusterRoleGetter struct {
 }
 
 func (g *ClusterRoleGetter) GetClusterRole(name string) (*rbac.ClusterRole, error) {
-	return g.Lister.Get(name)
+	return g.Lister.Get(context.TODO(), name)
 }
 
 type ClusterRoleBindingLister struct {
@@ -232,5 +233,6 @@ type ClusterRoleBindingLister struct {
 }
 
 func (l *ClusterRoleBindingLister) ListClusterRoleBindings() ([]*rbac.ClusterRoleBinding, error) {
-	return l.Lister.List(queries.Everything())
+	_, list, err := l.Lister.List(context.TODO(), storage.ListOptions{})
+	return list, err
 }

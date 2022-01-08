@@ -18,7 +18,7 @@ import (
 )
 
 type Config struct {
-	ConfigPath string `json:"configPath" flag:"rbac-config-path" description:"RBAC config path"`
+	ConfigPath string `json:"configPath" flag:"rbac-config-path" description:"RBAC config path as file provider"`
 }
 
 type FileStorage struct {
