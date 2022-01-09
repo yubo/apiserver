@@ -9,7 +9,7 @@ import (
 	"github.com/yubo/apiserver/pkg/db"
 	"github.com/yubo/apiserver/pkg/dynamiccertificates"
 	"github.com/yubo/apiserver/pkg/server"
-	"github.com/yubo/golib/net/session"
+	"github.com/yubo/apiserver/pkg/session"
 	"github.com/yubo/golib/proc"
 	"google.golang.org/grpc"
 	"k8s.io/klog/v2"

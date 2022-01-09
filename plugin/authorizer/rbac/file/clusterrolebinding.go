@@ -21,8 +21,8 @@ func NewClusterRoleBindingLister(f *FileStorage) listers.ClusterRoleBindingListe
 }
 
 // List lists all ClusterRoleBinding in the indexer.
-func (p *clusterRoleBindingLister) List(ctx context.Context, opts storage.ListOptions) (total int64, list []*rbac.ClusterRoleBinding, err error) {
-	return int64(len(p.clusterRoleBindings)), p.clusterRoleBindings, nil
+func (p *clusterRoleBindingLister) List(ctx context.Context, opts storage.ListOptions) (list []*rbac.ClusterRoleBinding, err error) {
+	return p.clusterRoleBindings, nil
 }
 
 // Get retrieves the ClusterRoleBinding from the db for a given name.

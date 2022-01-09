@@ -31,11 +31,12 @@ import (
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/api/errors"
+
 	//corev1listers "k8s.io/client-go/listers/core/v1"
-	corev1listers "github.com/yubo/apiserver/pkg/listers"
 	bootstrapapi "github.com/yubo/apiserver/pkg/cluster-bootstrap/token/api"
 	bootstrapsecretutil "github.com/yubo/apiserver/pkg/cluster-bootstrap/util/secrets"
 	bootstraptokenutil "github.com/yubo/apiserver/pkg/cluster-bootstrap/util/tokens"
+	corev1listers "github.com/yubo/apiserver/pkg/listers"
 )
 
 // TODO: A few methods in this package is copied from other sources. Either
@@ -98,7 +99,7 @@ func (t *TokenAuthenticator) AuthenticateToken(ctx context.Context, token string
 	}
 
 	secretName := bootstrapapi.BootstrapTokenSecretPrefix + tokenID
-	secret, err := t.lister.Get(secretName)
+	secret, err := t.lister.Get(context.TODO(), secretName)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			klog.V(3).Infof("No secret of name %s to match bootstrap bearer token", secretName)

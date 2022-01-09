@@ -91,12 +91,12 @@ func (p *serverDB) Close() error {
 
 func (p *serverDB) GetDB(name string) DB {
 	if p == nil {
-		panic("nil db")
+		return nil
 	}
 
 	if db, ok := p.dbs[name]; !ok {
 		klog.Infof("dbs %+v %s", p.dbs, name)
-		panic("v nil db")
+		return nil
 	} else {
 		return &serverDB{
 			name: name,

@@ -25,7 +25,7 @@ import (
 	restclient "github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/apiserver/pkg/server/healthz"
 	"github.com/yubo/apiserver/pkg/server/routes"
-	"github.com/yubo/golib/net/session"
+	"github.com/yubo/apiserver/pkg/session"
 	"github.com/yubo/golib/runtime"
 	utilnet "github.com/yubo/golib/util/net"
 	"github.com/yubo/golib/util/sets"

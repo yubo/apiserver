@@ -21,8 +21,8 @@ func NewRoleLister(f *FileStorage) listers.RoleLister {
 }
 
 // List lists all Roles in the indexer.
-func (p *roleLister) List(ctx context.Context, opts storage.ListOptions) (int64, []*rbac.Role, error) {
-	return int64(len(p.roles)), p.roles, nil
+func (p *roleLister) List(ctx context.Context, opts storage.ListOptions) ([]*rbac.Role, error) {
+	return p.roles, nil
 }
 
 // Get retrieves the Role from the db for a given name.

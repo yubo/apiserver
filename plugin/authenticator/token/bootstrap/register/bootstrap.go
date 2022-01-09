@@ -2,12 +2,10 @@ package register
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/yubo/apiserver/pkg/authentication"
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
-	"github.com/yubo/apiserver/pkg/listers"
-	"github.com/yubo/apiserver/pkg/options"
+	"github.com/yubo/apiserver/pkg/models"
 	"github.com/yubo/apiserver/plugin/authenticator/token/bootstrap"
 	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/proc"
@@ -42,13 +40,9 @@ func factory(ctx context.Context) (authenticator.Token, error) {
 		return nil, nil
 	}
 
-	db, ok := options.DBFrom(ctx, "")
-	if !ok {
-		return nil, fmt.Errorf("unable to get db from the context")
-	}
 	klog.V(5).InfoS("authmodule init", "name", moduleName)
 
-	return bootstrap.NewTokenAuthenticator(listers.NewSecretLister(db)), nil
+	return bootstrap.NewTokenAuthenticator(models.NewSecret()), nil
 }
 
 func init() {

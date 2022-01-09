@@ -2,37 +2,42 @@
 package user
 
 import (
+	"time"
+
 	"github.com/yubo/apiserver/pkg/rest"
 )
 
 type User struct {
-	Id    int    `json:"id"`
-	Name  string `json:"name"`
-	Phone string `json:"phone"`
+	Name      string `sql:",where,primary_key,size=32"`
+	Age       int
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 type CreateUserInput struct {
-	Name  string  `json:"name"`
-	Phone *string `json:"phone"`
+	Name string `sql:",where"`
+	Age  int
 }
 
-type CreateUserOutput struct {
-	ID int64 `json:"id" description:"id"`
+func (p *CreateUserInput) User() *User {
+	return &User{
+		Name: p.Name,
+		Age:  p.Age,
+	}
 }
 
-type ListUserInput struct {
+type ListInput struct {
 	rest.Pagination
 	Query *string `param:"query" name:"query" description:"query user"`
-	Count bool    `param:"query" name:"count" description:"just response total count"`
 }
 
 type ListUserOutput struct {
-	Total int     `json:"total"`
+	Total int64   `json:"total"`
 	List  []*User `json:"list"`
 }
 
 type GetUserInput struct {
-	Name string `param:"path" name:"user-name"`
+	Name string `param:"path" name:"name"`
 }
 
 func (p *GetUserInput) Validate() error {
@@ -40,14 +45,15 @@ func (p *GetUserInput) Validate() error {
 }
 
 type UpdateUserParam struct {
-	Name string `param:"path" name:"user-name"`
+	Name string `param:"path" name:"name"`
 }
 
-type UpdateUserBody struct {
-	Name  string `json:"-" sql:",where"`
-	Phone string `json:"phone"`
+type UpdateUserInput struct {
+	Name      string    `json:"-" sql:",where"` // from UpdateUserParam
+	Age       *int      `json:"age"`
+	UpdatedAt time.Time `json:"-"`
 }
 
 type DeleteUserInput struct {
-	Name string `param:"path" name:"user-name"`
+	Name string `param:"path" name:"name"`
 }

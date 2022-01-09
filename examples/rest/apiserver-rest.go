@@ -9,7 +9,6 @@ import (
 	"github.com/yubo/apiserver/pkg/options"
 	server "github.com/yubo/apiserver/pkg/server/module"
 	"github.com/yubo/golib/logs"
-	"github.com/yubo/golib/orm"
 	"github.com/yubo/golib/proc"
 
 	_ "github.com/yubo/apiserver/pkg/models/register"
@@ -35,7 +34,7 @@ var (
 func main() {
 	logs.InitLogs()
 	defer logs.FlushLogs()
-	orm.DEBUG = true
+	//orm.DEBUG = true
 
 	if err := server.NewRootCmdWithoutTLS().Execute(); err != nil {
 		os.Exit(1)

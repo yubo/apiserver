@@ -1,9 +1,9 @@
 package register
 
-import "github.com/yubo/golib/proc"
+import (
+	session "github.com/yubo/apiserver/pkg/session/module"
+)
 
 func init() {
-	proc.RegisterHooks(hookOps)
-
-	proc.RegisterFlags(moduleName, "session", newConfig())
+	session.Register()
 }

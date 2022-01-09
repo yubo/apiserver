@@ -11,7 +11,9 @@ import (
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/apiserver/pkg/server"
-	"github.com/yubo/golib/net/session"
+	"github.com/yubo/apiserver/pkg/session"
+
+	_ "github.com/yubo/apiserver/pkg/session/register"
 )
 
 type module struct {
@@ -38,17 +40,6 @@ func (p *module) Start() error {
 	p.session, ok = options.SessionManagerFrom(p.ctx)
 	if !ok {
 		return fmt.Errorf("unable to get session manager from the context")
-	}
-
-	// init database
-	{
-		db, ok := options.DBFrom(p.ctx, "")
-		if !ok {
-			return fmt.Errorf("unable to get db")
-		}
-		if err := db.ExecRows([]byte(session.CREATE_TABLE_SQLITE)); err != nil {
-			return err
-		}
 	}
 
 	p.installWs()

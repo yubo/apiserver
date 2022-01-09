@@ -1,12 +1,12 @@
-package register
+package session
 
 import (
 	"context"
 	"fmt"
 
 	"github.com/yubo/apiserver/pkg/options"
+	"github.com/yubo/apiserver/pkg/session"
 	"github.com/yubo/golib/configer"
-	"github.com/yubo/golib/net/session"
 	"github.com/yubo/golib/proc"
 )
 
@@ -30,19 +30,10 @@ var (
 	}}
 )
 
-func newConfig() *session.Config {
-	return &session.Config{
-		SidLength:      24,
-		HttpOnly:       true,
-		GcInterval:     60,
-		CookieLifetime: 16 * 3600,
-	}
-}
-
 func (p *module) init(ctx context.Context) error {
 	c := configer.ConfigerMustFrom(ctx)
 
-	cf := newConfig()
+	cf := session.NewConfig()
 	if err := c.Read(p.name, cf); err != nil {
 		return err
 	}
@@ -60,10 +51,10 @@ func (p *module) init(ctx context.Context) error {
 
 func startSession(cf *session.Config, ctx context.Context) (session.SessionManager, error) {
 	opts := []session.Option{session.WithCtx(ctx)}
-	if cf.Storage == "db" && cf.Dsn == "" {
-		db, ok := options.DBFrom(ctx, "")
+	if cf.Storage == "db" {
+		db, ok := options.DBFrom(ctx, cf.DBName)
 		if !ok {
-			return nil, fmt.Errorf("can not found db from context")
+			return nil, fmt.Errorf("can not found db[%s] from context", cf.DBName)
 		}
 		opts = append(opts, session.WithDB(db))
 	}
@@ -71,4 +62,9 @@ func startSession(cf *session.Config, ctx context.Context) (session.SessionManag
 		cf.CookieName = fmt.Sprintf("%s-sid", proc.Name())
 	}
 	return session.StartSession(cf, opts...)
+}
+
+func Register() {
+	proc.RegisterHooks(hookOps)
+	proc.RegisterFlags(moduleName, "session", session.NewConfig())
 }

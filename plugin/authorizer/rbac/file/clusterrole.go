@@ -21,8 +21,8 @@ func NewClusterRoleLister(f *FileStorage) listers.ClusterRoleLister {
 }
 
 // List lists all ClusterRoles in the indexer.
-func (p *clusterRoleLister) List(ctx context.Context, opts storage.ListOptions) (int64, []*rbac.ClusterRole, error) {
-	return int64(len(p.clusterRoles)), p.clusterRoles, nil
+func (p *clusterRoleLister) List(ctx context.Context, opts storage.ListOptions) ([]*rbac.ClusterRole, error) {
+	return p.clusterRoles, nil
 }
 
 // Get retrieves the ClusterRole from the db for a given name.

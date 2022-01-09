@@ -2,74 +2,69 @@
 package user
 
 import (
-	"strings"
+	"context"
 
-	"github.com/yubo/golib/orm"
-	"github.com/yubo/golib/util"
+	"github.com/yubo/apiserver/pkg/models"
+	"github.com/yubo/apiserver/pkg/storage"
 )
 
-const (
-	CREATE_TABLE_SQLITE = "CREATE TABLE IF NOT EXISTS `user` (" +
-		"  `id`    integer      PRIMARY    KEY AUTOINCREMENT," +
-		"  `name`  varchar(128) DEFAULT '' NOT NULL," +
-		"  `phone` varchar(16)  DEFAULT '' NOT NULL" +
-		");" +
-		" CREATE UNIQUE INDEX `user_index_name` on `user` (`name`);" +
-		" CREATE UNIQUE INDEX `user_index_phone` on `user` (`phone`);"
-)
+type UserModel interface {
+	Name() string
+	NewObj() interface{}
 
-func createUser(db orm.DB, in *CreateUserInput) (*User, error) {
-	err := db.Insert(in, orm.WithTable("user"))
-	if err != nil {
-		return nil, err
-	}
-
-	return getUser(db, in.Name)
+	List(ctx context.Context, opts storage.ListOptions) ([]*User, error)
+	Get(ctx context.Context, name string) (*User, error)
+	Create(ctx context.Context, obj *User) (*User, error)
+	Update(ctx context.Context, obj *UpdateUserInput) (*User, error)
+	Delete(ctx context.Context, name string) (*User, error)
 }
 
-func genUserSql(in *GetUsersInput) (where string, args []interface{}) {
-	a := []string{}
-	b := []interface{}{}
-	if query := util.StringValue(in.Query); query != "" {
-		a = append(a, "name like ?")
-		b = append(b, "%"+query+"%")
-	}
-	if len(a) > 0 {
-		where = " where " + strings.Join(a, " and ")
-		args = b
-	}
+func NewUser() UserModel {
+	o := &user{}
+	o.store = models.NewStore(o.Name())
+	return o
+}
+
+// user implements the user interface.
+type user struct {
+	store models.Store
+}
+
+func (p *user) Name() string {
+	return "user"
+}
+
+func (p *user) NewObj() interface{} {
+	return &User{}
+}
+
+func (p *user) Create(ctx context.Context, obj *User) (ret *User, err error) {
+	err = p.store.Create(ctx, obj.Name, obj, &ret)
 	return
 }
 
-func getUsers(db orm.DB, in *GetUsersInput) (total int, list []*User, err error) {
-	sql, args := genUserSql(in)
-
-	err = db.Query("select count(*) from user "+sql, args...).Row(&total)
-	if in.Count {
-		return
-	}
-
-	err = db.Query("select * from user"+sql+in.SqlExtra("id desc"), args...).Rows(&list)
+// Get retrieves the User from the db for a given name.
+func (p *user) Get(ctx context.Context, name string) (ret *User, err error) {
+	err = p.store.Get(ctx, name, false, &ret)
 	return
 }
 
-func getUser(db orm.DB, name string) (ret *User, err error) {
-	err = db.Query("select * from user where name = ?", name).Row(&ret)
+// List lists all Users in the indexer.
+func (p *user) List(ctx context.Context, opts storage.ListOptions) (list []*User, err error) {
+	err = p.store.List(ctx, opts, &list, opts.Total)
 	return
 }
 
-func updateUser(db orm.DB, in *UpdateUserBody) (*User, error) {
-	if err := db.Update(in, orm.WithTable("user")); err != nil {
-		return nil, err
-	}
-	return getUser(db, in.Name)
+func (p *user) Update(ctx context.Context, obj *UpdateUserInput) (ret *User, err error) {
+	err = p.store.Update(ctx, obj.Name, obj, &ret)
+	return
 }
 
-func deleteUser(db orm.DB, name string) (ret *User, err error) {
-	if ret, err = getUser(db, name); err != nil {
-		return
-	}
-	err = db.ExecNumErr("delete from user where name = ?", name)
+func (p *user) Delete(ctx context.Context, name string) (ret *User, err error) {
+	err = p.store.Delete(ctx, name, &ret)
 	return
+}
 
+func init() {
+	models.Register(&user{})
 }

@@ -21,8 +21,8 @@ func NewRoleBindingLister(f *FileStorage) listers.RoleBindingLister {
 }
 
 // List lists all RoleBindings in the indexer.
-func (p *roleBindingLister) List(ctx context.Context, opts storage.ListOptions) (total int64, ret []*rbac.RoleBinding, err error) {
-	return int64(len(p.roleBindings)), p.roleBindings, nil
+func (p *roleBindingLister) List(ctx context.Context, opts storage.ListOptions) (ret []*rbac.RoleBinding, err error) {
+	return p.roleBindings, nil
 }
 
 // Get retrieves the RoleBinding from the db for a given name.

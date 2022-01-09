@@ -12,6 +12,6 @@ import (
 type ClusterRoleLister interface {
 	// List lists all Roles in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(ctx context.Context, opts storage.ListOptions) (total int64, list []*rbac.ClusterRole, err error)
+	List(ctx context.Context, opts storage.ListOptions) (list []*rbac.ClusterRole, err error)
 	Get(ctx context.Context, name string) (*rbac.ClusterRole, error)
 }

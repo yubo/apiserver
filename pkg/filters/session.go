@@ -7,7 +7,7 @@ import (
 	"github.com/emicklei/go-restful"
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/responsewriters"
-	"github.com/yubo/golib/net/session"
+	"github.com/yubo/apiserver/pkg/session"
 	"k8s.io/klog/v2"
 )
 

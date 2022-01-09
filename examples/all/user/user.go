@@ -6,19 +6,17 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/yubo/apiserver/pkg/db"
 	"github.com/yubo/apiserver/pkg/options"
-	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/apiserver/pkg/server"
-	"k8s.io/klog/v2"
+
+	_ "github.com/yubo/apiserver/pkg/models/register"
 )
 
 type Module struct {
-	Name   string
-	server server.APIServer
-	db     db.DB
-	ctx    context.Context
+	Name string
+	UserModel
+	ctx context.Context
 }
 
 func New(ctx context.Context) *Module {
@@ -28,29 +26,20 @@ func New(ctx context.Context) *Module {
 }
 
 func (p *Module) Start() error {
-	var ok bool
-	p.server, ok = options.APIServerFrom(p.ctx)
+	http, ok := options.APIServerFrom(p.ctx)
 	if !ok {
 		return fmt.Errorf("unable to get API server from the context")
 	}
 
-	p.db, ok = options.DBFrom(p.ctx, db.DefaultName)
-	if !ok {
-		return fmt.Errorf("unable to get db from the context")
-	}
+	p.UserModel = NewUser()
 
-	// init database
-	if err := p.db.ExecRows([]byte(CREATE_TABLE_SQLITE)); err != nil {
-		return err
-	}
-
-	p.installWs()
+	p.installWs(http)
 
 	addAuthScope()
 	return nil
 }
 
-func (p *Module) installWs() {
+func (p *Module) installWs(http server.APIServer) {
 	rest.SwaggerTagRegister("user", "user Api - for restful sample")
 
 	rest.WsRouteBuild(&rest.WsOption{
@@ -58,54 +47,58 @@ func (p *Module) installWs() {
 		Produces:           []string{rest.MIME_JSON},
 		Consumes:           []string{rest.MIME_JSON},
 		Tags:               []string{"user"},
-		GoRestfulContainer: p.server,
+		GoRestfulContainer: http,
 		Routes: []rest.WsRoute{{
 			Method: "POST", SubPath: "/",
 			Desc:   "create user",
-			Handle: p.createUser,
+			Handle: p.create,
 		}, {
 			Method: "GET", SubPath: "/",
 			Desc:   "search/list users",
-			Handle: p.getUsers,
+			Handle: p.list,
 		}, {
-			Method: "GET", SubPath: "/{user-name}",
+			Method: "GET", SubPath: "/{name}",
 			Desc:   "get user",
-			Handle: p.getUser,
+			Handle: p.get,
 		}, {
-			Method: "PUT", SubPath: "/{user-name}",
+			Method: "PUT", SubPath: "/{name}",
 			Desc:   "update user",
-			Handle: p.updateUser,
+			Handle: p.update,
 		}, {
-			Method: "DELETE", SubPath: "/{user-name}",
+			Method: "DELETE", SubPath: "/{name}",
 			Desc:   "delete user",
-			Handle: p.deleteUser,
+			Handle: p.delete,
 		}},
 	})
 }
 
-func (p *Module) createUser(w http.ResponseWriter, req *http.Request, _ *rest.NonParam, in *CreateUserInput) (*User, error) {
-	return createUser(p.db, in)
+func (p *Module) create(w http.ResponseWriter, req *http.Request, _ *rest.NonParam, in *CreateUserInput) (*User, error) {
+	return p.Create(req.Context(), in.User())
 }
 
-func (p *Module) getUsers(w http.ResponseWriter, req *http.Request, param *GetUsersInput) (*GetUsersOutput, error) {
-	user, _ := request.UserFrom(req.Context())
-	klog.V(3).Infof("input %s user %+v", param, user)
-	total, list, err := getUsers(p.db, param)
-
-	return &GetUsersOutput{total, list}, err
+func (p *Module) get(w http.ResponseWriter, req *http.Request, in *GetUserInput) (*User, error) {
+	return p.Get(req.Context(), in.Name)
 }
 
-func (p *Module) getUser(w http.ResponseWriter, req *http.Request, in *GetUserInput) (*User, error) {
-	return getUser(p.db, in.Name)
+func (p *Module) list(w http.ResponseWriter, req *http.Request, in *ListInput) (ret *ListUserOutput, err error) {
+	ret = &ListUserOutput{}
+
+	opts, err := in.ListOptions(in.Query, &ret.Total)
+	if err != nil {
+		return nil, err
+	}
+
+	ret.List, err = p.List(req.Context(), *opts)
+	return ret, err
 }
 
-func (p *Module) updateUser(w http.ResponseWriter, req *http.Request, param *UpdateUserParam, in *UpdateUserBody) (*User, error) {
+func (p *Module) update(w http.ResponseWriter, req *http.Request, param *UpdateUserParam, in *UpdateUserInput) (*User, error) {
 	in.Name = param.Name
-	return updateUser(p.db, in)
+	return p.Update(req.Context(), in)
 }
 
-func (p *Module) deleteUser(w http.ResponseWriter, req *http.Request, in *DeleteUserInput) (*User, error) {
-	return deleteUser(p.db, in.Name)
+func (p *Module) delete(w http.ResponseWriter, req *http.Request, in *DeleteUserInput) (*User, error) {
+	return p.Delete(req.Context(), in.Name)
 }
 
 func addAuthScope() {

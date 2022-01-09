@@ -6,7 +6,6 @@ import (
 	"github.com/yubo/apiserver/pkg/authentication"
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/pkg/options"
-	"github.com/yubo/apiserver/pkg/session"
 	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/proc"
 	"k8s.io/klog/v2"
@@ -45,7 +44,7 @@ type authModule struct {
 func newConfig() *config { return &config{} }
 
 func factory(ctx context.Context) (authenticator.Request, error) {
-	return session.NewAuthenticator(), nil
+	return NewAuthenticator(), nil
 }
 
 func (p *authModule) init(ctx context.Context) error {

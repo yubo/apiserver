@@ -218,7 +218,7 @@ type RoleBindingLister struct {
 func (l *RoleBindingLister) ListRoleBindings(namespace string) ([]*rbac.RoleBinding, error) {
 	if namespace != "" {
 	}
-	_, list, err := l.Lister.List(context.TODO(), storage.ListOptions{})
+	list, err := l.Lister.List(context.TODO(), storage.ListOptions{})
 	return list, err
 }
 
@@ -235,6 +235,6 @@ type ClusterRoleBindingLister struct {
 }
 
 func (l *ClusterRoleBindingLister) ListClusterRoleBindings() ([]*rbac.ClusterRoleBinding, error) {
-	_, list, err := l.Lister.List(context.TODO(), storage.ListOptions{})
+	list, err := l.Lister.List(context.TODO(), storage.ListOptions{})
 	return list, err
 }

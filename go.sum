@@ -514,6 +514,10 @@ github.com/yubo/golib v0.0.2-0.20211115102216-bf30239e3310 h1:aK+9qOLF15z0psDOMX
 github.com/yubo/golib v0.0.2-0.20211115102216-bf30239e3310/go.mod h1:9X68yW2p1h5xhsPICx9Eb4T0LUo0CcohnDYfY3NfLQU=
 github.com/yubo/golib v0.0.2-0.20220109051459-76f0ecb7d788 h1:/9jbP4dP8uxakhjvAdYjmFrsYA1q28qWEGnAba0Htfk=
 github.com/yubo/golib v0.0.2-0.20220109051459-76f0ecb7d788/go.mod h1:9X68yW2p1h5xhsPICx9Eb4T0LUo0CcohnDYfY3NfLQU=
+github.com/yubo/golib v0.0.2-0.20220109070643-c6d92fc213d7 h1:GuRkH3U+qjQs4qlsyZwMzZtQAkHAqhW+0BVzEk8CJMw=
+github.com/yubo/golib v0.0.2-0.20220109070643-c6d92fc213d7/go.mod h1:9X68yW2p1h5xhsPICx9Eb4T0LUo0CcohnDYfY3NfLQU=
+github.com/yubo/golib v0.0.2-0.20220109150524-29ec97838a83 h1:h4lheI//SFCnwnz27271dqyeeGT5LHcZz1i1kmpLI9c=
+github.com/yubo/golib v0.0.2-0.20220109150524-29ec97838a83/go.mod h1:9X68yW2p1h5xhsPICx9Eb4T0LUo0CcohnDYfY3NfLQU=
 github.com/yubo/goswagger v0.0.0-20211114152643-2762ca8d22bd h1:g0PHaJGUzfu3YP4Q3vyArj7kNf1adqrd0B+loFtqAF8=
 github.com/yubo/goswagger v0.0.0-20211114152643-2762ca8d22bd/go.mod h1:gAX7WMxJB3z/fcLwP8VCrkZh0Dj0X/5vaJlXtq/f5qo=
 github.com/yubo/goswagger v0.0.0-20211115071236-bbeda335e7c1 h1:Ka2LKothlpuSxCpaKF5tIjfvOtqXTYUnRapEumqKDx0=
