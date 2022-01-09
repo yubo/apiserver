@@ -43,7 +43,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/uber/jaeger-client-go v2.25.0+incompatible
 	github.com/uber/jaeger-lib v2.2.0+incompatible
-	github.com/yubo/golib v0.0.2-0.20211115102216-bf30239e3310
+	github.com/yubo/golib v0.0.2-0.20220109051459-76f0ecb7d788
 	github.com/yubo/goswagger v0.0.0-20211115071236-bbeda335e7c1
 	go.uber.org/zap v1.13.0
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
@@ -61,5 +61,3 @@ require (
 	k8s.io/klog/v2 v2.9.0
 	sigs.k8s.io/yaml v1.2.0
 )
-
-replace github.com/yubo/golib => ../golib
