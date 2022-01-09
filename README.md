@@ -2,6 +2,8 @@
 
 ## Examples
 
+- Restful
+  * [REST](./examples/rest) with storage
 - Generic
   * [Hello World](./examples/hello)
   * [All In One](./examples/all)

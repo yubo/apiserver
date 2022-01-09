@@ -11,7 +11,7 @@ type Role interface {
 	Name() string
 	NewObj() interface{}
 
-	List(ctx context.Context, opts storage.ListOptions) (total int64, list []*rbac.Role, err error)
+	List(ctx context.Context, opts storage.ListOptions) ([]*rbac.Role, error)
 	Get(ctx context.Context, name string) (*rbac.Role, error)
 	Create(ctx context.Context, obj *rbac.Role) (*rbac.Role, error)
 	Update(ctx context.Context, obj *rbac.Role) (*rbac.Role, error)
@@ -21,7 +21,9 @@ type Role interface {
 // pkg/registry/rbac/role/storage/storage.go
 // pkg/registry/rbac/rest/storage_rbac.go
 func NewRole() Role {
-	return &role{store: NewStore("role")}
+	o := &role{}
+	o.store = NewStore(o.Name())
+	return o
 }
 
 // role implements the role interface.
@@ -49,8 +51,8 @@ func (p *role) Get(ctx context.Context, name string) (ret *rbac.Role, err error)
 }
 
 // List lists all Roles in the indexer.
-func (p *role) List(ctx context.Context, opts storage.ListOptions) (total int64, list []*rbac.Role, err error) {
-	err = p.store.List(ctx, opts, &list, &total)
+func (p *role) List(ctx context.Context, opts storage.ListOptions) (list []*rbac.Role, err error) {
+	err = p.store.List(ctx, opts, &list, opts.Total)
 	return
 }
 

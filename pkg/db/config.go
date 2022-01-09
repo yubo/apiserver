@@ -44,7 +44,7 @@ type Config struct {
 func (p *Config) Tags() map[string]*configer.FieldTag {
 	return map[string]*configer.FieldTag{
 		"driver": {Flag: []string{"db-driver"}, Default: "mysql", Description: "database drivers. Comma-delimited list of:" + strings.Join(sql.Drivers(), ",") + "."},
-		"dsn":    {Flag: []string{"db-dsn"}, Description: "disabled if dns is empty"},
+		"dsn":    {Flag: []string{"db-dsn"}, Description: "disabled if empty. e.g. \n  mysql: 'root:1234@tcp(127.0.0.1:3306)/test?parseTime=truer'\n  sqlite3: 'file:test.db?cache=shared&mode=memory'"},
 	}
 }
 

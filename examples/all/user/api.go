@@ -20,13 +20,13 @@ type CreateUserOutput struct {
 	ID int64 `json:"id" description:"id"`
 }
 
-type GetUsersInput struct {
+type ListUserInput struct {
 	rest.Pagination
 	Query *string `param:"query" name:"query" description:"query user"`
 	Count bool    `param:"query" name:"count" description:"just response total count"`
 }
 
-type GetUsersOutput struct {
+type ListUserOutput struct {
 	Total int     `json:"total"`
 	List  []*User `json:"list"`
 }

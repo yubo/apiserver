@@ -13,7 +13,7 @@ type RoleBinding interface {
 	Name() string
 	NewObj() interface{}
 
-	List(ctx context.Context, opts storage.ListOptions) (total int64, list []*rbac.RoleBinding, err error)
+	List(ctx context.Context, opts storage.ListOptions) ([]*rbac.RoleBinding, error)
 	Get(ctx context.Context, name string) (*rbac.RoleBinding, error)
 	Create(ctx context.Context, obj *rbac.RoleBinding) (*rbac.RoleBinding, error)
 	Update(ctx context.Context, obj *rbac.RoleBinding) (*rbac.RoleBinding, error)
@@ -23,7 +23,9 @@ type RoleBinding interface {
 // pkg/registry/rbac/role/storage/storage.go
 // pkg/registry/rbac/rest/storage_rbac.go
 func NewRoleBinding() RoleBinding {
-	return &roleBinding{store: NewStore("role_binding")}
+	o := &roleBinding{}
+	o.store = NewStore(o.Name())
+	return o
 }
 
 // roleBinding implements the role interface.
@@ -51,8 +53,8 @@ func (p *roleBinding) Get(ctx context.Context, name string) (ret *rbac.RoleBindi
 }
 
 // List lists all RoleBindings in the indexer.
-func (p *roleBinding) List(ctx context.Context, opts storage.ListOptions) (total int64, list []*rbac.RoleBinding, err error) {
-	err = p.store.List(ctx, opts, &list, &total)
+func (p *roleBinding) List(ctx context.Context, opts storage.ListOptions) (list []*rbac.RoleBinding, err error) {
+	err = p.store.List(ctx, opts, &list, opts.Total)
 	return
 }
 

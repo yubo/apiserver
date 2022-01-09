@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/yubo/apiserver/pkg/storage"
 	"github.com/yubo/golib/util"
 )
 
@@ -41,6 +42,22 @@ type Pagination struct {
 	Sorter      *string `param:"query" description:"column name"`
 	Order       *string `param:"query" description:"asc(default)/desc"`
 	Dump        bool    `param:"query,hidden" description:""`
+}
+
+// TODO: validate query
+func (p Pagination) ListOptions(query *string, total *int64, orders ...string) (*storage.ListOptions, error) {
+	offset, limit := p.OffsetLimit()
+	if sorter := util.SnakeCasedName(util.StringValue(p.Sorter)); sorter != "" {
+		orders = append([]string{"`" + sorter + "` " +
+			sqlOrder(util.StringValue(p.Order))}, orders...)
+	}
+	return &storage.ListOptions{
+		Query:   util.StringValue(query),
+		Offset:  util.Int64(int64(offset)),
+		Limit:   util.Int64(int64(limit)),
+		Total:   total,
+		Orderby: orders,
+	}, nil
 }
 
 func (p *Pagination) GetPageSize() int {
@@ -85,6 +102,7 @@ func (p *Pagination) OffsetLimit() (offset, limit int) {
 	return
 }
 
+// Deprecated
 func (p Pagination) SqlExtra(orders ...string) string {
 	offset, limit := p.OffsetLimit()
 
@@ -101,7 +119,7 @@ func (p Pagination) SqlExtra(orders ...string) string {
 	return fmt.Sprintf(order+" limit %d, %d", offset, limit)
 }
 
-// ungly hack
+// Deprecated
 func (p Pagination) SqlExtra2(prefix string, orders ...string) string {
 	offset, limit := p.OffsetLimit()
 

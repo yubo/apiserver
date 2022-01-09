@@ -167,3 +167,10 @@ func (p *FileStorage) sort() {
 	sort.Slice(p.clusterRoles, func(i, j int) bool { return p.clusterRoles[i].Name < p.clusterRoles[j].Name })
 	sort.Slice(p.clusterRoleBindings, func(i, j int) bool { return p.clusterRoleBindings[i].Name < p.clusterRoleBindings[j].Name })
 }
+
+func objKey(namespace, name string) string {
+	if namespace == "" {
+		return name
+	}
+	return namespace + "/" + name
+}

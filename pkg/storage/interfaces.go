@@ -42,4 +42,7 @@ type ListOptions struct {
 	Orderby []string
 	Offset  *int64
 	Limit   *int64
+
+	// for output count(*)
+	Total *int64
 }

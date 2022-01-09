@@ -13,7 +13,7 @@ type Secret interface {
 	Name() string
 	NewObj() interface{}
 
-	List(ctx context.Context, opts storage.ListOptions) (total int64, list []*api.Secret, err error)
+	List(ctx context.Context, opts storage.ListOptions) ([]*api.Secret, error)
 	Get(ctx context.Context, name string) (*api.Secret, error)
 	Create(ctx context.Context, obj *api.Secret) (*api.Secret, error)
 	Update(ctx context.Context, obj *api.Secret) (*api.Secret, error)
@@ -23,7 +23,9 @@ type Secret interface {
 // pkg/registry/rbac/role/storage/storage.go
 // pkg/registry/rbac/rest/storage_rbac.go
 func NewSecret() Secret {
-	return &secret{store: NewStore("secret")}
+	o := &secret{}
+	o.store = NewStore(o.Name())
+	return o
 }
 
 // secret implements the role interface.
@@ -51,8 +53,8 @@ func (p *secret) Get(ctx context.Context, name string) (ret *api.Secret, err err
 }
 
 // List lists all Secrets in the indexer.
-func (p *secret) List(ctx context.Context, opts storage.ListOptions) (total int64, list []*api.Secret, err error) {
-	err = p.store.List(ctx, opts, &list, &total)
+func (p *secret) List(ctx context.Context, opts storage.ListOptions) (list []*api.Secret, err error) {
+	err = p.store.List(ctx, opts, &list, opts.Total)
 	return
 }
 

@@ -15,6 +15,9 @@ type Store struct {
 	resource string
 }
 
+func (p Store) Kind() string {
+	return p.resource
+}
 func (p Store) Create(ctx context.Context, name string, obj, out runtime.Object) error {
 	return p.s.Create(ctx, p.prefix+p.resource+"/"+name, obj, out)
 }

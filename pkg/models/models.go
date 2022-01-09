@@ -7,6 +7,8 @@ import (
 	"github.com/yubo/apiserver/pkg/storage"
 	"github.com/yubo/golib/runtime"
 	"github.com/yubo/golib/util/errors"
+
+	_ "github.com/yubo/apiserver/pkg/db/register"
 )
 
 var (

@@ -13,7 +13,7 @@ type ClusterRoleBinding interface {
 	Name() string
 	NewObj() interface{}
 
-	List(ctx context.Context, opts storage.ListOptions) (total int64, list []*rbac.ClusterRoleBinding, err error)
+	List(ctx context.Context, opts storage.ListOptions) ([]*rbac.ClusterRoleBinding, error)
 	Get(ctx context.Context, name string) (*rbac.ClusterRoleBinding, error)
 	Create(ctx context.Context, obj *rbac.ClusterRoleBinding) (*rbac.ClusterRoleBinding, error)
 	Update(ctx context.Context, obj *rbac.ClusterRoleBinding) (*rbac.ClusterRoleBinding, error)
@@ -23,7 +23,9 @@ type ClusterRoleBinding interface {
 // pkg/registry/rbac/role/storage/storage.go
 // pkg/registry/rbac/rest/storage_rbac.go
 func NewClusterRoleBinding() ClusterRoleBinding {
-	return &clusterRoleBinding{store: NewStore("role_binding")}
+	o := &clusterRoleBinding{}
+	o.store = NewStore(o.Name())
+	return o
 }
 
 // clusterRoleBinding implements the role interface.
@@ -32,7 +34,7 @@ type clusterRoleBinding struct {
 }
 
 func (p *clusterRoleBinding) Name() string {
-	return "role_binding"
+	return "cluster_role_binding"
 }
 
 func (p *clusterRoleBinding) NewObj() interface{} {
@@ -51,8 +53,8 @@ func (p *clusterRoleBinding) Get(ctx context.Context, name string) (ret *rbac.Cl
 }
 
 // List lists all ClusterRoleBindings in the indexer.
-func (p *clusterRoleBinding) List(ctx context.Context, opts storage.ListOptions) (total int64, list []*rbac.ClusterRoleBinding, err error) {
-	err = p.store.List(ctx, opts, &list, &total)
+func (p *clusterRoleBinding) List(ctx context.Context, opts storage.ListOptions) (list []*rbac.ClusterRoleBinding, err error) {
+	err = p.store.List(ctx, opts, &list, opts.Total)
 	return
 }
 

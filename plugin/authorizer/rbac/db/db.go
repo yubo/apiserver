@@ -6,10 +6,6 @@ import (
 )
 
 func NewRBAC() (*rbac.RBACAuthorizer, error) {
-	f, err := NewFileStorage(config)
-	if err != nil {
-		return nil, err
-	}
 	return rbac.New(
 		&rbac.RoleGetter{Lister: models.NewRole()},
 		&rbac.RoleBindingLister{Lister: models.NewRoleBinding()},
