@@ -140,10 +140,10 @@ func (p Pagination) SqlExtra2(prefix string, orders ...string) string {
 func sqlOrder(order string) string {
 	switch strings.ToLower(order) {
 	case "ascend", "asc":
-		return "asc"
+		return "ASC"
 	case "descend", "desc":
-		return "desc"
+		return "DESC"
 	default:
-		return "asc"
+		return "ASC"
 	}
 }
