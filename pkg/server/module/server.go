@@ -320,7 +320,7 @@ func (p *serverModule) installAPI(c *config.Config) error {
 		routes.Expvar{}.Install(s.Handler.NonGoRestfulMux)
 	}
 
-	if c.EnableSwagger && c.EnableOpenAPI {
+	if c.EnableOpenAPI {
 		routes.Swagger{}.Install(s.Handler.NonGoRestfulMux, server.APIDocsPath)
 	}
 

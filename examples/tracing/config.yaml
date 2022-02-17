@@ -1,0 +1,16 @@
+tracing:
+  httpBody: true       # log http request body
+  httpHeader: true     # log http request header
+  respTraceId: true    # inject trace id into response header
+  jaeger:
+    serviceName: example-tracing
+    reporter:
+      localAgentHostPort: 127.0.0.1:6831
+      logSpans: false
+
+grpc:
+  addr: ":8081"
+  maxRecvMsgSize: 1024000
+
+apiserver:
+  enableOpenAPI: true  # enable swagger

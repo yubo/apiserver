@@ -52,8 +52,8 @@ type Config struct {
 
 	// swagger
 	//Swagger         goswagger.Config         `json:"swagger"`
-	EnableOpenAPI   bool                `json:"enableOpenAPI" flag:"openapi"`
-	EnableSwagger   bool                `json:"enableSwagger" flag:"swagger"`
+	EnableOpenAPI bool `json:"enableOpenAPI" flag:"openapi" description:"enable OpenAPI"`
+	//EnableSwagger   bool                `json:"enableSwagger" flag:"swagger" description:"enable swagger"`
 	SecuritySchemes []rest.SchemeConfig `json:"securitySchemes"`
 
 	EnableExpvar bool `json:"enableExpvar"`

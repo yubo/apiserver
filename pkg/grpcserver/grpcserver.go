@@ -22,8 +22,8 @@ const (
 )
 
 type config struct {
-	Addr           string `json:"addr"`
-	MaxRecvMsgSize int    `json:"maxRecvMsgSize"`
+	Addr           string `json:"addr" default:":8081" description:"grpc server address"`
+	MaxRecvMsgSize int    `json:"maxRecvMsgSize" description:"the max message size in bytes the server can receive.If this is not set, gRPC uses the default 4MB."`
 }
 
 type grpcServer struct {
@@ -80,6 +80,7 @@ func (p *grpcServer) start(ctx context.Context) error {
 	server := p.grpc
 
 	if util.AddrIsDisable(cf.Addr) {
+		klog.InfoS("grpcServer is disabled", "grpc.addr", cf.Addr)
 		return nil
 	}
 
@@ -87,7 +88,7 @@ func (p *grpcServer) start(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	klog.V(5).Infof("grpcServer Listen addr %s", cf.Addr)
+	klog.InfoS("grpcServer listening", "grpc.addr", cf.Addr)
 
 	reflection.Register(server)
 
