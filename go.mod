@@ -1,6 +1,6 @@
 module github.com/yubo/apiserver
 
-go 1.15
+go 1.16
 
 require (
 	cloud.google.com/go v0.54.0 // indirect
@@ -53,7 +53,6 @@ require (
 	golang.org/x/sys v0.0.0-20211013075003-97ac67df715c
 	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e // indirect
 	google.golang.org/grpc v1.41.0
-	google.golang.org/protobuf v1.27.1
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gopkg.in/square/go-jose.v2 v2.5.1
 	gopkg.in/yaml.v2 v2.4.0
