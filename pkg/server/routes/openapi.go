@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"github.com/emicklei/go-restful"
+	"github.com/emicklei/go-restful/v3"
 	"github.com/go-openapi/spec"
 	"github.com/yubo/apiserver/pkg/rest"
 )

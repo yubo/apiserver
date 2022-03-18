@@ -26,7 +26,7 @@ import (
 	"path"
 	"time"
 
-	restful "github.com/emicklei/go-restful"
+	restful "github.com/emicklei/go-restful/v3"
 	"github.com/yubo/apiserver/pkg/streaming/api"
 	"github.com/yubo/apiserver/pkg/streaming/portforward"
 	remotecommandserver "github.com/yubo/apiserver/pkg/streaming/remotecommand"

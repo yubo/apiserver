@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/emicklei/go-restful"
+	"github.com/emicklei/go-restful/v3"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/apiserver/pkg/streaming"

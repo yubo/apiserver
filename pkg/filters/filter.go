@@ -1,7 +1,7 @@
 package filters
 
 import (
-	"github.com/emicklei/go-restful"
+	"github.com/emicklei/go-restful/v3"
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/golib/runtime/serializer"
 )

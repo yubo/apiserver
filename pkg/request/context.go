@@ -20,7 +20,7 @@ import (
 	"context"
 	"net"
 
-	"github.com/emicklei/go-restful"
+	"github.com/emicklei/go-restful/v3"
 	"github.com/opentracing/opentracing-go"
 	"github.com/yubo/apiserver/pkg/apis/audit"
 	"github.com/yubo/apiserver/pkg/authentication/user"

@@ -2,8 +2,6 @@ module github.com/yubo/apiserver
 
 go 1.16
 
-replace github.com/yubo/golib => ../golib
-
 require (
 	cloud.google.com/go v0.54.0 // indirect
 	github.com/Azure/go-autorest/autorest v0.11.19
@@ -17,9 +15,9 @@ require (
 	github.com/docker/docker v17.12.0-ce-rc1.0.20200916142827-bd33bbf0497b+incompatible
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.4.0 // indirect
-	github.com/emicklei/go-restful v2.15.0+incompatible
-	github.com/emicklei/go-restful-openapi v1.4.1
-	github.com/go-openapi/spec v0.20.3
+	github.com/emicklei/go-restful-openapi/v2 v2.8.0
+	github.com/emicklei/go-restful/v3 v3.7.4
+	github.com/go-openapi/spec v0.20.4
 	github.com/gogo/protobuf v1.3.2
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e
 	github.com/golang/mock v1.4.1
@@ -45,7 +43,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/uber/jaeger-client-go v2.25.0+incompatible
 	github.com/uber/jaeger-lib v2.2.0+incompatible
-	github.com/yubo/golib v0.0.2-0.20220109150524-29ec97838a83
+	github.com/yubo/golib v0.0.3-0.20220318153846-9a4409366d5f
 	github.com/yubo/goswagger v0.0.0-20211115071236-bbeda335e7c1
 	go.uber.org/zap v1.13.0
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519

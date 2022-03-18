@@ -3,7 +3,7 @@ package urlencoded
 import (
 	"reflect"
 
-	restful "github.com/emicklei/go-restful"
+	restful "github.com/emicklei/go-restful/v3"
 )
 
 func RouteBuilderReads(b *restful.RouteBuilder, v reflect.Value) error {

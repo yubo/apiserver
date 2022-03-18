@@ -9,7 +9,7 @@ import (
 	rt "runtime"
 	"time"
 
-	"github.com/emicklei/go-restful"
+	"github.com/emicklei/go-restful/v3"
 	"github.com/go-openapi/spec"
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"

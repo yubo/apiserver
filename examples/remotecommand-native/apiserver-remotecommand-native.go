@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/emicklei/go-restful"
+	"github.com/emicklei/go-restful/v3"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/rest"
 	servermodule "github.com/yubo/apiserver/pkg/server/module"

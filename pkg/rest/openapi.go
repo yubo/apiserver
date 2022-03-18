@@ -7,14 +7,14 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/emicklei/go-restful"
-	restfulspec "github.com/emicklei/go-restful-openapi"
+	restfulspec "github.com/emicklei/go-restful-openapi/v2"
+	"github.com/emicklei/go-restful/v3"
 	"github.com/go-openapi/spec"
 	"github.com/yubo/apiserver/pkg/audit"
 	"github.com/yubo/apiserver/pkg/metrics"
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/responsewriters"
-	"github.com/yubo/golib/encoding/urlencoded"
+	"github.com/yubo/apiserver/pkg/rest/urlencoded"
 	"k8s.io/klog/v2"
 )
 

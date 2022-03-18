@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/emicklei/go-restful"
+	"github.com/emicklei/go-restful/v3"
 	"github.com/google/uuid"
 	"github.com/yubo/apiserver/pkg/audit"
 	auditpolicy "github.com/yubo/apiserver/pkg/audit/policy"

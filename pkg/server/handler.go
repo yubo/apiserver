@@ -24,7 +24,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/emicklei/go-restful"
+	"github.com/emicklei/go-restful/v3"
 	"github.com/yubo/apiserver/pkg/server/mux"
 	"github.com/yubo/apiserver/pkg/responsewriters"
 	"github.com/yubo/golib/api/errors"

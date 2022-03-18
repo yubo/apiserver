@@ -23,7 +23,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/emicklei/go-restful"
+	"github.com/emicklei/go-restful/v3"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/api/validation/path"
 	"github.com/yubo/golib/util/sets"

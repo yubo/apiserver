@@ -13,6 +13,10 @@ import (
 	"k8s.io/klog/v2"
 )
 
+type Validator interface {
+	Validate() error
+}
+
 func Req2curl(req *http.Request, body []byte, inputFile, outputFile *string) string {
 	buf := bytes.Buffer{}
 	buf.WriteString("curl -X " + escapeShell(req.Method))

@@ -11,7 +11,7 @@ import (
 
 	"io/ioutil"
 
-	restful "github.com/emicklei/go-restful"
+	restful "github.com/emicklei/go-restful/v3"
 	"github.com/stretchr/testify/require"
 )
 

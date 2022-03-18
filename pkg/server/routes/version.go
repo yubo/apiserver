@@ -19,7 +19,7 @@ package routes
 import (
 	"net/http"
 
-	"github.com/emicklei/go-restful"
+	"github.com/emicklei/go-restful/v3"
 	"github.com/yubo/apiserver/pkg/responsewriters"
 	"github.com/yubo/golib/version"
 )

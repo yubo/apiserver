@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/emicklei/go-restful"
+	"github.com/emicklei/go-restful/v3"
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/golib/api/errors"
 	"github.com/yubo/golib/util"
@@ -16,10 +16,6 @@ const (
 	QueryType  = "query"
 	HeaderType = "header"
 )
-
-type Validator interface {
-	Validate() error
-}
 
 func decodeParameters(parameters *request.Parameters, into interface{}) error {
 	if parameters == nil {
@@ -222,26 +218,25 @@ func setRouteBuilderParam(rb *restful.RouteBuilder, f *field) error {
 }
 
 // parameterCodec implements conversion to and from query parameters and objects.
-type ParameterCodec struct{}
+type parameterCodec struct{}
 
-//
-//// DecodeParameters converts the provided url.Values into an object of type From with the kind of into, and then
-//// converts that object to into (if necessary). Returns an error if the operation cannot be completed.
-func (c *ParameterCodec) DecodeParameters(parameters *request.Parameters, into interface{}) error {
+// DecodeParameters converts the provided url.Values into an object of type From with the kind of into, and then
+// converts that object to into (if necessary). Returns an error if the operation cannot be completed.
+func (c *parameterCodec) DecodeParameters(parameters *request.Parameters, into interface{}) error {
 	return decodeParameters(parameters, into)
 }
 
 // EncodeParameters converts the provided object into the to version, then converts that object to url.Values.
 // Returns an error if conversion is not possible.
-func (c *ParameterCodec) EncodeParameters(obj interface{}) (*request.Parameters, error) {
+func (c *parameterCodec) EncodeParameters(obj interface{}) (*request.Parameters, error) {
 	return encodeParameters(obj)
 }
 
-func (c *ParameterCodec) RouteBuilderParameters(rb *restful.RouteBuilder, obj interface{}) {
+func (c *parameterCodec) RouteBuilderParameters(rb *restful.RouteBuilder, obj interface{}) {
 	buildParameters(rb, obj)
 }
 
 // NewParameterCodec creates a ParameterCodec capable of transforming url values into versioned objects and back.
 func NewParameterCodec() request.ParameterCodec {
-	return &ParameterCodec{}
+	return &parameterCodec{}
 }

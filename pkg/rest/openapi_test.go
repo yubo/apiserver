@@ -8,7 +8,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/emicklei/go-restful"
+	"github.com/emicklei/go-restful/v3"
 	"github.com/stretchr/testify/assert"
 	"github.com/yubo/golib/util"
 	"k8s.io/klog/v2"

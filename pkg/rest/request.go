@@ -33,7 +33,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/emicklei/go-restful"
+	"github.com/emicklei/go-restful/v3"
 	"github.com/yubo/apiserver/pkg/metrics"
 	"github.com/yubo/apiserver/pkg/request"
 	restclientwatch "github.com/yubo/apiserver/pkg/rest/watch"
@@ -1483,7 +1483,7 @@ func ReadEntity(req *restful.Request, param, body interface{}, codec request.Par
 	}, param); err != nil {
 		return nil
 	}
-	if v, ok := param.(runtime.Validator); ok {
+	if v, ok := param.(Validator); ok {
 		if err := v.Validate(); err != nil {
 			return err
 		}
@@ -1497,7 +1497,7 @@ func ReadEntity(req *restful.Request, param, body interface{}, codec request.Par
 			return err
 		}
 	}
-	if v, ok := body.(runtime.Validator); ok {
+	if v, ok := body.(Validator); ok {
 		if err := v.Validate(); err != nil {
 			return err
 		}
