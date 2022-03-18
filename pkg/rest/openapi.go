@@ -75,6 +75,9 @@ func (p *WsOption) Validate() error {
 	} else {
 		p.Ws.Consumes(DefaultContentTypes...)
 	}
+	if p.ParameterCodec == nil {
+		p.ParameterCodec = NewParameterCodec()
+	}
 	return nil
 }
 
