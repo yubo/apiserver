@@ -177,7 +177,7 @@ func TestRequestPathVariableFromObj(t *testing.T) {
 	r := (&Request{
 		c:          &RESTClient{base: &url.URL{}},
 		pathPrefix: "/test/{value}",
-	}).VersionedParams(param, scheme.ParameterCodec)
+	}).VersionedParams(param, NewParameterCodec())
 	assert.Equal(t, "/test/hello", r.URL().String())
 }
 
@@ -258,7 +258,7 @@ func TestRequestVersionedParams(t *testing.T) {
 	if !reflect.DeepEqual(r.params, url.Values{"foo": []string{"a"}}) {
 		t.Errorf("should have set a param: %#v", r)
 	}
-	r.VersionedParams(&PodLogOptions{Follow: true, Container: "bar"}, scheme.ParameterCodec)
+	r.VersionedParams(&PodLogOptions{Follow: true, Container: "bar"}, NewParameterCodec())
 
 	if !reflect.DeepEqual(r.params, url.Values{
 		"foo":       []string{"a"},
@@ -270,8 +270,9 @@ func TestRequestVersionedParams(t *testing.T) {
 }
 
 func TestRequestVersionedParamsFromListOptions(t *testing.T) {
+	codec := NewParameterCodec()
 	r := &Request{c: &RESTClient{content: ClientContentConfig{}}}
-	r.VersionedParams(&api.ListOptions{ResourceVersion: "1"}, scheme.ParameterCodec)
+	r.VersionedParams(&api.ListOptions{ResourceVersion: "1"}, codec)
 	if !reflect.DeepEqual(r.params, url.Values{
 		"resourceVersion": []string{"1"},
 	}) {
@@ -279,7 +280,7 @@ func TestRequestVersionedParamsFromListOptions(t *testing.T) {
 	}
 
 	var timeout int64 = 10
-	r.VersionedParams(&api.ListOptions{ResourceVersion: "2", TimeoutSeconds: &timeout}, scheme.ParameterCodec)
+	r.VersionedParams(&api.ListOptions{ResourceVersion: "2", TimeoutSeconds: &timeout}, codec)
 	if !reflect.DeepEqual(r.params, url.Values{
 		"resourceVersion": []string{"1", "2"},
 		"timeoutSeconds":  []string{"10"},

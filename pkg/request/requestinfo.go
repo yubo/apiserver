@@ -20,12 +20,12 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 
+	"github.com/emicklei/go-restful"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/api/validation/path"
-	"github.com/yubo/golib/runtime"
-	"github.com/yubo/golib/scheme"
 	"github.com/yubo/golib/util/sets"
 	"k8s.io/klog/v2"
 )
@@ -82,6 +82,34 @@ var NamespaceSubResourcesForTest = sets.NewString(namespaceSubresources.List()..
 type RequestInfoFactory struct {
 	APIPrefixes          sets.String // without leading and trailing slashes
 	GrouplessAPIPrefixes sets.String // without leading and trailing slashes
+	ParameterCodec       ParameterCodec
+}
+
+// ParameterCodec defines methods for serializing and deserializing API objects to url.Values and
+// performing any necessary conversion. Unlike the normal Codec, query parameters are not self describing
+// and the desired version must be specified.
+type ParameterCodec interface {
+	// DecodeParameters takes the given url.Values in the specified group version and decodes them
+	// into the provided object, or returns an error.
+	DecodeParameters(parameter *Parameters, into interface{}) error
+	// EncodeParameters encodes the provided object as query parameters or returns an error.
+	EncodeParameters(obj interface{}) (*Parameters, error)
+
+	RouteBuilderParameters(rb *restful.RouteBuilder, obj interface{})
+}
+
+type Parameters struct {
+	Header http.Header
+	Query  url.Values
+	Path   map[string]string
+}
+
+func NewParameters() *Parameters {
+	return &Parameters{
+		Header: make(http.Header),
+		Query:  make(url.Values),
+		Path:   make(map[string]string),
+	}
 }
 
 // TODO write an integration test against the swagger doc to test the RequestInfo and match up behavior to responses
@@ -209,7 +237,7 @@ func (r *RequestInfoFactory) NewRequestInfo(req *http.Request) (*RequestInfo, er
 	// if there's no name on the request and we thought it was a get before, then the actual verb is a list or a watch
 	if len(requestInfo.Name) == 0 && requestInfo.Verb == "get" {
 		opts := api.ListOptions{}
-		if err := scheme.ParameterCodec.DecodeParameters(&runtime.Parameters{Query: req.URL.Query()}, &opts); err != nil {
+		if err := r.ParameterCodec.DecodeParameters(&Parameters{Query: req.URL.Query()}, &opts); err != nil {
 			// An error in parsing request will result in default to "list" and not setting "name" field.
 			klog.ErrorS(err, "Couldn't parse request", "Request", req.URL.Query())
 			// Reset opts to not rely on partial results from parsing.

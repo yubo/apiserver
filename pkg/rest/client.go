@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/runtime"
 	"github.com/yubo/golib/util/flowcontrol"
@@ -20,6 +21,7 @@ type Interface interface {
 	Patch(pt api.PatchType) *Request
 	Get() *Request
 	Delete() *Request
+	Codec() request.ParameterCodec
 }
 
 // ClientContentConfig controls how RESTClient communicates with the server.
@@ -70,6 +72,8 @@ type RESTClient struct {
 
 	// Set specific behavior of the client.  If not set http.DefaultClient will be used.
 	Client *http.Client
+
+	codec request.ParameterCodec
 }
 
 // NewRESTClient creates a new RESTClient. This client performs generic REST functions
@@ -93,6 +97,7 @@ func NewRESTClient(baseURL *url.URL, config ClientContentConfig, rateLimiter flo
 		rateLimiter:      rateLimiter,
 
 		Client: client,
+		codec:  NewParameterCodec(),
 	}, nil
 }
 
@@ -157,4 +162,8 @@ func (c *RESTClient) Get() *Request {
 // Delete begins a DELETE request. Short for c.Verb("DELETE").
 func (c *RESTClient) Delete() *Request {
 	return c.Verb("DELETE")
+}
+
+func (c *RESTClient) Codec() request.ParameterCodec {
+	return c.codec
 }

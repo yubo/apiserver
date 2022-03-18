@@ -244,6 +244,7 @@ func NewRequestInfoResolver(c *Config) *apirequest.RequestInfoFactory {
 	return &apirequest.RequestInfoFactory{
 		APIPrefixes:          apiPrefixes,
 		GrouplessAPIPrefixes: legacyAPIPrefixes,
+		ParameterCodec:       rest.NewParameterCodec(),
 	}
 }
 

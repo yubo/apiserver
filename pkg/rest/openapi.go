@@ -15,8 +15,6 @@ import (
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/responsewriters"
 	"github.com/yubo/golib/encoding/urlencoded"
-	"github.com/yubo/golib/runtime"
-	"github.com/yubo/golib/scheme"
 	"k8s.io/klog/v2"
 )
 
@@ -57,6 +55,7 @@ type WsOption struct {
 	Routes             []WsRoute
 	RespWrite          func(resp *restful.Response, req *http.Request, data interface{}, err error)
 	GoRestfulContainer GoRestfulContainer
+	ParameterCodec     request.ParameterCodec
 }
 
 func (p *WsOption) Validate() error {
@@ -84,7 +83,7 @@ func (p *WsOption) build() error {
 		return err
 	}
 
-	rb := NewRouteBuilder(p.Ws)
+	rb := NewRouteBuilder(p.Ws, p.ParameterCodec)
 
 	for i := range p.Routes {
 		route := &p.Routes[i]
@@ -185,11 +184,11 @@ type RouteBuilder struct {
 	ws             *restful.WebService
 	rb             *restful.RouteBuilder
 	consume        string
-	parameterCodec runtime.ParameterCodec
+	parameterCodec request.ParameterCodec
 }
 
-func NewRouteBuilder(ws *restful.WebService) *RouteBuilder {
-	return &RouteBuilder{ws: ws, parameterCodec: scheme.ParameterCodec}
+func NewRouteBuilder(ws *restful.WebService, codec request.ParameterCodec) *RouteBuilder {
+	return &RouteBuilder{ws: ws, parameterCodec: codec}
 }
 
 func (p *RouteBuilder) Build(wr *WsRoute) error {
@@ -348,7 +347,7 @@ func (p *RouteBuilder) registerHandle(b *restful.RouteBuilder, wr *WsRoute) erro
 			param := reflect.New(paramType).Interface()
 			body := reflect.New(bodyType).Interface()
 
-			if err := ReadEntity(req, param, body); err != nil {
+			if err := ReadEntity(req, param, body, p.parameterCodec); err != nil {
 				responsewriters.Error(err, resp.ResponseWriter, req.Request)
 				return
 			}
@@ -368,7 +367,7 @@ func (p *RouteBuilder) registerHandle(b *restful.RouteBuilder, wr *WsRoute) erro
 		} else if numIn == 3 {
 			// with param
 			param := reflect.New(paramType).Interface()
-			if err := ReadEntity(req, param, nil); err != nil {
+			if err := ReadEntity(req, param, nil, p.parameterCodec); err != nil {
 				responsewriters.Error(err, resp.ResponseWriter, req.Request)
 				return
 			}

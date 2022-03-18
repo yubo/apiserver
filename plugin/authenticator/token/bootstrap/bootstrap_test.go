@@ -24,20 +24,20 @@ import (
 
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	bootstrapapi "github.com/yubo/apiserver/pkg/cluster-bootstrap/token/api"
+	"github.com/yubo/apiserver/pkg/storage"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/api/errors"
-	"github.com/yubo/golib/labels"
 )
 
 type lister struct {
 	secrets []*api.Secret
 }
 
-func (l *lister) List(selector labels.Selector) (ret []*api.Secret, err error) {
+func (l *lister) List(ctx context.Context, selector storage.ListOptions) (ret []*api.Secret, err error) {
 	return l.secrets, nil
 }
 
-func (l *lister) Get(name string) (*api.Secret, error) {
+func (l *lister) Get(ctx context.Context, name string) (*api.Secret, error) {
 	for _, s := range l.secrets {
 		if s.Name == name {
 			return s, nil

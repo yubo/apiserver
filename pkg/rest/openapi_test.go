@@ -10,7 +10,6 @@ import (
 
 	"github.com/emicklei/go-restful"
 	"github.com/stretchr/testify/assert"
-	"github.com/yubo/golib/scheme"
 	"github.com/yubo/golib/util"
 	"k8s.io/klog/v2"
 )
@@ -79,6 +78,7 @@ func TestHttpParam(t *testing.T) {
 		&GetHostBody{},
 	}}
 
+	codec := NewParameterCodec()
 	for i, c := range cases {
 		container := restful.NewContainer()
 		ws := new(restful.WebService).Path("").Consumes(MIME_JSON)
@@ -89,7 +89,7 @@ func TestHttpParam(t *testing.T) {
 			To(func(req *restful.Request, resp *restful.Response) {
 				param := GetHost{}
 				body := GetHostBody{}
-				err := ReadEntity(req, &param, &body)
+				err := ReadEntity(req, &param, &body, codec)
 				assert.Emptyf(t, err, "case-%d", i)
 				assert.Equalf(t, c.param, &param, "case-%d", i)
 				assert.Equalf(t, c.body, &body, "case-%d", i)
@@ -105,7 +105,7 @@ func TestHttpParam(t *testing.T) {
 		assert.NoError(t, err)
 
 		err = cli.Post().Prefix("/dirs/{dir}/hosts/{name}").
-			VersionedParams(c.param, scheme.ParameterCodec).
+			VersionedParams(c.param, codec).
 			Body(c.body).Do(context.Background()).Error()
 		assert.NoErrorf(t, err, "case-%d", i)
 	}
@@ -134,6 +134,8 @@ func TestWsRouteBuild(t *testing.T) {
 		&UpdateUserInput{Age: util.Int(26), DisplayName: util.String("sonic2020")},
 	)
 
+	codec := NewParameterCodec()
+
 	for i := 0; i < len(cases)/2; i++ {
 		container := restful.NewContainer()
 		param := cases[2*i]
@@ -160,7 +162,7 @@ func TestWsRouteBuild(t *testing.T) {
 		assert.NoError(t, err)
 
 		err = c.Put().Prefix("namespaces/{namespace}/users/{name}").
-			VersionedParams(param, scheme.ParameterCodec).
+			VersionedParams(param, codec).
 			Body(body).Do(context.Background()).Error()
 		assert.NoError(t, err)
 	}
@@ -191,6 +193,8 @@ func TestWsRouteBuildWithResponse(t *testing.T) {
 		&User{Name: util.String("tom"), Age: util.Int(26), DisplayName: util.String("sonic2020")},
 	)
 
+	codec := NewParameterCodec()
+
 	for i := 0; i < len(cases)/3; i++ {
 		container := restful.NewContainer()
 		param := cases[3*i]
@@ -218,7 +222,7 @@ func TestWsRouteBuildWithResponse(t *testing.T) {
 
 		got := &User{}
 		err := c.Put().Prefix("namespaces/{namespace}/users/{name}").
-			VersionedParams(param, scheme.ParameterCodec).
+			VersionedParams(param, codec).
 			Body(body).Do(context.Background()).Into(got)
 		assert.NoError(t, err)
 		assert.Equalf(t, user, got, "get user from api")

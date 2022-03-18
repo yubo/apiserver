@@ -2,6 +2,8 @@ module github.com/yubo/apiserver
 
 go 1.16
 
+replace github.com/yubo/golib => ../golib
+
 require (
 	cloud.google.com/go v0.54.0 // indirect
 	github.com/Azure/go-autorest/autorest v0.11.19

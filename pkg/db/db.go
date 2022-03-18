@@ -37,7 +37,7 @@ func NewDB(ctx context.Context, config *Config) (DB, error) {
 			klog.Warningf("database[%s].dsn is empty, skiped", cf.Name)
 			continue
 		}
-		opts := []orm.Option{
+		opts := []orm.DBOption{
 			orm.WithContext(ctx),
 		}
 

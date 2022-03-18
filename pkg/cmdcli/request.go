@@ -61,7 +61,7 @@ func (p *Request) Do(ctx context.Context) error {
 	}
 
 	if p.param != nil {
-		req = req.VersionedParams(p.param, scheme.ParameterCodec)
+		req = req.VersionedParams(p.param, p.client.Codec())
 	}
 	if p.body != nil {
 		req = req.Body(p.body)

@@ -41,7 +41,6 @@ import (
 	"github.com/yubo/golib/api/errors"
 	"github.com/yubo/golib/runtime"
 	"github.com/yubo/golib/runtime/serializer/streaming"
-	"github.com/yubo/golib/scheme"
 	"github.com/yubo/golib/util"
 	utilclock "github.com/yubo/golib/util/clock"
 	"github.com/yubo/golib/util/flowcontrol"
@@ -359,11 +358,11 @@ func (r *Request) Param(paramName, s string) *Request {
 // to the request. Use this to provide versioned query parameters from client libraries.
 // VersionedParams will not write query parameters that have omitempty set and are empty. If a
 // parameter has already been set it is appended to (Params and VersionedParams are additive).
-func (r *Request) VersionedParams(obj runtime.Object, codec runtime.ParameterCodec) *Request {
+func (r *Request) VersionedParams(obj runtime.Object, codec request.ParameterCodec) *Request {
 	return r.SpecificallyVersionedParams(obj, codec)
 }
 
-func (r *Request) SpecificallyVersionedParams(obj runtime.Object, codec runtime.ParameterCodec) *Request {
+func (r *Request) SpecificallyVersionedParams(obj runtime.Object, codec request.ParameterCodec) *Request {
 	if r.err != nil {
 		return r
 	}
@@ -1471,13 +1470,13 @@ func ValidatePathSegmentName(name string, prefix bool) []string {
 }
 
 // dst: must be ptr
-func ReadEntity(req *restful.Request, param, body interface{}) error {
+func ReadEntity(req *restful.Request, param, body interface{}, codec request.ParameterCodec) error {
 	ctx := request.WithParam(req.Request.Context(), param)
 	ctx = request.WithBody(ctx, body)
 	req.Request = req.Request.WithContext(ctx)
 
 	// param
-	if err := scheme.ParameterCodec.DecodeParameters(&runtime.Parameters{
+	if err := codec.DecodeParameters(&request.Parameters{
 		Header: req.Request.Header,
 		Path:   req.PathParameters(),
 		Query:  req.Request.URL.Query(),

@@ -81,9 +81,8 @@ func TestRole(t *testing.T) {
 		})
 
 		t.Run("list roles", func(t *testing.T) {
-			total, list, err := roles.List(context.TODO(), storage.ListOptions{})
+			list, err := roles.List(context.TODO(), storage.ListOptions{})
 			assert.NoError(t, err)
-			assert.Equal(t, int64(1), total)
 			assert.NotNil(t, list)
 		})
 

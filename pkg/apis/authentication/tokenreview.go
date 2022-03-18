@@ -23,7 +23,6 @@ import (
 
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/golib/api"
-	"github.com/yubo/golib/scheme"
 )
 
 // TokenReviewsGetter has a method to return a TokenReviewInterface.
@@ -55,7 +54,7 @@ func (c *tokenReviews) Create(ctx context.Context, tokenReview *TokenReview, opt
 	result = &TokenReview{}
 	err = c.client.Post().
 		Resource("tokenreviews").
-		VersionedParams(&opts, scheme.ParameterCodec).
+		VersionedParams(&opts, rest.NewParameterCodec()).
 		Body(tokenReview).
 		Do(ctx).
 		Into(result)

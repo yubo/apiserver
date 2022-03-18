@@ -10,10 +10,6 @@ const (
 	MIME_PROTOBUF    = "application/x-protobuf"
 	MIME_OCTET       = "application/octet-stream" // If Content-Type is not present in request, use the default
 
-	PathType   = "path"
-	QueryType  = "query"
-	HeaderType = "header"
-
 	MaxFormSize = int64(1<<63 - 1)
 
 	SecurityDefinitionKey = "OAPI_SECURITY_DEFINITION"

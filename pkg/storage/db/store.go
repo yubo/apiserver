@@ -82,7 +82,12 @@ func (p store) Drop(key string) error {
 	db := p.getdb(context.TODO())
 	table, _, _ := parseKey(key)
 
-	return db.DropTable(orm.NewOptions(orm.WithTable(table)))
+	opt, err := orm.NewOptions(orm.WithTable(table))
+	if err != nil {
+		return err
+	}
+
+	return db.DropTable(opt)
 }
 
 func (p store) Create(ctx context.Context, key string, obj, out runtime.Object) error {
@@ -152,7 +157,7 @@ func (p store) Get(ctx context.Context, key string, opts storage.GetOptions, out
 }
 
 func (p store) get(db orm.Interface, table, selector string, ignoreNotFound bool, out runtime.Object) error {
-	opts := []orm.SqlOption{orm.WithTable(table), orm.WithSelector(selector)}
+	opts := []orm.Option{orm.WithTable(table), orm.WithSelector(selector)}
 	if ignoreNotFound {
 		opts = append(opts, orm.WithIgnoreNotFoundErr())
 	}
@@ -164,7 +169,7 @@ func (p store) List(ctx context.Context, key string, opts storage.ListOptions, o
 	db := p.getdb(ctx)
 
 	table, _, _ := parseKey(key)
-	o := []orm.SqlOption{
+	o := []orm.Option{
 		orm.WithTable(table),
 		orm.WithTotal(total),
 		orm.WithSelector(opts.Query),

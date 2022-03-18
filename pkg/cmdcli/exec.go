@@ -10,7 +10,6 @@ import (
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/apiserver/pkg/streaming/api"
 	"github.com/yubo/apiserver/tools/remotecommand"
-	"github.com/yubo/golib/scheme"
 	"github.com/yubo/golib/util/interrupt"
 	"github.com/yubo/golib/util/term"
 )
@@ -110,7 +109,7 @@ func (p *execRequest) Run() error {
 			Stdin:       o.Stdin,
 			Stdout:      o.Out != nil,
 			Stderr:      o.ErrOut != nil,
-		}, scheme.ParameterCodec)
+		}, client.Codec())
 
 	return t.Safe(func() error {
 		return RemoteExecute(
