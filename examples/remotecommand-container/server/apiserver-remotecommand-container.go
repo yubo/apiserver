@@ -7,19 +7,18 @@ import (
 	"os"
 	"time"
 
-	"github.com/emicklei/go-restful/v3"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/rest"
+	servermodule "github.com/yubo/apiserver/pkg/server/module"
 	"github.com/yubo/apiserver/pkg/streaming"
 	"github.com/yubo/apiserver/pkg/streaming/api"
 	"github.com/yubo/apiserver/pkg/streaming/portforward"
 	"github.com/yubo/apiserver/pkg/streaming/providers/dockershim"
 	remotecommandserver "github.com/yubo/apiserver/pkg/streaming/remotecommand"
-	"github.com/yubo/golib/logs"
+	"github.com/yubo/golib/cli"
 	"github.com/yubo/golib/proc"
 	"k8s.io/klog/v2"
 
-	servermodule "github.com/yubo/apiserver/pkg/server/module"
 	_ "github.com/yubo/apiserver/pkg/server/register"
 )
 
@@ -52,14 +51,9 @@ type server struct {
 }
 
 func main() {
-	logs.InitLogs()
-	defer logs.FlushLogs()
-
-	restful.EnableTracing(true)
-
-	if err := servermodule.NewRootCmdWithoutTLS().Execute(); err != nil {
-		os.Exit(1)
-	}
+	command := proc.NewRootCmd(servermodule.WithoutTLS(), proc.WithHooks(hookOps...))
+	code := cli.Run(command)
+	os.Exit(code)
 }
 
 func start(ctx context.Context) error {
@@ -74,7 +68,7 @@ func start(ctx context.Context) error {
 
 func (p *server) installWs(http rest.GoRestfulContainer) {
 	rest.WsRouteBuild(&rest.WsOption{
-		Path:               "/",
+		Path:               "/remotecommand",
 		GoRestfulContainer: http,
 		Routes: []rest.WsRoute{
 			{Method: "POST", SubPath: "/exec", Handle: p.exec},
@@ -148,8 +142,4 @@ func (p *server) portForward(w http.ResponseWriter, req *http.Request, in *api.P
 		p.config.StreamCreationTimeout,
 		p.config.SupportedPortForwardProtocols)
 	return nil
-}
-
-func init() {
-	proc.RegisterHooks(hookOps)
 }

@@ -9,7 +9,7 @@ import (
 	"github.com/emicklei/go-restful/v3"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/rest"
-	"github.com/yubo/golib/logs"
+	"github.com/yubo/golib/cli"
 	"github.com/yubo/golib/proc"
 	"github.com/yubo/golib/util"
 
@@ -69,14 +69,9 @@ var (
 )
 
 func main() {
-	logs.InitLogs()
-	defer logs.FlushLogs()
-
-	proc.RegisterHooks(hookOps)
-
-	if err := server.NewRootCmdWithoutTLS().Execute(); err != nil {
-		os.Exit(1)
-	}
+	command := proc.NewRootCmd(server.WithoutTLS(), proc.WithHooks(hookOps...))
+	code := cli.Run(command)
+	os.Exit(code)
 }
 
 func start(ctx context.Context) error {

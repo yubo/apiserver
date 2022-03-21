@@ -27,7 +27,7 @@ func run() error {
 		ContentConfig: rest.ContentConfig{NegotiatedSerializer: scheme.Codecs},
 	}
 
-	return cmdcli.NewExecClient(config, "POST", "/attach").
+	return cmdcli.NewExecClient(config, "POST", "/remotecommand/attach").
 		Attach(os.Args[1]).
 		Run()
 }

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	osruntime "runtime"
 
 	"github.com/yubo/apiserver/pkg/authentication"
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
@@ -14,13 +13,14 @@ import (
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/apiserver/plugin/authenticator/token/tokentest"
-	"github.com/yubo/golib/logs"
+	"github.com/yubo/golib/cli"
 	"github.com/yubo/golib/proc"
 	"github.com/yubo/golib/util/runtime"
 	"github.com/yubo/golib/util/wsstream"
 	"golang.org/x/net/websocket"
 
 	_ "github.com/yubo/apiserver/pkg/authentication/register"
+	server "github.com/yubo/apiserver/pkg/server/module"
 	_ "github.com/yubo/apiserver/pkg/server/register"
 )
 
@@ -42,13 +42,11 @@ var (
 )
 
 func main() {
-	logs.InitLogs()
-	defer logs.FlushLogs()
+	registerAuthn()
 
-	osruntime.GOMAXPROCS(2)
-	if err := proc.NewRootCmd().Execute(); err != nil {
-		os.Exit(1)
-	}
+	command := proc.NewRootCmd(server.WithoutTLS(), proc.WithHooks(hookOps...))
+	code := cli.Run(command)
+	os.Exit(code)
 }
 
 func start(ctx context.Context) error {
@@ -101,9 +99,7 @@ func _wsHandle(ws *websocket.Conn) {
 		u.GetName(), u.GetGroups()))
 }
 
-func init() {
-	proc.RegisterHooks(hookOps)
-
+func registerAuthn() {
 	authentication.RegisterTokenAuthn(func(context.Context) (authenticator.Token, error) {
 		return &tokentest.TokenAuthenticator{
 			Tokens: map[string]*user.DefaultInfo{
@@ -111,5 +107,4 @@ func init() {
 			},
 		}, nil
 	})
-
 }

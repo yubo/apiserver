@@ -28,7 +28,7 @@ func run() error {
 		return err
 	}
 
-	return cmdcli.NewExecClient(config, "POST", "/exec").
+	return cmdcli.NewExecClient(config, "POST", "/remotecommand/exec").
 		Command(name, args...).
 		Container(containerId).
 		Run()

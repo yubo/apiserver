@@ -33,9 +33,10 @@ var (
 )
 
 func main() {
-	cmd := proc.NewRootCmd(server.WithoutTLS(), proc.WithHooks(hookOps...))
-	code := cli.Run(cmd)
+	command := proc.NewRootCmd(server.WithoutTLS(), proc.WithHooks(hookOps...))
+	code := cli.Run(command)
 	os.Exit(code)
+
 }
 
 func start(ctx context.Context) error {

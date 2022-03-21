@@ -8,10 +8,11 @@ import (
 
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/rest"
-	"github.com/yubo/golib/logs"
+	"github.com/yubo/golib/cli"
 	"github.com/yubo/golib/proc"
 
 	// http
+	server "github.com/yubo/apiserver/pkg/server/module"
 	_ "github.com/yubo/apiserver/pkg/server/register"
 
 	// authn
@@ -40,12 +41,9 @@ var (
 )
 
 func main() {
-	logs.InitLogs()
-	defer logs.FlushLogs()
-
-	if err := proc.NewRootCmd().Execute(); err != nil {
-		os.Exit(1)
-	}
+	command := proc.NewRootCmd(server.WithoutTLS(), proc.WithHooks(hookOps...))
+	code := cli.Run(command)
+	os.Exit(code)
 }
 
 func start(ctx context.Context) error {
@@ -78,8 +76,4 @@ func installWs(http rest.GoRestfulContainer) {
 
 func handle(w http.ResponseWriter, req *http.Request) error {
 	return nil
-}
-
-func init() {
-	proc.RegisterHooks(hookOps)
 }

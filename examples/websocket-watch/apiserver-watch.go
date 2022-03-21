@@ -5,17 +5,17 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	osruntime "runtime"
 	"time"
 
 	"github.com/yubo/apiserver/pkg/handlers"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/rest"
-	"github.com/yubo/golib/logs"
+	"github.com/yubo/golib/cli"
 	"github.com/yubo/golib/proc"
 	"github.com/yubo/golib/watch"
 	"k8s.io/klog/v2"
 
+	server "github.com/yubo/apiserver/pkg/server/module"
 	_ "github.com/yubo/apiserver/pkg/server/register"
 )
 
@@ -39,14 +39,9 @@ var (
 )
 
 func main() {
-	logs.InitLogs()
-	defer logs.FlushLogs()
-
-	osruntime.GOMAXPROCS(2)
-
-	if err := proc.NewRootCmd().Execute(); err != nil {
-		os.Exit(1)
-	}
+	command := proc.NewRootCmd(server.WithoutTLS(), proc.WithHooks(hookOps...))
+	code := cli.Run(command)
+	os.Exit(code)
 }
 
 func start(ctx context.Context) error {
@@ -87,8 +82,4 @@ func watchHandle(w http.ResponseWriter, req *http.Request) error {
 	err := handlers.ServeWatch(watcher, req, w, 0)
 	klog.V(10).Infof("exit with err %v", err)
 	return err
-}
-
-func init() {
-	proc.RegisterHooks(hookOps)
 }
