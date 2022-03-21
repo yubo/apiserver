@@ -6,7 +6,6 @@ server
 
 ```sh
 go run ./apiserver-audit.go \
-	--secure-serving=false --insecure-serving \
 	--audit-policy-file ./audit-policy.yaml  \
 	--audit-log-path -
 ```

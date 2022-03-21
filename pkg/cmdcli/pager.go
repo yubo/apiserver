@@ -54,7 +54,7 @@ func NewPager(r *Request, stdout io.Writer, disablePage bool) (*Pager, error) {
 func getPaginationFrom(input interface{}) (*rest.Pagination, error) {
 	rv := reflect.Indirect(reflect.ValueOf(input))
 	if rv.Kind() != reflect.Struct {
-		return nil, errors.New("request.input must be a pointer to a struct")
+		return nil, fmt.Errorf("request.input must be a pointer to a struct, got %s", rv.Kind())
 	}
 
 	pagination, ok := rv.FieldByName("Pagination").Addr().Interface().(*rest.Pagination)

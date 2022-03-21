@@ -52,7 +52,6 @@ import (
 	_ "github.com/yubo/apiserver/pkg/server/register"
 	_ "github.com/yubo/apiserver/pkg/session/register"
 	_ "github.com/yubo/apiserver/pkg/tracing/register"
-	_ "github.com/yubo/golib/logs/register"
 )
 
 const (
@@ -75,10 +74,9 @@ var (
 )
 
 func newServerCmd() *cobra.Command {
-	proc.RegisterHooks(hookOps)
 	options.InstallReporter()
 
-	cmd := proc.NewRootCmd()
+	cmd := proc.NewRootCmd(proc.WithHooks(hookOps...))
 	cmd.AddCommand(options.NewVersionCmd())
 
 	return cmd

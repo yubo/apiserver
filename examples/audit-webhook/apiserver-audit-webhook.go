@@ -9,10 +9,11 @@ import (
 
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/rest"
-	"github.com/yubo/golib/logs"
+	"github.com/yubo/golib/cli"
 	"github.com/yubo/golib/proc"
 
 	// http
+	server "github.com/yubo/apiserver/pkg/server/module"
 	_ "github.com/yubo/apiserver/pkg/server/register"
 
 	// audit
@@ -20,7 +21,6 @@ import (
 )
 
 // go run ./apiserver-audit.go
-//
 
 const (
 	moduleName = "example.webhook.audit.apiserver"
@@ -36,12 +36,9 @@ var (
 )
 
 func main() {
-	logs.InitLogs()
-	defer logs.FlushLogs()
-
-	if err := proc.NewRootCmd().Execute(); err != nil {
-		os.Exit(1)
-	}
+	command := proc.NewRootCmd(server.WithoutTLS(), proc.WithHooks(hookOps...))
+	code := cli.Run(command)
+	os.Exit(code)
 }
 
 func start(ctx context.Context) error {
@@ -55,10 +52,10 @@ func start(ctx context.Context) error {
 
 func installWs(http rest.GoRestfulContainer) {
 	rest.WsRouteBuild(&rest.WsOption{
-		Path:               "/",
+		Path:               "/audit",
 		GoRestfulContainer: http,
 		Routes: []rest.WsRoute{
-			{Method: "POST", SubPath: "/webhook/audit", Handle: echo},
+			{Method: "POST", SubPath: "/webhook", Handle: echo},
 			{Method: "POST", SubPath: "/hello", Handle: hw},
 		},
 	})
@@ -71,8 +68,4 @@ func echo(w http.ResponseWriter, req *http.Request) {
 
 func hw(w http.ResponseWriter, req *http.Request) (string, error) {
 	return "hello, world", nil
-}
-
-func init() {
-	proc.RegisterHooks(hookOps)
 }

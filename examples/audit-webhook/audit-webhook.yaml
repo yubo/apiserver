@@ -4,7 +4,7 @@ preferences: {}
 clusters:
 - name: example-cluster
   cluster:
-    server: http://127.0.0.1:8080/webhook/audit
+    server: http://127.0.0.1:8080/audit/webhook
 users:
 - name: example-user
   user:

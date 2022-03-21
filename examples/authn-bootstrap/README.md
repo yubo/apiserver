@@ -1,33 +1,24 @@
-## Authentication - bootstrap(TODO)
-
-#### token file
-
-[tokens.cvs](./tokens.cvs)
-
-```cvs
-token-777,user3,uid3,"group1,group2"
-```
+## Authentication - bootstrap
 
 #### server
 
 ```sh
-$ go run ./apiserver-authn-tokenfile.go --token-auth-file=./tokens.cvs
+$ go run ./authn-bootstrap.go --db-driver=sqlite3 --db-dsn="file:test.db?cache=shared&mode=memory"
 ```
 
 
 #### client
 ```sh
-$ curl -H 'Content-Type:application/json' -H 'Authorization: bearer token-777' http://localhost:8080/hello
+$ curl -Ss  -H 'Authorization: bearer foobar.circumnavigation' http://localhost:8080/hello
 {
- "Name": "user3",
- "UID": "uid3",
+ "Name": "system:bootstrap:foobar",
+ "UID": "",
  "Groups": [
-  "group1",
-  "group2",
+  "system:bootstrappers",
+  "system:bootstrappers:foo",
   "system:authenticated"
  ],
  "Extra": null
 }
-
 ```
 

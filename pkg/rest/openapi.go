@@ -65,6 +65,9 @@ func (p *WsOption) Validate() error {
 	if p.Path != "" {
 		p.Ws = p.Ws.Path(p.Path)
 	}
+	if p.Ws.RootPath() == "/" {
+		klog.Warningf("rootpath is set to /, which may overwrite the existing route")
+	}
 	if len(p.Produces) > 0 {
 		p.Ws.Produces(p.Produces...)
 	} else {
@@ -114,7 +117,10 @@ func (p *WsOption) build() error {
 			}
 		}
 
-		rb.Build(route)
+		if err := rb.Build(route); err != nil {
+			return err
+		}
+		klog.InfoS("route register", "method", route.Method, "path", path.Join(p.Path, route.SubPath))
 	}
 	return nil
 

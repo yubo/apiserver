@@ -6,7 +6,7 @@ replace github.com/yubo/apiserver => ../..
 
 require (
 	github.com/yubo/apiserver v0.0.0-00010101000000-000000000000
-	github.com/yubo/golib v0.0.3-0.20220318153846-9a4409366d5f
+	github.com/yubo/golib v0.0.3-0.20220321060901-d37195448f54
 	golang.org/x/net v0.0.0-20220225172249-27dd8689420f
-	k8s.io/klog/v2 v2.60.0
+	k8s.io/klog/v2 v2.60.1
 )

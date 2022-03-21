@@ -2,6 +2,7 @@ package rest
 
 import (
 	"net/http"
+	"reflect"
 
 	"github.com/emicklei/go-restful/v3"
 	"github.com/yubo/apiserver/pkg/responsewriters"
@@ -14,6 +15,8 @@ func DefaultRespWrite(resp *restful.Response, req *http.Request, data interface{
 		klog.V(3).Infof("response %d %s", code, err.Error())
 		return
 	}
+
+	data = reflect.Indirect(reflect.ValueOf(data)).Interface()
 
 	if _, ok := data.(NonParam); ok {
 		resp.WriteHeader(http.StatusOK)

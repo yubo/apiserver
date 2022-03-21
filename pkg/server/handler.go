@@ -25,8 +25,8 @@ import (
 	"strings"
 
 	"github.com/emicklei/go-restful/v3"
-	"github.com/yubo/apiserver/pkg/server/mux"
 	"github.com/yubo/apiserver/pkg/responsewriters"
+	"github.com/yubo/apiserver/pkg/server/mux"
 	"github.com/yubo/golib/api/errors"
 	"github.com/yubo/golib/runtime"
 	"k8s.io/klog/v2"
@@ -103,7 +103,11 @@ func (a *APIServerHandler) ListedPaths() []string {
 	var handledPaths []string
 	// Extract the paths handled using restful.WebService
 	for _, ws := range a.GoRestfulContainer.RegisteredWebServices() {
-		handledPaths = append(handledPaths, ws.RootPath())
+		//handledPaths = append(handledPaths, ws.RootPath())
+		// add subpath
+		for _, v := range ws.Routes() {
+			handledPaths = append(handledPaths, v.Path)
+		}
 	}
 	handledPaths = append(handledPaths, a.NonGoRestfulMux.ListedPaths()...)
 	sort.Strings(handledPaths)

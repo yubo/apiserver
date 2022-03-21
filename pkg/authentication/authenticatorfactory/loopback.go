@@ -19,8 +19,8 @@ package authenticatorfactory
 import (
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/pkg/authentication/request/bearertoken"
-	"github.com/yubo/apiserver/plugin/authenticator/token/tokenfile"
 	"github.com/yubo/apiserver/pkg/authentication/user"
+	"github.com/yubo/apiserver/plugin/authenticator/token/tokenfile"
 )
 
 // NewFromTokens returns an authenticator.Request or an error

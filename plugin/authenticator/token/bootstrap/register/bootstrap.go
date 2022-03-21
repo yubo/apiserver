@@ -25,7 +25,7 @@ func (o *config) Validate() error {
 	return nil
 }
 
-func newConfig() *config { return &config{} }
+func newConfig() *config { return &config{BootstrapToken: true} }
 
 func factory(ctx context.Context) (authenticator.Token, error) {
 	c := configer.ConfigerMustFrom(ctx)
@@ -40,7 +40,7 @@ func factory(ctx context.Context) (authenticator.Token, error) {
 		return nil, nil
 	}
 
-	klog.V(5).InfoS("authmodule init", "name", moduleName)
+	klog.InfoS("authmodule init", "name", moduleName)
 
 	return bootstrap.NewTokenAuthenticator(models.NewSecret()), nil
 }

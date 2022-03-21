@@ -7,7 +7,7 @@ server
 go run ./apiserver-audit-webhook.go
 
 # slave
-go run ./apiserver-audit-webhook.go --bind-port 8081 --audit-policy-file ./audit-policy.yaml --audit-webhook-config-file ./audit-webhook.yaml --audit-webhook-batch-max-wait 2s
+go run ./apiserver-audit-webhook.go --port 8081 --audit-policy-file ./audit-policy.yaml --audit-webhook-config-file ./audit-webhook.yaml --audit-webhook-batch-max-wait 2s
 ```
 
 
@@ -18,7 +18,7 @@ kind: Policy
 rules:
   - level: RequestResponse
     nonResourceURLs:
-      - /hello
+      - /audit/hello
 ```
 
 [audit-webhook.yaml](./audit-webhook.yaml)
@@ -29,7 +29,7 @@ preferences: {}
 clusters:
 - name: example-cluster
   cluster:
-    server: http://127.0.0.1:8080/webhook/audit
+    server: http://127.0.0.1:8080/audit/webhook
 users:
 - name: example-user
   user:
@@ -47,12 +47,12 @@ current-context: example-context
 test
 
 ```
-curl -X POST http://localhost:8081/hello
+curl -X POST http://localhost:8081/audit/hello
 ```
 
 master server stdout
 
 ```json
-{"metadata":{},"items":[{"level":"RequestResponse","auditID":"a145e3d8-9821-4b48-bdc7-eb9c2a51b7ce","stage":"RequestReceived","requestURI":"/hello","verb":"post","user":{},"sourceIPs":["::1"],"userAgent":"curl/7.64.1","requestReceivedTimestamp":"2021-10-21T05:15:33.930197Z","stageTimestamp":"2021-10-21T05:15:33.930197Z"},{"level":"RequestResponse","auditID":"a145e3d8-9821-4b48-bdc7-eb9c2a51b7ce","stage":"ResponseComplete","requestURI":"/hello","verb":"post","user":{},"sourceIPs":["::1"],"userAgent":"curl/7.64.1","responseStatus":{"metadata":{},"code":200},"requestReceivedTimestamp":"2021-10-21T05:15:33.930197Z","stageTimestamp":"2021-10-21T05:15:33.930354Z","annotations":{"authorization.k8s.io/decision":"allow","authorization.k8s.io/reason":""}}]}
+{"metadata":{},"items":[{"level":"RequestResponse","auditID":"655dbb82-57e0-400d-9980-8cd7f19bf884","stage":"RequestReceived","requestURI":"/audit/hello","verb":"post","user":{},"sourceIPs":["::1"],"userAgent":"curl/7.77.0","requestReceivedTimestamp":"2022-03-21T07:57:53.382469Z","stageTimestamp":"2022-03-21T07:57:53.382469Z"},{"level":"RequestResponse","auditID":"655dbb82-57e0-400d-9980-8cd7f19bf884","stage":"ResponseComplete","requestURI":"/audit/hello","verb":"post","user":{},"sourceIPs":["::1"],"userAgent":"curl/7.77.0","responseStatus":{"metadata":{},"code":200},"requestReceivedTimestamp":"2022-03-21T07:57:53.382469Z","stageTimestamp":"2022-03-21T07:57:53.382641Z","annotations":{"authorization.k8s.io/decision":"allow","authorization.k8s.io/reason":""}}]}
 ```
 

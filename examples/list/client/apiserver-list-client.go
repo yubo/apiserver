@@ -9,7 +9,7 @@ import (
 	"k8s.io/klog/v2"
 )
 
-type Item struct {
+type User struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 }
@@ -20,7 +20,7 @@ type ListInput struct {
 
 type ListOutput struct {
 	Total int     `json:"total"`
-	List  []*Item `json:"list"`
+	List  []*User `json:"list"`
 }
 
 func run() error {
@@ -30,6 +30,7 @@ func run() error {
 				PageSize: 10,
 			},
 		}),
+		cmdcli.WithPrefix("/users"),
 		cmdcli.WithOutput(&ListOutput{}),
 	)
 	if err != nil {

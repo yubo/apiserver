@@ -3,14 +3,11 @@ package main
 import (
 	"os"
 
-	"github.com/yubo/golib/logs"
+	"github.com/yubo/golib/cli"
 )
 
 func main() {
-	logs.InitLogs()
-	defer logs.FlushLogs()
-
-	if err := newServerCmd().Execute(); err != nil {
-		os.Exit(1)
-	}
+	command := newServerCmd()
+	code := cli.Run(command)
+	os.Exit(code)
 }

@@ -8,7 +8,7 @@ import (
 
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/rest"
-	"github.com/yubo/golib/logs"
+	"github.com/yubo/golib/cli"
 	"github.com/yubo/golib/proc"
 
 	server "github.com/yubo/apiserver/pkg/server/module"
@@ -33,12 +33,9 @@ var (
 )
 
 func main() {
-	logs.InitLogs()
-	defer logs.FlushLogs()
-
-	if err := server.NewRootCmdWithoutTLS().Execute(); err != nil {
-		os.Exit(1)
-	}
+	command := proc.NewRootCmd(server.WithoutTLS(), proc.WithHooks(hookOps...))
+	code := cli.Run(command)
+	os.Exit(code)
 }
 
 func start(ctx context.Context) error {
@@ -51,7 +48,7 @@ func start(ctx context.Context) error {
 	return nil
 }
 
-type Item struct {
+type User struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 }
@@ -62,15 +59,15 @@ type ListInput struct {
 
 type ListOutput struct {
 	Total int     `json:"total"`
-	List  []*Item `json:"list"`
+	List  []*User `json:"list"`
 }
 
 func installWs(http rest.GoRestfulContainer) {
 	rest.WsRouteBuild(&rest.WsOption{
-		Path:               "/",
+		Path:               "/users",
 		GoRestfulContainer: http,
 		Routes: []rest.WsRoute{
-			{Method: "GET", SubPath: "/", Handle: list, Desc: "list itmes"},
+			{Method: "GET", SubPath: "/", Handle: list, Desc: "list users"},
 		},
 	})
 }
@@ -79,14 +76,10 @@ func list(w http.ResponseWriter, req *http.Request, in *ListInput) (*ListOutput,
 	offset, limit := in.OffsetLimit()
 	out := &ListOutput{Total: 1000}
 	for i := 0; i < limit; i++ {
-		out.List = append(out.List, &Item{
+		out.List = append(out.List, &User{
 			Name:        fmt.Sprintf("name-%03d", i+offset),
 			Description: fmt.Sprintf("description for name-%03d", i+offset),
 		})
 	}
 	return out, nil
-}
-
-func init() {
-	proc.RegisterHooks(hookOps)
 }

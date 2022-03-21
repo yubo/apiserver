@@ -17,7 +17,7 @@ func NewRequest(host string, opts ...RequestOption) (*Request, error) {
 			NegotiatedSerializer: scheme.Codecs,
 		},
 	}
-	return NewRequestWithConfig(config)
+	return NewRequestWithConfig(config, opts...)
 }
 
 func NewRequestWithConfig(config *rest.Config, opts ...RequestOption) (*Request, error) {

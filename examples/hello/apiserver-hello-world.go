@@ -8,18 +8,19 @@ import (
 
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/rest"
-	"github.com/yubo/golib/logs"
+	"github.com/yubo/golib/cli"
 	"github.com/yubo/golib/proc"
 
+	server "github.com/yubo/apiserver/pkg/server/module"
 	_ "github.com/yubo/apiserver/pkg/server/register"
 )
 
 // This example shows the minimal code needed to get a restful.WebService working.
-// go run ./apiserver-hello-world.go --secure-serving=false --insecure-serving
+// go run ./apiserver-hello-world.go
 // GET http://localhost:8080/hello
 
 const (
-	moduleName = "apiserver.hello"
+	moduleName = "hello.apiserver"
 )
 
 var (
@@ -32,14 +33,9 @@ var (
 )
 
 func main() {
-	logs.InitLogs()
-	defer logs.FlushLogs()
-
-	proc.RegisterHooks(hookOps)
-
-	if err := proc.NewRootCmd().Execute(); err != nil {
-		os.Exit(1)
-	}
+	cmd := proc.NewRootCmd(server.WithoutTLS(), proc.WithHooks(hookOps...))
+	code := cli.Run(cmd)
+	os.Exit(code)
 }
 
 func start(ctx context.Context) error {
@@ -69,9 +65,9 @@ func hello(w http.ResponseWriter, req *http.Request) ([]byte, error) {
 }
 
 func helloArray(w http.ResponseWriter, req *http.Request, _ *rest.NonParam, s *[]string) (string, error) {
-	return fmt.Sprintf("hello, %+v", s), nil
+	return fmt.Sprintf("%s", *s), nil
 }
 
 func helloMap(w http.ResponseWriter, req *http.Request, _ *rest.NonParam, m *map[string]string) (string, error) {
-	return fmt.Sprintf("hello, %+v", m), nil
+	return fmt.Sprintf("%s", *m), nil
 }
