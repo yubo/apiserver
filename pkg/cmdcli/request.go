@@ -3,10 +3,13 @@ package cmdcli
 import (
 	"context"
 	"io"
+	"net/http"
 	"time"
 
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/golib/scheme"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/propagation"
 )
 
 // host: 127.0.0.1:8080
@@ -56,6 +59,10 @@ type Request struct {
 func (p *Request) Do(ctx context.Context) error {
 	req := p.client.Verb(p.method)
 
+	if p.httpClient != nil {
+		p.client.Client = p.httpClient
+	}
+
 	if p.prefix != "" {
 		req = req.Prefix(p.prefix)
 	}
@@ -102,19 +109,40 @@ func (p *Request) Do(ctx context.Context) error {
 type RequestOptions struct {
 	method  string
 	prefix  string
-	client  *rest.RESTClient    // client
+	header  http.Header
 	timeout time.Duration       // second
 	param   interface{}         // param variables
 	body    interface{}         // string, []byte, io.Reader, struct{}
 	output  interface{}         //
 	cb      []func(interface{}) //
+
+	// Set specific behavior of the client.  If not set http.DefaultClient will be used.
+	httpClient *http.Client
 }
 
 type RequestOption func(*RequestOptions)
 
-func WithClient(client *rest.RESTClient) RequestOption {
+func WithTraceInject(ctx context.Context) RequestOption {
+	header := make(http.Header)
+	otel.GetTextMapPropagator().Inject(ctx, propagation.HeaderCarrier(header))
+
+	return WithHeader(header)
+}
+
+func WithHeader(header http.Header) RequestOption {
 	return func(o *RequestOptions) {
-		o.client = client
+		if o.header == nil {
+			o.header = header
+		}
+		for k, v := range header {
+			o.header[k] = v
+		}
+	}
+}
+
+func WithClient(client *http.Client) RequestOption {
+	return func(o *RequestOptions) {
+		o.httpClient = client
 	}
 }
 func WithMethod(method string) RequestOption {

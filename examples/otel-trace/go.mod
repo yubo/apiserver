@@ -1,12 +1,15 @@
-module github.com/yubo/examples/otel-trace
+module github.com/yubo/examples/otel-traces
 
 go 1.16
 
+replace github.com/yubo/apiserver => ../..
+
 require (
-	github.com/emicklei/go-restful/v3 v3.7.4
-	go.opentelemetry.io/contrib/instrumentation/github.com/emicklei/go-restful/otelrestful v0.29.0
-	go.opentelemetry.io/otel v1.4.1
-	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.4.1
-	go.opentelemetry.io/otel/sdk v1.4.1
-	go.opentelemetry.io/otel/trace v1.4.1
+	github.com/yubo/apiserver v0.0.0-00010101000000-000000000000
+	github.com/yubo/golib v0.0.3-0.20220321060901-d37195448f54
+	go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace v0.30.0
+	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.30.0
+	go.opentelemetry.io/otel v1.5.0
+	go.opentelemetry.io/otel/sdk v1.5.0
+	go.opentelemetry.io/otel/trace v1.5.0
 )

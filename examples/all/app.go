@@ -51,7 +51,7 @@ import (
 	_ "github.com/yubo/apiserver/pkg/models/register"
 	_ "github.com/yubo/apiserver/pkg/server/register"
 	_ "github.com/yubo/apiserver/pkg/session/register"
-	_ "github.com/yubo/apiserver/pkg/tracing/register"
+	_ "github.com/yubo/apiserver/pkg/traces/register"
 )
 
 const (
