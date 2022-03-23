@@ -1,19 +1,19 @@
 traces:
   debug: true
   radioBased: 1.0
-  serviceName: otel-traces.examples.apiserver
+  serviceName: otel-trace.server
   contextHeadername: Trace-Id
   attributes:
     key1: value1
-  #otel:
-  #  endpoint: localhost:4317
-  #  insecure: true
-  jaeger:
-    endpoint: http://localhost:14268/api/traces
+  otel:
+    endpoint: localhost:4317
     insecure: true
-    username:
-    password:
-    insecure:
-    timeout:
-    insecureSkipVerify:
-    issuerCAPath:
+  #jaeger:
+  #  endpoint: http://localhost:14268/api/traces
+  #  insecure: true
+  #  username:
+  #  password:
+  #  insecure:
+  #  timeout:
+  #  insecureSkipVerify:
+  #  issuerCAPath:

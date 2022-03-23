@@ -80,11 +80,11 @@ func getUser1(ctx context.Context, in *User) (*User, error) {
 	return in, nil
 }
 
-func getUser2(ctx context.Context, in *User) (*User, error) {
-	ctx, span := traces.Start(ctx, "getUser2", oteltrace.WithAttributes(attribute.String("name", in.Name)))
+func getUser2(w http.ResponseWriter, req *http.Request, in *User) (*User, error) {
+	ctx, span := traces.Start(req.Context(), "getUser2", oteltrace.WithAttributes(attribute.String("name", in.Name)))
 	defer span.End()
 
-	return getUser2(ctx, in)
+	return getUser1(ctx, in)
 }
 
 func getUser3(w http.ResponseWriter, req *http.Request, in *User) (*User, error) {
@@ -107,7 +107,6 @@ func makeRequest(ctx context.Context, host, path string) (*User, error) {
 		cmdcli.WithMethod("GET"),
 		cmdcli.WithPrefix(path),
 		cmdcli.WithClient(client),
-		cmdcli.WithTraceInject(ctx),
 	)
 	if err != nil {
 		return nil, err

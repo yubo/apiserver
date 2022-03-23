@@ -8,8 +8,6 @@ import (
 
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/golib/scheme"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/propagation"
 )
 
 // host: 127.0.0.1:8080
@@ -73,6 +71,9 @@ func (p *Request) Do(ctx context.Context) error {
 	if p.body != nil {
 		req = req.Body(p.body)
 	}
+	for k, v := range p.header {
+		req.SetHeader(k, v...)
+	}
 
 	if p.timeout > 0 {
 		var cancel context.CancelFunc
@@ -122,20 +123,16 @@ type RequestOptions struct {
 
 type RequestOption func(*RequestOptions)
 
-func WithTraceInject(ctx context.Context) RequestOption {
-	header := make(http.Header)
-	otel.GetTextMapPropagator().Inject(ctx, propagation.HeaderCarrier(header))
-
-	return WithHeader(header)
-}
-
 func WithHeader(header http.Header) RequestOption {
 	return func(o *RequestOptions) {
 		if o.header == nil {
 			o.header = header
+			return
 		}
-		for k, v := range header {
-			o.header[k] = v
+		for k, values := range header {
+			for _, v := range values {
+				o.header.Add(k, v)
+			}
 		}
 	}
 }
