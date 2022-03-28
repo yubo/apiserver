@@ -1,0 +1,20 @@
+syntax = "proto3";
+option go_package = "github.com/yubo/apiserver/examples/otel-trace-grpc/api";
+package api;
+
+message UserGetInput {
+	string Name = 1;
+}
+
+message User {
+	string Name = 1;
+}
+
+service Service {
+	rpc GetUserV1(UserGetInput) returns (User) {
+	}
+	rpc GetUserV2(UserGetInput) returns (User) {
+	}
+	rpc GetUserV3(UserGetInput) returns (User) {
+	}
+}

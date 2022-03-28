@@ -1,20 +1,31 @@
-# OTEL traces
+# OTEL trace
 
 ![](./jaeger-snapshot.jpeg)
+
+## install jaeger & otel-col
+
+https://github.com/yubo/quick-start/tree/main/opentelemetry/02-demo
+
+```
+flowchart LR
+    /api/v1/users --> getUser1
+    /api/v2/users --> getUser2 --> getUser1
+    /api/v3/users --> getUser3 --> /api/v1/users
+```
 
 ## server
 - config .yaml
 ```
 traces:
-  serviceName: otel-traces.examples.apiserver
+  serviceName: otel-trace.examples.apiserver
   contextHeadername: Trace-Id
-  jaeger:
-    endpoint: http://localhost:14268/api/traces
+  otel:
+    endpoint: localhost:4317
     insecure: true
 ```
 
 ```
-$ go run ./server/apiserver-traces-server.go  -f server/config.yaml
+$ go run ./server/apiserver-trace-server.go  -f server/config.yaml
 ```
 
 ## client
@@ -36,7 +47,7 @@ Content-Length: 18
 
 - client
 ```
-$ go run ./client/apiserver-traces-client.go
+$ go run ./client/apiserver-trace-client.go
 2022/03/23 12:58:46 tracer.Start traceID: 0ac9b29f947be6f506f00fd807e5db08
 2022/03/23 12:58:46 response traceID: 0ac9b29f947be6f506f00fd807e5db08
 ```

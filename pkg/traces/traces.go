@@ -8,6 +8,7 @@ import (
 
 	"github.com/emicklei/go-restful/v3"
 	"github.com/yubo/apiserver/pkg/options"
+	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/proc"
 	"github.com/yubo/golib/util"
@@ -22,7 +23,6 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 	oteltrace "go.opentelemetry.io/otel/trace"
-	"google.golang.org/grpc"
 	"k8s.io/klog/v2"
 )
 
@@ -237,7 +237,7 @@ func (p *traces) filter() restful.FilterFunction {
 		)
 		defer span.End()
 
-		ctx = WithTracer(ctx, p.tracer)
+		ctx = request.WithTracer(ctx, p.tracer)
 
 		// pass the span through the request context
 		req.Request = req.Request.WithContext(ctx)
@@ -258,7 +258,7 @@ func (p *traces) filter() restful.FilterFunction {
 func newOtelExporter(ctx context.Context, c *OtelConfig) (*otlptrace.Exporter, error) {
 	driverOpts := []otlptracegrpc.Option{
 		otlptracegrpc.WithEndpoint(c.Endpoint),
-		otlptracegrpc.WithDialOption(grpc.WithBlock()),
+		//otlptracegrpc.WithDialOption(grpc.WithBlock()),
 	}
 	if c.Insecure {
 		driverOpts = append(driverOpts, otlptracegrpc.WithInsecure())

@@ -1,0 +1,38 @@
+audit:
+  policyFile: "./testdata/audit-policy.yaml"
+  log:
+    batch:
+      asyncDelegate: false
+      bufferSize: 10000
+      maxBatchSize: 1
+      maxBatchWait: 0
+      mode: blocking
+      throttleBurst: 0
+      throttleEnable: false
+      throttleQPS: 0
+    compress: false
+    format: json
+    maxAge: 0
+    maxBackups: 0
+    maxSize: 0
+    path: ""
+    truncate:
+      enabled: false
+      maxBatchSize: 10485760
+      maxEventSize: 102400
+  webhook:
+    batch:
+      asyncDelegate: true
+      bufferSize: 10000
+      maxBatchSize: 400
+      maxBatchWait: 30s
+      mode: batch
+      throttleBurst: 15
+      throttleEnable: true
+      throttleQPS: 10
+    configFile: "./testdata/audit-webhook.yaml"
+    initialBackoff: 10s
+    truncate:
+      enabled: false
+      maxBatchSize: 10485760
+      maxEventSize: 102400

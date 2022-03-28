@@ -2,17 +2,14 @@ package grpcserver
 
 import (
 	"context"
-	"net"
 
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/ext"
+	"github.com/yubo/apiserver/pkg/config/configgrpc"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/golib/configer"
-	"github.com/yubo/golib/net/rpc"
 	"github.com/yubo/golib/proc"
 	"github.com/yubo/golib/util"
+	"go.opentelemetry.io/otel"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/reflection"
 	"k8s.io/klog/v2"
 )
@@ -21,14 +18,14 @@ const (
 	moduleName = "grpc"
 )
 
-type config struct {
-	Addr           string `json:"addr" default:":8081" description:"grpc server address"`
-	MaxRecvMsgSize int    `json:"maxRecvMsgSize" description:"the max message size in bytes the server can receive.If this is not set, gRPC uses the default 4MB."`
-}
+//type config struct {
+//	Addr           string `json:"addr" default:":8081" description:"grpc server address"`
+//	MaxRecvMsgSize int    `json:"maxRecvMsgSize" description:"the max message size in bytes the server can receive.If this is not set, gRPC uses the default 4MB."`
+//}
 
 type grpcServer struct {
 	name   string
-	config *config
+	config *configgrpc.GRPCServerSettings
 	grpc   *grpc.Server
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -57,19 +54,27 @@ var (
 	}}
 )
 
-func (p *grpcServer) init(ctx context.Context) (err error) {
+func (p *grpcServer) init(ctx context.Context) error {
 	c := configer.ConfigerMustFrom(ctx)
 	p.ctx, p.cancel = context.WithCancel(ctx)
 
-	cf := &config{}
+	cf := &configgrpc.GRPCServerSettings{}
 	if err := c.Read(p.name, cf); err != nil {
 		return err
 	}
 	p.config = cf
 
+	// TODO:
+	tracerProvider := otel.GetTracerProvider()
+	propagators := otel.GetTextMapPropagator()
+
+	opts, err := cf.ToServerOption(tracerProvider, propagators)
+	if err != nil {
+		return err
+	}
+
 	// grpc api
-	p.grpc = newServer(cf, grpc.UnaryInterceptor(interceptor))
-	// TODO: lookup authn & authz
+	p.grpc = grpc.NewServer(opts...)
 
 	options.WithGrpcServer(ctx, p.grpc)
 	return nil
@@ -79,16 +84,16 @@ func (p *grpcServer) start(ctx context.Context) error {
 	cf := p.config
 	server := p.grpc
 
-	if util.AddrIsDisable(cf.Addr) {
-		klog.InfoS("grpcServer is disabled", "grpc.addr", cf.Addr)
+	if util.AddrIsDisable(cf.Endpoint) {
+		klog.InfoS("grpcServer is disabled", "grpc.addr", cf.Endpoint)
 		return nil
 	}
 
-	ln, err := net.Listen(util.CleanSockFile(util.ParseAddr(cf.Addr)))
+	ln, err := cf.ToListener()
 	if err != nil {
 		return err
 	}
-	klog.InfoS("grpcServer listening", "grpc.addr", cf.Addr)
+	klog.InfoS("grpc Listen", "address", cf.Endpoint)
 
 	reflection.Register(server)
 
@@ -116,33 +121,15 @@ func (p *grpcServer) stop(ctx context.Context) error {
 	return nil
 }
 
-func newServer(cf *config, opt ...grpc.ServerOption) *grpc.Server {
-	if cf.MaxRecvMsgSize > 0 {
-		klog.V(5).Infof("set grpc server max recv msg size %s",
-			util.ByteSize(cf.MaxRecvMsgSize).HumanReadable())
-		opt = append(opt, grpc.MaxRecvMsgSize(cf.MaxRecvMsgSize))
-	}
-
-	return grpc.NewServer(opt...)
-}
-
-func interceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
-
-	if opentracing.IsGlobalTracerRegistered() {
-		md, ok := metadata.FromIncomingContext(ctx)
-		if !ok {
-			md = metadata.New(nil)
-		}
-		tr := opentracing.GlobalTracer()
-		spanContext, _ := tr.Extract(opentracing.TextMap, rpc.TextMapCarrier{MD: md})
-		sp := tr.StartSpan(info.FullMethod,
-			ext.RPCServerOption(spanContext), ext.SpanKindRPCServer)
-		defer sp.Finish()
-		ctx = opentracing.ContextWithSpan(ctx, sp)
-	}
-
-	return handler(ctx, req)
-}
+//func newServer(cf *config, opt ...grpc.ServerOption) *grpc.Server {
+//	if cf.MaxRecvMsgSize > 0 {
+//		klog.V(5).Infof("set grpc server max recv msg size %s",
+//			util.ByteSize(cf.MaxRecvMsgSize).HumanReadable())
+//		opt = append(opt, grpc.MaxRecvMsgSize(cf.MaxRecvMsgSize))
+//	}
+//
+//	return grpc.NewServer(opt...)
+//}
 
 func Register() {
 	proc.RegisterHooks(hookOps)

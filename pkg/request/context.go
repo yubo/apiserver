@@ -21,12 +21,16 @@ import (
 	"net"
 
 	"github.com/emicklei/go-restful/v3"
-	"github.com/opentracing/opentracing-go"
 	"github.com/yubo/apiserver/pkg/apis/audit"
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/session"
 	"github.com/yubo/golib/api"
+	"go.opentelemetry.io/otel/trace"
 	// "github.com/yubo/apiserver/pkg/apis/audit"
+)
+
+var (
+	noopTracer = trace.NewNoopTracerProvider().Tracer("noop")
 )
 
 // The key type is unexported to prevent collisions
@@ -123,14 +127,16 @@ func RespFrom(ctx context.Context) (*restful.Response, bool) {
 }
 
 // WithTracer returns a copy of parent in which the tracer value is set
-func WithTracer(parent context.Context, tracer opentracing.Tracer) context.Context {
-	return WithValue(parent, tracerKey, tracer)
+func WithTracer(parent context.Context, tracer trace.Tracer) context.Context {
+	return context.WithValue(parent, tracerKey, tracer)
 }
 
 // TracerFrom returns the value of the tracer key on the ctx
-func TracerFrom(ctx context.Context) (opentracing.Tracer, bool) {
-	tracer, ok := ctx.Value(tracerKey).(opentracing.Tracer)
-	return tracer, ok
+func TracerFrom(ctx context.Context) trace.Tracer {
+	if tracer, ok := ctx.Value(tracerKey).(trace.Tracer); ok {
+		return tracer
+	}
+	return noopTracer
 }
 
 // WithrSession returns a copy of parent in which the session value is set

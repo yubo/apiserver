@@ -17,13 +17,13 @@ type User struct {
 	Age  int    `json:"age"`
 }
 
-func request1(server *httptest.Server) error {
+func requestWithRest(server *httptest.Server) error {
 	user := User{}
 
 	c, err := rest.RESTClientFor(&rest.Config{
 		Host: server.URL,
 		ContentConfig: rest.ContentConfig{
-			NegotiatedSerializer: scheme.Codecs.WithoutConversion(),
+			NegotiatedSerializer: scheme.Codecs,
 		},
 	})
 	if err != nil {
@@ -38,7 +38,7 @@ func request1(server *httptest.Server) error {
 	return nil
 }
 
-func request2(server *httptest.Server) error {
+func requestWithCmdcli(server *httptest.Server) error {
 	user := User{}
 
 	req, err := cmdcli.NewRequest(server.URL,
@@ -65,10 +65,10 @@ func main() {
 		}))
 	defer server.Close()
 
-	if err := request1(server); err != nil {
+	if err := requestWithRest(server); err != nil {
 		fmt.Println("err:", err)
 	}
-	if err := request2(server); err != nil {
+	if err := requestWithCmdcli(server); err != nil {
 		fmt.Println("err:", err)
 	}
 	// output:

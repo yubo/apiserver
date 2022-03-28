@@ -1,0 +1,15 @@
+traces:
+  debug: true
+  radioBased: 1.0
+  serviceName: otel-trace.server
+  contextHeadername: Trace-Id
+  attributes:
+    key1: value1
+  otel:
+    endpoint: localhost:4317
+    insecure: true
+
+grpc:
+  endpoint: 0.0.0.0:8081
+  transport: tcp
+

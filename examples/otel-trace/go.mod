@@ -1,4 +1,4 @@
-module github.com/yubo/examples/otel-traces
+module github.com/yubo/apiserver/examples/otel-trace
 
 go 1.16
 

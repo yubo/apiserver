@@ -12,11 +12,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/yubo/apiserver/pkg/request"
 	"go.opentelemetry.io/otel/trace"
-)
-
-var (
-	noopTracer = trace.NewNoopTracerProvider().Tracer("noop")
 )
 
 type HttpClientConfig struct {
@@ -91,25 +88,5 @@ func getIssuerCACertFromPath(path string) (*x509.Certificate, error) {
 }
 
 func Start(ctx context.Context, spanName string, opts ...trace.SpanStartOption) (context.Context, trace.Span) {
-	return TracerFrom(ctx).Start(ctx, spanName, opts...)
+	return request.TracerFrom(ctx).Start(ctx, spanName, opts...)
 }
-
-// {{{ context
-type key int
-
-const (
-	tracerKey key = iota
-)
-
-func WithTracer(parent context.Context, tracer trace.Tracer) context.Context {
-	return context.WithValue(parent, tracerKey, tracer)
-}
-
-func TracerFrom(ctx context.Context) trace.Tracer {
-	if tracer, ok := ctx.Value(tracerKey).(trace.Tracer); ok {
-		return tracer
-	}
-	return noopTracer
-}
-
-//}}}

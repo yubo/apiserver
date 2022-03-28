@@ -1,0 +1,45 @@
+apiserver:
+  alternateDNS: null
+  enableContentionProfiling: true
+  enableExpvar: false
+  enableIndex: true
+  enableMetrics: true
+  enableOpenAPI: true
+  enableProfiling: false
+  generic:
+    advertiseAddress: ""
+    corsAllowedOriginList: null
+    enablePriorityAndFairness: true
+    externalHost: ""
+    goawayChance: 0
+    hstsDirectives: null
+    livezGracePeriod: 0
+    maxMutatingRequestsInFlight: 200
+    maxRequestBodyBytes: 3145728
+    maxRequestsInFlight: 400
+    minRequestTimeout: 30m0s
+    requestTimeout: 1m0s
+    shutdownDelayDuration: 0
+  insecureServing:
+    bindAddress: 0.0.0.0
+    bindNework: tcp
+    bindPort: 8080
+    enabled: true
+  secureServing:
+    PermitAddressSharing: false
+    bindAddress: 0.0.0.0
+    bindNework: tcp
+    bindPort: 8443
+    enabled: true
+    http2MaxStreamsPerConnection: 0
+    permitPortSharing: false
+    serverCert:
+      certDir: /var/run/all
+      pairName: apiserver
+  securitySchemes:
+  - authorizationURL: ""
+    fieldName: authorization
+    name: BearerToken
+    tokenURL: ""
+    type: apiKey
+    valueSource: header
