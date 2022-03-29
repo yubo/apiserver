@@ -6,8 +6,8 @@ make
 # https://kubernetes.io/zh/docs/reference/access-authn-authz/authentication/#static-token-file
 echo 'token-1,system:yubo,uid:yubo,"group1,group2,group3"' > tokens.cvs
 
-./helo \
-	-f ./etc/helo.yml \
+./all-in-one \
+	-f ./etc/config.yml \
 	--token-auth-file=./tokens.cvs \
 	-v 10 \
 	--anonymous-auth \

@@ -157,9 +157,10 @@ func (p *authorization) init(ctx context.Context) error {
 
 	authz := &server.AuthorizationInfo{
 		Authorizer: p.authorizer,
-		Modes:      sets.NewString(AuthorizationModeChoices...),
+		Modes:      sets.NewString(cf.Modes...),
 	}
 
+	klog.InfoS("withAuthz", "modes", cf.Modes)
 	options.WithAuthz(ctx, authz)
 
 	return nil

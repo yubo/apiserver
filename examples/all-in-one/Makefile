@@ -18,27 +18,28 @@ $(APP_NAME): $(DEP_OBJS)
 		    go build -ldflags '$(GO_BUILD_LDFLAGS)' -o $@  *.go
 
 
-devrun:
+devrun: $(APP_NAME)
 	@echo "./${APP_NAME} \
 		-f ./etc/config.yaml \
 		--token-auth-file=./etc/tokens.cvs \
+		--anonymous-auth \
+		--authorization-mode=AlwaysAllow \
 		-v 10 \
 		--logtostderr"
-		#--authorization-mode=AlwaysAllow \
 		#--tls-cert-file=./run/pki/apiserver.crt \
 		#--tls-private-key-file=./run/pki/apiserver.key \
 
-run:
+run: $(APP_NAME)
 	./$(APP_NAME) \
 		-f ./etc/config.yaml \
-		-v 3 \
+		-v 10 \
 		--cert-dir /tmp/$(APP_NAME) \
 		--add-dir-header \
 		--logtostderr 2>&1
-		# --debug-config --dry-run \
-		#--token-auth-file=./run/tokens.cvs \
-		## --authorization-mode=AlwaysAllow \
-		#--authorization-mode=RBAC \
+
+		#--anonymous-auth \
+		#--debug-config --dry-run \
+		--authorization-mode=AlwaysAllow \
 		#--tls-cert-file=./run/pki/apiserver.crt \
 		#--tls-private-key-file=./run/pki/apiserver.key \
 

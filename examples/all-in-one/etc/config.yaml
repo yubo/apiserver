@@ -13,7 +13,7 @@ debug:
   metrics: true
 
 traces:
-  debug: true
+  debug: false
   serviceName: otel-trace.server
   contextHeadername: Trace-Id
   otel:
@@ -58,7 +58,7 @@ apiserver:
 authentication:
   session: true                   # --enable-session-auth
   bootstrapToken: true            # --enable-bootstrap-token-auth
-  anonymous: false                # --anonymous-auth
+  anonymous: true                 # --anonymous-auth
   tokenAuthFile: ./etc/tokens.cvs # --token-auth-file={file-path}
   oidc:
     issuerURL:                    # --oidc-issuer-url
@@ -67,6 +67,14 @@ authentication:
 authorization:
   policyFile: ./etc/abac.json     # --authorization-policy-file={file-path}
   modes:                          # --modes=ABAC,AlwaysAllow
+    - ABAC
+  alwaysAllowGroups:
+    - system:masters
+  alwaysAllowPaths:
+    - /healthz
+    - /readyz
+    - /livez
+  modes:
     - ABAC
 
 session:

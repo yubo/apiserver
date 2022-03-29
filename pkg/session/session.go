@@ -67,7 +67,7 @@ func (p *sessionManager) GC() {
 			)
 			list, err := p.List(p.ctx, storage.ListOptions{Query: query})
 			if err != nil {
-				klog.Warning("list err %s", err)
+				klog.Warningf("list err %s", err)
 				return
 			}
 
