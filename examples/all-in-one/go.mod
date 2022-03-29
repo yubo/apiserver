@@ -3,6 +3,7 @@ module github.com/yubo/apiserver/examples/all-in-one
 go 1.16
 
 replace github.com/yubo/apiserver => ../..
+
 replace github.com/yubo/golib => ../../../golib
 
 require (

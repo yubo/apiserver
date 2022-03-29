@@ -13,13 +13,13 @@ const (
 	moduleName = "db"
 )
 
-type dbModule struct {
+type module struct {
 	name string
 	db   db.DB
 }
 
 var (
-	_module = &dbModule{name: moduleName}
+	_module = &module{name: moduleName}
 	hookOps = []proc.HookOps{{
 		Hook:        _module.init,
 		Owner:       moduleName,
@@ -37,7 +37,7 @@ var (
 
 // Because some configuration may be stored in the database,
 // set the db.connect into sys.db.prestart
-func (p *dbModule) init(ctx context.Context) (err error) {
+func (p *module) init(ctx context.Context) (err error) {
 	c := configer.ConfigerMustFrom(ctx)
 
 	cf := &db.Config{}
@@ -53,7 +53,7 @@ func (p *dbModule) init(ctx context.Context) (err error) {
 	return nil
 }
 
-func (p *dbModule) stop(ctx context.Context) error {
+func (p *module) stop(ctx context.Context) error {
 	return p.db.Close()
 }
 

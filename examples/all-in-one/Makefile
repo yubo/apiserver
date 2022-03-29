@@ -6,16 +6,12 @@ APP_NAME=all-in-one
 FILE_NAME=$(APP_NAME)-$(VERSION)-$(RELEASE).$(shell uname -s).$(shell uname -m)
 DEP_OBJS=$(shell find . -name "*.go" -type f)
 TARGETS=$(APP_NAME)
-CGO_ENABLED?=1
-
-GO_BUILD_LDFLAGS_CMD      := $(abspath ./scripts/go-build-ldflags.sh)
-GO_BUILD_LDFLAGS          := $(shell $(GO_BUILD_LDFLAGS_CMD) LDFLAG)
+CGO_ENABLED=1
 
 all: $(APP_NAME)
 
 $(APP_NAME): $(DEP_OBJS)
-	GO111MODULE=on CGO_ENABLED=$(CGO_ENABLED) GOARCH=amd64 \
-		    go build -ldflags '$(GO_BUILD_LDFLAGS)' -o $@  *.go
+	CGO_ENABLED=$(CGO_ENABLED) ./scripts/go-build.sh
 
 
 devrun: $(APP_NAME)

@@ -1,18 +1,6 @@
-package main
+package components
 
 import (
-	"context"
-
-	"github.com/spf13/cobra"
-	"github.com/yubo/apiserver/examples/all-in-one/authn"
-	"github.com/yubo/apiserver/examples/all-in-one/authz"
-	"github.com/yubo/apiserver/examples/all-in-one/session"
-	"github.com/yubo/apiserver/examples/all-in-one/trace"
-	"github.com/yubo/apiserver/examples/all-in-one/user"
-	"github.com/yubo/apiserver/pkg/options"
-	"github.com/yubo/golib/proc"
-	"k8s.io/klog/v2"
-
 	_ "github.com/yubo/golib/orm/mysql"
 	_ "github.com/yubo/golib/orm/sqlite"
 
@@ -52,59 +40,5 @@ import (
 	_ "github.com/yubo/apiserver/pkg/server/register"
 	_ "github.com/yubo/apiserver/pkg/session/register"
 	_ "github.com/yubo/apiserver/pkg/traces/register"
+	_ "github.com/yubo/apiserver/pkg/version/reporter/register"
 )
-
-const (
-	AppName    = "all.example.apiserver"
-	moduleName = "all.example.apiserver"
-)
-
-var (
-	hookOps = []proc.HookOps{{
-		Hook:     start,
-		Owner:    moduleName,
-		HookNum:  proc.ACTION_START,
-		Priority: proc.PRI_MODULE,
-	}, {
-		Hook:     stop,
-		Owner:    moduleName,
-		HookNum:  proc.ACTION_STOP,
-		Priority: proc.PRI_MODULE,
-	}}
-)
-
-func newServerCmd() *cobra.Command {
-	options.InstallReporter()
-
-	cmd := proc.NewRootCmd(proc.WithHooks(hookOps...))
-	cmd.AddCommand(options.NewVersionCmd())
-
-	return cmd
-}
-
-func start(ctx context.Context) error {
-	klog.Info("start")
-
-	if err := session.New(ctx).Start(); err != nil {
-		return err
-	}
-	if err := trace.New(ctx).Start(); err != nil {
-		return err
-	}
-	if err := user.New(ctx).Start(); err != nil {
-		return err
-	}
-	if err := authn.New(ctx).Start(); err != nil {
-		return err
-	}
-	if err := authz.New(ctx).Start(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func stop(ctx context.Context) error {
-	klog.Info("stop")
-	return nil
-}
