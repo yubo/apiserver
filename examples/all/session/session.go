@@ -11,7 +11,7 @@ import (
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/apiserver/pkg/server"
-	"github.com/yubo/apiserver/pkg/session"
+	session "github.com/yubo/apiserver/pkg/session/types"
 
 	_ "github.com/yubo/apiserver/pkg/session/register"
 )

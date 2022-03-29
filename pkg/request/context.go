@@ -23,7 +23,7 @@ import (
 	"github.com/emicklei/go-restful/v3"
 	"github.com/yubo/apiserver/pkg/apis/audit"
 	"github.com/yubo/apiserver/pkg/authentication/user"
-	"github.com/yubo/apiserver/pkg/session"
+	"github.com/yubo/apiserver/pkg/session/types"
 	"github.com/yubo/golib/api"
 	"go.opentelemetry.io/otel/trace"
 	// "github.com/yubo/apiserver/pkg/apis/audit"
@@ -140,13 +140,13 @@ func TracerFrom(ctx context.Context) trace.Tracer {
 }
 
 // WithrSession returns a copy of parent in which the session value is set
-func WithSession(parent context.Context, sess session.Session) context.Context {
+func WithSession(parent context.Context, sess types.SessionContext) context.Context {
 	return WithValue(parent, sessionKey, sess)
 }
 
 // SessionFrom returns the value of the session key on the ctx
-func SessionFrom(ctx context.Context) (session.Session, bool) {
-	s, ok := ctx.Value(sessionKey).(session.Session)
+func SessionFrom(ctx context.Context) (types.SessionContext, bool) {
+	s, ok := ctx.Value(sessionKey).(types.SessionContext)
 	return s, ok
 }
 

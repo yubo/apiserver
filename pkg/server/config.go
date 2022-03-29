@@ -25,7 +25,7 @@ import (
 	restclient "github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/apiserver/pkg/server/healthz"
 	"github.com/yubo/apiserver/pkg/server/routes"
-	"github.com/yubo/apiserver/pkg/session"
+	"github.com/yubo/apiserver/pkg/session/types"
 	"github.com/yubo/golib/runtime"
 	utilnet "github.com/yubo/golib/util/net"
 	"github.com/yubo/golib/util/sets"
@@ -57,7 +57,7 @@ type Config struct {
 	Authorization *AuthorizationInfo
 
 	// deprecated
-	Session session.SessionManager
+	Session types.SessionManager
 
 	// LoopbackClientConfig is a config for a privileged loopback connection to the API server
 	// This is required for proper functioning of the PostStartHooks on a GenericAPIServer

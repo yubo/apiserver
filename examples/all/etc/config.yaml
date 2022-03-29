@@ -1,5 +1,5 @@
 global:
-  logLevel: 10
+  logLevel: 1
   logFlushFrequency: 5
   watchdogSec: 10
 
@@ -12,15 +12,13 @@ debug:
   expvar: true
   metrics: true
 
-tracing:
-  httpBody: true       # log http request body
-  httpHeader: true     # log http request header
-  respTraceId: true    # inject trace id into response header
-  jaeger:
-    serviceName: example-all
-    reporter:
-      localAgentHostPort: 127.0.0.1:6831
-      logSpans: false
+traces:
+  debug: true
+  serviceName: otel-trace.server
+  contextHeadername: Trace-Id
+  otel:
+    endpoint: localhost:4317
+    insecure: true
 
 apiserver:
   generic:
@@ -80,7 +78,7 @@ session:
   httpOnly: true
   domain:
   gcInterval: 60
-  cookieLifetime: 57600 # 16 * 3600
+  cookieLifetime: 57600s # 16 * 3600
 
 grpc:
   addr: ":8081"

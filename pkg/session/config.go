@@ -14,7 +14,6 @@ func NewConfig() *Config {
 	return &Config{
 		SidLength:      32,
 		HttpOnly:       true,
-		Storage:        "db",
 		GcInterval:     api.NewDuration("600s"),
 		CookieLifetime: api.NewDuration("16h"),
 		MaxIdleTime:    api.NewDuration("1h"),
@@ -32,8 +31,6 @@ type Config struct {
 	GcInterval     api.Duration
 	CookieLifetime api.Duration
 	MaxIdleTime    api.Duration
-	DBName         string `json:"dbName"`
-	Storage        string `description:"mem|db(defualt)"`
 	TableName      string `json:"tableName"`
 }
 
@@ -48,10 +45,6 @@ func (p *Config) Validate() error {
 
 	if p.CookieName == "" {
 		p.CookieName = DefCookieName
-	}
-
-	if p.Storage != "db" && p.Storage != "mem" {
-		return fmt.Errorf("storage %s is invalid, should be mem or db(default)", p.Storage)
 	}
 
 	return nil

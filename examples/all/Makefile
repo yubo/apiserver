@@ -2,10 +2,9 @@
 
 VERSION=0.0.1
 RELEASE=1
-APP_NAME=all
+APP_NAME=all-in-one
 FILE_NAME=$(APP_NAME)-$(VERSION)-$(RELEASE).$(shell uname -s).$(shell uname -m)
-DEP_OBJS=$(shell find . -name "*.go" -type f) \
-	 ./tracing/tracing.pb.go
+DEP_OBJS=$(shell find . -name "*.go" -type f)
 TARGETS=$(APP_NAME)
 CGO_ENABLED?=1
 
@@ -19,10 +18,9 @@ $(APP_NAME): $(DEP_OBJS)
 		    go build -ldflags '$(GO_BUILD_LDFLAGS)' -o $@  *.go
 
 
-.PHONY: devrun run dev
 devrun:
 	@echo "./${APP_NAME} \
-		-f ./etc/${APP_NAME}.yaml \
+		-f ./etc/config.yaml \
 		--token-auth-file=./etc/tokens.cvs \
 		-v 10 \
 		--logtostderr"
@@ -31,10 +29,10 @@ devrun:
 		#--tls-private-key-file=./run/pki/apiserver.key \
 
 run:
-	./all \
-		-f ./etc/all.yaml \
-		-v 9 \
-		--cert-dir /tmp/all \
+	./$(APP_NAME) \
+		-f ./etc/config.yaml \
+		-v 3 \
+		--cert-dir /tmp/$(APP_NAME) \
 		--add-dir-header \
 		--logtostderr 2>&1
 		# --debug-config --dry-run \
@@ -55,10 +53,3 @@ clean:
 tools:
 	go get -u google.golang.org/grpc && \
 	go get -u github.com/golang/protobuf/protoc-gen-go
-	# https://grpc.io/docs/quickstart/go/
-
-
-%.pb.go: %.proto
-	protoc --go_out=. --go_opt=paths=source_relative \
-		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
-		$<

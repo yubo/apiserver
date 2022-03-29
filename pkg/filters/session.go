@@ -7,14 +7,13 @@ import (
 	"github.com/emicklei/go-restful/v3"
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/responsewriters"
-	"github.com/yubo/apiserver/pkg/session"
+	"github.com/yubo/apiserver/pkg/session/types"
 	"k8s.io/klog/v2"
 )
 
 // http filter
-func WithSession(handler http.Handler, sm session.SessionManager) http.Handler {
+func WithSession(handler http.Handler, sm types.SessionManager) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		klog.V(8).Infof("entering filters.WithSession")
 		defer klog.V(8).Infof("leaving filters.WithSession")
 
 		s, err := sm.Start(w, req)
@@ -31,7 +30,7 @@ func WithSession(handler http.Handler, sm session.SessionManager) http.Handler {
 }
 
 // go-restful filter
-func Session(sm session.SessionManager) restful.FilterFunction {
+func Session(sm types.SessionManager) restful.FilterFunction {
 	return func(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
 		s, err := sm.Start(resp, req.Request)
 		if err != nil {

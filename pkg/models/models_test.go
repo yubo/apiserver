@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/yubo/apiserver/pkg/apis/rbac"
 	"github.com/yubo/apiserver/pkg/storage"
-	dbstore "github.com/yubo/apiserver/pkg/storage/db"
+	storagedb "github.com/yubo/apiserver/pkg/storage/db"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/orm"
 
@@ -41,7 +41,7 @@ func runTests(t *testing.T, tests ...func()) {
 	}
 	defer db.Close()
 
-	SetStorage(dbstore.New(db), "test_")
+	SetStorage(storagedb.New(db), "test_")
 
 	for _, test := range tests {
 		test()

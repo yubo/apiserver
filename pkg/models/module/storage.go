@@ -45,6 +45,14 @@ var (
 		HookNum:     proc.ACTION_START,
 		Priority:    proc.PRI_SYS_INIT,
 		SubPriority: options.PRI_M_DB + 1,
+	}, {
+		// after moduels start
+		// before services start
+		Hook:        _module.preStart,
+		Owner:       moduleName,
+		HookNum:     proc.ACTION_START,
+		Priority:    proc.PRI_SYS_START - 1,
+		SubPriority: options.PRI_M_DB + 1,
 	}}
 )
 
@@ -70,6 +78,10 @@ func (p *module) init(ctx context.Context) (err error) {
 
 	models.SetStorage(p.storage, cf.TablePrefix)
 
+	return nil
+}
+
+func (p *module) preStart(ctx context.Context) error {
 	if err := models.Prepare(); err != nil {
 		return err
 	}

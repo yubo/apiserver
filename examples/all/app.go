@@ -7,7 +7,7 @@ import (
 	"github.com/yubo/apiserver/examples/all/authn"
 	"github.com/yubo/apiserver/examples/all/authz"
 	"github.com/yubo/apiserver/examples/all/session"
-	"github.com/yubo/apiserver/examples/all/tracing"
+	"github.com/yubo/apiserver/examples/all/trace"
 	"github.com/yubo/apiserver/examples/all/user"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/golib/proc"
@@ -88,7 +88,7 @@ func start(ctx context.Context) error {
 	if err := session.New(ctx).Start(); err != nil {
 		return err
 	}
-	if err := tracing.New(ctx).Start(); err != nil {
+	if err := trace.New(ctx).Start(); err != nil {
 		return err
 	}
 	if err := user.New(ctx).Start(); err != nil {

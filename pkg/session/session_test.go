@@ -3,13 +3,19 @@ package session
 import (
 	"bytes"
 	"context"
-	"database/sql"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/yubo/apiserver/pkg/models"
+	"github.com/yubo/apiserver/pkg/session/types"
+	"github.com/yubo/apiserver/pkg/storage"
+	storagedb "github.com/yubo/apiserver/pkg/storage/db"
 	"github.com/yubo/golib/orm"
 	"github.com/yubo/golib/util/clock"
 
@@ -17,76 +23,75 @@ import (
 )
 
 var (
-	driver    = "sqlite3"
-	dsn       = "file:test.db?cache=shared&mode=memory"
-	available bool
-	db        orm.DB
+	driver   = "sqlite3"
+	dsn      = "file:test.db?cache=shared&mode=memory"
+	db       orm.DB
+	sessions *session
 )
 
-func init() {
-	var err error
-
-	if db, err = orm.Open(driver, dsn); err == nil {
-		if err = db.SqlDB().Ping(); err == nil {
-			available = true
-		}
-		db.Close()
+func TestMain(m *testing.M) {
+	if err := testInit(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
 	}
+
+	code := m.Run()
+
+	db.Close()
+
+	os.Exit(code)
 }
 
-func mustExec(t *testing.T, db orm.DB, query string, args ...interface{}) (res sql.Result) {
-	res, err := db.Exec(query, args...)
+func testInit() error {
+	var err error
+
+	// init storage
+	// init models
+	db, err = orm.Open(driver, dsn)
 	if err != nil {
-		if len(query) > 300 {
-			query = "[query too large to print]"
-		}
-		t.Fatalf("error on %s: %s", query, err.Error())
+		return fmt.Errorf("open %s err %s", dsn, err)
 	}
-	return res
+
+	models.SetStorage(storagedb.New(db), "test_")
+	sessions = &session{store: models.NewStore("session")}
+	sessions.store.Drop()
+
+	return nil
 }
 
 func TestDbSession(t *testing.T) {
 	var (
-		sess  SessionManager
-		store Session
-		err   error
-		sid   string
+		sm      types.SessionManager
+		sessCtx types.SessionContext
+		err     error
+		sid     string
 	)
-
-	if !available {
-		t.Skipf("SQL server not running on %s", dsn)
-	}
 
 	cf := NewConfig()
 
-	ctx, cancel := context.WithCancel(context.Background())
-	db, _ := orm.Open(driver, dsn, orm.WithContext(ctx))
-
-	if sess, err = StartSession(cf, WithCtx(ctx), WithDB(db)); err != nil {
+	if sm, err = NewSessionManager(cf, WithModel(sessions)); err != nil {
 		t.Fatalf("error NewSession: %s", err.Error())
 	}
-	defer cancel()
+	defer sm.Stop()
 
-	mustExec(t, db, "DROP TABLE IF EXISTS session;")
-	db.AutoMigrate(&sessionConn{}, orm.WithTable("session"))
-	defer db.Exec("DROP TABLE IF EXISTS session")
+	models.AutoMigrate("session", sessions.NewObj())
+	defer sessions.store.Drop()
 
 	r, _ := http.NewRequest("GET", "", bytes.NewBuffer([]byte{}))
 	w := httptest.NewRecorder()
 
-	if store, err = sess.Start(w, r); err != nil {
-		t.Fatalf("session.Start(): %s", err.Error())
-	}
+	sessCtx, err = sm.Start(w, r)
+	assert.NoError(t, err)
 
-	if n := sess.All(); n != 1 {
-		t.Fatalf("sess.All() got %d want %d", n, 1)
-	}
+	list, err := sessions.List(context.TODO(), storage.ListOptions{})
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(list))
 
-	store.Set("abc", "11223344")
-	if err = store.Update(w); err != nil {
-		t.Fatalf("store.Update(w) got err %s ", err.Error())
-	}
-	sid = store.Sid()
+	sessCtx.Set("abc", "11223344")
+	err = sessCtx.Update(w)
+	assert.NoError(t, err)
+
+	sid = sessCtx.Sid()
 
 	// new request
 	r, _ = http.NewRequest("GET", "", bytes.NewBuffer([]byte{}))
@@ -104,187 +109,53 @@ func TestDbSession(t *testing.T) {
 	}
 	http.SetCookie(w, cookie)
 	r.AddCookie(cookie)
-	if store, err = sess.Start(w, r); err != nil {
-		t.Fatalf("session.Start(): %s", err.Error())
-	}
 
-	if n := sess.All(); n != 1 {
-		t.Fatalf("sess.All() got %d want %d", n, 1)
-	}
+	sessCtx, err = sm.Start(w, r)
+	assert.NoError(t, err)
 
-	if v := store.Get("abc"); v != "11223344" {
-		t.Fatalf("store.Get('abc') got %s want %s", v, "11223344")
-	}
+	assert.Equal(t, "11223344", sessCtx.Get("abc"))
 
-	store.Set("abc", "22334455")
+	sessCtx.Set("abc", "22334455")
+	assert.Equal(t, "22334455", sessCtx.Get("abc"))
 
-	if v := store.Get("abc"); v != "22334455" {
-		t.Fatalf("store.Get('abc') got %s want %s", v, "22334455")
-	}
+	list, err = sessions.List(context.TODO(), storage.ListOptions{})
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(list))
 
-	sess.Destroy(w, r)
-	if n := sess.All(); n != 0 {
-		t.Fatalf("sess.All() got %d want %d", n, 0)
-	}
-
+	sm.Destroy(w, r)
+	list, err = sessions.List(context.TODO(), storage.ListOptions{})
+	assert.NoError(t, err)
+	assert.Equal(t, 0, len(list))
 }
 
 func TestDbSessionGC(t *testing.T) {
-	var (
-		sess SessionManager
-		err  error
-	)
-
-	if !available {
-		t.Skipf("SQL server not running on %s", dsn)
-	}
-
 	cf := NewConfig()
-
-	ctx, cancel := context.WithCancel(context.Background())
-	db, _ := orm.Open(driver, dsn, orm.WithContext(ctx))
 	clock := &clock.FakeClock{}
 	clock.SetTime(time.Now())
 	orm.SetClock(clock)
 
-	if sess, err = StartSession(cf, WithCtx(ctx), WithDB(db), WithClock(clock)); err != nil {
-		t.Fatalf("error NewSession: %s", err.Error())
-	}
-	defer cancel()
+	sm, err := NewSessionManager(cf, WithModel(sessions), WithClock(clock))
+	assert.NoError(t, err)
+	sm.GC()
+	defer sm.Stop()
 
-	mustExec(t, db, "DROP TABLE IF EXISTS session;")
-	db.AutoMigrate(&sessionConn{}, orm.WithTable("session"))
-	defer db.Exec("DROP TABLE IF EXISTS session")
+	models.AutoMigrate("session", sessions.NewObj())
+	defer sessions.store.Drop()
 
 	r, _ := http.NewRequest("GET", "", bytes.NewBuffer([]byte{}))
 	w := httptest.NewRecorder()
 
-	if _, err = sess.Start(w, r); err != nil {
-		t.Fatalf("session.Start(): %s", err.Error())
-	}
-	if n := sess.All(); n != 1 {
-		t.Fatalf("sess.All() got %d want %d", n, 1)
-	}
+	_, err = sm.Start(w, r)
+	assert.NoError(t, err)
+
+	list, err := sessions.List(context.TODO(), storage.ListOptions{})
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(list))
 
 	clock.SetTime(clock.Now().Add(time.Hour * 25))
 	time.Sleep(100 * time.Millisecond)
 
-	if n := sess.All(); n != 0 {
-		t.Fatalf("sess.All() got %d want %d", n, 0)
-	}
-
-}
-
-func TestMemSession(t *testing.T) {
-	var (
-		sess  SessionManager
-		store Session
-		err   error
-		sid   string
-	)
-
-	cf := NewConfig()
-	cf.Storage = "mem"
-
-	ctx, cancel := context.WithCancel(context.Background())
-
-	if sess, err = StartSession(cf, WithCtx(ctx)); err != nil {
-		t.Fatalf("error NewSession: %s", err.Error())
-	}
-	defer cancel()
-
-	r, _ := http.NewRequest("GET", "", bytes.NewBuffer([]byte{}))
-	w := httptest.NewRecorder()
-
-	if store, err = sess.Start(w, r); err != nil {
-		t.Fatalf("session.Start(): %s", err.Error())
-	}
-
-	if n := sess.All(); n != 1 {
-		t.Fatalf("sess.All() got %d want %d", n, 1)
-	}
-
-	store.Set("abc", "11223344")
-	if err = store.Update(w); err != nil {
-		t.Fatalf("store.Update(w) got err %s ", err.Error())
-	}
-	sid = store.Sid()
-
-	// new request
-	r, _ = http.NewRequest("GET", "", bytes.NewBuffer([]byte{}))
-	w = httptest.NewRecorder()
-
-	cookie := &http.Cookie{
-		Name:     cf.CookieName,
-		Value:    url.QueryEscape(sid),
-		Path:     "/",
-		HttpOnly: cf.HttpOnly,
-		Domain:   cf.Domain,
-	}
-	if cf.CookieLifetime.Duration > 0 {
-		cookie.Expires = time.Now().Add(cf.CookieLifetime.Duration)
-	}
-	http.SetCookie(w, cookie)
-	r.AddCookie(cookie)
-	if store, err = sess.Start(w, r); err != nil {
-		t.Fatalf("session.Start(): %s", err.Error())
-	}
-
-	if n := sess.All(); n != 1 {
-		t.Fatalf("sess.All() got %d want %d", n, 1)
-	}
-
-	if v := store.Get("abc"); v != "11223344" {
-		t.Fatalf("store.Get('abc') got %s want %s", v, "11223344")
-	}
-
-	store.Set("abc", "22334455")
-
-	if v := store.Get("abc"); v != "22334455" {
-		t.Fatalf("store.Get('abc') got %s want %s", v, "22334455")
-	}
-
-	sess.Destroy(w, r)
-	if n := sess.All(); n != 0 {
-		t.Fatalf("sess.All() got %d want %d", n, 0)
-	}
-
-}
-
-func TestMemSessionGC(t *testing.T) {
-	var (
-		sess SessionManager
-		err  error
-	)
-
-	cf := NewConfig()
-	cf.Storage = "mem"
-
-	ctx, cancel := context.WithCancel(context.Background())
-	clock := &clock.FakeClock{}
-	clock.SetTime(time.Now())
-	orm.SetClock(clock)
-
-	if sess, err = StartSession(cf, WithCtx(ctx), WithClock(clock)); err != nil {
-		t.Fatalf("error NewSession: %s", err.Error())
-	}
-	defer cancel()
-
-	r, _ := http.NewRequest("GET", "", bytes.NewBuffer([]byte{}))
-	w := httptest.NewRecorder()
-
-	if _, err = sess.Start(w, r); err != nil {
-		t.Fatalf("session.Start(): %s", err.Error())
-	}
-	if n := sess.All(); n != 1 {
-		t.Fatalf("sess.All() got %d want %d", n, 1)
-	}
-
-	clock.SetTime(clock.Now().Add(time.Hour * 25))
-	time.Sleep(100 * time.Millisecond)
-
-	if n := sess.All(); n != 0 {
-		t.Fatalf("sess.All() got %d want %d", n, 0)
-	}
-
+	list, err = sessions.List(context.TODO(), storage.ListOptions{})
+	assert.NoError(t, err)
+	assert.Equal(t, 0, len(list))
 }

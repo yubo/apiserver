@@ -9,7 +9,7 @@ import (
 	"github.com/yubo/apiserver/pkg/db"
 	"github.com/yubo/apiserver/pkg/dynamiccertificates"
 	"github.com/yubo/apiserver/pkg/server"
-	"github.com/yubo/apiserver/pkg/session"
+	"github.com/yubo/apiserver/pkg/session/types"
 	"github.com/yubo/golib/proc"
 	"google.golang.org/grpc"
 	"k8s.io/klog/v2"
@@ -103,13 +103,13 @@ func APIServerMustFrom(ctx context.Context) server.APIServer {
 	return server
 }
 
-func WithSessionManager(ctx context.Context, sm session.SessionManager) {
+func WithSessionManager(ctx context.Context, sm types.SessionManager) {
 	klog.V(5).Infof("attr with session manager")
 	proc.AttrMustFrom(ctx)[sessionManagerKey] = sm
 }
 
-func SessionManagerFrom(ctx context.Context) (session.SessionManager, bool) {
-	sm, ok := proc.AttrMustFrom(ctx)[sessionManagerKey].(session.SessionManager)
+func SessionManagerFrom(ctx context.Context) (types.SessionManager, bool) {
+	sm, ok := proc.AttrMustFrom(ctx)[sessionManagerKey].(types.SessionManager)
 	return sm, ok
 }
 
