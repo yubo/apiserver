@@ -13,8 +13,6 @@ import (
 	"github.com/yubo/apiserver/pkg/traces"
 	"go.opentelemetry.io/otel/attribute"
 	oteltrace "go.opentelemetry.io/otel/trace"
-
-	_ "github.com/yubo/apiserver/pkg/traces/register"
 )
 
 const (

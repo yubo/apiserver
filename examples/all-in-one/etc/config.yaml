@@ -14,7 +14,7 @@ debug:
 
 traces:
   debug: false
-  serviceName: otel-trace.server
+  serviceName: all-in-one
   contextHeadername: Trace-Id
   otel:
     endpoint: localhost:4317
@@ -65,17 +65,16 @@ authentication:
     clientID:                     # --oidc-client-id
 
 authorization:
-  policyFile: ./etc/abac.json     # --authorization-policy-file={file-path}
-  modes:                          # --modes=ABAC,AlwaysAllow
-    - ABAC
+  modes:                          # --modes=RBAC,AlwaysAllow
+    - RBAC
+  #policyFile: ./etc/abac.json     # --authorization-policy-file={file-path}
+  rbac:
+    configPath: ./etc/rbac        # --rbac-config-path
   alwaysAllowGroups:
     - system:masters
   alwaysAllowPaths:
-    - /healthz
-    - /readyz
-    - /livez
-  modes:
-    - ABAC
+    - /apidocs.json
+    - /swagger/*
 
 session:
   enabled: true

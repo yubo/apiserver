@@ -177,6 +177,7 @@ func New(roles rbacregistryvalidation.RoleGetter, roleBindings rbacregistryvalid
 }
 
 func RulesAllow(requestAttributes authorizer.Attributes, rules ...rbac.PolicyRule) bool {
+	klog.InfoS("rules allows")
 	for i := range rules {
 		if RuleAllows(requestAttributes, &rules[i]) {
 			return true
@@ -187,6 +188,7 @@ func RulesAllow(requestAttributes authorizer.Attributes, rules ...rbac.PolicyRul
 }
 
 func RuleAllows(requestAttributes authorizer.Attributes, rule *rbac.PolicyRule) bool {
+	klog.InfoS("rule allows", "requestAttributes.IsResourceRequest", requestAttributes.IsResourceRequest())
 	if requestAttributes.IsResourceRequest() {
 		combinedResource := requestAttributes.GetResource()
 		if len(requestAttributes.GetSubresource()) > 0 {
@@ -194,11 +196,12 @@ func RuleAllows(requestAttributes authorizer.Attributes, rule *rbac.PolicyRule) 
 		}
 
 		return rbac.VerbMatches(rule, requestAttributes.GetVerb()) &&
-			rbac.APIGroupMatches(rule, requestAttributes.GetAPIGroup()) &&
+			//rbac.APIGroupMatches(rule, requestAttributes.GetAPIGroup()) &&
 			rbac.ResourceMatches(rule, combinedResource, requestAttributes.GetSubresource()) &&
 			rbac.ResourceNameMatches(rule, requestAttributes.GetName())
 	}
 
+	klog.InfoS("rule allows", "verbmatches", rbac.VerbMatches(rule, requestAttributes.GetVerb()), "nonresource matches", rbac.NonResourceURLMatches(rule, requestAttributes.GetPath()))
 	return rbac.VerbMatches(rule, requestAttributes.GetVerb()) &&
 		rbac.NonResourceURLMatches(rule, requestAttributes.GetPath())
 }

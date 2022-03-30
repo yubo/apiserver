@@ -102,7 +102,7 @@ subjects:
 
 ```shell
 // run server
-go run ./apiserver-authorization.go --token-auth-file=./tokens.cvs --authorization-mode=RBAC --rbac-config-path=./testdata
+go run ./apiserver-authorization.go --token-auth-file=./tokens.cvs --authorization-mode=RBAC --rbac-config-path=./testdata 
 
 // succeed
 curl -X POST http://localhost:8080/api/v1/namespaces/test/users -H "Authorization: Bearer token-admin"

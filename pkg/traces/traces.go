@@ -103,7 +103,7 @@ func (p *traces) start(ctx context.Context) error {
 		return err
 	}
 
-	if cf.Otel == nil && cf.Jaeger == nil || !cf.Debug {
+	if cf.Otel == nil && cf.Jaeger == nil && !cf.Debug {
 		return nil
 	}
 	p.config = cf

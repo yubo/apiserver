@@ -1,4 +1,4 @@
-## models
+## restful example
 
 The models storage supported automigrate db.table with resources object
 

@@ -53,7 +53,7 @@ func NewFileStorage(config *Config) (*FileStorage, error) {
 
 	f.sort()
 
-	defer klog.V(10).InfoS("rbac.file leaving",
+	klog.V(10).InfoS("rbac.file leaving",
 		"Role", len(f.roles),
 		"RoleBinding", len(f.roleBindings),
 		"ClusterRole", len(f.clusterRoles),

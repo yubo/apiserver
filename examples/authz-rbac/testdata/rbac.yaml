@@ -1,6 +1,7 @@
 kind: RoleBinding
 metadata:
   name: apiserver-admin
+  namespace: test
 roleRef:
   kind: Role
   name: apiserver-admin
@@ -11,6 +12,7 @@ subjects:
 kind: RoleBinding
 metadata:
   name: apiserver-reporter
+  namespace: test
 roleRef:
   kind: Role
   name: apiserver-reporter
@@ -23,6 +25,7 @@ subjects:
 kind: RoleBinding
 metadata:
   name: apiserver-guest
+  namespace: test
 roleRef:
   kind: Role
   name: apiserver-guest
@@ -33,6 +36,7 @@ subjects:
 kind: Role
 metadata:
   name: apiserver-reporter
+  namespace: test
 rules:
   - resources:
       - users 
@@ -42,6 +46,7 @@ rules:
 kind: Role
 metadata:
   name: apiserver-admin
+  namespace: test
 rules:
   - resources:
       - users
@@ -51,6 +56,7 @@ rules:
 kind: Role
 metadata:
   name: apiserver-guest
+  namespace: test
 rules:
   - resources:
       - users

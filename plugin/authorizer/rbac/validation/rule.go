@@ -20,10 +20,11 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/yubo/apiserver/pkg/apis/rbac"
 	"github.com/yubo/apiserver/pkg/authentication/serviceaccount"
 	"github.com/yubo/apiserver/pkg/authentication/user"
-	"github.com/yubo/apiserver/pkg/apis/rbac"
 	utilerrors "github.com/yubo/golib/util/errors"
+	"k8s.io/klog/v2"
 	//"k8s.io/component-helpers/auth/rbac/validation"
 )
 
@@ -170,6 +171,7 @@ func (d *roleBindingDescriber) String() string {
 }
 
 func (r *DefaultRuleResolver) VisitRulesFor(user user.Info, namespace string, visitor func(source fmt.Stringer, rule *rbac.PolicyRule, err error) bool) {
+	klog.InfoS("visit rules for")
 	if clusterRoleBindings, err := r.clusterRoleBindingLister.ListClusterRoleBindings(); err != nil {
 		if !visitor(nil, nil, err) {
 			return
