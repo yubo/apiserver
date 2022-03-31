@@ -18,6 +18,7 @@ import (
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/apiserver/pkg/server"
 	"github.com/yubo/apiserver/pkg/server/config"
+	"github.com/yubo/apiserver/pkg/server/healthz"
 	"github.com/yubo/apiserver/pkg/server/routes"
 	"github.com/yubo/apiserver/pkg/version"
 	"github.com/yubo/golib/configer"
@@ -321,6 +322,10 @@ func (p *serverModule) installAPI(c *config.Config) error {
 
 	if c.EnableOpenAPI {
 		routes.Swagger{}.Install(s.Handler.NonGoRestfulMux, server.APIDocsPath)
+	}
+
+	if c.EnableHealthz {
+		healthz.InstallHandler(s.Handler.NonGoRestfulMux)
 	}
 
 	return nil

@@ -53,6 +53,7 @@ apiserver:
   enablePriorityAndFairness: true
   enableProfiling: true
   enableOpenAPI: true
+  enableHealthz: true
 
 
 authentication:
@@ -75,6 +76,7 @@ authorization:
   alwaysAllowPaths:
     - /apidocs.json
     - /swagger/*
+    - /healthz
 
 session:
   enabled: true

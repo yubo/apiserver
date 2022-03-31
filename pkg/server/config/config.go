@@ -57,6 +57,8 @@ type Config struct {
 	SecuritySchemes []rest.SchemeConfig `json:"securitySchemes"`
 
 	EnableExpvar bool `json:"enableExpvar"`
+
+	EnableHealthz bool `json:"enableHealthz"`
 }
 
 func (p *Config) NewServerConfig() *server.Config {
