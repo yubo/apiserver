@@ -2,8 +2,6 @@ module github.com/yubo/apiserver
 
 go 1.16
 
-replace github.com/yubo/golib => ../golib
-
 require (
 	github.com/Azure/go-autorest/autorest v0.11.19
 	github.com/Azure/go-autorest/autorest/adal v0.9.14
@@ -41,7 +39,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/stretchr/testify v1.7.0
-	github.com/yubo/golib v0.0.3-0.20220328093426-c3a2f6ed6613
+	github.com/yubo/golib v0.0.3-0.20220329171146-169e9a94dae8
 	github.com/yubo/goswagger v0.0.0-20211115071236-bbeda335e7c1
 	go.opentelemetry.io/collector v0.47.0
 	go.opentelemetry.io/collector/model v0.47.0
