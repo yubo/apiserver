@@ -12,7 +12,7 @@ import (
 	"github.com/yubo/apiserver/pkg/cmdcli"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/rest"
-	"github.com/yubo/apiserver/pkg/traces"
+	"github.com/yubo/apiserver/pkg/tracing"
 	"github.com/yubo/golib/cli"
 	"github.com/yubo/golib/proc"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -21,7 +21,7 @@ import (
 
 	server "github.com/yubo/apiserver/pkg/server/module"
 	_ "github.com/yubo/apiserver/pkg/server/register"
-	_ "github.com/yubo/apiserver/pkg/traces/register"
+	_ "github.com/yubo/apiserver/pkg/tracing/register"
 )
 
 const (
@@ -74,21 +74,21 @@ func getUser(w http.ResponseWriter, req *http.Request, in *User) (*User, error) 
 }
 
 func getUser1(ctx context.Context, in *User) (*User, error) {
-	_, span := traces.Start(ctx, "getUser1", oteltrace.WithAttributes(attribute.String("name", in.Name)))
+	_, span := tracing.Start(ctx, "getUser1", oteltrace.WithAttributes(attribute.String("name", in.Name)))
 	defer span.End()
 
 	return in, nil
 }
 
 func getUser2(w http.ResponseWriter, req *http.Request, in *User) (*User, error) {
-	ctx, span := traces.Start(req.Context(), "getUser2", oteltrace.WithAttributes(attribute.String("name", in.Name)))
+	ctx, span := tracing.Start(req.Context(), "getUser2", oteltrace.WithAttributes(attribute.String("name", in.Name)))
 	defer span.End()
 
 	return getUser1(ctx, in)
 }
 
 func getUser3(w http.ResponseWriter, req *http.Request, in *User) (*User, error) {
-	ctx, span := traces.Start(req.Context(), "getUser3", oteltrace.WithAttributes(attribute.String("name", in.Name)))
+	ctx, span := tracing.Start(req.Context(), "getUser3", oteltrace.WithAttributes(attribute.String("name", in.Name)))
 	defer span.End()
 
 	return makeRequest(ctx, "127.0.0.1:8080", "/api/v1/users/"+in.Name)
