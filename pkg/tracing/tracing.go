@@ -27,12 +27,12 @@ import (
 )
 
 const (
-	moduleName = "traces"
-	tracerName = "github.com/yubo/apiserver/pkg/traces"
+	moduleName = "tracing"
+	tracerName = "github.com/yubo/apiserver/pkg/tracing"
 )
 
 var (
-	_module = &traces{name: moduleName}
+	_module = &tracing{name: moduleName}
 	hookOps = []proc.HookOps{{
 		Hook:        _module.start,
 		Owner:       moduleName,
@@ -86,7 +86,7 @@ func (p *Config) Validate() error {
 	return nil
 }
 
-type traces struct {
+type tracing struct {
 	name   string
 	config *Config
 
@@ -95,7 +95,7 @@ type traces struct {
 	tracer         oteltrace.Tracer
 }
 
-func (p *traces) start(ctx context.Context) error {
+func (p *tracing) start(ctx context.Context) error {
 	c := configer.ConfigerMustFrom(ctx)
 
 	cf := newConfig()
@@ -127,7 +127,7 @@ func (p *traces) start(ctx context.Context) error {
 	return nil
 }
 
-func (p *traces) stop(ctx context.Context) error {
+func (p *tracing) stop(ctx context.Context) error {
 	if p.tracerProvider != nil {
 		return p.tracerProvider.Shutdown(ctx)
 	}
@@ -135,7 +135,7 @@ func (p *traces) stop(ctx context.Context) error {
 	return nil
 }
 
-func (p *traces) prepare(ctx context.Context) error {
+func (p *tracing) prepare(ctx context.Context) error {
 	cf := p.config
 	opts := []sdktrace.TracerProviderOption{
 		sdktrace.WithSampler(sdktrace.TraceIDRatioBased(cf.RadioBased)),
@@ -192,7 +192,7 @@ func (p *traces) prepare(ctx context.Context) error {
 	return nil
 }
 
-func (p *traces) resource(ctx context.Context) (*resource.Resource, error) {
+func (p *tracing) resource(ctx context.Context) (*resource.Resource, error) {
 	cf := p.config
 
 	opts := []resource.Option{
@@ -220,7 +220,7 @@ func (p *traces) resource(ctx context.Context) (*resource.Resource, error) {
 // The service parameter should describe the name of the (virtual) server handling
 // the request.  Options can be applied to configure the tracer and propagators
 // used for this filter.
-func (p *traces) filter() restful.FilterFunction {
+func (p *tracing) filter() restful.FilterFunction {
 	cf := p.config
 
 	return func(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
@@ -289,5 +289,5 @@ func newJaegerExporter(ctx context.Context, c *JaegerConfig) (*jaeger.Exporter, 
 
 func Register() {
 	proc.RegisterHooks(hookOps)
-	proc.RegisterFlags(moduleName, "traces", newConfig())
+	proc.RegisterFlags(moduleName, "tracing", newConfig())
 }
