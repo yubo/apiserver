@@ -10,7 +10,7 @@ import (
 
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/rest"
-	"github.com/yubo/apiserver/pkg/traces"
+	"github.com/yubo/apiserver/pkg/tracing"
 	"go.opentelemetry.io/otel/attribute"
 	oteltrace "go.opentelemetry.io/otel/trace"
 )
@@ -41,11 +41,11 @@ func (p *Module) Start() error {
 }
 
 func (p *Module) installWs(http rest.GoRestfulContainer) {
-	rest.SwaggerTagRegister("traces", "traces demo")
+	rest.SwaggerTagRegister("tracing", "tracing demo")
 
 	rest.WsRouteBuild(&rest.WsOption{
-		Path:               "/traces",
-		Tags:               []string{"traces"},
+		Path:               "/tracing",
+		Tags:               []string{"tracing"},
 		GoRestfulContainer: http,
 		Routes: []rest.WsRoute{
 			{Method: "GET", SubPath: "v1/users/{name}", Handle: getUser},
@@ -63,14 +63,14 @@ func getUser(w http.ResponseWriter, req *http.Request, in *User) (*User, error) 
 }
 
 func getUser1(ctx context.Context, in *User) (*User, error) {
-	_, span := traces.Start(ctx, "getUser1", oteltrace.WithAttributes(attribute.String("name", in.Name)))
+	_, span := tracing.Start(ctx, "getUser1", oteltrace.WithAttributes(attribute.String("name", in.Name)))
 	defer span.End()
 
 	return in, nil
 }
 
 func getUser2(w http.ResponseWriter, req *http.Request, in *User) (*User, error) {
-	ctx, span := traces.Start(req.Context(), "getUser2", oteltrace.WithAttributes(attribute.String("name", in.Name)))
+	ctx, span := tracing.Start(req.Context(), "getUser2", oteltrace.WithAttributes(attribute.String("name", in.Name)))
 	defer span.End()
 
 	return getUser1(ctx, in)

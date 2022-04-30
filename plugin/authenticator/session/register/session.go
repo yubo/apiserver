@@ -6,7 +6,6 @@ import (
 	"github.com/yubo/apiserver/pkg/authentication"
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/pkg/options"
-	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/proc"
 	"k8s.io/klog/v2"
 )
@@ -48,10 +47,8 @@ func factory(ctx context.Context) (authenticator.Request, error) {
 }
 
 func (p *authModule) init(ctx context.Context) error {
-	c := configer.ConfigerMustFrom(ctx)
-
 	cf := newConfig()
-	if err := c.Read(modulePath, cf); err != nil {
+	if err := proc.ReadConfig(modulePath, cf); err != nil {
 		return err
 	}
 	p.config = cf
@@ -67,5 +64,5 @@ func (p *authModule) init(ctx context.Context) error {
 
 func init() {
 	proc.RegisterHooks(hookOps)
-	proc.RegisterFlags(modulePath, "authentication", newConfig())
+	proc.AddConfig(moduleName, newConfig(), proc.WithConfigGroup("authentication"))
 }

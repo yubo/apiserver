@@ -9,7 +9,6 @@ import (
 	"github.com/emicklei/go-restful/v3"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/request"
-	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/proc"
 	"github.com/yubo/golib/util"
 	"go.opentelemetry.io/otel"
@@ -49,24 +48,24 @@ var (
 )
 
 type Config struct {
-	RadioBased        float64           `yaml:"radioBased"`
-	ServiceName       string            `yaml:"serviceName"`
-	ContextHeaderName string            `yaml:"contextHeaderName"`
-	Attributes        map[string]string `yaml:"attributes"`
-	Debug             bool              `yaml:"debug"`
-	Otel              *OtelConfig       `yaml:"otel"`
-	Jaeger            *JaegerConfig     `yaml:"jaeger"`
+	RadioBased        float64           `json:"radioBased"`
+	ServiceName       string            `json:"serviceName"`
+	ContextHeaderName string            `json:"contextHeaderName"`
+	Attributes        map[string]string `json:"attributes"`
+	Debug             bool              `json:"debug"`
+	Otel              *OtelConfig       `json:"otel"`
+	Jaeger            *JaegerConfig     `json:"jaeger"`
 }
 
 type OtelConfig struct {
-	Endpoint string `yaml:"endpoint"`
-	Insecure bool   `yaml:"insecure"`
+	Endpoint string `json:"endpoint"`
+	Insecure bool   `json:"insecure"`
 }
 
 type JaegerConfig struct {
-	Endpoint string `yaml:"endpoint"`
-	Username string `yaml:"username"`
-	Password string `yaml:"password"`
+	Endpoint string `json:"endpoint"`
+	Username string `json:"username"`
+	Password string `json:"password"`
 	HttpClientConfig
 }
 
@@ -96,10 +95,8 @@ type tracing struct {
 }
 
 func (p *tracing) start(ctx context.Context) error {
-	c := configer.ConfigerMustFrom(ctx)
-
 	cf := newConfig()
-	if err := c.Read(p.name, cf); err != nil {
+	if err := proc.ReadConfig(p.name, cf); err != nil {
 		return err
 	}
 
@@ -289,5 +286,5 @@ func newJaegerExporter(ctx context.Context, c *JaegerConfig) (*jaeger.Exporter, 
 
 func Register() {
 	proc.RegisterHooks(hookOps)
-	proc.RegisterFlags(moduleName, "tracing", newConfig())
+	proc.AddConfig(moduleName, newConfig(), proc.WithConfigGroup("tracing"))
 }

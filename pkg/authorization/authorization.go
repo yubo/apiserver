@@ -69,7 +69,7 @@ type config struct {
 	AlwaysAllowGroups []string `json:"alwaysAllowGroups" flag:"authorization-always-allow-groups" description:"AlwaysAllowGroups are groups which are allowed to take any actions." default:"system:masters"`
 }
 
-func (p *config) tags() map[string]*configer.FieldTag {
+func (p *config) GetTags() map[string]*configer.FieldTag {
 	defaultMode := "AlwaysAllow"
 	if len(AuthorizationModeChoices) > 0 && !IsValidAuthorizationMode("AlwaysAllow") {
 		defaultMode = AuthorizationModeChoices[0]
@@ -142,11 +142,10 @@ func RegisterAuthz(name string, factory authorizer.AuthorizerFactory) error {
 }
 
 func (p *authorization) init(ctx context.Context) error {
-	c := configer.ConfigerMustFrom(ctx)
 	p.ctx, p.cancel = context.WithCancel(ctx)
 
 	cf := newConfig()
-	if err := c.Read(p.name, cf); err != nil {
+	if err := proc.ReadConfig(p.name, cf); err != nil {
 		return err
 	}
 	p.config = cf
@@ -229,7 +228,7 @@ func RegisterHooks() {
 
 func RegisterFlags() {
 	cf := newConfig()
-	proc.RegisterFlags(moduleName, moduleName, cf, configer.WithTags(cf.tags))
+	proc.AddConfig(moduleName, cf, proc.WithConfigGroup("authorization"))
 }
 
 func Register() {

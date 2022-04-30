@@ -8,7 +8,6 @@ import (
 	"github.com/yubo/apiserver/pkg/authentication/request/x509"
 	"github.com/yubo/apiserver/pkg/dynamiccertificates"
 	"github.com/yubo/apiserver/pkg/options"
-	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/proc"
 	"k8s.io/klog/v2"
 )
@@ -48,10 +47,8 @@ func (s *config) GetClientCAContentProvider() (dynamiccertificates.CAContentProv
 func newConfig() *config { return &config{} }
 
 func factory(ctx context.Context) (authenticator.Request, error) {
-	c := configer.ConfigerMustFrom(ctx)
-
 	cf := newConfig()
-	if err := c.Read(configPath, cf); err != nil {
+	if err := proc.ReadConfig(configPath, cf); err != nil {
 		return nil, err
 	}
 
@@ -79,6 +76,6 @@ func factory(ctx context.Context) (authenticator.Request, error) {
 }
 
 func init() {
-	proc.RegisterFlags(configPath, "authentication", newConfig())
 	authentication.RegisterAuthn(factory)
+	proc.AddConfig(configPath, newConfig(), proc.WithConfigGroup("authentication"))
 }

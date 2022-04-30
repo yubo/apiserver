@@ -9,7 +9,6 @@ import (
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/storage"
 	dbstore "github.com/yubo/apiserver/pkg/storage/db"
-	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/proc"
 )
 
@@ -59,10 +58,8 @@ var (
 // Because some configuration may be stored in the database,
 // set the db.connect into sys.db.prestart
 func (p *module) init(ctx context.Context) (err error) {
-	c := configer.ConfigerMustFrom(ctx)
-
 	cf := NewConfig()
-	if err := c.Read(p.name, cf); err != nil {
+	if err := proc.ReadConfig(p.name, cf); err != nil {
 		return err
 	}
 
@@ -92,5 +89,5 @@ func Register() {
 	proc.RegisterHooks(hookOps)
 
 	cf := NewConfig()
-	proc.RegisterFlags("models", "models", cf)
+	proc.AddConfig("models", cf, proc.WithConfigGroup("models"))
 }

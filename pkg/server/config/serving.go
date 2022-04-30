@@ -98,7 +98,7 @@ type GeneratableKeyCert struct {
 	FixtureDirectory string `json:"fixtureDirectory"`
 }
 
-func (p *SecureServingOptions) Tags() map[string]*configer.FieldTag {
+func (p *SecureServingOptions) GetTags() map[string]*configer.FieldTag {
 	tags := map[string]*configer.FieldTag{}
 
 	{

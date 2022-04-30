@@ -69,12 +69,10 @@ type serverModule struct {
 }
 
 func (p *serverModule) init(ctx context.Context) (err error) {
-	c := configer.ConfigerMustFrom(ctx)
-
 	p.ctx, p.cancel = context.WithCancel(ctx)
 
 	cf := config.NewConfig()
-	if err := c.Read(moduleName, cf); err != nil {
+	if err := proc.ReadConfig(p.name, cf); err != nil {
 		return err
 	}
 
@@ -338,7 +336,13 @@ func (p *serverModule) Start(stopCh <-chan struct{}, done chan struct{}) error {
 		routes.OpenAPI{}.Install(
 			server.APIDocsPath,
 			p.config.Handler.GoRestfulContainer,
-			spec.InfoProps{Title: proc.Name()},
+			spec.InfoProps{
+				Description: proc.Description(),
+				Title:       proc.Name(),
+				Contact:     proc.Contact(),
+				License:     proc.License(),
+				Version:     s.Version.String(),
+			},
 			s.SecuritySchemes,
 		)
 	}
@@ -394,8 +398,7 @@ func RegisterHooks() {
 }
 
 func RegisterFlags() {
-	cf := config.NewConfig()
-	proc.RegisterFlags(moduleName, "APIServer", cf, configer.WithTags(cf.Tags))
+	proc.AddConfig(moduleName, config.NewConfig(), proc.WithConfigGroup("APIServer"))
 }
 
 func Register() {

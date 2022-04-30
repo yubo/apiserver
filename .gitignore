@@ -3,6 +3,7 @@ example/helo
 tmp/
 vendor/
 shell/
+Makefile
 
 *.bak
 *.log
