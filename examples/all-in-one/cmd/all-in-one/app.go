@@ -77,7 +77,7 @@ var (
 	}}
 	license = spec.License{
 		LicenseProps: spec.LicenseProps{
-			Name: "",
+			Name: "Apache-2.0",
 			URL:  "https://www.apache.org/licenses/LICENSE-2.0.txt",
 		},
 	}
