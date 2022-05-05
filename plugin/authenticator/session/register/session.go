@@ -63,6 +63,7 @@ func (p *authModule) init(ctx context.Context) error {
 }
 
 func init() {
+	authentication.RegisterAuthn(factory)
 	proc.RegisterHooks(hookOps)
 	proc.AddConfig(moduleName, newConfig(), proc.WithConfigGroup("authentication"))
 }

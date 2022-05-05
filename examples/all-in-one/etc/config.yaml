@@ -79,15 +79,13 @@ authorization:
     - /healthz
 
 session:
-  enabled: true
-  storage: "db" # mem | db
-  storageExtra: "session"
   cookieName: "golib-example-sid"
   sidLength: 24
   httpOnly: true
   domain:
-  gcInterval: 60
-  cookieLifetime: 57600s # 16 * 3600
+  gcInterval: 60s
+  cookieLifetime: 16h
+  maxIdleTime: 1h
 
 grpc:
   addr: ":8081"

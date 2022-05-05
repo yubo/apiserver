@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -1382,6 +1383,19 @@ func (r Result) Into(obj runtime.Object) error {
 		}
 	}
 	return nil
+}
+
+func (r Result) JsonInto(obj runtime.Object) error {
+	if r.err != nil || obj == nil {
+		return r.Error()
+	}
+
+	err := json.Unmarshal(r.body, obj)
+	if err != nil {
+		klog.ErrorS(err, "jsonunmarshal", "body", string(r.body))
+	}
+
+	return err
 }
 
 // WasCreated updates the provided bool pointer to whether the server returned
