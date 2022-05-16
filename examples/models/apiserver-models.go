@@ -4,9 +4,9 @@ import (
 	"context"
 	"os"
 
-	"github.com/yubo/apiserver/pkg/models"
+	"github.com/yubo/apiserver/examples/models/api"
+	"github.com/yubo/apiserver/examples/models/models"
 	server "github.com/yubo/apiserver/pkg/server/module"
-	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/cli"
 	"github.com/yubo/golib/proc"
 	"k8s.io/klog/v2"
@@ -44,29 +44,27 @@ func start(ctx context.Context) error {
 	m := models.NewSecret()
 
 	secret := &api.Secret{
-		ObjectMeta: api.ObjectMeta{
-			Name: "bootstrap-token-test",
-		},
-		Type: "bootstrap.kubernetes.io/token",
+		Name: "token-test",
+		Data: "1",
 	}
 
 	if e, err := m.Create(ctx, secret); err != nil {
 		return err
 	} else {
-		klog.InfoS("create", "name", e.Name, "type", e.Type)
+		klog.InfoS("create", "name", e.Name, "data", e.Data)
 	}
 
-	if e, err := m.Get(ctx, "bootstrap-token-test"); err != nil {
+	if e, err := m.Get(ctx, "token-test"); err != nil {
 		return err
 	} else {
-		klog.InfoS("get", "name", e.Name, "type", e.Type)
+		klog.InfoS("get", "name", e.Name, "data", e.Data)
 	}
 
-	secret.Type = "bootstrap.kubernetes.io/token/2"
+	secret.Data = "2"
 	if e, err := m.Update(ctx, secret); err != nil {
 		return err
 	} else {
-		klog.InfoS("get", "name", e.Name, "type", e.Type)
+		klog.InfoS("get", "name", e.Name, "data", e.Data)
 	}
 
 	return nil
