@@ -10,13 +10,14 @@ import (
 	"github.com/yubo/golib/runtime"
 )
 
-// k8s.io/apiserver/pkg/registry/generic/registry/store.go
+var _ storage.KV = &store{}
 
+// k8s.io/apiserver/pkg/registry/generic/registry/store.go
 type store struct {
 	db orm.Interface
 }
 
-func New(db orm.DB) storage.Interface {
+func New(db orm.DB) storage.KV {
 	return newStore(db)
 }
 
@@ -167,18 +168,14 @@ func (p store) get(db orm.Interface, table, selector string, ignoreNotFound bool
 
 func (p store) List(ctx context.Context, key string, opts storage.ListOptions, out runtime.Object, total *int64) error {
 	db := p.getdb(ctx)
-
 	table, _, _ := parseKey(key)
-	o := []orm.Option{
+
+	return db.List(
+		out,
 		orm.WithTable(table),
 		orm.WithTotal(total),
 		orm.WithSelector(opts.Query),
 		orm.WithOrderby(opts.Orderby...),
-	}
-
-	if opts.Offset != nil && opts.Limit != nil {
-		o = append(o, orm.WithLimit(*opts.Offset, *opts.Limit))
-	}
-
-	return db.List(out, o...)
+		orm.WithLimit(opts.Offset, opts.Limit),
+	)
 }

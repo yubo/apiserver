@@ -4,8 +4,9 @@ import (
 	"context"
 	"os"
 
-	"github.com/yubo/apiserver/examples/models/api"
-	"github.com/yubo/apiserver/examples/models/models"
+	"examples/models/api"
+	"examples/models/models"
+
 	server "github.com/yubo/apiserver/pkg/server/module"
 	"github.com/yubo/golib/cli"
 	"github.com/yubo/golib/proc"
@@ -41,18 +42,18 @@ func main() {
 func start(ctx context.Context) error {
 	defer proc.Shutdown()
 
-	m := models.NewSecret()
+	m := models.NewDemo()
 
-	secret := &api.Secret{
+	secret := &api.Demo{
 		Name: "token-test",
 		Data: "1",
 	}
 
-	if e, err := m.Create(ctx, secret); err != nil {
+	if err := m.Create(ctx, secret); err != nil {
 		return err
-	} else {
-		klog.InfoS("create", "name", e.Name, "data", e.Data)
 	}
+
+	klog.InfoS("create", "name", secret.Name, "data", secret.Data)
 
 	if e, err := m.Get(ctx, "token-test"); err != nil {
 		return err
@@ -61,7 +62,11 @@ func start(ctx context.Context) error {
 	}
 
 	secret.Data = "2"
-	if e, err := m.Update(ctx, secret); err != nil {
+	if err := m.Update(ctx, secret); err != nil {
+		return err
+	}
+
+	if e, err := m.Get(ctx, "token-test"); err != nil {
 		return err
 	} else {
 		klog.InfoS("get", "name", e.Name, "data", e.Data)
