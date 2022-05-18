@@ -8,7 +8,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/yubo/apiserver/examples/otel-trace-grpc/api"
+	"examples/otel-trace-grpc/api"
+
 	"github.com/yubo/apiserver/pkg/config/configgrpc"
 	"github.com/yubo/apiserver/pkg/config/configtls"
 	"github.com/yubo/apiserver/pkg/grpcclient"

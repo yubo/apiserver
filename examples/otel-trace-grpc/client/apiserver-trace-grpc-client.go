@@ -5,7 +5,8 @@ import (
 	"flag"
 	"log"
 
-	"github.com/yubo/apiserver/examples/otel-trace-grpc/api"
+	"examples/otel-trace-grpc/api"
+
 	"github.com/yubo/apiserver/pkg/config/configgrpc"
 	"github.com/yubo/apiserver/pkg/config/configtls"
 	"github.com/yubo/apiserver/pkg/grpcclient"
@@ -22,7 +23,7 @@ import (
 
 const (
 	otelAgentAddr = "0.0.0.0:4317"
-	traceName     = "github.com/yubo/apiserver/examples/otel-trace-grpc/client"
+	traceName     = "examples/otel-trace-grpc/client"
 )
 
 var (

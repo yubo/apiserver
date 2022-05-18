@@ -22,7 +22,7 @@ import (
 const (
 	serverAddr    = "http://0.0.0.0:8080/api/v%d/users/tom"
 	otelAgentAddr = "0.0.0.0:4317"
-	traceName     = "github.com/yubo/apiserver/examples/otel-trace/client"
+	traceName     = "examples/otel-trace/client"
 )
 
 var (

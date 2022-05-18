@@ -30,12 +30,12 @@ func (p *Demo) NewObj() interface{} {
 }
 
 func (p *Demo) Create(ctx context.Context, obj *api.Demo) error {
-	return p.DB.Insert(obj, orm.WithTable(p.Name()))
+	return p.Insert(obj, orm.WithTable(p.Name()))
 }
 
 // Get retrieves the Secret from the db for a given name.
 func (p *Demo) Get(ctx context.Context, name string) (ret *api.Demo, err error) {
-	err = p.DB.Query("select * from `"+p.Name()+"` where name=?", name).Row(&ret)
+	err = p.Query("select * from `"+p.Name()+"` where name=?", name).Row(&ret)
 	return
 }
 

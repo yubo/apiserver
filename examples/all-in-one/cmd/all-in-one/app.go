@@ -5,14 +5,15 @@ import (
 
 	"github.com/go-openapi/spec"
 	"github.com/spf13/cobra"
-	"github.com/yubo/apiserver/examples/all-in-one/authn"
-	"github.com/yubo/apiserver/examples/all-in-one/authz"
-	"github.com/yubo/apiserver/examples/all-in-one/session"
-	"github.com/yubo/apiserver/examples/all-in-one/trace"
-	"github.com/yubo/apiserver/examples/all-in-one/user"
 	"github.com/yubo/apiserver/pkg/version"
 	"github.com/yubo/golib/proc"
 	"k8s.io/klog/v2"
+
+	"examples/all-in-one/authn"
+	"examples/all-in-one/authz"
+	"examples/all-in-one/session"
+	"examples/all-in-one/trace"
+	"examples/all-in-one/user"
 
 	_ "github.com/yubo/golib/orm/mysql"
 	_ "github.com/yubo/golib/orm/sqlite"

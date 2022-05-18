@@ -3,8 +3,9 @@ package routes
 import (
 	"net/http"
 
-	"github.com/yubo/apiserver/examples/rest/api"
-	"github.com/yubo/apiserver/examples/rest/models"
+	"examples/rest/api"
+	"examples/rest/models"
+
 	"github.com/yubo/apiserver/pkg/rest"
 )
 

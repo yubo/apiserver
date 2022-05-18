@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/yubo/apiserver/examples/rest/routes"
+	"examples/rest/routes"
+
 	"github.com/yubo/apiserver/pkg/options"
 	server "github.com/yubo/apiserver/pkg/server/module"
 	"github.com/yubo/golib/cli"
