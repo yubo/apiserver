@@ -1,0 +1,12 @@
+authorization:
+  webhook:
+    webhookConfigFile: 
+    webhookCacheAuthorizedTTL: 5m
+    webhookCacheUnauthorizedTTL: 30s
+    webhookRetryBackoff:
+      duration: 500ms
+      factor: 1.5
+      jitter: 0.2
+      steps: 5
+      cap:
+

@@ -58,10 +58,12 @@ func factory(ctx context.Context) (authenticator.Request, error) {
 	}
 
 	servingInfo := options.APIServerMustFrom(ctx).Config().SecureServing
-	if servingInfo == nil || servingInfo.ClientCA == nil {
-		klog.V(5).InfoS("authnModule x509 ignore", "reason", "clientCA was not found")
+	if servingInfo == nil {
+		klog.V(5).InfoS("authnModule x509 ignore", "reason", "servingInfo was not found")
 		return nil, nil
 	}
+
+	klog.V(5).InfoS("authnModule x509", "ca file", cf.ClientCA)
 
 	clientCA, err := dynamiccertificates.NewDynamicCAContentFromFile("client-ca-bundle", cf.ClientCA)
 	if err != nil {

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/yubo/apiserver/pkg/authorization"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
@@ -65,7 +64,7 @@ func newConfig() *config {
 // both authentication and authorization webhook used by the apiserver.
 func DefaultAuthWebhookRetryBackoff() *wait.Backoff {
 	return &wait.Backoff{
-		Duration: 500 * time.Millisecond,
+		Duration: api.NewDuration("500ms"),
 		Factor:   1.5,
 		Jitter:   0.2,
 		Steps:    5,

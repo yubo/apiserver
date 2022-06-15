@@ -24,6 +24,7 @@ import (
 
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/apiserver/tools/clientcmd"
+	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/api/errors"
 	"github.com/yubo/golib/runtime"
 	"github.com/yubo/golib/runtime/serializer"
@@ -39,7 +40,7 @@ const defaultRequestTimeout = 30 * time.Second
 // Handy for the client that provides a custom initial delay only.
 func DefaultRetryBackoffWithInitialDelay(initialBackoffDelay time.Duration) wait.Backoff {
 	return wait.Backoff{
-		Duration: initialBackoffDelay,
+		Duration: api.Duration{initialBackoffDelay},
 		Factor:   1.5,
 		Jitter:   0.2,
 		Steps:    5,

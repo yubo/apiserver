@@ -1,0 +1,70 @@
+package main
+
+import (
+	"context"
+	"fmt"
+	"net/http"
+	"os"
+
+	"github.com/yubo/apiserver/pkg/options"
+	"github.com/yubo/apiserver/pkg/rest"
+	"github.com/yubo/golib/cli"
+	"github.com/yubo/golib/proc"
+
+	_ "github.com/yubo/apiserver/pkg/authentication/register"
+	_ "github.com/yubo/apiserver/pkg/server/register"
+	_ "github.com/yubo/apiserver/plugin/authenticator/x509/register"
+)
+
+// This example shows the minimal code needed to get a restful.WebService working.
+
+const (
+	moduleName = "example.webhook"
+)
+
+var (
+	hookOps = []proc.HookOps{{
+		Hook:     start,
+		Owner:    moduleName,
+		HookNum:  proc.ACTION_START,
+		Priority: proc.PRI_MODULE,
+	}}
+)
+
+func main() {
+	command := proc.NewRootCmd(proc.WithHooks(hookOps...))
+	code := cli.Run(command)
+	os.Exit(code)
+}
+
+func start(ctx context.Context) error {
+	http, ok := options.APIServerFrom(ctx)
+	if !ok {
+		return fmt.Errorf("unable to get http server from the context")
+	}
+
+	installWs(http)
+	return nil
+}
+
+func installWs(http rest.GoRestfulContainer) {
+	rest.WsRouteBuild(&rest.WsOption{
+		Path:               "/inc",
+		GoRestfulContainer: http,
+		Routes: []rest.WsRoute{
+			{Method: "POST", SubPath: "/", Handle: inc},
+		},
+	})
+}
+
+type Input struct {
+	X int
+}
+
+type Output struct {
+	X int
+}
+
+func inc(w http.ResponseWriter, req *http.Request, _ *rest.NonParam, input *Input) (*Output, error) {
+	return &Output{input.X + 1}, nil
+}
