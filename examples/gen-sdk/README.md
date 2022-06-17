@@ -3,7 +3,7 @@
 This is an example of generate api-python
 
 ```
-go run apiserver-gen-sdk.go
+go run main.go
 ```
 
 ## See Also

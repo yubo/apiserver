@@ -71,7 +71,7 @@ type SecureServingOptions struct {
 	PermitPortSharing bool `json:"permitPortSharing" flag:"permit-port-sharing" description:"If true, SO_REUSEPORT will be used when binding the port, which allows more than one instance to bind on the same address and port. [default=false]"`
 
 	// PermitAddressSharing controls if SO_REUSEADDR is used when binding the port.
-	PermitAddressSharing bool `json:"PermitAddressSharing" falg:"permit-address-sharing" description:"If true, SO_REUSEADDR will be used when binding the port. This allows binding to wildcard IPs like 0.0.0.0 and specific IPs in parallel, and it avoids waiting for the kernel to release sockets in TIME_WAIT state."`
+	PermitAddressSharing bool `json:"permitAddressSharing" falg:"permit-address-sharing" description:"If true, SO_REUSEADDR will be used when binding the port. This allows binding to wildcard IPs like 0.0.0.0 and specific IPs in parallel, and it avoids waiting for the kernel to release sockets in TIME_WAIT state."`
 }
 
 type GeneratableKeyCert struct {

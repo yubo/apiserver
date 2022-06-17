@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"flag"
 	"os"
 
+	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/util/webhook"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/scheme"
@@ -12,8 +14,7 @@ import (
 )
 
 var (
-	kubeConfigFile = "./kube.conf"
-	retryBackoff   = wait.Backoff{
+	retryBackoff = wait.Backoff{
 		Duration: api.NewDuration("5ms"),
 		Factor:   1.5,
 		Jitter:   0.2,
@@ -26,12 +27,16 @@ type Input struct {
 }
 
 type Output struct {
-	X int
+	X    int
+	User user.DefaultInfo
 }
 
 func main() {
+	configFile := flag.String("conf", "./client.conf", "webhook config path")
+	flag.Parse()
+
 	if err := func() error {
-		w, err := webhook.NewGenericWebhook(scheme.Codecs, kubeConfigFile, retryBackoff, nil)
+		w, err := webhook.NewGenericWebhook(scheme.Codecs, *configFile, retryBackoff, nil)
 		if err != nil {
 			return err
 		}

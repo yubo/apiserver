@@ -4,9 +4,9 @@ apiserver:
     bindNework: tcp
     bindPort: 8443
     serverCert:
-      certDir: ../testdata/
+      certDir: ./testdata/
       pairName: server
 
 authentication:
-  clientCAFile: ../testdata/ca.crt
+  clientCAFile: ./testdata/ca.crt
 

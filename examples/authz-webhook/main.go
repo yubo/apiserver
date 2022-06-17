@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 
@@ -16,14 +15,17 @@ import (
 	server "github.com/yubo/apiserver/pkg/server/module"
 	_ "github.com/yubo/apiserver/pkg/server/register"
 
-	// audit
-	_ "github.com/yubo/apiserver/pkg/audit/register"
+	// authn
+	_ "github.com/yubo/apiserver/pkg/authentication/register"
+	_ "github.com/yubo/apiserver/plugin/authenticator/token/tokenfile/register"
+
+	// authz
+	_ "github.com/yubo/apiserver/pkg/authorization/register"
+	_ "github.com/yubo/apiserver/plugin/authorizer/rbac/register"
 )
 
-// go run ./apiserver-audit.go
-
 const (
-	moduleName = "example.webhook.audit.apiserver"
+	moduleName = "webhook.authz.examples"
 )
 
 var (
@@ -46,26 +48,29 @@ func start(ctx context.Context) error {
 	if !ok {
 		return fmt.Errorf("unable to get http server from the context")
 	}
+
 	installWs(http)
 	return nil
 }
 
 func installWs(http rest.GoRestfulContainer) {
 	rest.WsRouteBuild(&rest.WsOption{
-		Path:               "/audit",
+		Path:               "/api/v1",
 		GoRestfulContainer: http,
 		Routes: []rest.WsRoute{
-			{Method: "POST", SubPath: "/webhook", Handle: echo},
-			{Method: "POST", SubPath: "/hello", Handle: hw},
+			// with clusterRole & ClusterRoleBinding
+			{Method: "GET", SubPath: "/users", Handle: handle},
+			{Method: "POST", SubPath: "/users", Handle: handle},
+			{Method: "GET", SubPath: "/status", Handle: handle},
+
+			// with role & roleBinding (test namespace)
+			{Method: "GET", SubPath: "/namespaces/test/users", Handle: handle},
+			{Method: "POST", SubPath: "/namespaces/test/users", Handle: handle},
+			{Method: "GET", SubPath: "/namespaces/test/status", Handle: handle},
 		},
 	})
 }
 
-func echo(w http.ResponseWriter, req *http.Request) {
-	body, _ := ioutil.ReadAll(req.Body)
-	fmt.Printf("%s\n", string(body))
-}
-
-func hw(w http.ResponseWriter, req *http.Request) (string, error) {
-	return "hello, world", nil
+func handle(w http.ResponseWriter, req *http.Request) error {
+	return nil
 }

@@ -15,6 +15,7 @@ import (
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/cli"
 	"github.com/yubo/golib/proc"
+	"k8s.io/klog/v2"
 
 	// api server
 	server "github.com/yubo/apiserver/pkg/server/module"
@@ -31,21 +32,8 @@ import (
 	_ "github.com/yubo/golib/orm/sqlite"
 )
 
-// go run ./authn-bootstrap.go --db-driver=sqlite3 --db-dsn="file:test.db?cache=shared&mode=memory"
-// $curl -Ss  -H 'Authorization: bearer foobar.circumnavigation' http://localhost:8080/hello
-// {
-//  "Name": "system:bootstrap:foobar",
-//  "UID": "",
-//  "Groups": [
-//   "system:bootstrappers",
-//   "system:bootstrappers:foo",
-//   "system:authenticated"
-//  ],
-//  "Extra": null
-// }
-
 const (
-	moduleName = "example.bootstrap.authn"
+	moduleName = "bootstrap.authn.exmaples"
 
 	// Fake values for testing.
 	tokenID     = "foobar"           // 6 letters
@@ -105,6 +93,7 @@ func installWs(http rest.GoRestfulContainer) {
 }
 
 func hw(w http.ResponseWriter, req *http.Request) (*user.DefaultInfo, error) {
+	klog.InfoS("recv", "req.header", req.Header)
 	u, ok := request.UserFrom(req.Context())
 	if !ok {
 		return nil, fmt.Errorf("unable to get user info")

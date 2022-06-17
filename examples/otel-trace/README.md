@@ -25,7 +25,7 @@ traces:
 ```
 
 ```
-$ go run ./server/apiserver-trace-server.go  -f server/config.yaml
+$ go run ./server/main.go  -f server/config.yaml
 ```
 
 ## client
@@ -47,7 +47,7 @@ Content-Length: 18
 
 - client
 ```
-$ go run ./client/apiserver-trace-client.go
+$ go run ./client/main.go
 2022/03/23 12:58:46 tracer.Start traceID: 0ac9b29f947be6f506f00fd807e5db08
 2022/03/23 12:58:46 response traceID: 0ac9b29f947be6f506f00fd807e5db08
 ```

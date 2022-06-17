@@ -62,7 +62,7 @@ openssl x509 -req -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out s
 
 # Create a client certiticate
 openssl genrsa -out client.key 2048
-openssl req -new -key client.key -out client.csr -subj "/CN=${CN_BASE}_client" -config client.conf
+openssl req -new -key client.key -out client.csr -subj "/CN=tome/O=dev/O=admin" -config client.conf
 openssl x509 -req -in client.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out client.crt -days 100000 -extensions v3_req -extfile client.conf
 
 # Clean up after we're done.

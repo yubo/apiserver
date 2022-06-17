@@ -15,12 +15,8 @@ import (
 	_ "github.com/yubo/apiserver/pkg/server/register"
 )
 
-// This example shows the minimal code needed to get a restful.WebService working.
-// go run ./apiserver-hello-world.go
-// GET http://localhost:8080/hello
-
 const (
-	moduleName = "hello.apiserver"
+	moduleName = "hello.examples"
 )
 
 var (

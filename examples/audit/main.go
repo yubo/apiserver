@@ -11,15 +11,16 @@ import (
 	"github.com/yubo/golib/cli"
 	"github.com/yubo/golib/proc"
 
-	_ "github.com/yubo/apiserver/pkg/authentication/register"
+	// http
+	server "github.com/yubo/apiserver/pkg/server/module"
 	_ "github.com/yubo/apiserver/pkg/server/register"
-	_ "github.com/yubo/apiserver/plugin/authenticator/x509/register"
+
+	// audit
+	_ "github.com/yubo/apiserver/pkg/audit/register"
 )
 
-// This example shows the minimal code needed to get a restful.WebService working.
-
 const (
-	moduleName = "example.webhook"
+	moduleName = "audit.examples"
 )
 
 var (
@@ -32,7 +33,10 @@ var (
 )
 
 func main() {
-	command := proc.NewRootCmd(proc.WithHooks(hookOps...))
+	command := proc.NewRootCmd(
+		server.WithoutTLS(),
+		proc.WithHooks(hookOps...),
+	)
 	code := cli.Run(command)
 	os.Exit(code)
 }
@@ -42,29 +46,29 @@ func start(ctx context.Context) error {
 	if !ok {
 		return fmt.Errorf("unable to get http server from the context")
 	}
-
 	installWs(http)
 	return nil
 }
 
 func installWs(http rest.GoRestfulContainer) {
 	rest.WsRouteBuild(&rest.WsOption{
-		Path:               "/inc",
+		Path:               "/api",
 		GoRestfulContainer: http,
 		Routes: []rest.WsRoute{
-			{Method: "POST", SubPath: "/", Handle: inc},
+			{Method: "POST", SubPath: "/users", Handle: hw}, // RequestResponse
+			{Method: "GET", SubPath: "/tokens", Handle: hw}, // metadata
 		},
 	})
+	rest.WsRouteBuild(&rest.WsOption{
+		Path:               "/static",
+		GoRestfulContainer: http,
+		Routes: []rest.WsRoute{
+			{Method: "GET", SubPath: "/hw", Handle: hw}, // none
+		},
+	})
+
 }
 
-type Input struct {
-	X int
-}
-
-type Output struct {
-	X int
-}
-
-func inc(w http.ResponseWriter, req *http.Request, _ *rest.NonParam, input *Input) (*Output, error) {
-	return &Output{input.X + 1}, nil
+func hw(w http.ResponseWriter, req *http.Request) ([]byte, error) {
+	return []byte(req.URL.Path + ": hello, world\n"), nil
 }

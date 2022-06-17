@@ -6,40 +6,22 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/golib/cli"
 	"github.com/yubo/golib/proc"
 
-	// api server
-	server "github.com/yubo/apiserver/pkg/server/module"
-	_ "github.com/yubo/apiserver/pkg/server/register"
-
-	// authn
 	_ "github.com/yubo/apiserver/pkg/authentication/register"
-	_ "github.com/yubo/apiserver/plugin/authenticator/token/tokenfile/register"
+	"github.com/yubo/apiserver/pkg/authentication/user"
+	_ "github.com/yubo/apiserver/pkg/server/register"
+	_ "github.com/yubo/apiserver/plugin/authenticator/x509/register"
 )
 
-// go run ./apiserver-authn-tokenfile.go --token-auth-file=./tokens.cvs
-//
 // This example shows the minimal code needed to get a restful.WebService working.
-//
-// curl -H 'Content-Type:application/json' -H 'Authorization: bearer token-777' http://localhost:8080/hello
-// {
-//   "Name": "user3",
-//   "UID": "uid3",
-//   "Groups": [
-//     "group1",
-//     "group2",
-//     "system:authenticated"
-//   ],
-//   "Extra": null
-// }
 
 const (
-	moduleName = "example.tokenfile.authn"
+	moduleName = "x509.authn.examples"
 )
 
 var (
@@ -52,7 +34,7 @@ var (
 )
 
 func main() {
-	command := proc.NewRootCmd(server.WithoutTLS(), proc.WithHooks(hookOps...))
+	command := proc.NewRootCmd(proc.WithHooks(hookOps...))
 	code := cli.Run(command)
 	os.Exit(code)
 }
@@ -62,29 +44,43 @@ func start(ctx context.Context) error {
 	if !ok {
 		return fmt.Errorf("unable to get http server from the context")
 	}
+
 	installWs(http)
 	return nil
 }
 
 func installWs(http rest.GoRestfulContainer) {
 	rest.WsRouteBuild(&rest.WsOption{
-		Path:               "/hello",
+		Path:               "/inc",
 		GoRestfulContainer: http,
 		Routes: []rest.WsRoute{
-			{Method: "GET", SubPath: "/", Handle: hw},
+			{Method: "POST", SubPath: "/", Handle: inc},
 		},
 	})
 }
 
-func hw(w http.ResponseWriter, req *http.Request) (*user.DefaultInfo, error) {
+type Input struct {
+	X int
+}
+
+type Output struct {
+	X    int
+	User user.DefaultInfo
+}
+
+func inc(w http.ResponseWriter, req *http.Request, _ *rest.NonParam, input *Input) (*Output, error) {
 	u, ok := request.UserFrom(req.Context())
 	if !ok {
 		return nil, fmt.Errorf("unable to get user info")
 	}
-	return &user.DefaultInfo{
-		Name:   u.GetName(),
-		UID:    u.GetUID(),
-		Groups: u.GetGroups(),
-		Extra:  u.GetExtra(),
+
+	return &Output{
+		X: input.X + 1,
+		User: user.DefaultInfo{
+			Name:   u.GetName(),
+			UID:    u.GetUID(),
+			Groups: u.GetGroups(),
+			Extra:  u.GetExtra(),
+		},
 	}, nil
 }

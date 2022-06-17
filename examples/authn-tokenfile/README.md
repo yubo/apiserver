@@ -1,6 +1,6 @@
 ## Authentication - token file
 
-#### token file
+### server
 
 [tokens.cvs](./tokens.cvs)
 
@@ -8,14 +8,15 @@
 token-777,user3,uid3,"group1,group2"
 ```
 
-#### server
-
 ```sh
-$ go run ./apiserver-authn-tokenfile.go --token-auth-file=./tokens.cvs
+$ go run ./main.go --token-auth-file=./tokens.cvs
 ```
 
 
-#### client
+### client
+
+#### curl 
+
 ```sh
 $ curl -H 'Content-Type:application/json' -H 'Authorization: bearer token-777' http://localhost:8080/hello
 {
@@ -28,6 +29,12 @@ $ curl -H 'Content-Type:application/json' -H 'Authorization: bearer token-777' h
  ],
  "Extra": null
 }
-
 ```
 
+#### webhook
+
+```sh
+$ cd ./client
+$ go run ./main.go --conf ./client.conf
+I0617 13:31:56.412910   98328 main.go:41] "webhook" resp={Name:user3 UID:uid3 Groups:[group1 group2 system:authenticated] Extra:map[]}
+```

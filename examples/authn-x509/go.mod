@@ -1,4 +1,4 @@
-module examples/webhook
+module examples/authn-x509
 
 go 1.16
 

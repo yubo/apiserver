@@ -5,7 +5,7 @@
 server
 
 ```sh
-go run ./apiserver-audit.go \
+go run ./main.go \
 	--audit-policy-file ./audit-policy.yaml  \
 	--audit-log-path -
 ```

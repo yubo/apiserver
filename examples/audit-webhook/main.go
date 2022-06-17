@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 
@@ -19,11 +20,8 @@ import (
 	_ "github.com/yubo/apiserver/pkg/audit/register"
 )
 
-// go run ./apiserver-audit.go
-//
-
 const (
-	moduleName = "example.audit.apiserver"
+	moduleName = "webhook.audit.examples"
 )
 
 var (
@@ -36,10 +34,7 @@ var (
 )
 
 func main() {
-	command := proc.NewRootCmd(
-		server.WithoutTLS(),
-		proc.WithHooks(hookOps...),
-	)
+	command := proc.NewRootCmd(server.WithoutTLS(), proc.WithHooks(hookOps...))
 	code := cli.Run(command)
 	os.Exit(code)
 }
@@ -55,23 +50,20 @@ func start(ctx context.Context) error {
 
 func installWs(http rest.GoRestfulContainer) {
 	rest.WsRouteBuild(&rest.WsOption{
-		Path:               "/api",
+		Path:               "/audit",
 		GoRestfulContainer: http,
 		Routes: []rest.WsRoute{
-			{Method: "POST", SubPath: "/users", Handle: hw}, // RequestResponse
-			{Method: "GET", SubPath: "/tokens", Handle: hw}, // metadata
+			{Method: "POST", SubPath: "/webhook", Handle: echo},
+			{Method: "POST", SubPath: "/hello", Handle: hw},
 		},
 	})
-	rest.WsRouteBuild(&rest.WsOption{
-		Path:               "/static",
-		GoRestfulContainer: http,
-		Routes: []rest.WsRoute{
-			{Method: "GET", SubPath: "/hw", Handle: hw}, // none
-		},
-	})
-
 }
 
-func hw(w http.ResponseWriter, req *http.Request) ([]byte, error) {
-	return []byte(req.URL.Path + ": hello, world\n"), nil
+func echo(w http.ResponseWriter, req *http.Request) {
+	body, _ := ioutil.ReadAll(req.Body)
+	fmt.Printf("%s\n", string(body))
+}
+
+func hw(w http.ResponseWriter, req *http.Request) (string, error) {
+	return "hello, world", nil
 }

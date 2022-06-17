@@ -22,13 +22,13 @@ grpc:
 ```
 
 ```
-$ go run ./server/apiserver-trace-grpc-server.go  -f server/config.yaml
+$ go run ./server/main.go  -f server/config.yaml
 ```
 
 ## client
 
 ```
-$ go run ./client/apiserver-trace-grpc-client.go
+$ go run ./client/main.go
 2022/03/28 17:26:41 tracer.Start traceID: f472a61c43fd8bea12a3496b93796fb8
 I0328 17:26:41.176719   95653 grpcclient.go:26] "grpc.Dial" endpoint="127.0.0.1:8081"
 2022/03/28 17:26:41 get user Name:"tom"

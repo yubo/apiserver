@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/yubo/apiserver/pkg/authentication"
-	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/request"
@@ -15,43 +13,17 @@ import (
 	"github.com/yubo/golib/cli"
 	"github.com/yubo/golib/proc"
 
-	// http
+	// api server
 	server "github.com/yubo/apiserver/pkg/server/module"
 	_ "github.com/yubo/apiserver/pkg/server/register"
 
 	// authn
 	_ "github.com/yubo/apiserver/pkg/authentication/register"
+	_ "github.com/yubo/apiserver/plugin/authenticator/token/tokenfile/register"
 )
 
-// go run ./apiserver-authentication-custom.go
-//
-// $ curl -Ss -i http://localhost:8080/hello
-// HTTP/1.1 200 OK
-// Cache-Control: no-cache, private
-// Content-Type: application/json
-// Content-Length: 103
-//
-// {
-//  "Name": "system:anonymous",
-//  "UID": "",
-//  "Groups": [
-//   "system:unauthenticated"
-//  ],
-//  "Extra": null
-// }
-//
-// $ curl -Ss  -H 'Authorization: bearer 123' http://localhost:8080/hello
-// {
-//  "Name": "system",
-//  "UID": "",
-//  "Groups": [
-//   "system:authenticated"
-//  ],
-//  "Extra": null
-// }
-
 const (
-	moduleName = "example.custom.authn"
+	moduleName = "tokenfile.authn.examples"
 )
 
 var (
@@ -64,10 +36,6 @@ var (
 )
 
 func main() {
-	authentication.RegisterTokenAuthn(func(_ context.Context) (authenticator.Token, error) {
-		return &TokenAuthenticator{}, nil
-	})
-
 	command := proc.NewRootCmd(server.WithoutTLS(), proc.WithHooks(hookOps...))
 	code := cli.Run(command)
 	os.Exit(code)
@@ -103,33 +71,4 @@ func hw(w http.ResponseWriter, req *http.Request) (*user.DefaultInfo, error) {
 		Groups: u.GetGroups(),
 		Extra:  u.GetExtra(),
 	}, nil
-}
-
-type TokenAuthenticator struct{}
-
-var (
-	_token = "123"
-	_user  = &user.DefaultInfo{
-		Name: "system",
-	}
-)
-
-func (a *TokenAuthenticator) AuthenticateToken(ctx context.Context, value string) (*authenticator.Response, bool, error) {
-	if value == _token {
-		return &authenticator.Response{User: _user}, true, nil
-	}
-
-	return nil, false, nil
-}
-
-func (a *TokenAuthenticator) Name() string {
-	return "custom token authenticator"
-}
-
-func (a *TokenAuthenticator) Priority() int {
-	return authenticator.PRI_TOKEN_CUSTOM
-}
-
-func (a *TokenAuthenticator) Available() bool {
-	return true
 }
