@@ -2,8 +2,6 @@ module github.com/yubo/apiserver
 
 go 1.16
 
-replace github.com/yubo/golib => ../golib
-
 require (
 	github.com/Azure/go-autorest/autorest v0.11.19
 	github.com/Azure/go-autorest/autorest/adal v0.9.14
@@ -34,13 +32,14 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822
 	github.com/opencontainers/go-digest v1.0.0
 	github.com/opencontainers/image-spec v1.0.1 // indirect
+	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pquerna/cachecontrol v0.1.0 // indirect
 	github.com/prometheus/client_golang v1.12.1
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/stretchr/testify v1.7.0
-	github.com/yubo/golib v0.0.3-0.20220328093426-c3a2f6ed6613
+	github.com/yubo/golib v0.0.3-0.20220619092530-4b2095953f3f
 	github.com/yubo/goswagger v0.0.0-20211115071236-bbeda335e7c1
 	go.opentelemetry.io/collector v0.47.0
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.30.0
