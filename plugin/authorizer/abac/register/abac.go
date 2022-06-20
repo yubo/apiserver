@@ -8,7 +8,6 @@ import (
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	"github.com/yubo/apiserver/plugin/authorizer/abac"
 	"github.com/yubo/apiserver/plugin/authorizer/abac/api"
-	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/proc"
 	"github.com/yubo/golib/util/errors"
 )
@@ -47,7 +46,7 @@ func newConfig() *config {
 
 func factory(ctx context.Context) (authorizer.Authorizer, error) {
 	cf := newConfig()
-	if err := configer.ConfigerMustFrom(ctx).Read(configPath, cf); err != nil {
+	if err := proc.ReadConfig(configPath, cf); err != nil {
 		return nil, err
 	}
 
@@ -59,6 +58,6 @@ func factory(ctx context.Context) (authorizer.Authorizer, error) {
 }
 
 func init() {
-	proc.RegisterFlags(configPath, "authorization", newConfig())
 	authorization.RegisterAuthz(modeName, factory)
+	proc.AddConfig(configPath, newConfig(), proc.WithConfigGroup("authorization"))
 }

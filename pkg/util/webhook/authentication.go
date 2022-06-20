@@ -17,12 +17,18 @@ limitations under the License.
 package webhook
 
 import (
+	"fmt"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/yubo/apiserver/pkg/rest"
+	"github.com/yubo/apiserver/tools/clientcmd"
+	clientcmdapi "github.com/yubo/apiserver/tools/clientcmd/api"
+	"github.com/yubo/golib/api"
 )
 
 // AuthenticationInfoResolverWrapper can be used to inject Dial function to the
@@ -38,9 +44,9 @@ func NewDefaultAuthenticationInfoResolverWrapper(
 	webhookAuthResolverWrapper := func(delegate AuthenticationInfoResolver) AuthenticationInfoResolver {
 		return &AuthenticationInfoResolverDelegator{
 			ClientConfigForFunc: func(hostPort string) (*rest.Config, error) {
-				//if hostPort == "kubernetes.default.svc:443" {
-				//	return kubeapiserverClientConfig, nil
-				//}
+				if hostPort == "kubernetes.default.svc:443" {
+					return kubeapiserverClientConfig, nil
+				}
 				ret, err := delegate.ClientConfigFor(hostPort)
 				if err != nil {
 					return nil, err
@@ -60,9 +66,9 @@ func NewDefaultAuthenticationInfoResolverWrapper(
 				return ret, nil
 			},
 			ClientConfigForServiceFunc: func(serviceName, serviceNamespace string, servicePort int) (*rest.Config, error) {
-				//if serviceName == "kubernetes" && serviceNamespace == api.NamespaceDefault && servicePort == 443 {
-				//	return kubeapiserverClientConfig, nil
-				//}
+				if serviceName == "kubernetes" && serviceNamespace == api.NamespaceDefault && servicePort == 443 {
+					return kubeapiserverClientConfig, nil
+				}
 				ret, err := delegate.ClientConfigForService(serviceName, serviceNamespace, servicePort)
 				if err != nil {
 					return nil, err
@@ -114,27 +120,26 @@ func (a *AuthenticationInfoResolverDelegator) ClientConfigForService(serviceName
 }
 
 type defaultAuthenticationInfoResolver struct {
-	//kubeconfig clientcmdapi.Config
-	configs map[string]*rest.Config
+	kubeconfig clientcmdapi.Config
 }
 
 // NewDefaultAuthenticationInfoResolver generates an AuthenticationInfoResolver
 // that builds rest.Config based on the kubeconfig file. kubeconfigFile is the
 // path to the kubeconfig.
 func NewDefaultAuthenticationInfoResolver(kubeconfigFile string) (AuthenticationInfoResolver, error) {
-	//if len(kubeconfigFile) == 0 {
-	return &defaultAuthenticationInfoResolver{}, nil
-	//}
+	if len(kubeconfigFile) == 0 {
+		return &defaultAuthenticationInfoResolver{}, nil
+	}
 
-	//loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
-	//loadingRules.ExplicitPath = kubeconfigFile
-	//loader := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, &clientcmd.ConfigOverrides{})
-	//clientConfig, err := loader.RawConfig()
-	//if err != nil {
-	//	return nil, err
-	//}
+	loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
+	loadingRules.ExplicitPath = kubeconfigFile
+	loader := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, &clientcmd.ConfigOverrides{})
+	clientConfig, err := loader.RawConfig()
+	if err != nil {
+		return nil, err
+	}
 
-	//return &defaultAuthenticationInfoResolver{kubeconfig: clientConfig}, nil
+	return &defaultAuthenticationInfoResolver{kubeconfig: clientConfig}, nil
 }
 
 func (c *defaultAuthenticationInfoResolver) ClientConfigFor(hostPort string) (*rest.Config, error) {
@@ -146,113 +151,108 @@ func (c *defaultAuthenticationInfoResolver) ClientConfigForService(serviceName, 
 }
 
 func (c *defaultAuthenticationInfoResolver) clientConfig(target string) (*rest.Config, error) {
-	if config, ok := c.configs[target]; ok {
-		return config, nil
+	// exact match
+	if authConfig, ok := c.kubeconfig.AuthInfos[target]; ok {
+		return restConfigFromKubeconfig(authConfig)
 	}
+
+	// star prefixed match
+	serverSteps := strings.Split(target, ".")
+	for i := 1; i < len(serverSteps); i++ {
+		nickName := "*." + strings.Join(serverSteps[i:], ".")
+		if authConfig, ok := c.kubeconfig.AuthInfos[nickName]; ok {
+			return restConfigFromKubeconfig(authConfig)
+		}
+	}
+
+	// If target included the default https port (443), search again without the port
+	if target, port, err := net.SplitHostPort(target); err == nil && port == "443" {
+		// exact match without port
+		if authConfig, ok := c.kubeconfig.AuthInfos[target]; ok {
+			return restConfigFromKubeconfig(authConfig)
+		}
+
+		// star prefixed match without port
+		serverSteps := strings.Split(target, ".")
+		for i := 1; i < len(serverSteps); i++ {
+			nickName := "*." + strings.Join(serverSteps[i:], ".")
+			if authConfig, ok := c.kubeconfig.AuthInfos[nickName]; ok {
+				return restConfigFromKubeconfig(authConfig)
+			}
+		}
+	}
+
+	// if we're trying to hit the kube-apiserver and there wasn't an explicit config, use the in-cluster config
+	if target == "kubernetes.default.svc:443" {
+		// if we can find an in-cluster-config use that.  If we can't, fall through.
+		inClusterConfig, err := rest.InClusterConfig()
+		if err == nil {
+			return setGlobalDefaults(inClusterConfig), nil
+		}
+	}
+
+	// star (default) match
+	if authConfig, ok := c.kubeconfig.AuthInfos["*"]; ok {
+		return restConfigFromKubeconfig(authConfig)
+	}
+
+	// use the current context from the kubeconfig if possible
+	if len(c.kubeconfig.CurrentContext) > 0 {
+		if currContext, ok := c.kubeconfig.Contexts[c.kubeconfig.CurrentContext]; ok {
+			if len(currContext.AuthInfo) > 0 {
+				if currAuth, ok := c.kubeconfig.AuthInfos[currContext.AuthInfo]; ok {
+					return restConfigFromKubeconfig(currAuth)
+				}
+			}
+		}
+	}
+
 	// anonymous
 	return setGlobalDefaults(&rest.Config{}), nil
-
-	// exact match
-	//if authConfig, ok := c.kubeconfig.AuthInfos[target]; ok {
-	//	return restConfigFromKubeconfig(authConfig)
-	//}
-
-	//// star prefixed match
-	//serverSteps := strings.Split(target, ".")
-	//for i := 1; i < len(serverSteps); i++ {
-	//	nickName := "*." + strings.Join(serverSteps[i:], ".")
-	//	if authConfig, ok := c.kubeconfig.AuthInfos[nickName]; ok {
-	//		return restConfigFromKubeconfig(authConfig)
-	//	}
-	//}
-
-	//// If target included the default https port (443), search again without the port
-	//if target, port, err := net.SplitHostPort(target); err == nil && port == "443" {
-	//	// exact match without port
-	//	if authConfig, ok := c.kubeconfig.AuthInfos[target]; ok {
-	//		return restConfigFromKubeconfig(authConfig)
-	//	}
-
-	//	// star prefixed match without port
-	//	serverSteps := strings.Split(target, ".")
-	//	for i := 1; i < len(serverSteps); i++ {
-	//		nickName := "*." + strings.Join(serverSteps[i:], ".")
-	//		if authConfig, ok := c.kubeconfig.AuthInfos[nickName]; ok {
-	//			return restConfigFromKubeconfig(authConfig)
-	//		}
-	//	}
-	//}
-
-	//// if we're trying to hit the kube-apiserver and there wasn't an explicit config, use the in-cluster config
-	////if target == "kubernetes.default.svc:443" {
-	////	// if we can find an in-cluster-config use that.  If we can't, fall through.
-	////	inClusterConfig, err := rest.InClusterConfig()
-	////	if err == nil {
-	////		return setGlobalDefaults(inClusterConfig), nil
-	////	}
-	////}
-
-	//// star (default) match
-	//if authConfig, ok := c.kubeconfig.AuthInfos["*"]; ok {
-	//	return restConfigFromKubeconfig(authConfig)
-	//}
-
-	//// use the current context from the kubeconfig if possible
-	//if len(c.kubeconfig.CurrentContext) > 0 {
-	//	if currContext, ok := c.kubeconfig.Contexts[c.kubeconfig.CurrentContext]; ok {
-	//		if len(currContext.AuthInfo) > 0 {
-	//			if currAuth, ok := c.kubeconfig.AuthInfos[currContext.AuthInfo]; ok {
-	//				return restConfigFromKubeconfig(currAuth)
-	//			}
-	//		}
-	//	}
-	//}
-
-	// anonymous
-	//return setGlobalDefaults(&rest.Config{}), nil
 }
 
-//func restConfigFromKubeconfig(configAuthInfo *clientcmdapi.AuthInfo) (*rest.Config, error) {
-//	config := &rest.Config{}
-//
-//	// blindly overwrite existing values based on precedence
-//	if len(configAuthInfo.Token) > 0 {
-//		config.BearerToken = configAuthInfo.Token
-//		config.BearerTokenFile = configAuthInfo.TokenFile
-//	} else if len(configAuthInfo.TokenFile) > 0 {
-//		tokenBytes, err := ioutil.ReadFile(configAuthInfo.TokenFile)
-//		if err != nil {
-//			return nil, err
-//		}
-//		config.BearerToken = string(tokenBytes)
-//		config.BearerTokenFile = configAuthInfo.TokenFile
-//	}
-//	if len(configAuthInfo.Impersonate) > 0 {
-//		config.Impersonate = rest.ImpersonationConfig{
-//			UserName: configAuthInfo.Impersonate,
-//			Groups:   configAuthInfo.ImpersonateGroups,
-//			Extra:    configAuthInfo.ImpersonateUserExtra,
-//		}
-//	}
-//	if len(configAuthInfo.ClientCertificate) > 0 || len(configAuthInfo.ClientCertificateData) > 0 {
-//		config.CertFile = configAuthInfo.ClientCertificate
-//		config.CertData = configAuthInfo.ClientCertificateData
-//		config.KeyFile = configAuthInfo.ClientKey
-//		config.KeyData = configAuthInfo.ClientKeyData
-//	}
-//	if len(configAuthInfo.Username) > 0 || len(configAuthInfo.Password) > 0 {
-//		config.Username = configAuthInfo.Username
-//		config.Password = configAuthInfo.Password
-//	}
-//	if configAuthInfo.Exec != nil {
-//		config.ExecProvider = configAuthInfo.Exec.DeepCopy()
-//	}
-//	if configAuthInfo.AuthProvider != nil {
-//		return nil, fmt.Errorf("auth provider not supported")
-//	}
-//
-//	return setGlobalDefaults(config), nil
-//}
+func restConfigFromKubeconfig(configAuthInfo *clientcmdapi.AuthInfo) (*rest.Config, error) {
+	config := &rest.Config{}
+
+	// blindly overwrite existing values based on precedence
+	if len(configAuthInfo.Token) > 0 {
+		config.BearerToken = configAuthInfo.Token
+		config.BearerTokenFile = configAuthInfo.TokenFile
+	} else if len(configAuthInfo.TokenFile) > 0 {
+		tokenBytes, err := ioutil.ReadFile(configAuthInfo.TokenFile)
+		if err != nil {
+			return nil, err
+		}
+		config.BearerToken = string(tokenBytes)
+		config.BearerTokenFile = configAuthInfo.TokenFile
+	}
+	if len(configAuthInfo.Impersonate) > 0 {
+		config.Impersonate = rest.ImpersonationConfig{
+			UserName: configAuthInfo.Impersonate,
+			Groups:   configAuthInfo.ImpersonateGroups,
+			Extra:    configAuthInfo.ImpersonateUserExtra,
+		}
+	}
+	if len(configAuthInfo.ClientCertificate) > 0 || len(configAuthInfo.ClientCertificateData) > 0 {
+		config.CertFile = configAuthInfo.ClientCertificate
+		config.CertData = configAuthInfo.ClientCertificateData
+		config.KeyFile = configAuthInfo.ClientKey
+		config.KeyData = configAuthInfo.ClientKeyData
+	}
+	if len(configAuthInfo.Username) > 0 || len(configAuthInfo.Password) > 0 {
+		config.Username = configAuthInfo.Username
+		config.Password = configAuthInfo.Password
+	}
+	if configAuthInfo.Exec != nil {
+		//config.ExecProvider = configAuthInfo.Exec.DeepCopy()
+		config.ExecProvider = configAuthInfo.Exec
+	}
+	if configAuthInfo.AuthProvider != nil {
+		return nil, fmt.Errorf("auth provider not supported")
+	}
+
+	return setGlobalDefaults(config), nil
+}
 
 func setGlobalDefaults(config *rest.Config) *rest.Config {
 	config.UserAgent = "kube-apiserver-admission"

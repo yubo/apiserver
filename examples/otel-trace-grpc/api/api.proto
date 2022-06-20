@@ -1,5 +1,5 @@
 syntax = "proto3";
-option go_package = "github.com/yubo/apiserver/examples/otel-trace-grpc/api";
+option go_package = "examples/otel-trace-grpc/api";
 package api;
 
 message UserGetInput {

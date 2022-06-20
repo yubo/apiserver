@@ -5,7 +5,6 @@ import (
 
 	"github.com/yubo/apiserver/pkg/db"
 	"github.com/yubo/apiserver/pkg/options"
-	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/proc"
 )
 
@@ -38,10 +37,8 @@ var (
 // Because some configuration may be stored in the database,
 // set the db.connect into sys.db.prestart
 func (p *module) init(ctx context.Context) (err error) {
-	c := configer.ConfigerMustFrom(ctx)
-
-	cf := &db.Config{}
-	if err := c.Read(p.name, cf); err != nil {
+	cf := newConfig()
+	if err := proc.ReadConfig(p.name, cf); err != nil {
 		return err
 	}
 
@@ -57,9 +54,12 @@ func (p *module) stop(ctx context.Context) error {
 	return p.db.Close()
 }
 
+func newConfig() *db.Config {
+	return &db.Config{}
+}
+
 func Register() {
 	proc.RegisterHooks(hookOps)
 
-	cf := &db.Config{}
-	proc.RegisterFlags("db", "db", cf, configer.WithTags(cf.Tags))
+	proc.AddConfig(moduleName, newConfig(), proc.WithConfigGroup("db"))
 }

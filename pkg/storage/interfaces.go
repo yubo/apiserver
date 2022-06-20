@@ -9,15 +9,9 @@ import (
 	"github.com/yubo/golib/runtime"
 )
 
-// Interface offers a common interface for object marshaling/unmarshaling operations and
+// KV offers a common interface for object marshaling/unmarshaling operations and
 // hides all the storage-related operations behind it.
-type Interface interface {
-	// create/autoMigrate table
-	AutoMigrate(name string, obj runtime.Object) error
-
-	// drop table, for test
-	Drop(name string) error
-
+type KV interface {
 	Create(ctx context.Context, key string, obj, out runtime.Object) error
 
 	Delete(ctx context.Context, key string, out runtime.Object) error

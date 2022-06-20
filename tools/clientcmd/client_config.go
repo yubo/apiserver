@@ -187,25 +187,25 @@ func (config *DirectClientConfig) ClientConfig() (*restclient.Config, error) {
 	}
 
 	// only try to read the auth information if we are secure
-	if restclient.IsConfigTransportTLS(*clientConfig) {
-		var err error
-		var persister restclient.AuthProviderConfigPersister
-		if config.configAccess != nil {
-			authInfoName, _ := config.getAuthInfoName()
-			persister = PersisterForUser(config.configAccess, authInfoName)
-		}
-		userAuthPartialConfig, err := config.getUserIdentificationPartialConfig(configAuthInfo, config.fallbackReader, persister, configClusterInfo)
-		if err != nil {
-			return nil, err
-		}
-		mergo.Merge(clientConfig, userAuthPartialConfig, mergo.WithOverride)
-
-		serverAuthPartialConfig, err := getServerIdentificationPartialConfig(configAuthInfo, configClusterInfo)
-		if err != nil {
-			return nil, err
-		}
-		mergo.Merge(clientConfig, serverAuthPartialConfig, mergo.WithOverride)
+	//if restclient.IsConfigTransportTLS(*clientConfig) {
+	//var err error
+	var persister restclient.AuthProviderConfigPersister
+	if config.configAccess != nil {
+		authInfoName, _ := config.getAuthInfoName()
+		persister = PersisterForUser(config.configAccess, authInfoName)
 	}
+	userAuthPartialConfig, err := config.getUserIdentificationPartialConfig(configAuthInfo, config.fallbackReader, persister, configClusterInfo)
+	if err != nil {
+		return nil, err
+	}
+	mergo.Merge(clientConfig, userAuthPartialConfig, mergo.WithOverride)
+
+	serverAuthPartialConfig, err := getServerIdentificationPartialConfig(configAuthInfo, configClusterInfo)
+	if err != nil {
+		return nil, err
+	}
+	mergo.Merge(clientConfig, serverAuthPartialConfig, mergo.WithOverride)
+	//}
 
 	return clientConfig, nil
 }

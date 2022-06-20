@@ -106,5 +106,5 @@ func (p *authModule) init(ctx context.Context) error {
 
 func init() {
 	proc.RegisterHooks(hookOps)
-	proc.RegisterFlags(moduleName, "authentication", newConfig())
+	proc.AddConfig(moduleName, newConfig(), proc.WithConfigGroup("authentication"))
 }

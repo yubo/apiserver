@@ -5,7 +5,7 @@ The models storage supported automigrate db.table with resources object
 #### server
 
 ```sh
-go run ./apiserver-rest.go \
+go run ./main.go \
 	--db-driver=sqlite3 \
 	--db-dsn="file:test.db?cache=shared&mode=memory"
 ```

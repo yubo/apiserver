@@ -98,7 +98,7 @@ func APIServerFrom(ctx context.Context) (server.APIServer, bool) {
 func APIServerMustFrom(ctx context.Context) server.APIServer {
 	server, ok := proc.AttrMustFrom(ctx)[apiServerKey].(server.APIServer)
 	if !ok {
-		panic("unable get genericServer")
+		panic("unable get APIServer module")
 	}
 	return server
 }

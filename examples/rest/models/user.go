@@ -3,7 +3,8 @@ package models
 import (
 	"context"
 
-	"github.com/yubo/apiserver/examples/rest/api"
+	"examples/rest/api"
+
 	"github.com/yubo/apiserver/pkg/models"
 	"github.com/yubo/apiserver/pkg/storage"
 )

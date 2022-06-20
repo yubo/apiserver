@@ -1,9 +1,9 @@
 package register
 
 import (
-	models "github.com/yubo/apiserver/pkg/models/module"
+	"github.com/yubo/apiserver/pkg/models"
 )
 
 func init() {
-	models.Register()
+	models.RegisterModule()
 }

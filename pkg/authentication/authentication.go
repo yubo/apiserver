@@ -14,7 +14,6 @@ import (
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/server"
 	"github.com/yubo/golib/api"
-	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/proc"
 )
 
@@ -144,11 +143,10 @@ type authentication struct {
 }
 
 func (p *authentication) init(ctx context.Context) error {
-	c := configer.ConfigerMustFrom(ctx)
 	p.ctx, p.cancel = context.WithCancel(ctx)
 
-	cf := &config{}
-	if err := c.Read(moduleName, cf); err != nil {
+	cf := newConfig()
+	if err := proc.ReadConfig(moduleName, cf); err != nil {
 		return err
 	}
 	p.config = cf
@@ -176,5 +174,5 @@ func (p *authentication) stop(ctx context.Context) error {
 
 func Register() {
 	proc.RegisterHooks(hookOps)
-	proc.RegisterFlags(moduleName, "authentication", &config{})
+	proc.AddConfig(moduleName, newConfig(), proc.WithConfigGroup("authentication"))
 }

@@ -75,13 +75,13 @@ func (p *Config) NewServerConfig() *server.Config {
 	}
 }
 
-func (p *Config) Tags() map[string]*configer.FieldTag {
+func (p *Config) GetTags() map[string]*configer.FieldTag {
 	tags := map[string]*configer.FieldTag{}
 
-	for k, v := range p.GenericServerRunOptions.Tags() {
+	for k, v := range p.GenericServerRunOptions.GetTags() {
 		tags["generic."+k] = v
 	}
-	for k, v := range p.SecureServing.Tags() {
+	for k, v := range p.SecureServing.GetTags() {
 		tags["serving."+k] = v
 	}
 

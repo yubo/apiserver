@@ -3,15 +3,17 @@ package main
 import (
 	"context"
 
+	"github.com/go-openapi/spec"
 	"github.com/spf13/cobra"
-	"github.com/yubo/apiserver/examples/all-in-one/authn"
-	"github.com/yubo/apiserver/examples/all-in-one/authz"
-	"github.com/yubo/apiserver/examples/all-in-one/session"
-	"github.com/yubo/apiserver/examples/all-in-one/trace"
-	"github.com/yubo/apiserver/examples/all-in-one/user"
-	"github.com/yubo/apiserver/pkg/version/reporter"
+	"github.com/yubo/apiserver/pkg/version"
 	"github.com/yubo/golib/proc"
 	"k8s.io/klog/v2"
+
+	"examples/all-in-one/authn"
+	"examples/all-in-one/authz"
+	"examples/all-in-one/session"
+	"examples/all-in-one/trace"
+	"examples/all-in-one/user"
 
 	_ "github.com/yubo/golib/orm/mysql"
 	_ "github.com/yubo/golib/orm/sqlite"
@@ -51,13 +53,21 @@ import (
 	_ "github.com/yubo/apiserver/pkg/models/register"
 	_ "github.com/yubo/apiserver/pkg/server/register"
 	_ "github.com/yubo/apiserver/pkg/session/register"
-	_ "github.com/yubo/apiserver/pkg/traces/register"
-	_ "github.com/yubo/apiserver/pkg/version/reporter/register"
+	_ "github.com/yubo/apiserver/pkg/tracing/register"
 )
 
 const (
 	moduleName = "all.example.apiserver"
 )
+
+type config struct {
+	TestA string `json:"testA" flag:"test-a" description:"this is a flag for demo"`
+	TestB string `json:"testB"`
+}
+
+func newConfig() *config {
+	return &config{}
+}
 
 var (
 	hookOps = []proc.HookOps{{
@@ -66,11 +76,32 @@ var (
 		HookNum:  proc.ACTION_START,
 		Priority: proc.PRI_MODULE,
 	}}
+	license = spec.License{
+		LicenseProps: spec.LicenseProps{
+			Name: "Apache-2.0",
+			URL:  "https://www.apache.org/licenses/LICENSE-2.0.txt",
+		},
+	}
+	contact = spec.ContactInfo{
+		ContactInfoProps: spec.ContactInfoProps{
+			Name:  "yubo",
+			URL:   "http://github.com/yubo",
+			Email: "yubo@yubo.org",
+		},
+	}
 )
 
 func newServerCmd() *cobra.Command {
-	cmd := proc.NewRootCmd(proc.WithHooks(hookOps...))
-	cmd.AddCommand(reporter.NewVersionCmd())
+	cmd := proc.NewRootCmd(
+		proc.WithHooks(hookOps...),
+		proc.WithName("all-in-one"),
+		proc.WithDescription("apiserver examples all in one"),
+		proc.WithVersion(version.Get()),
+		proc.WithLicense(&license),
+		proc.WithContact(&contact),
+		proc.WithReport(),
+	)
+	cmd.AddCommand(proc.NewVersionCmd())
 
 	return cmd
 }
@@ -95,4 +126,8 @@ func start(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func init() {
+	proc.AddGlobalConfig(newConfig())
 }

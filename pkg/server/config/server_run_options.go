@@ -51,7 +51,7 @@ type ServerRunOptions struct {
 	EnablePriorityAndFairness bool  `json:"enablePriorityAndFairness" default:"true" flag:"enable-priority-and-fairness" description:"If true and the APIPriorityAndFairness feature gate is enabled, replace the max-in-flight handler with an enhanced one that queues and dispatches with priority and fairness"`
 }
 
-func (p *ServerRunOptions) Tags() map[string]*configer.FieldTag {
+func (p *ServerRunOptions) GetTags() map[string]*configer.FieldTag {
 	return nil
 }
 

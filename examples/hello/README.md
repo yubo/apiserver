@@ -3,7 +3,7 @@
 #### HTTP
 ```sh
 # server
-$ go run ./apiserver-hello-world.go
+$ go run ./main.go
 
 # client
 $ curl http://localhost:8080/hello

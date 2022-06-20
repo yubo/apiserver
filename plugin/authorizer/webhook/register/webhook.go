@@ -4,13 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/yubo/apiserver/pkg/authorization"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	"github.com/yubo/apiserver/plugin/authorizer/webhook"
 	"github.com/yubo/golib/api"
-	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/proc"
 	utilerrors "github.com/yubo/golib/util/errors"
 	"github.com/yubo/golib/util/wait"
@@ -66,7 +64,7 @@ func newConfig() *config {
 // both authentication and authorization webhook used by the apiserver.
 func DefaultAuthWebhookRetryBackoff() *wait.Backoff {
 	return &wait.Backoff{
-		Duration: 500 * time.Millisecond,
+		Duration: api.NewDuration("500ms"),
 		Factor:   1.5,
 		Jitter:   0.2,
 		Steps:    5,
@@ -74,10 +72,8 @@ func DefaultAuthWebhookRetryBackoff() *wait.Backoff {
 }
 
 func factory(ctx context.Context) (authorizer.Authorizer, error) {
-	c := configer.ConfigerMustFrom(ctx)
-
 	cf := newConfig()
-	if err := c.Read(configPath, cf); err != nil {
+	if err := proc.ReadConfig(configPath, cf); err != nil {
 		return nil, err
 	}
 
@@ -93,6 +89,6 @@ func factory(ctx context.Context) (authorizer.Authorizer, error) {
 }
 
 func init() {
-	proc.RegisterFlags(configPath, "authorization", newConfig())
 	authorization.RegisterAuthz(modeName, factory)
+	proc.AddConfig(configPath, newConfig(), proc.WithConfigGroup("authorization"))
 }

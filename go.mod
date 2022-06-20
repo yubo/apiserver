@@ -16,7 +16,7 @@ require (
 	github.com/docker/go-units v0.4.0 // indirect
 	github.com/emicklei/go-restful-openapi/v2 v2.8.0
 	github.com/emicklei/go-restful/v3 v3.7.4
-	github.com/go-openapi/spec v0.20.4
+	github.com/go-openapi/spec v0.20.5
 	github.com/gogo/protobuf v1.3.2
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da
 	github.com/golang/mock v1.4.4
@@ -35,14 +35,12 @@ require (
 	github.com/pquerna/cachecontrol v0.1.0 // indirect
 	github.com/prometheus/client_golang v1.12.1
 	github.com/sirupsen/logrus v1.8.1 // indirect
-	github.com/spf13/cobra v1.4.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/stretchr/testify v1.7.0
-	github.com/yubo/golib v0.0.3-0.20220329171146-169e9a94dae8
+	github.com/yubo/golib v0.0.3-0.20220619092530-4b2095953f3f
 	github.com/yubo/goswagger v0.0.0-20211115071236-bbeda335e7c1
 	go.opentelemetry.io/collector v0.47.0
-	go.opentelemetry.io/collector/model v0.47.0
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.30.0
 	go.opentelemetry.io/otel v1.5.0
 	go.opentelemetry.io/otel/exporters/jaeger v1.5.0
@@ -51,7 +49,6 @@ require (
 	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.5.0
 	go.opentelemetry.io/otel/sdk v1.5.0
 	go.opentelemetry.io/otel/trace v1.5.0
-	go.uber.org/zap v1.21.0
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
 	golang.org/x/net v0.0.0-20211013171255-e13a2654a71e
 	golang.org/x/oauth2 v0.0.0-20210514164344-f6687ab2804c

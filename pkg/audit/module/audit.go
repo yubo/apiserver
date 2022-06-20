@@ -90,12 +90,12 @@ func (c *config) Validate() error {
 	return errors.NewAggregate(allErrors)
 }
 
-func (p *config) tags() map[string]*configer.FieldTag {
+func (p *config) GetTags() map[string]*configer.FieldTag {
 	tags := map[string]*configer.FieldTag{}
-	for k, v := range p.LogOptions.tags() {
+	for k, v := range p.LogOptions.GetTags() {
 		tags["log."+k] = v
 	}
-	for k, v := range p.WebhookOptions.tags() {
+	for k, v := range p.WebhookOptions.GetTags() {
 		tags["webhook."+k] = v
 	}
 
@@ -129,7 +129,7 @@ func flagf(format string, a ...interface{}) []string {
 	return []string{fmt.Sprintf(format, a...)}
 }
 
-func (o *AuditBatchOptions) tags(pluginName string) map[string]*configer.FieldTag {
+func (o *AuditBatchOptions) GetTags(pluginName string) map[string]*configer.FieldTag {
 	return map[string]*configer.FieldTag{
 		"mode":           {Flag: flagf("audit-%s-mode", pluginName), Description: "Strategy for sending audit events. Blocking indicates sending events should block server responses. Batch causes the backend to buffer and write events asynchronously. Known modes are " + strings.Join(AllowedModes, ",") + "."},
 		"bufferSize":     {Flag: flagf("audit-%s-batch-buffer-size", pluginName)},
@@ -159,7 +159,7 @@ type AuditTruncateOptions struct {
 	plugintruncate.Config
 }
 
-func (o *AuditTruncateOptions) tags(pluginName string) map[string]*configer.FieldTag {
+func (o *AuditTruncateOptions) GetTags(pluginName string) map[string]*configer.FieldTag {
 	return map[string]*configer.FieldTag{
 		"enabled":      {Flag: flagf("audit-%s-truncate-enabled", pluginName)},
 		"maxBatchSize": {Flag: flagf("audit-%s-truncate-max-batch-size", pluginName)},
@@ -202,14 +202,14 @@ type AuditLogOptions struct {
 	//GroupVersionString string
 }
 
-func (p *AuditLogOptions) tags() map[string]*configer.FieldTag {
+func (p *AuditLogOptions) GetTags() map[string]*configer.FieldTag {
 	tags := map[string]*configer.FieldTag{
 		"format": {Description: "Format of saved audits. \"legacy\" indicates 1-line text format for each event. \"json\" indicates structured json format. Known formats are " + strings.Join(pluginlog.AllowedFormats, ",") + "."},
 	}
-	for k, v := range p.BatchOptions.tags(pluginlog.PluginName) {
+	for k, v := range p.BatchOptions.GetTags(pluginlog.PluginName) {
 		tags["batch."+k] = v
 	}
-	for k, v := range p.TruncateOptions.tags(pluginlog.PluginName) {
+	for k, v := range p.TruncateOptions.GetTags(pluginlog.PluginName) {
 		tags["truncate."+k] = v
 	}
 
@@ -334,12 +334,12 @@ type AuditWebhookOptions struct {
 	//GroupVersionString string
 }
 
-func (p *AuditWebhookOptions) tags() map[string]*configer.FieldTag {
+func (p *AuditWebhookOptions) GetTags() map[string]*configer.FieldTag {
 	tags := map[string]*configer.FieldTag{}
-	for k, v := range p.BatchOptions.tags(pluginwebhook.PluginName) {
+	for k, v := range p.BatchOptions.GetTags(pluginwebhook.PluginName) {
 		tags["batch."+k] = v
 	}
-	for k, v := range p.TruncateOptions.tags(pluginwebhook.PluginName) {
+	for k, v := range p.TruncateOptions.GetTags(pluginwebhook.PluginName) {
 		tags["truncate."+k] = v
 	}
 
@@ -599,8 +599,7 @@ func RegisterHooks() {
 }
 
 func RegisterConfig() {
-	cf := newConfig()
-	proc.RegisterFlags(moduleName, "Audit", cf, configer.WithTags(cf.tags))
+	proc.AddConfig(moduleName, newConfig(), proc.WithConfigGroup("Audit"))
 }
 
 func Register() {

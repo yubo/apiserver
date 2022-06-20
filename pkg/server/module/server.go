@@ -43,6 +43,12 @@ var (
 		Priority:    proc.PRI_SYS_INIT,
 		SubPriority: options.PRI_M_HTTP,
 	}, {
+		Hook:        _module.init2,
+		Owner:       moduleName,
+		HookNum:     proc.ACTION_START,
+		Priority:    proc.PRI_SYS_INIT,
+		SubPriority: options.PRI_M_HTTP2,
+	}, {
 		Hook:        _module.start,
 		Owner:       moduleName,
 		HookNum:     proc.ACTION_START,
@@ -61,26 +67,27 @@ var _ server.APIServer = &serverModule{}
 
 type serverModule struct {
 	name   string
-	config *server.Config
+	config *config.Config
+	server *server.Config
 
 	ctx       context.Context
 	cancel    context.CancelFunc
 	stoppedCh chan struct{}
 }
 
+// init: no dep
 func (p *serverModule) init(ctx context.Context) (err error) {
-	c := configer.ConfigerMustFrom(ctx)
-
 	p.ctx, p.cancel = context.WithCancel(ctx)
 
 	cf := config.NewConfig()
-	if err := c.Read(moduleName, cf); err != nil {
+	if err := proc.ReadConfig(p.name, cf); err != nil {
 		return err
 	}
 
-	p.config = cf.NewServerConfig()
+	p.config = cf
+	p.server = cf.NewServerConfig()
 
-	if err := p.serverInit(cf); err != nil {
+	if err := p.serverInit(); err != nil {
 		return err
 	}
 
@@ -89,8 +96,17 @@ func (p *serverModule) init(ctx context.Context) (err error) {
 	return nil
 }
 
+// init: dep authn, authz, audit
+func (p *serverModule) init2(ctx context.Context) (err error) {
+	if err := p.serverInit2(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (p *serverModule) Address() string {
-	return p.config.SecureServing.Listener.Addr().String()
+	return p.server.SecureServing.Listener.Addr().String()
 }
 
 func (p *serverModule) start(ctx context.Context) error {
@@ -119,36 +135,44 @@ func (p *serverModule) Info() {
 	if !klog.V(10).Enabled() {
 		return
 	}
-	for _, path := range p.config.Handler.ListedPaths() {
+	for _, path := range p.server.Handler.ListedPaths() {
 		klog.Infof("apiserver path %s", path)
 	}
 }
 func (p *serverModule) Config() *server.Config {
-	return p.config
+	return p.server
 }
 
 // same as http.Handle()
 func (p *serverModule) Add(service *restful.WebService) *restful.Container {
-	return p.config.Handler.GoRestfulContainer.Add(service)
+	return p.server.Handler.GoRestfulContainer.Add(service)
 }
 func (p *serverModule) Filter(filter restful.FilterFunction) {
-	p.config.Handler.GoRestfulContainer.Filter(filter)
+	p.server.Handler.GoRestfulContainer.Filter(filter)
 }
 
-func (p *serverModule) serverInit(c *config.Config) (err error) {
-	if p == nil || p.config == nil || c == nil {
+func (p *serverModule) serverInit() error {
+	if p == nil || p.server == nil || p.config == nil {
 		return nil
 	}
 
-	if err := p.prepare(c); err != nil {
+	if err := p.prepare(); err != nil {
 		return err
 	}
 
-	if err := p.servingInit(c); err != nil {
+	if err := p.servingInit(); err != nil {
 		return err
 	}
 
-	if err := p.authInit(c); err != nil {
+	return nil
+}
+
+func (p *serverModule) serverInit2() error {
+	if p == nil || p.server == nil || p.config == nil {
+		return nil
+	}
+
+	if err := p.authInit(); err != nil {
 		return err
 	}
 
@@ -156,15 +180,16 @@ func (p *serverModule) serverInit(c *config.Config) (err error) {
 		return err
 	}
 
-	if err := p.installAPI(c); err != nil {
+	if err := p.installAPI(); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (p *serverModule) prepare(c *config.Config) error {
-	s := p.config
+func (p *serverModule) prepare() error {
+	c := p.config
+	s := p.server
 
 	if err := c.GenericServerRunOptions.DefaultAdvertiseAddress(c.SecureServing); err != nil {
 		return err
@@ -214,8 +239,9 @@ func (p *serverModule) prepare(c *config.Config) error {
 }
 
 // servingInit initialize secureServing / insecureServing/ loopbackClientConfig
-func (p *serverModule) servingInit(c *config.Config) error {
-	s := p.config
+func (p *serverModule) servingInit() error {
+	s := p.server
+	c := p.config
 
 	if err := c.InsecureServing.ApplyToWithLoopback(&s.InsecureServing, &s.LoopbackClientConfig); err != nil {
 		return err
@@ -234,8 +260,8 @@ func (p *serverModule) servingInit(c *config.Config) error {
 	return nil
 }
 
-func (p *serverModule) authInit(c *config.Config) error {
-	s := p.config
+func (p *serverModule) authInit() error {
+	s := p.server
 
 	// Deprecated
 	if session, ok := options.SessionManagerFrom(p.ctx); ok {
@@ -277,7 +303,7 @@ func (p *serverModule) authInit(c *config.Config) error {
 }
 
 func (p *serverModule) handlerInit() error {
-	s := p.config
+	s := p.server
 	handlerChainBuilder := func(handler http.Handler) http.Handler {
 		return s.BuildHandlerChainFunc(handler, s)
 	}
@@ -288,8 +314,9 @@ func (p *serverModule) handlerInit() error {
 	return nil
 }
 
-func (p *serverModule) installAPI(c *config.Config) error {
-	s := p.config
+func (p *serverModule) installAPI() error {
+	s := p.server
+	c := p.config
 
 	if c.EnableIndex {
 		routes.Index{}.Install(s.ListedPathProvider, s.Handler.NonGoRestfulMux)
@@ -332,13 +359,19 @@ func (p *serverModule) installAPI(c *config.Config) error {
 }
 
 func (p *serverModule) Start(stopCh <-chan struct{}, done chan struct{}) error {
-	s := p.config
+	s := p.server
 
 	if s.EnableOpenAPI {
 		routes.OpenAPI{}.Install(
 			server.APIDocsPath,
-			p.config.Handler.GoRestfulContainer,
-			spec.InfoProps{Title: proc.Name()},
+			p.server.Handler.GoRestfulContainer,
+			spec.InfoProps{
+				Description: proc.Description(),
+				Title:       proc.Name(),
+				Contact:     proc.Contact(),
+				License:     proc.License(),
+				Version:     s.Version.String(),
+			},
 			s.SecuritySchemes,
 		)
 	}
@@ -394,8 +427,7 @@ func RegisterHooks() {
 }
 
 func RegisterFlags() {
-	cf := config.NewConfig()
-	proc.RegisterFlags(moduleName, "APIServer", cf, configer.WithTags(cf.Tags))
+	proc.AddConfig(moduleName, config.NewConfig(), proc.WithConfigGroup("APIServer"))
 }
 
 func Register() {

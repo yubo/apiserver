@@ -158,12 +158,10 @@ func (p *sessionManager) Exist(sid string) bool {
 	return !errors.IsNotFound(err)
 }
 
-func (p *sessionManager) getSid(r *http.Request) (sid string, err error) {
-	var cookie *http.Cookie
-
-	cookie, err = r.Cookie(p.config.CookieName)
+func (p *sessionManager) getSid(r *http.Request) (string, error) {
+	cookie, err := r.Cookie(p.config.CookieName)
 	if err != nil || cookie.Value == "" {
-		return sid, nil
+		return "", nil
 	}
 
 	return url.QueryUnescape(cookie.Value)

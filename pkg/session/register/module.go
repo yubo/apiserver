@@ -8,7 +8,6 @@ import (
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/session"
 	"github.com/yubo/apiserver/pkg/session/types"
-	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/proc"
 )
 
@@ -40,10 +39,8 @@ var (
 )
 
 func (p *module) init(ctx context.Context) error {
-	c := configer.ConfigerMustFrom(ctx)
-
-	cf := session.NewConfig()
-	if err := c.Read(p.name, cf); err != nil {
+	cf := newConfig()
+	if err := proc.ReadConfig(p.name, cf); err != nil {
 		return err
 	}
 	p.config = cf
@@ -74,7 +71,11 @@ func (p *module) postStart(ctx context.Context) error {
 	return nil
 }
 
+func newConfig() *session.Config {
+	return session.NewConfig()
+}
+
 func Register() {
 	proc.RegisterHooks(hookOps)
-	proc.RegisterFlags(moduleName, "session", session.NewConfig())
+	proc.AddConfig(moduleName, newConfig(), proc.WithConfigGroup("session"))
 }
