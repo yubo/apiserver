@@ -83,7 +83,8 @@ type TokenAuthenticator struct{}
 var (
 	_token = "123"
 	_user  = &user.DefaultInfo{
-		Name: "system",
+		Name:   "steve",
+		Groups: []string{"dev"},
 	}
 )
 
@@ -93,16 +94,4 @@ func (a *TokenAuthenticator) AuthenticateToken(ctx context.Context, value string
 	}
 
 	return nil, false, nil
-}
-
-func (a *TokenAuthenticator) Name() string {
-	return "custom token authenticator"
-}
-
-func (a *TokenAuthenticator) Priority() int {
-	return authenticator.PRI_TOKEN_CUSTOM
-}
-
-func (a *TokenAuthenticator) Available() bool {
-	return true
 }

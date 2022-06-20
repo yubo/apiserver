@@ -3,27 +3,38 @@
 ## Examples
 
 - Restful
-  * [REST](./examples/rest) with storage
+  * [x] [REST](./examples/rest) with storage
 - Generic
-  * [Hello World](./examples/hello)
-  * [All In One](./examples/all-in-one)
-  * [List](./examples/list)
+  * [x] [Hello World](./examples/hello)
+  * [x] [All In One](./examples/all-in-one)
+  * [x] [List](./examples/list)
 - Audit
-  * [Audit](./examples/audit)
-- Authn & Authz
-  * [Authentication](./examples/authn)
-  * [Authentication Custom](./examples/authn-custom)
-  * [Authorization ABAC](./examples/authz-abac)
-  * [Authorization RBAC](./examples/authz-rbac)
+  * [x] [Audit](./examples/audit)
+- Authenticate
+  * [x] [Authentication Basic](./examples/authn-basic)
+  * [x] [Authentication Bootstrap](./examples/authn-bootstrap)
+  * [x] [Authentication Token Customize](./examples/authn-token-customize)
+  * [x] [Authentication Tokenfile](./examples/authn-tokenfile)
+  * [x] [Authentication X509](./examples/authn-x509)
+- Authorization
+  * [x] [Authorization ABAC](./examples/authz-abac)
+  * [x] [Authorization RBAC](./examples/authz-rbac)
+  * [x] [Authorization Path](./examples/authz-path)
+  * [ ] [Authorization Webhook](./examples/authz-webhook)
 - Stream
-  * [Remotecommand Container](./examples/remotecommand-container)
-  * [Remotecommand Native](./examples/remotecommand-native)
-  * [Websocket Authentication](./examples/websocket-auth)
-  * [Websocket Watch](./examples/websocket-watch)
+  * [x] [Remotecommand Container](./examples/remotecommand-container)
+  * [x] [Remotecommand Native](./examples/remotecommand-native)
+  * [x] [Websocket Authentication](./examples/websocket-auth)
+  * [x] [Websocket Watch](./examples/websocket-watch)
 - OpenAPI
-  * [Swagger](./examples/swagger)
-  * [Custom response](./examples/custom-response)
-  * [Generate SDK](./examples/gen-sdk)
+  * [x] [Swagger](./examples/swagger)
+  * [x] [Custom Response](./examples/custom-response)
+  * [x] [Generate SDK](./examples/gen-sdk)
 - Telemetry
-  * [HTTP OTEL trace](./examples/otel-trace)
-  * [GRPC OTEL trace](./examples/otel-trace-grpc)
+  * [x] [HTTP OTEL Trace](./examples/otel-trace)
+  * [x] [GRPC OTEL Trace](./examples/otel-trace-grpc)
+- Misc
+  * [x] [Gen Sdk](./gen-sdk)
+  * [x] [Models DB](./models-db)
+  * [x] [Models KV](./models-kv)
+  * [x] [Models SQL](./models-sql)

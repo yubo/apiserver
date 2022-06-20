@@ -1,4 +1,4 @@
-module examples/authn-custom
+module examples/authn-basic
 
 go 1.16
 

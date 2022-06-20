@@ -1,4 +1,4 @@
-## apiserver authentication custom
+## apiserver authentication - token customize
 
 ### server
 
@@ -13,9 +13,10 @@ $ go run ./main.go
 ```sh
 $ curl -Ss  -H 'Authorization: bearer 123' http://localhost:8080/hello
 {
- "Name": "system",
+ "Name": "steve",
  "UID": "",
  "Groups": [
+  "dev",
   "system:authenticated"
  ],
  "Extra": null
@@ -26,5 +27,5 @@ $ curl -Ss  -H 'Authorization: bearer 123' http://localhost:8080/hello
 
 ```sh
 go run ./client/main.go --conf ./client/client.conf
-I0617 13:28:35.073152   96903 main.go:41] "webhook" resp={Name:system UID: Groups:[system:authenticated] Extra:map[]}
+I0620 12:24:09.061620   50854 main.go:41] "webhook" resp={Name:steve UID: Groups:[dev system:authenticated] Extra:map[]}
 ```
