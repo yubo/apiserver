@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/rest"
@@ -13,7 +14,6 @@ import (
 	"github.com/yubo/golib/proc"
 
 	_ "github.com/yubo/apiserver/pkg/authentication/register"
-	"github.com/yubo/apiserver/pkg/authentication/user"
 	_ "github.com/yubo/apiserver/pkg/server/register"
 	_ "github.com/yubo/apiserver/plugin/authenticator/x509/register"
 )
