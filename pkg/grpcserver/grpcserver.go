@@ -5,7 +5,6 @@ import (
 
 	"github.com/yubo/apiserver/pkg/config/configgrpc"
 	"github.com/yubo/apiserver/pkg/options"
-	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/proc"
 	"github.com/yubo/golib/util"
 	"go.opentelemetry.io/otel"
@@ -55,11 +54,10 @@ var (
 )
 
 func (p *grpcServer) init(ctx context.Context) error {
-	c := configer.ConfigerMustFrom(ctx)
 	p.ctx, p.cancel = context.WithCancel(ctx)
 
 	cf := &configgrpc.GRPCServerSettings{}
-	if err := c.Read(p.name, cf); err != nil {
+	if err := proc.ReadConfig(p.name, cf); err != nil {
 		return err
 	}
 	p.config = cf

@@ -1,0 +1,24 @@
+apiserver:
+  insecureServing:
+    enabled: true
+    bindPort: 8081
+  secureServing:
+    enabled: false
+
+oidc-provider:
+  rsakey: "../testdata/rsa.pem"
+  openIDConfig: |
+    {
+      "issuer": "http://localhost:8081",
+      "jwks_uri": "http://localhost:8081/.testing/keys"
+    }
+  claim: |
+    {
+      "iss": "http://localhost:8081",
+      "aud": "my-client",
+      "username": "steve",
+      "groups": ["team1", "team2"],
+      "exp": %d
+    }
+
+

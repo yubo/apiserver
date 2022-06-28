@@ -16,14 +16,8 @@
 
 set -e
 
-rm ./*.pem
+rm -f ./*.pem
 
-for N in $(seq 1 3); do
-    ssh-keygen -m pem -t rsa -b 2048 -f rsa_"$N".pem -N ''
-done
+ssh-keygen -m pem -t rsa -b 2048 -f rsa.pem -N ''
 
-for N in $(seq 1 3); do
-    ssh-keygen -m pem -t ecdsa -b 521 -f ecdsa_"$N".pem -N ''
-done
-
-rm ./*.pub
+rm -f ./*.pub

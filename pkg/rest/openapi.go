@@ -38,7 +38,16 @@ func WsRouteBuild(opt *WsOption) {
 }
 
 type GoRestfulContainer interface {
+	// Add a WebService to the Container. It will detect duplicate root paths and exit in that case.
 	Add(*restful.WebService) *restful.Container
+	// Remove a WebService from the Container.
+	Remove(service *restful.WebService) error
+	// Handle registers the handler for the given pattern.
+	// If a handler already exists for pattern, Handle panics.
+	Handle(path string, handler http.Handler)
+	// UnlistedHandle registers the handler for the given pattern, but doesn't list it.
+	// If a handler already exists for pattern, Handle panics.
+	UnlistedHandle(path string, handler http.Handler)
 }
 
 // sys.Filters > opt.Filter > opt.Filters > route.acl > route.filter > route.filters
@@ -471,7 +480,7 @@ func SecuritySchemeRegister(name string, s *spec.SecurityScheme) error {
 		s.AddScope(scope, desc)
 	}
 
-	klog.Infof("add scheme %s", name)
+	klog.V(3).Infof("add scheme %s", name)
 	securitySchemes[name] = s
 	return nil
 }

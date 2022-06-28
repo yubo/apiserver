@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/yubo/apiserver/pkg/options"
-	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/proc"
 	utilerrors "github.com/yubo/golib/util/errors"
 )
@@ -92,10 +91,8 @@ func newConfig() *config {
 }
 
 func (p *authModule) init(ctx context.Context) error {
-	c := configer.ConfigerMustFrom(ctx)
-
 	cf := newConfig()
-	if err := c.Read(moduleName, cf); err != nil {
+	if err := proc.ReadConfig(moduleName, cf); err != nil {
 		return err
 	}
 	p.config = cf

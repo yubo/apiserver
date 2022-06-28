@@ -143,10 +143,35 @@ func (p *serverModule) Config() *server.Config {
 	return p.server
 }
 
-// same as http.Handle()
+// Add a WebService to the Container. It will detect duplicate root paths and exit in that case.
 func (p *serverModule) Add(service *restful.WebService) *restful.Container {
 	return p.server.Handler.GoRestfulContainer.Add(service)
 }
+
+// Remove a WebService from the Container.
+func (p *serverModule) Remove(service *restful.WebService) error {
+	return p.server.Handler.GoRestfulContainer.Remove(service)
+}
+
+// Handle registers the handler for the given pattern.
+// If a handler already exists for pattern, Handle panics.
+func (p *serverModule) Handle(path string, handler http.Handler) {
+	p.server.Handler.NonGoRestfulMux.Handle(path, handler)
+}
+
+// UnlistedHandle registers the handler for the given pattern, but doesn't list it.
+// If a handler already exists for pattern, Handle panics.
+func (p *serverModule) UnlistedHandle(path string, handler http.Handler) {
+	p.server.Handler.NonGoRestfulMux.UnlistedHandle(path, handler)
+}
+
+// ListedPaths is an alphabetically sorted list of paths to be reported at /.
+func (p *serverModule) ListedPaths() []string {
+	return p.server.ListedPathProvider.ListedPaths()
+}
+
+// Filter appends a container FilterFunction. These are called before dispatching
+// a http.Request to a WebService from the container
 func (p *serverModule) Filter(filter restful.FilterFunction) {
 	p.server.Handler.GoRestfulContainer.Filter(filter)
 }

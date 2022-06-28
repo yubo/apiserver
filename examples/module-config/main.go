@@ -6,7 +6,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/proc"
 	"sigs.k8s.io/yaml"
 )
@@ -18,6 +17,10 @@ type config struct {
 	License  string `json:"license" flag:"license" description:"license"`
 }
 
+type module struct {
+	name string
+}
+
 func newConfig() *config {
 	return &config{UserName: "Anonymous"}
 }
@@ -27,8 +30,9 @@ const (
 )
 
 var (
+	_module = &module{name: moduleName}
 	hookOps = []proc.HookOps{{
-		Hook:     start,
+		Hook:     _module.start,
 		Owner:    moduleName,
 		HookNum:  proc.ACTION_START,
 		Priority: proc.PRI_MODULE,
@@ -42,11 +46,9 @@ func main() {
 	}
 }
 
-func start(ctx context.Context) error {
-	c := configer.ConfigerMustFrom(ctx)
-
+func (p *module) start(ctx context.Context) error {
 	cf := newConfig()
-	if err := c.Read(moduleName, cf); err != nil {
+	if err := proc.ReadConfig(p.name, cf); err != nil {
 		return err
 	}
 

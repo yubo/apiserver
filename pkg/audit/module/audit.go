@@ -486,11 +486,10 @@ func (p *module) Backend() audit.Backend {
 }
 
 func (p *module) init(ctx context.Context) (err error) {
-	c := configer.ConfigerMustFrom(ctx)
 	p.ctx, p.cancel = context.WithCancel(ctx)
 
 	cf := &config{}
-	if err := c.Read(moduleName, cf); err != nil {
+	if err := proc.ReadConfig(moduleName, cf); err != nil {
 		return err
 	}
 	p.config = cf

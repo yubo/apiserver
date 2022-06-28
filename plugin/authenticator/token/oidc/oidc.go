@@ -36,7 +36,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -259,14 +258,14 @@ var allowedSigningAlgs = map[string]bool{
 }
 
 func newAuthenticator(opts Options, initVerifier func(ctx context.Context, a *Authenticator, config *oidc.Config)) (*Authenticator, error) {
-	url, err := url.Parse(opts.IssuerURL)
-	if err != nil {
-		return nil, err
-	}
+	//url, err := url.Parse(opts.IssuerURL)
+	//if err != nil {
+	//	return nil, err
+	//}
 
-	if url.Scheme != "https" {
-		return nil, fmt.Errorf("'oidc-issuer-url' (%q) has invalid scheme (%q), require 'https'", opts.IssuerURL, url.Scheme)
-	}
+	//if url.Scheme != "https" {
+	//	return nil, fmt.Errorf("'oidc-issuer-url' (%q) has invalid scheme (%q), require 'https'", opts.IssuerURL, url.Scheme)
+	//}
 
 	if opts.UsernameClaim == "" {
 		return nil, errors.New("no username claim provided")
@@ -285,6 +284,7 @@ func newAuthenticator(opts Options, initVerifier func(ctx context.Context, a *Au
 	}
 
 	var roots *x509.CertPool
+	var err error
 	if opts.CAFile != "" {
 		roots, err = certutil.NewPool(opts.CAFile)
 		if err != nil {

@@ -34,6 +34,8 @@ type config struct {
 
 	SigningAlgs []string `json:"signingAlgs" default:"RS256" flag:"oidc-signing-algs" description:"Comma-separated list of allowed JOSE asymmetric signing algorithms. JWTs with a 'alg' header value not in this list will be rejected. Values are defined by RFC 7518 https://tools.ietf.org/html/rfc7518#section-3.1."`
 
+	// RequiredClaims, if specified, causes the OIDCAuthenticator to verify that all the
+	// required claims key value pairs are present in the ID Token.
 	RequiredClaims map[string]string `json:"requiredClaims" flag:"oidc-required-claim" description:"A key=value pair that describes a required claim in the ID Token. If set, the claim is verified to be present in the ID Token with a matching value. Repeat this flag to specify multiple claims."`
 }
 
