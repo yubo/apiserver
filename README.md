@@ -10,9 +10,11 @@
   * [x] [List](./examples/list)
 - Audit
   * [x] [Audit](./examples/audit)
+  * [ ] [Audit webhook](./examples/audit-webhook)
 - Authenticate
   * [x] [Authentication Basic](./examples/authn-basic)
   * [x] [Authentication Bootstrap](./examples/authn-bootstrap)
+  * [x] [Authentication OIDC](./examples/authn-oidc)
   * [x] [Authentication Token Customize](./examples/authn-token-customize)
   * [x] [Authentication Tokenfile](./examples/authn-tokenfile)
   * [x] [Authentication X509](./examples/authn-x509)
@@ -34,7 +36,7 @@
   * [x] [HTTP OTEL Trace](./examples/otel-trace)
   * [x] [GRPC OTEL Trace](./examples/otel-trace-grpc)
 - Misc
-  * [x] [Gen Sdk](./gen-sdk)
-  * [x] [Models DB](./models-db)
-  * [x] [Models KV](./models-kv)
-  * [x] [Models SQL](./models-sql)
+  * [x] [Models DB](./examples/models-db)
+  * [x] [Models KV](./examples/models-kv)
+  * [x] [Models SQL](./examples/models-sql)
+  * [x] [Module Config](./examples/module-config)
