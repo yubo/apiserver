@@ -26,6 +26,7 @@ import (
 	"io/ioutil"
 	"mime"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"path"
 	"reflect"
@@ -98,6 +99,7 @@ type Request struct {
 	backoff     BackoffManager
 	timeout     time.Duration
 	maxRetries  int
+	debug       bool
 
 	// {c.base}/{pathPrefix}/namespaces/{namespace}//{resource}/{resource-name}/{sub-resource}/{subpath}
 
@@ -175,6 +177,11 @@ func NewRequestWithClient(base *url.URL, content ClientContentConfig, client *ht
 // Verb sets the verb this request will use.
 func (r *Request) Verb(verb string) *Request {
 	r.verb = verb
+	return r
+}
+
+func (r *Request) Debug() *Request {
+	r.debug = true
 	return r
 }
 
@@ -976,13 +983,30 @@ func (r *Request) request(ctx context.Context, fn func(*http.Request, *http.Resp
 			}
 			retryInfo = ""
 		}
+
+		if r.debug {
+			dump, err := httputil.DumpRequestOut(req, true)
+			if err != nil {
+				return err
+			}
+			klog.InfoS("client.Do", "request", string(dump))
+		}
+
 		resp, err := client.Do(req)
+
+		if r.debug && resp != nil {
+			if dump, err := httputil.DumpResponse(resp, true); err == nil {
+				klog.InfoS("client.Do", "response", string(dump))
+			}
+		}
+
 		updateURLMetrics(r, resp, err)
 		if err != nil {
 			r.backoff.UpdateBackoff(r.URL(), err, 0)
 		} else {
 			r.backoff.UpdateBackoff(r.URL(), err, resp.StatusCode)
 		}
+
 		if err != nil {
 			// "Connection reset by peer" or "apiserver is shutting down" are usually a transient errors.
 			// Thus in case of "GET" operations, we simply retry it.

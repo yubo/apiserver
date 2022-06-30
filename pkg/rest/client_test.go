@@ -204,7 +204,6 @@ func validate(testParam TestParam, t *testing.T, body []byte, fakeHandler *utilt
 		}
 	}
 	fakeHandler.ValidateRequest(t, "/test", "GET", nil)
-
 }
 
 func testServerEnv(t *testing.T, statusCode int) (*httptest.Server, *utiltesting.FakeHandler, *api.Status) {

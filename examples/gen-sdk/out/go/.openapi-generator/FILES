@@ -1,17 +1,19 @@
 .gitignore
-.openapi-generator-ignore
 .travis.yml
 README.md
 api/openapi.yaml
+api_default.go
 api_user.go
 client.go
 configuration.go
+docs/DefaultApi.md
 docs/MainCreateUserInput.md
 docs/MainCreateUserOutput.md
 docs/MainGetUsersOutput.md
 docs/MainUpdateUserBody.md
 docs/MainUser.md
 docs/UserApi.md
+docs/VersionInfo.md
 git_push.sh
 go.mod
 go.sum
@@ -20,5 +22,6 @@ model_main_create_user_output.go
 model_main_get_users_output.go
 model_main_update_user_body.go
 model_main_user.go
+model_version_info.go
 response.go
 utils.go

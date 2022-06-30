@@ -172,12 +172,20 @@ type WsRoute struct {
 	//Action string
 	Acl string
 	//--
-	Method       string
-	SubPath      string
-	Desc         string
-	Scope        string
-	Consume      string
-	Produce      string
+	Method  string
+	SubPath string
+	Desc    string
+	Scope   string
+	Consume string
+	Produce string
+
+	// Operation allows you to document what the actual method/function call is of the Route.
+	// Unless called, the operation name is derived from the RouteFunction set using To(..).
+	Operation string
+
+	// Notes is a verbose explanation of the operation behavior. Optional.
+	Notes string
+
 	Deprecated   bool
 	Handle       interface{}
 	Filter       restful.FilterFunction
@@ -236,6 +244,14 @@ func (p *RouteBuilder) Build(wr *WsRoute) error {
 
 	if wr.Produce != "" {
 		b.Produces(wr.Produce)
+	}
+
+	if wr.Operation != "" {
+		b.Operation(wr.Operation)
+	}
+
+	if wr.Notes != "" {
+		b.Notes(wr.Notes)
 	}
 
 	for _, filter := range wr.Filters {

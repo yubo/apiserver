@@ -5,9 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"os/exec"
 
-	"github.com/yubo/apiserver/pkg/cmdcli"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/golib/api/errors"
@@ -19,12 +17,8 @@ import (
 	_ "github.com/yubo/apiserver/pkg/server/register"
 )
 
-// https://github.com/openapitools/openapi-generator
-// https://openapi-generator.tech/docs/generators
-// go run apiserver-gen-sdk.go
-
 const (
-	moduleName = "example.gensdk.openapi"
+	moduleName = "gen-sdk.example"
 	lang       = "python"
 )
 
@@ -84,6 +78,7 @@ type DeleteUserInput struct {
 }
 
 type DeleteUserOutput User
+
 type Module struct {
 	users []*User
 }
@@ -94,11 +89,6 @@ var (
 		Owner:    moduleName,
 		HookNum:  proc.ACTION_START,
 		Priority: proc.PRI_MODULE,
-	}, {
-		Hook:     postStart,
-		Owner:    moduleName,
-		HookNum:  proc.ACTION_START,
-		Priority: proc.PRI_SYS_POSTSTART,
 	}}
 	module Module
 )
@@ -119,52 +109,6 @@ func start(ctx context.Context) error {
 	return nil
 }
 
-func postStart(ctx context.Context) error {
-	defer proc.Shutdown()
-
-	server, ok := options.APIServerFrom(ctx)
-	if !ok {
-		return fmt.Errorf("unable to get API server from the context")
-	}
-
-	fd, err := os.Create("./apidocs.json")
-	if err != nil {
-		return err
-	}
-	defer fd.Close()
-
-	req, err := cmdcli.NewRequestWithConfig(
-		server.Config().LoopbackClientConfig,
-		cmdcli.WithPrefix("/apidocs.json"),
-		cmdcli.WithOutput(fd))
-	if err != nil {
-		return err
-	}
-
-	if err := req.Do(context.Background()); err != nil {
-		return err
-	}
-
-	pwd, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-
-	cmd := exec.Command("docker", "run", "--rm",
-		"-v", pwd+":/local",
-		"openapitools/openapi-generator-cli",
-		"generate",
-		"-i", "/local/apidocs.json",
-		"-g", lang,
-		"-o", "/local/out/"+lang)
-
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	return cmd.Run()
-}
-
 func (p *Module) installWs(http rest.GoRestfulContainer) {
 	rest.SwaggerTagRegister("user", "user Api - swagger api sample")
 	rest.WsRouteBuild(&rest.WsOption{
@@ -175,24 +119,29 @@ func (p *Module) installWs(http rest.GoRestfulContainer) {
 		GoRestfulContainer: http,
 		Routes: []rest.WsRoute{{
 			Method: "POST", SubPath: "/",
-			Desc:   "create user",
-			Handle: p.createUser,
+			Desc:      "create user",
+			Operation: "createUser",
+			Handle:    p.createUser,
 		}, {
 			Method: "GET", SubPath: "/",
-			Desc:   "search/list users",
-			Handle: p.getUsers,
+			Desc:      "search/list users",
+			Operation: "getUsers",
+			Handle:    p.getUsers,
 		}, {
 			Method: "GET", SubPath: "/{user-name}",
-			Desc:   "get user",
-			Handle: p.getUser,
+			Desc:      "get user",
+			Operation: "getUser",
+			Handle:    p.getUser,
 		}, {
 			Method: "PUT", SubPath: "/{user-name}",
-			Desc:   "update user",
-			Handle: p.updateUser,
+			Desc:      "update user",
+			Operation: "updateUser",
+			Handle:    p.updateUser,
 		}, {
 			Method: "DELETE", SubPath: "/{user-name}",
-			Desc:   "delete user",
-			Handle: p.deleteUser,
+			Desc:      "delete user",
+			Operation: "deleteUser",
+			Handle:    p.deleteUser,
 		}},
 	})
 }

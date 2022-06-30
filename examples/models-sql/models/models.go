@@ -30,12 +30,13 @@ func (p *Demo) NewObj() interface{} {
 }
 
 func (p *Demo) Create(ctx context.Context, obj *api.Demo) error {
-	return p.Insert(obj, orm.WithTable(p.Name()))
+	// use snamekcassedName(objs.Name()) as table name
+	return p.Insert(obj)
 }
 
 // Get retrieves the Secret from the db for a given name.
 func (p *Demo) Get(ctx context.Context, name string) (ret *api.Demo, err error) {
-	err = p.Query("select * from `"+p.Name()+"` where name=?", name).Row(&ret)
+	err = p.Query("select * from demo where name=?", name).Row(&ret)
 	return
 }
 
@@ -52,11 +53,12 @@ func (p *Demo) List(ctx context.Context, opts storage.ListOptions) (list []*api.
 }
 
 func (p *Demo) Update(ctx context.Context, obj *api.Demo) error {
-	return p.DB.Update(obj, orm.WithTable(p.Name()))
+	// use snamekcassedName(objs.Name()) as table name
+	return p.DB.Update(obj)
 }
 
 func (p *Demo) Delete(ctx context.Context, name string) error {
-	_, err := p.DB.Exec("delete `"+p.Name()+"` where name=?", name)
+	_, err := p.DB.Exec("delete demo where name=?", name)
 	return err
 }
 

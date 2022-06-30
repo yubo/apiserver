@@ -10,7 +10,7 @@ import (
 	"github.com/yubo/golib/scheme"
 )
 
-// host: 127.0.0.1:8080
+// host: http://127.0.0.1:8080
 func NewRequest(host string, opts ...RequestOption) (*Request, error) {
 	config := &rest.Config{
 		Host: host,
@@ -33,6 +33,9 @@ func NewRequestWithClient(client *rest.RESTClient, opts ...RequestOption) *Reque
 	o := &Request{
 		client: client,
 	}
+
+	// default method
+	o.method = "GET"
 
 	for _, opt := range opts {
 		opt(&o.RequestOptions)
@@ -63,6 +66,10 @@ func (p *Request) Do(ctx context.Context) error {
 
 	if p.prefix != "" {
 		req = req.Prefix(p.prefix)
+	}
+
+	if p.debug {
+		req = req.Debug()
 	}
 
 	if p.param != nil {
@@ -110,12 +117,13 @@ func (p *Request) Do(ctx context.Context) error {
 type RequestOptions struct {
 	method  string
 	prefix  string
+	debug   bool
 	header  http.Header
 	timeout time.Duration       // second
-	param   interface{}         // param variables
+	param   interface{}         // param variables,
 	body    interface{}         // string, []byte, io.Reader, struct{}
-	output  interface{}         //
-	cb      []func(interface{}) //
+	output  interface{}         // io.Writer, struct{}
+	cb      []func(interface{}) // callback after req.Do()
 
 	// Set specific behavior of the client.  If not set http.DefaultClient will be used.
 	httpClient *http.Client
@@ -152,16 +160,33 @@ func WithPrefix(prefix string) RequestOption {
 		o.prefix = prefix
 	}
 }
+func WithDebug() RequestOption {
+	return func(o *RequestOptions) {
+		o.debug = true
+	}
+}
+
+// WithParam: encode by request.ParameterCodec for req.{HEAD, Param, Path}
 func WithParam(param interface{}) RequestOption {
 	return func(o *RequestOptions) {
 		o.param = param
 	}
 }
-func WithBody(body interface{}) RequestOption {
+
+// WithBody makes the request use obj as the body. Optional.
+// If obj is a string, try to read a file of that name.
+// If obj is a []byte, send it directly.
+// If obj is an io.Reader, use it directly.
+// If obj is a runtime.Object, marshal it correctly, and set Content-Type header.
+// If obj is a runtime.Object and nil, do nothing.
+// Otherwise, set an error.
+func WithBody(obj interface{}) RequestOption {
 	return func(o *RequestOptions) {
-		o.body = body
+		o.body = obj
 	}
 }
+
+// WithOutput: output.(io.Writer) or decode.into(output)
 func WithOutput(output interface{}) RequestOption {
 	return func(o *RequestOptions) {
 		o.output = output

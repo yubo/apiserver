@@ -58,7 +58,7 @@ func start(ctx context.Context) error {
 	if e, err := m.Get(ctx, "token-test"); err != nil {
 		return err
 	} else {
-		klog.InfoS("get", "name", e.Name, "data", e.Data)
+		klog.InfoS("get", "id", *e.Id, "name", e.Name, "data", e.Data)
 	}
 
 	secret.Data = "2"
@@ -69,7 +69,7 @@ func start(ctx context.Context) error {
 	if e, err := m.Get(ctx, "token-test"); err != nil {
 		return err
 	} else {
-		klog.InfoS("get", "name", e.Name, "data", e.Data)
+		klog.InfoS("get", "id", *e.Id, "name", e.Name, "data", e.Data)
 	}
 
 	return nil
