@@ -17,6 +17,7 @@ type User struct {
 	Age  int    `json:"age"`
 }
 
+// curl -X GET http://localhost/
 func requestWithRest(server *httptest.Server) error {
 	user := User{}
 
@@ -38,6 +39,7 @@ func requestWithRest(server *httptest.Server) error {
 	return nil
 }
 
+// curl -X GET http://localhost/
 func requestWithCmdcli(server *httptest.Server) error {
 	user := User{}
 

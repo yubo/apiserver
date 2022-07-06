@@ -49,7 +49,7 @@ type TLSSetting struct {
 
 	// ReloadInterval specifies the duration after which the certificate will be reloaded
 	// If not set, it will never be reloaded (optional)
-	ReloadInterval time.Duration `json:"reload_interval"`
+	ReloadInterval time.Duration `json:"reloadInterval"`
 }
 
 // TLSClientSetting contains TLS configurations that are specific to client

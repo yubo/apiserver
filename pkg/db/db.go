@@ -8,6 +8,8 @@ import (
 	"k8s.io/klog/v2"
 )
 
+var _ DB = new(serverDB)
+
 const (
 	DefaultName = "__default__"
 )

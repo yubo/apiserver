@@ -1,0 +1,9 @@
+s3:
+  endpoint: http://localhost:9000
+  accessKeyID: "fw8LrYkEP0lRjMb7"
+  secretAccessKey: "0u57StTemDncw7YQ4RX7yCnzH4mchwbS"
+  bucketName: test
+  tls:
+    insecure: false
+    insecureSkipVerify: false
+    caFile:

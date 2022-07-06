@@ -8,6 +8,7 @@ import (
 	"github.com/yubo/apiserver/pkg/audit"
 	"github.com/yubo/apiserver/pkg/db"
 	"github.com/yubo/apiserver/pkg/dynamiccertificates"
+	"github.com/yubo/apiserver/pkg/s3"
 	"github.com/yubo/apiserver/pkg/server"
 	"github.com/yubo/apiserver/pkg/session/types"
 	"github.com/yubo/golib/proc"
@@ -21,6 +22,7 @@ type key int
 const (
 	_ key = iota
 	dbKey
+	s3Key
 	apiServerKey
 	grpcserverKey
 	authnKey          // Authentication
@@ -150,4 +152,14 @@ func WithClientCA(ctx context.Context, clientCA dynamiccertificates.CAContentPro
 func ClientCAFrom(ctx context.Context) (dynamiccertificates.CAContentProvider, bool) {
 	clientCA, ok := proc.AttrMustFrom(ctx)[clientCAKey].(dynamiccertificates.CAContentProvider)
 	return clientCA, ok
+}
+
+func WithS3Client(ctx context.Context, cli s3.S3Client) {
+	klog.V(5).Infof("attr with S3Client")
+	proc.AttrMustFrom(ctx)[s3Key] = cli
+}
+
+func S3ClientFrom(ctx context.Context) (s3.S3Client, bool) {
+	cli, ok := proc.AttrMustFrom(ctx)[s3Key].(s3.S3Client)
+	return cli, ok
 }

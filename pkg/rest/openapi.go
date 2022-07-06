@@ -48,6 +48,10 @@ type GoRestfulContainer interface {
 	// UnlistedHandle registers the handler for the given pattern, but doesn't list it.
 	// If a handler already exists for pattern, Handle panics.
 	UnlistedHandle(path string, handler http.Handler)
+	// HandlePrefix is like Handle, but matches for anything under the path.  Like a standard golang trailing slash.
+	HandlePrefix(path string, handler http.Handler)
+	// UnlistedHandlePrefix is like UnlistedHandle, but matches for anything under the path.  Like a standard golang trailing slash.
+	UnlistedHandlePrefix(path string, handler http.Handler)
 }
 
 // sys.Filters > opt.Filter > opt.Filters > route.acl > route.filter > route.filters
@@ -186,8 +190,15 @@ type WsRoute struct {
 	// Notes is a verbose explanation of the operation behavior. Optional.
 	Notes string
 
-	Deprecated   bool
-	Handle       interface{}
+	Deprecated bool
+
+	// handle(req *restful.Request, resp *restful.Response)
+	// handle(req *restful.Request, resp *restful.Response, param *struct{})
+	// handle(req *restful.Request, resp *restful.Response, param *struct{}, body *slice)
+	// handle(req *restful.Request, resp *restful.Response, param *struct{}, body *map)
+	// handle(req *restful.Request, resp *restful.Response, param *struct{}, body *struct)
+	Handle interface{}
+
 	Filter       restful.FilterFunction
 	Filters      []restful.FilterFunction
 	ExtraOutput  []ApiOutput

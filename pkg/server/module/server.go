@@ -165,6 +165,16 @@ func (p *serverModule) UnlistedHandle(path string, handler http.Handler) {
 	p.server.Handler.NonGoRestfulMux.UnlistedHandle(path, handler)
 }
 
+// HandlePrefix is like Handle, but matches for anything under the path.  Like a standard golang trailing slash.
+func (p *serverModule) HandlePrefix(path string, handler http.Handler) {
+	p.server.Handler.NonGoRestfulMux.HandlePrefix(path, handler)
+}
+
+// UnlistedHandlePrefix is like UnlistedHandle, but matches for anything under the path.  Like a standard golang trailing slash.
+func (p *serverModule) UnlistedHandlePrefix(path string, handler http.Handler) {
+	p.server.Handler.NonGoRestfulMux.UnlistedHandlePrefix(path, handler)
+}
+
 // ListedPaths is an alphabetically sorted list of paths to be reported at /.
 func (p *serverModule) ListedPaths() []string {
 	return p.server.ListedPathProvider.ListedPaths()

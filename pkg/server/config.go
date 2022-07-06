@@ -128,6 +128,10 @@ type APIServer interface {
 	// UnlistedHandle registers the handler for the given pattern, but doesn't list it.
 	// If a handler already exists for pattern, Handle panics.
 	UnlistedHandle(path string, handler http.Handler)
+	// HandlePrefix is like Handle, but matches for anything under the path.  Like a standard golang trailing slash.
+	HandlePrefix(path string, handler http.Handler)
+	// UnlistedHandlePrefix is like UnlistedHandle, but matches for anything under the path.  Like a standard golang trailing slash.
+	UnlistedHandlePrefix(path string, handler http.Handler)
 	// ListedPaths is an alphabetically sorted list of paths to be reported at /.
 	ListedPaths() []string
 
