@@ -5,16 +5,16 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"path"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/yubo/apiserver/pkg/config/configtls"
+	"k8s.io/klog/v2"
 )
 
 type Config struct {
-	Endpoint        string                     `json:"endpoint" description:"s3 endpoint, e.g. http://localhost:9000"`
+	Endpoint        string                     `json:"endpoint" description:"s3 endpoint, e.g. 127.0.0.1:9000"`
 	AccessKeyID     string                     `json:"accessKeyID"`
 	SecretAccessKey string                     `json:"secretAccessKey"`
 	BucketName      string                     `json:"bucketName"`
@@ -42,40 +42,44 @@ type minioClient struct {
 }
 
 func New(cf *Config) (S3Client, error) {
-	u, err := url.Parse(cf.Endpoint)
-	if err != nil {
-		return nil, err
-	}
-
 	opts := &minio.Options{
 		Creds: credentials.NewStaticV4(cf.AccessKeyID, cf.SecretAccessKey, ""),
 	}
 
-	if u.Scheme == "https" {
+	client := &minioClient{
+		bucketName: cf.BucketName,
+		endpoint:   fmt.Sprintf("http://%s/", cf.Endpoint),
+	}
+
+	if cf.TLS.Insecure {
+		opts.Secure = true
+
 		tlsCfg, err := cf.TLS.LoadTLSConfig()
 		if err != nil {
 			return nil, err
 		}
+
 		transport := http.DefaultTransport.(*http.Transport).Clone()
 		transport.TLSClientConfig = tlsCfg
 		opts.Transport = transport
+
+		client.endpoint = fmt.Sprintf("https://%s/", cf.Endpoint)
 	}
 
-	cli, err := minio.New(u.Host, opts)
+	cli, err := minio.New(cf.Endpoint, opts)
 	if err != nil {
 		return nil, err
 	}
 
 	// check
 	if ok, err := cli.BucketExists(context.TODO(), cf.BucketName); err != nil || !ok {
+		klog.InfoS("bucketexists", "err", err)
 		return nil, fmt.Errorf("s3 bucket[%s] does't exist", cf.BucketName)
 	}
 
-	return &minioClient{
-		Client:     cli,
-		endpoint:   fmt.Sprintf("%s://%s/", u.Scheme, u.Host),
-		bucketName: cf.BucketName,
-	}, nil
+	client.Client = cli
+
+	return client, nil
 }
 
 func (p *minioClient) Put(ctx context.Context, objectPath, contentType string, reader io.Reader, objectSize int64) error {

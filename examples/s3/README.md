@@ -71,7 +71,7 @@ $ curl -X POST -F "uploadFile=@/tmp/test.txt" http://localhost:8080/s3/tmp
 
 get file
 ```sh
-$ curl -L  -X GET  http://localhost:8080/s3/tmp/test.txt
+$ curl -L -X GET http://localhost:8080/s3/tmp/test.txt
 123
 ```
 
