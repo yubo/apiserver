@@ -5,9 +5,7 @@ The models storage supported automigrate db.table with resources object
 #### server
 
 ```sh
-go run ./main.go \
-	--db-driver=sqlite3 \
-	--db-dsn="file:test.db?cache=shared&mode=memory"
+go run -f ./config.yaml
 ```
 
 
@@ -33,7 +31,7 @@ $ curl -X GET http://localhost:8080/api/users/tom
 }
 
 # list
-$ curl -X GET http://localhost:8080/api/users
+$ curl -X GET http://localhost:8080/api/users -G --data-urlencode 'query=name in (tom, jerry),age>15'
 {
  "total": 1,
  "list": [

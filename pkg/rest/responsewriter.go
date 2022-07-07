@@ -2,7 +2,6 @@ package rest
 
 import (
 	"net/http"
-	"reflect"
 
 	"github.com/emicklei/go-restful/v3"
 	"github.com/yubo/apiserver/pkg/responsewriters"
@@ -16,19 +15,19 @@ func DefaultRespWrite(resp *restful.Response, req *http.Request, data interface{
 		return
 	}
 
-	data = reflect.Indirect(reflect.ValueOf(data)).Interface()
-
 	if _, ok := data.(NonParam); ok {
 		resp.WriteHeader(http.StatusOK)
 		return
 	}
 
-	if b, ok := data.([]byte); ok {
-		resp.Write(b)
-		return
+	switch t := data.(type) {
+	case []byte:
+		resp.Write(t)
+	case *[]byte:
+		resp.Write(*t)
+	default:
+		resp.WriteEntity(t)
 	}
-
-	resp.WriteEntity(data)
 }
 
 // wrapper data and error

@@ -473,6 +473,9 @@ func (p *RouteBuilder) buildBody(consume string, body interface{}) *RouteBuilder
 }
 
 func toInterface(v reflect.Value) interface{} {
+	if v.IsNil() {
+		return nil
+	}
 	if v.CanInterface() {
 		return v.Interface()
 	}

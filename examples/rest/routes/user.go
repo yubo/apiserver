@@ -7,6 +7,7 @@ import (
 	"examples/rest/models"
 
 	"github.com/yubo/apiserver/pkg/rest"
+	"k8s.io/klog/v2"
 )
 
 type user struct {
@@ -44,6 +45,7 @@ func (p *user) list(w http.ResponseWriter, req *http.Request, in *api.ListInput)
 	if err != nil {
 		return nil, err
 	}
+	klog.InfoS("list", "opts", opts)
 
 	ret.List, err = p.List(req.Context(), *opts)
 	return ret, err
