@@ -11,4 +11,4 @@ db:
   connMaxLifetime: 0
   driver: sqlite3
   dsn: file:test.db?cache=shared&mode=memory
-  ignoreNotFound: false
+  ignoreNotFound: true
