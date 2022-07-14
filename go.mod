@@ -16,7 +16,6 @@ require (
 	github.com/docker/go-units v0.4.0 // indirect
 	github.com/emicklei/go-restful-openapi/v2 v2.8.0
 	github.com/emicklei/go-restful/v3 v3.7.4
-	github.com/go-ini/ini v1.66.6 // indirect
 	github.com/go-openapi/spec v0.20.5
 	github.com/gogo/protobuf v1.3.2
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da
@@ -27,7 +26,6 @@ require (
 	github.com/hashicorp/golang-lru v0.5.1
 	github.com/imdario/mergo v0.3.5
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
-	github.com/minio/minio-go v6.0.14+incompatible
 	github.com/minio/minio-go/v7 v7.0.30
 	github.com/moby/term v0.0.0-20201216013528-df9cb8a40635
 	github.com/morikuni/aec v1.0.0 // indirect

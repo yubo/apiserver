@@ -19,10 +19,11 @@ import (
 )
 
 var (
-	Scopes              = map[string]string{}
-	securitySchemes     = map[string]*spec.SecurityScheme{}
-	swaggerTags         = []spec.Tag{}
-	DefaultContentTypes = []string{MIME_ALL, MIME_JSON}
+	ScopeCatalog          = map[string]string{}
+	securitySchemeCatalog = map[string]*spec.SecurityScheme{}
+	respWriterCatalog     = map[string]RespWriter{}
+	swaggerTags           = []spec.Tag{}
+	DefaultContentTypes   = []string{MIME_ALL, MIME_JSON}
 )
 
 func WsRouteBuild(opt *WsOption) {
@@ -66,7 +67,7 @@ type WsOption struct {
 	PrefixPath         string
 	Tags               []string
 	Routes             []WsRoute
-	RespWrite          func(resp *restful.Response, req *http.Request, data interface{}, err error)
+	RespWriter         RespWriter
 	GoRestfulContainer GoRestfulContainer
 	ParameterCodec     request.ParameterCodec
 }
@@ -102,6 +103,10 @@ func (p *WsOption) build() error {
 		return err
 	}
 
+	if p.RespWriter == nil {
+		p.RespWriter = DefaultRespWriter
+	}
+
 	rb := NewRouteBuilder(p.Ws, p.ParameterCodec)
 
 	for i := range p.Routes {
@@ -122,18 +127,13 @@ func (p *WsOption) build() error {
 			route.Tags = p.Tags
 		}
 
-		if route.RespWrite == nil {
-			if p.RespWrite != nil {
-				route.RespWrite = p.RespWrite
-			} else {
-				route.RespWrite = DefaultRespWrite
-			}
+		if route.RespWriter == nil {
+			route.RespWriter = p.RespWriter
 		}
 
 		if err := rb.Build(route); err != nil {
 			return err
 		}
-		klog.InfoS("route register", "method", route.Method, "path", path.Join(p.Path, route.SubPath))
 	}
 	return nil
 
@@ -199,15 +199,14 @@ type WsRoute struct {
 	// handle(req *restful.Request, resp *restful.Response, param *struct{}, body *struct)
 	Handle interface{}
 
-	Filter       restful.FilterFunction
-	Filters      []restful.FilterFunction
-	ExtraOutput  []ApiOutput
-	Tags         []string
-	RespWrite    func(resp *restful.Response, req *http.Request, data interface{}, err error)
-	InputParam   interface{} // pri > handle
-	InputPayload interface{} // pri > handle
-	Output       interface{} // pri > handle
-	// Handle      restful.RouteFunction
+	Filter      restful.FilterFunction
+	Filters     []restful.FilterFunction
+	ExtraOutput []ApiOutput
+	Tags        []string
+	RespWriter  RespWriter
+	InputParam  interface{} // pri > handle
+	InputBody   interface{} // pri > handle
+	Output      interface{} // pri > handle
 }
 
 type ApiOutput struct {
@@ -244,6 +243,10 @@ func (p *RouteBuilder) Build(wr *WsRoute) error {
 		panic("unsupported method " + wr.Method)
 	}
 	p.rb = b
+
+	if wr.Deprecated {
+		b.Deprecate()
+	}
 
 	if wr.Scope != "" {
 		b.Metadata(SecurityDefinitionKey, wr.Scope)
@@ -299,7 +302,7 @@ func (p *RouteBuilder) registerHandle(b *restful.RouteBuilder, wr *WsRoute) erro
 	// handle(req *restful.Request, resp *restful.Response, param *struct{}, body *map)
 	// handle(req *restful.Request, resp *restful.Response, param *struct{}, body *struct)
 	// handle(...) error
-	// handle(...) (out struct{}, err error)
+	// handle(...) (out *struct{}, err error)
 
 	// func (f HandlerFunc) ServeHTTP(w ResponseWriter, r *Request) {
 	// handle(w ResponseWriter, r *Request, param *struct{}, body *struct{})
@@ -310,7 +313,7 @@ func (p *RouteBuilder) registerHandle(b *restful.RouteBuilder, wr *WsRoute) erro
 	numIn := t.NumIn()
 	numOut := t.NumOut()
 
-	if !((numIn == 2 || numIn == 3 || numIn == 4) && (numOut == 0 || numOut == 1 || numOut == 2)) {
+	if !((numIn >= 2 && numIn <= 4) && numOut <= 2) {
 		return fmt.Errorf("%s handle in num %d out num %d is Invalid", t.Name(), numIn, numOut)
 	}
 
@@ -325,8 +328,9 @@ func (p *RouteBuilder) registerHandle(b *restful.RouteBuilder, wr *WsRoute) erro
 	var paramType reflect.Type
 	var bodyType reflect.Type
 
-	// 3, 4
+	// build input param
 	if numIn > 2 {
+		inputParam := wr.InputParam
 		paramType = t.In(2)
 
 		switch paramType.Kind() {
@@ -340,15 +344,17 @@ func (p *RouteBuilder) registerHandle(b *restful.RouteBuilder, wr *WsRoute) erro
 		}
 
 		if wr.InputParam == nil {
-			p.buildParam(reflect.New(paramType).Elem().Interface())
+			inputParam = reflect.New(paramType).Elem().Interface()
+		}
+
+		if inputParam != nil {
+			p.buildParam(inputParam)
 		}
 	}
-	if wr.InputParam != nil {
-		p.buildParam(wr.InputParam)
-	}
 
-	// 4
+	// build intput body
 	if numIn > 3 {
+		inputBody := wr.InputBody
 		bodyType = t.In(3)
 
 		if bodyType.Kind() != reflect.Ptr {
@@ -362,26 +368,30 @@ func (p *RouteBuilder) registerHandle(b *restful.RouteBuilder, wr *WsRoute) erro
 			return fmt.Errorf("just support ptr to struct|slice|map")
 		}
 
-		if wr.InputPayload == nil {
-			p.buildBody(wr.Consume, reflect.New(bodyType).Elem().Interface())
+		if wr.InputBody == nil {
+			inputBody = reflect.New(bodyType).Elem().Interface()
 		}
-	}
-	if wr.InputPayload != nil {
-		p.buildBody(wr.Consume, wr.InputPayload)
+
+		if inputBody != nil {
+			p.buildBody(wr.Consume, inputBody)
+		}
 	}
 
-	if numOut == 2 {
-		ot := t.Out(0)
-		if ot.Kind() == reflect.Ptr {
-			ot = ot.Elem()
+	// build output head & body
+	{
+		output := wr.Output
+		if numOut == 2 {
+			ot := t.Out(0)
+			if ot.Kind() == reflect.Ptr {
+				ot = ot.Elem()
+			}
+
+			if output == nil {
+				output = reflect.New(ot).Elem().Interface()
+			}
 		}
-		output := reflect.New(ot).Elem().Interface()
-		if wr.Output == nil {
-			b.Returns(http.StatusOK, "OK", output)
-		}
-	}
-	if wr.Output != nil {
-		b.Returns(http.StatusOK, "OK", wr.Output)
+		wr.RespWriter.AddRoute(wr.Method, path.Join(p.ws.RootPath(), wr.SubPath))
+		b.Returns(http.StatusOK, "OK", output)
 	}
 
 	handler := func(req *restful.Request, resp *restful.Response) {
@@ -430,12 +440,12 @@ func (p *RouteBuilder) registerHandle(b *restful.RouteBuilder, wr *WsRoute) erro
 		}
 
 		if numOut == 2 {
-			wr.RespWrite(resp, req.Request, toInterface(ret[0]), toError(ret[1]))
+			wr.RespWriter.RespWrite(resp, req.Request, toInterface(ret[0]), toError(ret[1]))
 			return
 		}
 
 		if numOut == 1 {
-			wr.RespWrite(resp, req.Request, NonParam{}, toError(ret[0]))
+			wr.RespWriter.RespWrite(resp, req.Request, nil, toError(ret[0]))
 		}
 	}
 
@@ -479,7 +489,6 @@ func toInterface(v reflect.Value) interface{} {
 	if v.CanInterface() {
 		return v.Interface()
 	}
-
 	return nil
 }
 
@@ -488,30 +497,40 @@ func toError(v reflect.Value) error {
 		e, _ := v.Interface().(error)
 		return e
 	}
-
 	return nil
 }
 
 func ScopeRegister(scope, description string) {
-	Scopes[scope] = description
+	ScopeCatalog[scope] = description
 }
 
 func SecurityScheme(ssoAddr string) *spec.SecurityScheme {
 	return spec.OAuth2AccessToken(ssoAddr+"/o/oauth2/authorize", ssoAddr+"/o/oauth2/token")
 }
 
-func SecuritySchemeRegister(name string, s *spec.SecurityScheme) error {
-	if securitySchemes[name] != nil {
-		return fmt.Errorf("SecuritySchemeRegister name %s exists", name)
+func ResponseWriterRegister(w RespWriter) error {
+	name := w.Name()
+	if respWriterCatalog[name] != nil {
+		return fmt.Errorf("ResponseWriterRegister %s exists", name)
 	}
 
-	for scope, desc := range Scopes {
+	klog.V(3).Infof("add resp writer %s", name)
+	respWriterCatalog[name] = w
+	return nil
+}
+
+func SecuritySchemeRegister(name string, s *spec.SecurityScheme) error {
+	if securitySchemeCatalog[name] != nil {
+		return fmt.Errorf("SecuritySchemeRegister %s exists", name)
+	}
+
+	for scope, desc := range ScopeCatalog {
 		klog.Infof("scope %s %s", scope, desc)
 		s.AddScope(scope, desc)
 	}
 
 	klog.V(3).Infof("add scheme %s", name)
-	securitySchemes[name] = s
+	securitySchemeCatalog[name] = s
 	return nil
 }
 
@@ -561,8 +580,7 @@ func SwaggerTagRegister(name, desc string) {
 	}})
 }
 
-func InstallApiDocs(apiPath string, container *restful.Container,
-	infoProps spec.InfoProps, securitySchemes []SchemeConfig) error {
+func InstallApiDocs(apiPath string, container *restful.Container, infoProps spec.InfoProps, securitySchemes []SchemeConfig) error {
 	// register scheme to openapi
 	for _, v := range securitySchemes {
 		scheme, err := v.SecurityScheme()
@@ -581,80 +599,57 @@ func InstallApiDocs(apiPath string, container *restful.Container,
 		// you control what services are visible
 		WebServices:                   wss,
 		APIPath:                       apiPath,
-		PostBuildSwaggerObjectHandler: getSwaggerHandler(wss, infoProps),
+		PostBuildSwaggerObjectHandler: genSwaggerHandler(wss, infoProps),
 	})
 	container.Add(ws)
 	return nil
 }
 
-func getSwaggerHandler(wss []*restful.WebService, infoProps spec.InfoProps) func(*spec.Swagger) {
+func genSwaggerHandler(wss []*restful.WebService, infoProps spec.InfoProps) func(*spec.Swagger) {
 	return func(s *spec.Swagger) {
-		s.Info = &spec.Info{InfoProps: infoProps}
-		s.Tags = swaggerTags
-		s.SecurityDefinitions = securitySchemes
-
-		if len(s.SecurityDefinitions) == 0 {
-			return
+		for _, v := range respWriterCatalog {
+			v.SwaggerHandler(s)
 		}
 
-		// loop through all registerd web services
-		for _, ws := range wss {
-			for _, route := range ws.Routes() {
-				// route metadata for a SecurityDefinition
-				secdefn, ok := route.Metadata[SecurityDefinitionKey]
-				if !ok {
-					continue
-				}
+		swaggerWithSecurityScheme(wss, infoProps, s)
+	}
+}
 
-				scope, ok := secdefn.(string)
-				if !ok {
-					continue
-				}
+func swaggerWithSecurityScheme(wss []*restful.WebService, infoProps spec.InfoProps, s *spec.Swagger) {
 
-				// grab path and path item in openapi spec
-				path, err := s.Paths.JSONLookup(strings.TrimRight(route.Path, "/"))
-				if err != nil {
-					klog.Warningf("skipping Security openapi spec for %s:%s, %s", route.Method, route.Path, err.Error())
-					path, err = s.Paths.JSONLookup(route.Path[:len(route.Path)-1])
-					if err != nil {
-						klog.Warningf("skipping Security openapi spec for %s:%s, %s", route.Method, route.Path[:len(route.Path)-1], err.Error())
-						continue
-					}
-				}
-				pItem := path.(*spec.PathItem)
+	s.Info = &spec.Info{InfoProps: infoProps}
+	s.Tags = swaggerTags
+	s.SecurityDefinitions = securitySchemeCatalog
 
-				// Update respective path Option based on method
-				var pOption *spec.Operation
-				switch method := strings.ToLower(route.Method); method {
-				case "get":
-					pOption = pItem.Get
-				case "post":
-					pOption = pItem.Post
-				case "patch":
-					pOption = pItem.Patch
-				case "delete":
-					pOption = pItem.Delete
-				case "put":
-					pOption = pItem.Put
-				case "head":
-					pOption = pItem.Head
-				case "options":
-					pOption = pItem.Options
-				default:
-					// unsupported method
-					klog.Warningf("skipping Security openapi spec for %s:%s, unsupported method '%s'", route.Method, route.Path, route.Method)
-					continue
-				}
-
-				// update the pOption with security entry
-				for k := range s.SecurityDefinitions {
-					pOption.SecuredWith(k, scope)
-				}
-			}
-		}
-
+	if len(s.SecurityDefinitions) == 0 {
+		return
 	}
 
+	// loop through all registerd web services
+	for _, ws := range wss {
+		for _, route := range ws.Routes() {
+			// route metadata for a SecurityDefinition
+			secdefn, ok := route.Metadata[SecurityDefinitionKey]
+			if !ok {
+				continue
+			}
+
+			scope, ok := secdefn.(string)
+			if !ok {
+				continue
+			}
+
+			operation, err := OperationFrom(s, route.Method, route.Path)
+			if err != nil {
+				panic(err)
+			}
+
+			// update the operation with security entry
+			for k := range s.SecurityDefinitions {
+				operation.SecuredWith(k, scope)
+			}
+		}
+	}
 }
 
 type SchemeConfig struct {

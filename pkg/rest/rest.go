@@ -27,3 +27,7 @@ const (
 	SecurityTypeApplication SecurityType = "application"
 	SecurityTypeAccessCode  SecurityType = "accessCode" // same as oauth2
 )
+
+func init() {
+	ResponseWriterRegister(DefaultRespWriter)
+}

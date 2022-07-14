@@ -7,10 +7,10 @@ import (
 )
 
 type User struct {
-	Name      string `sql:",where,primary_key,size=32"`
-	Age       int
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	Name      string    `sql:",where,primary_key,size=32" json:"name" description:"user name"`
+	Age       int       `json:"age" description:"user age"`
+	CreatedAt time.Time `json:"createdAt" description:"created at"`
+	UpdatedAt time.Time `json:"updatedAt" description:"updated at"`
 }
 
 type CreateUserInput struct {
@@ -31,8 +31,10 @@ type ListInput struct {
 }
 
 type ListUserOutput struct {
-	Total int64   `json:"total"`
-	List  []*User `json:"list"`
+	List        []User `json:"list"`
+	CurrentPage int    `json:"currentPage"`
+	PageSize    int    `json:"pageSize"`
+	Total       int64  `json:"total"`
 }
 
 type GetUserInput struct {

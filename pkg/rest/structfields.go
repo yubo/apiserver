@@ -3,6 +3,7 @@ package rest
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 	"sync"
 	"unicode"
@@ -15,37 +16,30 @@ var fieldCache sync.Map // map[reflect.Type]structFields
 // A field represents a single field found in a struct.
 // `param:"query,required,hidden" format:"password" description:"aaa"`
 type field struct {
-	tagOpt
-	typ   reflect.Type
+	fieldProps
+	Type  reflect.Type
 	index []int
 }
 
 func (p field) String() string {
-	return fmt.Sprintf("key %s index %v %s", p.key, p.index, p.tagOpt)
+	return fmt.Sprintf("key %s index %v %s", p.Key, p.index, p.fieldProps)
 }
 
-func (p field) Key() string {
-	if p.name != "" {
-		return p.name
-	}
+type fieldProps struct {
+	Key string
 
-	return p.key
-}
+	ParamType string // param:<type>
+	Skip      bool   // param:"-"
+	Hidden    bool   // param:<type>[,hiddent]
+	Required  bool   // param:<type>[,required]
 
-type tagOpt struct {
-	name        string
-	key         string
-	paramType   string
-	format      string
-	skip        bool
-	hidden      bool
-	required    bool
-	description string
-}
-
-func (p tagOpt) String() string {
-	return fmt.Sprintf("name=%s key=%v paramType=%s skip=%v required=%v hidden=%v format=%s description=%s",
-		p.name, p.key, p.paramType, p.skip, p.required, p.hidden, p.format, p.description)
+	Name        string   // name:<name>
+	Format      string   // format:<format>    e.g. password
+	Description string   // description:<desc>
+	Enum        []string // enum:<a|b|c>
+	Maximum     *float64 // maximum: 500
+	Minimum     *float64 // minimum: 10
+	Default     string   // default:<default>
 }
 
 type structFields struct {
@@ -76,7 +70,7 @@ func cachedTypeFields(t reflect.Type) structFields {
 func typeFields(t reflect.Type) structFields {
 	// Anonymous fields to explore at the current level and the next.
 	current := []field{}
-	next := []field{{typ: t}}
+	next := []field{{Type: t}}
 
 	// Count of queued names for current level and the next.
 	var count, nextCount map[reflect.Type]int
@@ -95,14 +89,14 @@ func typeFields(t reflect.Type) structFields {
 		count, nextCount = nextCount, map[reflect.Type]int{}
 
 		for _, f := range current {
-			if visited[f.typ] {
+			if visited[f.Type] {
 				continue
 			}
-			visited[f.typ] = true
+			visited[f.Type] = true
 
 			// Scan f.typ for fields to include.
-			for i := 0; i < f.typ.NumField(); i++ {
-				sf := f.typ.Field(i)
+			for i := 0; i < f.Type.NumField(); i++ {
+				sf := f.Type.Field(i)
 				isUnexported := sf.PkgPath != ""
 				if sf.Anonymous {
 					t := sf.Type
@@ -120,8 +114,8 @@ func typeFields(t reflect.Type) structFields {
 					continue
 				}
 
-				opt := getTagOpt(sf)
-				if opt.skip {
+				props := getFieldProps(sf)
+				if props.Skip {
 					continue
 				}
 				index := make([]int, len(f.index)+1)
@@ -135,15 +129,15 @@ func typeFields(t reflect.Type) structFields {
 				}
 
 				// Record found field and index sequence.
-				if opt.name != "" || !sf.Anonymous || ft.Kind() != reflect.Struct {
+				if props.Name != "" || !sf.Anonymous || ft.Kind() != reflect.Struct {
 					field := field{
-						tagOpt: opt,
-						index:  index,
-						typ:    ft,
+						fieldProps: props,
+						index:      index,
+						Type:       ft,
 					}
 
 					fields = append(fields, field)
-					if count[f.typ] > 1 {
+					if count[f.Type] > 1 {
 						// If there were multiple instances, add a second,
 						// so that the annihilation code will see a duplicate.
 						// It only cares about the distinction between 1 or 2,
@@ -156,7 +150,7 @@ func typeFields(t reflect.Type) structFields {
 				// Record new anonymous struct to explore in next round.
 				nextCount[ft]++
 				if nextCount[ft] == 1 {
-					next = append(next, field{index: index, typ: ft})
+					next = append(next, field{index: index, Type: ft})
 				}
 			}
 		}
@@ -164,10 +158,10 @@ func typeFields(t reflect.Type) structFields {
 
 	nameIndex := make(map[string]int, len(fields))
 	for i, field := range fields {
-		if _, ok := nameIndex[field.key]; ok {
-			panicType(field.typ, fmt.Sprintf("duplicate field %s", field.key))
+		if _, ok := nameIndex[field.Key]; ok {
+			panicType(field.Type, fmt.Sprintf("duplicate field %s", field.Key))
 		}
-		nameIndex[field.key] = i
+		nameIndex[field.Key] = i
 	}
 	return structFields{fields, nameIndex}
 }
@@ -228,49 +222,70 @@ func (o tagOptions) Contains(optionName string) bool {
 	return false
 }
 
-// `param:"(path|header|param|data)?(,required|hidden)?"`
+// `param:"(path|header|param)?(,required|hidden)?"`
 // `name:"keyName"`
 // `json:"keyName"`
 // `format:"password"`
 // `description:"ooxxoo"`
 // func getTags(ff reflect.StructField) (name, paramType, format string, skip, bool) {
-func getTagOpt(sf reflect.StructField) (opt tagOpt) {
+func getFieldProps(sf reflect.StructField) (opt fieldProps) {
 	if sf.Anonymous {
 		return
 	}
 
 	tag := sf.Tag.Get("param")
 	if tag == "-" || tag == "" {
-		opt.skip = true
+		opt.Skip = true
 		return
 	}
 
 	typ, opts := parseTag(tag)
 	if opts.Contains("required") {
-		opt.required = true
+		opt.Required = true
 	}
 	if opts.Contains("hidden") {
-		opt.hidden = true
+		opt.Hidden = true
+	}
+	opt.ParamType = typ
+
+	opt.Name = sf.Tag.Get("name")
+	opt.Format = sf.Tag.Get("format")
+	opt.Description = sf.Tag.Get("description")
+	opt.Default = sf.Tag.Get("default")
+
+	if v := sf.Tag.Get("enum"); v != "" {
+		opt.Enum = strings.Split(v, "|")
 	}
 
-	opt.paramType = typ
-	opt.name = sf.Tag.Get("name")
-	opt.format = sf.Tag.Get("format")
-	opt.description = sf.Tag.Get("description")
+	if v := sf.Tag.Get("maximum"); v != "" {
+		f, err := strconv.ParseFloat(v, 64)
+		if err != nil {
+			panic(err)
+		}
+		opt.Maximum = &f
+	}
+
+	if v := sf.Tag.Get("minimum"); v != "" {
+		f, err := strconv.ParseFloat(v, 64)
+		if err != nil {
+			panic(err)
+		}
+		opt.Minimum = &f
+	}
 
 	switch typ {
 	case PathType:
-		opt.key = strings.ToLower(sf.Name)
+		opt.Key = strings.ToLower(sf.Name)
 	case HeaderType:
-		opt.key = strings.ToUpper(sf.Name)
+		opt.Key = strings.ToUpper(sf.Name)
 	case QueryType:
-		opt.key = util.LowerCamelCasedName(sf.Name)
+		opt.Key = util.LowerCamelCasedName(sf.Name)
 	default:
 		panicType(sf.Type, fmt.Sprintf("unknown param type=%s", typ))
 	}
 
-	if opt.name != "" {
-		opt.key = opt.name
+	if opt.Name != "" {
+		opt.Key = opt.Name
 	}
 
 	return

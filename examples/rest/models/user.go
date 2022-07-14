@@ -13,7 +13,7 @@ type User interface {
 	Name() string
 	NewObj() interface{}
 
-	List(ctx context.Context, opts storage.ListOptions) ([]*api.User, error)
+	List(ctx context.Context, opts storage.ListOptions) ([]api.User, error)
 	Get(ctx context.Context, name string) (*api.User, error)
 	Create(ctx context.Context, obj *api.User) (*api.User, error)
 	Update(ctx context.Context, obj *api.UpdateUserInput) (*api.User, error)
@@ -51,7 +51,7 @@ func (p *user) Get(ctx context.Context, name string) (ret *api.User, err error) 
 }
 
 // List lists all Users in the indexer.
-func (p *user) List(ctx context.Context, opts storage.ListOptions) (list []*api.User, err error) {
+func (p *user) List(ctx context.Context, opts storage.ListOptions) (list []api.User, err error) {
 	err = p.store.List(ctx, opts, &list, opts.Total)
 	return
 }

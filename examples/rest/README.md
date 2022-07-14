@@ -13,7 +13,7 @@ go run -f ./config.yaml
 
 ```shell
 # create
-$ curl -X POST -H 'Content-Type:application/json' http://localhost:8080/api/users -d '{"name":"tom", "age": 16}'
+$ curl -X POST -H 'Content-Type:application/json' http://localhost:8080/api/v1/users -d '{"name":"tom", "age": 16}'
 {
  "Name": "tom",
  "Age": 16,
@@ -22,7 +22,7 @@ $ curl -X POST -H 'Content-Type:application/json' http://localhost:8080/api/user
 }
 
 # get
-$ curl -X GET http://localhost:8080/api/users/tom
+$ curl -X GET http://localhost:8080/api/v1/users/tom
 {
  "Name": "tom",
  "Age": 16,
@@ -30,8 +30,21 @@ $ curl -X GET http://localhost:8080/api/users/tom
  "UpdatedAt": "2022-01-09T13:11:29.472817364+08:00"
 }
 
+# use v2 as umi styles
+$ curl -X GET http://localhost:8080/api/v2/users/tom
+{
+ "data": {
+  "name": "tom",
+  "age": 16,
+  "createdAt": "2022-07-15T00:39:53.527575+08:00",
+  "updatedAt": "2022-07-15T00:39:53.527575+08:00"
+ },
+ "host": "localhost",
+ "success": true
+}
+
 # list
-$ curl -X GET http://localhost:8080/api/users -G --data-urlencode 'query=name in (tom, jerry),age>15'
+$ curl -X GET http://localhost:8080/api/v1/users -G --data-urlencode 'query=name in (tom, jerry),age>15'
 {
  "total": 1,
  "list": [
@@ -45,7 +58,7 @@ $ curl -X GET http://localhost:8080/api/users -G --data-urlencode 'query=name in
 }
 
 # update
-$ curl -X PUT -H 'Content-Type:application/json' http://localhost:8080/api/users/tom -d '{"age": 17}'
+$ curl -X PUT -H 'Content-Type:application/json' http://localhost:8080/api/v1/users/tom -d '{"age": 17}'
 {
  "Name": "tom",
  "Age": 17,
@@ -54,7 +67,7 @@ $ curl -X PUT -H 'Content-Type:application/json' http://localhost:8080/api/users
 }
 
 # delete
-$ curl -X DELETE http://localhost:8080/api/users/tom
+$ curl -X DELETE http://localhost:8080/api/v1/users/tom
 {
  "Name": "tom",
  "Age": 17,
@@ -62,7 +75,7 @@ $ curl -X DELETE http://localhost:8080/api/users/tom
  "UpdatedAt": "2022-01-09T13:13:11.12705333+08:00"
 }
 
-$ curl -X GET http://localhost:8080/api/users
+$ curl -X GET http://localhost:8080/api/v1/users
 {
  "total": 0,
  "list": null

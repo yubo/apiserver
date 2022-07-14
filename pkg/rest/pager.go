@@ -37,10 +37,10 @@ func SetLimitPage(def, max int) {
 type Pagination struct {
 	Offset      int     `param:"query,hidden" description:"offset, priority is more than currentPage"`
 	Limit       int     `param:"query,hidden" description:"limit, priority is more than pageSize"`
-	PageSize    int     `param:"query" description:"page size"`
-	CurrentPage int     `param:"query" description:"current page number, start at 1(defualt)"`
+	PageSize    int     `param:"query" description:"page size" default:"10" maximum:"500"`
+	CurrentPage int     `param:"query" description:"current page number, start at 1(defualt)" default:"1"`
 	Sorter      *string `param:"query" description:"column name"`
-	Order       *string `param:"query" description:"asc(default)/desc"`
+	Order       *string `param:"query" description:"asc(default)/desc" default:"asc" enum:"asc|desc"`
 	Dump        bool    `param:"query,hidden" description:""`
 }
 

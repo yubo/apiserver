@@ -9,6 +9,7 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/go-openapi/spec"
 	"github.com/yubo/golib/util"
 	"k8s.io/klog/v2"
 )
@@ -97,4 +98,57 @@ func printStr(in string) string {
 		}
 		return '.'
 	}, in)
+}
+
+// github.com/emicklei/go-restful-openapi/definition_builder.go
+func KeyFrom(st reflect.Type, modelTypeNameFn func(t reflect.Type) (string, bool)) string {
+	key := st.String()
+	if modelTypeNameFn != nil {
+		if name, ok := modelTypeNameFn(st); ok {
+			key = name
+		}
+	}
+	if len(st.Name()) == 0 { // unnamed type
+		// If it is an array, remove the leading []
+		key = strings.TrimPrefix(key, "[]")
+		// Swagger UI has special meaning for [
+		key = strings.Replace(key, "[]", "||", -1)
+	}
+	return key
+}
+
+func OperationFrom(s *spec.Swagger, method, path string) (*spec.Operation, error) {
+	p, err := s.Paths.JSONLookup(strings.TrimRight(path, "/"))
+	if err != nil {
+		return nil, err
+	}
+
+	var ret *spec.Operation
+	pathItem := p.(*spec.PathItem)
+
+	switch strings.ToLower(method) {
+	case "get":
+		ret = pathItem.Get
+	case "post":
+		ret = pathItem.Post
+	case "patch":
+		ret = pathItem.Patch
+	case "delete":
+		ret = pathItem.Delete
+	case "put":
+		ret = pathItem.Put
+	case "head":
+		ret = pathItem.Head
+	case "options":
+		ret = pathItem.Options
+	default:
+		// unsupported method
+		return nil, fmt.Errorf("skipping Security openapi spec for %s:%s, unsupported method '%s'", method, path, method)
+	}
+
+	if ret == nil {
+		return nil, fmt.Errorf("can't found %s:%s", method, path)
+	}
+
+	return ret, nil
 }

@@ -60,15 +60,15 @@ func setFieldValue(p *request.Parameters, f *field, dstValue reflect.Value) erro
 	var value string
 	var ok bool
 
-	key := f.name
+	key := f.Name
 	if key == "" {
-		key = f.key
+		key = f.Key
 	}
 
-	switch f.paramType {
+	switch f.ParamType {
 	case PathType:
 		if value, ok = p.Path[key]; !ok {
-			if f.required {
+			if f.Required {
 				return fmt.Errorf("%s must be set", key)
 			}
 			return nil
@@ -76,7 +76,7 @@ func setFieldValue(p *request.Parameters, f *field, dstValue reflect.Value) erro
 		data = []string{value}
 	case HeaderType:
 		if value = p.Header.Get(key); value == "" {
-			if f.required {
+			if f.Required {
 				return fmt.Errorf("%s must be set", key)
 			}
 			return nil
@@ -84,13 +84,13 @@ func setFieldValue(p *request.Parameters, f *field, dstValue reflect.Value) erro
 		data = []string{value}
 	case QueryType:
 		if data, ok = p.Query[key]; !ok {
-			if f.required {
+			if f.Required {
 				return fmt.Errorf("%s must be set", key)
 			}
 			return nil
 		}
 	default:
-		panicType(f.typ, "invalid opt type")
+		panicType(f.Type, "invalid opt type")
 	}
 
 	if err := util.SetValue(dstValue, data); err != nil {
@@ -119,24 +119,24 @@ func encodeParameters(obj interface{}) (*request.Parameters, error) {
 
 	for i, f := range fields.list {
 		klog.V(11).InfoS("fileds info", "index", i, "type", rv.Type(),
-			"name", f.name, "key", f.key, "paramType", f.paramType,
-			"skip", f.skip, "required", f.required, "hidden", f.hidden,
-			"format", f.format)
+			"name", f.Name, "key", f.Key, "paramType", f.ParamType,
+			"skip", f.Skip, "required", f.Required, "hidden", f.Hidden,
+			"format", f.Format)
 		subv, err := getSubv(rv, f.index, false)
 		if err != nil || subv.IsZero() {
-			if f.required {
-				return nil, fmt.Errorf("%v must be set", f.key)
+			if f.Required {
+				return nil, fmt.Errorf("%v must be set", f.Key)
 			}
 			continue
 		}
 
-		key := f.Key()
+		key := f.Key
 		data, err := util.GetValue(subv)
 		if err != nil {
 			return nil, err
 		}
 
-		switch f.paramType {
+		switch f.ParamType {
 		case PathType:
 			params.Path[key] = data[0]
 		case QueryType:
@@ -148,7 +148,7 @@ func encodeParameters(obj interface{}) (*request.Parameters, error) {
 				params.Header.Add(key, data[i])
 			}
 		default:
-			return nil, fmt.Errorf("invalid kind: %s %s", f.paramType, key)
+			return nil, fmt.Errorf("invalid kind: %s %s", f.ParamType, key)
 		}
 	}
 
@@ -174,26 +174,24 @@ func buildParameters(rb *restful.RouteBuilder, obj interface{}) {
 func setRouteBuilderParam(rb *restful.RouteBuilder, f *field) error {
 	var parameter *restful.Parameter
 
-	switch f.paramType {
+	switch f.ParamType {
 	case PathType:
-		parameter = restful.PathParameter(f.key, f.description)
+		parameter = restful.PathParameter(f.Key, f.Description)
 	case QueryType:
-		if f.hidden {
+		if f.Hidden {
 			return nil
 		}
-		parameter = restful.QueryParameter(f.key, f.description)
-		parameter.Required(f.required)
+		parameter = restful.QueryParameter(f.Key, f.Description)
 	case HeaderType:
-		if f.hidden {
+		if f.Hidden {
 			return nil
 		}
-		parameter = restful.HeaderParameter(f.key, f.description)
-		parameter.Required(f.required)
+		parameter = restful.HeaderParameter(f.Key, f.Description)
 	default:
-		panicType(f.typ, "setParam")
+		panicType(f.Type, "setParam")
 	}
 
-	switch f.typ.Kind() {
+	switch f.Type.Kind() {
 	case reflect.String:
 		parameter.DataType("string")
 	case reflect.Bool:
@@ -201,18 +199,29 @@ func setRouteBuilderParam(rb *restful.RouteBuilder, f *field) error {
 	case reflect.Uint, reflect.Int, reflect.Int32, reflect.Int64:
 		parameter.DataType("integer")
 	case reflect.Slice:
-		if typeName := f.typ.Elem().Name(); typeName != "string" {
-			panicType(f.typ, "unsupported param")
+		if typeName := f.Type.Elem().Name(); typeName != "string" {
+			panicType(f.Type, "unsupported param")
 		}
 	default:
-		panicType(f.typ, "unsupported param")
+		panicType(f.Type, "unsupported param")
 	}
 
-	if f.format != "" {
-		parameter.DataFormat(f.format)
+	if f.Required {
+		parameter.Required(true)
 	}
 
-	rb.Param(parameter)
+	if f.Minimum != nil {
+		parameter.Minimum(*f.Minimum)
+	}
+	if f.Maximum != nil {
+		parameter.Maximum(*f.Maximum)
+	}
+
+	rb.Param(parameter.
+		DataFormat(f.Format).
+		DefaultValue(f.Default).
+		PossibleValues(f.Enum),
+	)
 
 	return nil
 }

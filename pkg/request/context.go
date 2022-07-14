@@ -49,6 +49,7 @@ const (
 	// resp
 	respKey
 	tracerKey
+	traceIDKey
 	sessionKey
 
 	// bodyKey is the context key for the request body
@@ -137,6 +138,17 @@ func TracerFrom(ctx context.Context) trace.Tracer {
 		return tracer
 	}
 	return noopTracer
+}
+
+// WithTraceID returns a copy of parent in which the traceID value is set
+func WithTraceID(parent context.Context, traceID string) context.Context {
+	return context.WithValue(parent, traceIDKey, traceID)
+}
+
+// TraceIDFrom returns the value of the traceID key on the ctx
+func TraceIDFrom(ctx context.Context) (string, bool) {
+	traceID, ok := ctx.Value(traceIDKey).(string)
+	return traceID, ok
 }
 
 // WithrSession returns a copy of parent in which the session value is set

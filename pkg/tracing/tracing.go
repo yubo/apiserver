@@ -235,6 +235,7 @@ func (p *tracing) filter() restful.FilterFunction {
 		defer span.End()
 
 		ctx = request.WithTracer(ctx, p.tracer)
+		ctx = request.WithTraceID(ctx, span.SpanContext().TraceID().String())
 
 		// pass the span through the request context
 		req.Request = req.Request.WithContext(ctx)

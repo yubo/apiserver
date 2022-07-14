@@ -61,5 +61,5 @@ func newConfig() *db.Config {
 func Register() {
 	proc.RegisterHooks(hookOps)
 
-	proc.AddConfig(moduleName, newConfig(), proc.WithConfigGroup("db"))
+	proc.AddConfig(moduleName, newConfig(), proc.WithConfigGroup("DB"))
 }
