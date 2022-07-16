@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	moduleName = "otel-trace-grpc.apiserver"
+	moduleName = "grpc.trace.otel.examples"
 )
 
 var (

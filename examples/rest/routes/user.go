@@ -8,7 +8,6 @@ import (
 
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/apiserver/plugin/responsewriter/umi"
-	"k8s.io/klog/v2"
 )
 
 type route struct {
@@ -31,31 +30,37 @@ func InstallUser(http rest.GoRestfulContainer) {
 			Method:    "POST",
 			SubPath:   "/users",
 			Operation: "createUser",
+			Desc:      "create User",
 			Handle:    r.createUser,
 		}, {
 			Method:    "GET",
 			SubPath:   "/users",
 			Operation: "listUser",
+			Desc:      "list User",
 			Handle:    r.listUser,
 		}, {
 			Method:     "GET",
 			SubPath:    "/user/{name}",
 			Operation:  "getUserByName",
+			Desc:       "get user by name",
 			Deprecated: true,
 			Handle:     r.getUser,
 		}, {
 			Method:    "GET",
 			SubPath:   "/users/{name}",
+			Desc:      "get user by name",
 			Operation: "getUser",
 			Handle:    r.getUser,
 		}, {
 			Method:    "PUT",
 			SubPath:   "/users/{name}",
+			Desc:      "update user by name",
 			Operation: "updateUser",
 			Handle:    r.updateUser,
 		}, {
 			Method:    "DELETE",
 			SubPath:   "/users/{name}",
+			Desc:      "delete user by name",
 			Operation: "deleteUser",
 			Handle:    r.deleteUser,
 		}},
@@ -71,38 +76,38 @@ func InstallUser(http rest.GoRestfulContainer) {
 		Routes: []rest.WsRoute{{
 			Method:    "POST",
 			SubPath:   "/users",
-			Operation: "createUser",
+			Operation: "createUserV2",
 			Desc:      "create user",
 			Handle:    r.createUser,
 		}, {
 			Method:    "GET",
 			SubPath:   "/users",
-			Operation: "listUser",
+			Operation: "listUserV2",
 			Desc:      "list user",
 			Handle:    r.listUser,
 		}, {
 			Method:     "GET",
 			SubPath:    "/user/{name}",
-			Operation:  "getUserByName",
+			Operation:  "getUserByNameV2",
 			Desc:       "get user by name",
 			Deprecated: true,
 			Handle:     r.getUser,
 		}, {
 			Method:    "GET",
 			SubPath:   "/users/{name}",
-			Operation: "getUser",
+			Operation: "getUserV2",
 			Desc:      "get user by name",
 			Handle:    r.getUser,
 		}, {
 			Method:    "PUT",
 			SubPath:   "/users/{name}",
-			Operation: "updateUser",
+			Operation: "updateUserV2",
 			Desc:      "update user",
 			Handle:    r.updateUser,
 		}, {
 			Method:    "DELETE",
 			SubPath:   "/users/{name}",
-			Operation: "deleteUser",
+			Operation: "deleteUserV2",
 			Desc:      "delete user",
 			Handle:    r.deleteUser,
 		}},
@@ -126,7 +131,6 @@ func (p *route) listUser(w http.ResponseWriter, req *http.Request, in *api.ListI
 	if err != nil {
 		return nil, err
 	}
-	klog.InfoS("list", "opts", opts)
 
 	list, err := p.List(req.Context(), *opts)
 	if err != nil {

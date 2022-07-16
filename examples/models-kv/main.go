@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	moduleName = "models.apiserver"
+	moduleName = "kv.models.examples"
 )
 
 var (

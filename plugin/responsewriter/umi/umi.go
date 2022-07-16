@@ -18,9 +18,10 @@ import (
 // https://pro.ant.design/zh-CN/docs/request
 
 var (
-	_hostname, _ = os.Hostname()
-	RespWriter   = newRespWriter()
-	schemas      = map[int]string{
+	modelTypePrefix = "__umi__."
+	_hostname, _    = os.Hostname()
+	RespWriter      = newRespWriter()
+	schemas         = map[int]string{
 		http.StatusOK: `{
   "required": [
     "success"
@@ -120,7 +121,7 @@ func (p *respWriter) SwaggerHandler(s *spec.Swagger) {
 				panic(err)
 			}
 
-			modelType := "_umi_"
+			modelType := modelTypePrefix + "Output" + strconv.Itoa(status)
 
 			// v is a copy of schema
 			resp, ok := o.Responses.StatusCodeResponses[status]
@@ -128,10 +129,10 @@ func (p *respWriter) SwaggerHandler(s *spec.Swagger) {
 				resp = spec.Response{}
 				resp.Description = http.StatusText(status)
 			} else {
-				if name := nameOfSchema(resp.Schema); strings.HasPrefix(name, "_umi_") {
+				if name := nameOfSchema(resp.Schema); strings.HasPrefix(name, modelTypePrefix) {
 					panic(fmt.Sprintf("method %s:%s invalie prefix model name %s", route.method, route.path, name))
 				} else {
-					modelType = "_umi_." + name
+					modelType = modelTypePrefix + name
 				}
 				definition.Properties["data"] = *resp.Schema
 			}

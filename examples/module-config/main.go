@@ -10,6 +10,20 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+const (
+	moduleName = "config.module.examples"
+)
+
+var (
+	_module = &module{name: moduleName}
+	hookOps = []proc.HookOps{{
+		Hook:     _module.start,
+		Owner:    moduleName,
+		HookNum:  proc.ACTION_START,
+		Priority: proc.PRI_MODULE,
+	}}
+)
+
 type config struct {
 	UserName string `json:"userName" flag:"user-name" env:"USER_NAME" description:"user name"`
 	UserAge  int    `json:"userAge" flag:"user-age" env:"USER_AGE" description:"user age"`
@@ -24,20 +38,6 @@ type module struct {
 func newConfig() *config {
 	return &config{UserName: "Anonymous"}
 }
-
-const (
-	moduleName = "example"
-)
-
-var (
-	_module = &module{name: moduleName}
-	hookOps = []proc.HookOps{{
-		Hook:     _module.start,
-		Owner:    moduleName,
-		HookNum:  proc.ACTION_START,
-		Priority: proc.PRI_MODULE,
-	}}
-)
 
 func main() {
 	if err := proc.NewRootCmd(proc.WithoutLoop()).Execute(); err != nil {

@@ -45,7 +45,7 @@ func (v Version) Install(c *restful.Container) {
 			Operation("getCodeVersion").
 			Produces(restful.MIME_JSON).
 			Consumes(restful.MIME_JSON).
-			Writes(version.Info{}))
+			Returns(http.StatusOK, http.StatusText(http.StatusOK), version.Info{}))
 
 	c.Add(versionWS)
 }

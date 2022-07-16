@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	moduleName = "example.rest.apiserver"
+	moduleName = "rest.examples"
 )
 
 var (

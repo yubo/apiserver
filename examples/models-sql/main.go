@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	moduleName = "models.apiserver"
+	moduleName = "sql.models.examples"
 )
 
 var (

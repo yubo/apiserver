@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	moduleName = "s3-client.examples"
+	moduleName = "client.s3.examples"
 )
 
 type module struct {

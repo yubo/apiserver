@@ -391,7 +391,7 @@ func (p *RouteBuilder) registerHandle(b *restful.RouteBuilder, wr *WsRoute) erro
 			}
 		}
 		wr.RespWriter.AddRoute(wr.Method, path.Join(p.ws.RootPath(), wr.SubPath))
-		b.Returns(http.StatusOK, "OK", output)
+		b.Returns(http.StatusOK, http.StatusText(http.StatusOK), output)
 	}
 
 	handler := func(req *restful.Request, resp *restful.Response) {

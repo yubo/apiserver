@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	moduleName = "otel-trace.apiserver"
+	moduleName = "trace.otel.examples"
 )
 
 var (

@@ -22,7 +22,7 @@ import (
 // Open in browser http://localhost:8080/swagger
 
 const (
-	moduleName = "example.swagger"
+	moduleName = "swagger.examples"
 )
 
 type User struct {
