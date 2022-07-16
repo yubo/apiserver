@@ -24,3 +24,22 @@ echo 'token-1,system:yubo,uid:yubo,"group1,group2,group3"' > tokens.cvs
 # debug flags set
 ./all-in-on  -f ./etc/config.yaml --debug-flags --dry-run
 ```
+
+#### use with make
+
+```
+# build
+make
+
+# build with goreleaser
+make build
+
+# build & package with goreleaser
+make pkg
+
+# build & package & release with goreleaser
+make release
+
+# clean
+make clean
+```

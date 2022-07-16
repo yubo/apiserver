@@ -1,0 +1,85 @@
+project_name: all-in-one
+builds:
+  - id: all-in-one
+    goos:
+      #- darwin
+      - linux
+      #- windows
+    goarch:
+      #- "386"
+      - amd64
+      #- arm64
+    ignore:
+      - goos: darwin
+        goarch: "386"
+      - goos: windows
+        goarch: arm64
+    main: ./cmd/all-in-one
+    binary: all-in-one
+    env:
+      - CGO_ENABLED=1
+    ldflags:
+      - "{{ .Env.GOLDFLAGS }}"
+    flags:
+      - -trimpath
+archives:
+  - id: all-in-one
+    builds:
+      - all-in-one
+    name_template: '{{ .Binary }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{
+      .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}'
+nfpms:
+  - package_name: all-in-one
+    contents:
+      - src: misc/all-in-one/all-in-one.service
+        dst: /lib/systemd/system/all-in-one.service
+      - src: misc/all-in-one/all-in-one.conf
+        dst: /etc/all-in-one/all-in-one.conf
+        type: config|noreplace
+      - src: etc/config.yaml
+        dst: /etc/all-in-one/config.yaml
+        type: config
+    scripts:
+      preinstall: misc/all-in-one/preinstall.sh
+      postinstall: misc/all-in-one/postinstall.sh
+      preremove: misc/all-in-one/preremove.sh
+    id: all-in-one
+    builds:
+      - all-in-one
+    formats:
+      #- apk
+      #- deb
+      - rpm
+    maintainer: yubo <yubo@yubo.org>
+    description: OpenTelemetry Collector - all-in-one
+    license: Apache 2.0
+
+checksum:
+  name_template: 'checksums.txt'
+
+
+dockers:
+- id: all-in-one
+  goos: linux
+  goarch: amd64
+  dockerfile: misc/all-in-one/Dockerfile
+  image_templates:
+  - ybbbbasdf/all-in-one:{{ .Version }}-amd64
+  extra_files:
+  - etc/config.yaml
+  build_flag_templates:
+  - --pull
+  - --platform=linux/amd64
+  - --label=image.created={{.Date}}
+  - --label=image.name={{.ProjectName}}
+  - --label=image.revision={{.FullCommit}}
+  - --label=image.version={{.Version}}
+  - --label=image.source={{.GitURL}}
+  use: buildx
+
+docker_manifests:
+- name_template: ybbbbasdf/all-in-one:{{ .Version }}
+  image_templates:
+  - ybbbbasdf/all-in-one:{{ .Version }}-amd64
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"

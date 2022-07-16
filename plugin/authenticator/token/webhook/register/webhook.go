@@ -7,6 +7,7 @@ import (
 
 	"github.com/yubo/apiserver/pkg/authentication"
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
+	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/proc"
 	"github.com/yubo/golib/util/wait"
 )
@@ -58,7 +59,7 @@ func factory(ctx context.Context) (authenticator.Token, error) {
 // both authentication and authorization webhook used by the apiserver.
 func DefaultAuthWebhookRetryBackoff() *wait.Backoff {
 	return &wait.Backoff{
-		Duration: 500 * time.Millisecond,
+		Duration: api.NewDuration("500ms"),
 		Factor:   1.5,
 		Jitter:   0.2,
 		Steps:    5,

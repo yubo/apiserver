@@ -31,9 +31,9 @@
 #
 # If KUBE_GIT_VERSION_FILE, this function will load from that file instead of
 # querying git.
-kube::version::get_version_vars() {
+version::get_version_vars() {
   if [[ -n ${KUBE_GIT_VERSION_FILE-} ]]; then
-    kube::version::load_version_vars "${KUBE_GIT_VERSION_FILE}"
+    version::load_version_vars "${KUBE_GIT_VERSION_FILE}"
     return
   fi
 
@@ -53,7 +53,7 @@ kube::version::get_version_vars() {
     fi
   fi
 
-  local git=(git --work-tree "${KUBE_ROOT}")
+  local git=(git --work-tree "${ROOT}")
 
   if [[ -n ${KUBE_GIT_COMMIT-} ]] || KUBE_GIT_COMMIT=$("${git[@]}" rev-parse "HEAD^{commit}" 2>/dev/null); then
     if [[ -z ${KUBE_GIT_TREE_STATE-} ]]; then
@@ -117,10 +117,10 @@ kube::version::get_version_vars() {
 }
 
 # Saves the environment flags to $1
-kube::version::save_version_vars() {
+version::save_version_vars() {
   local version_file=${1-}
   [[ -n ${version_file} ]] || {
-    echo "!!! Internal error.  No file specified in kube::version::save_version_vars"
+    echo "!!! Internal error.  No file specified in version::save_version_vars"
     return 1
   }
 
@@ -134,10 +134,10 @@ EOF
 }
 
 # Loads up the version variables from file $1
-kube::version::load_version_vars() {
+version::load_version_vars() {
   local version_file=${1-}
   [[ -n ${version_file} ]] || {
-    echo "!!! Internal error.  No file specified in kube::version::load_version_vars"
+    echo "!!! Internal error.  No file specified in version::load_version_vars"
     return 1
   }
 
@@ -148,8 +148,8 @@ kube::version::load_version_vars() {
 # in order to set the Kubernetes based on the git tree status.
 # IMPORTANT: if you update any of these, also update the lists in
 # pkg/version/def.bzl and hack/print-workspace-status.sh.
-kube::version::ldflags() {
-  kube::version::get_version_vars
+version::ldflags() {
+  version::get_version_vars
 
   local -a ldflags
   function add_ldflag() {

@@ -1,2 +1,4 @@
 all-in-one
 *.sh
+dist/
+bin/

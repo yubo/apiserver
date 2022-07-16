@@ -9,11 +9,11 @@ import (
 	"github.com/yubo/golib/proc"
 	"k8s.io/klog/v2"
 
-	"examples/all-in-one/authn"
-	"examples/all-in-one/authz"
-	"examples/all-in-one/session"
-	"examples/all-in-one/trace"
-	"examples/all-in-one/user"
+	"examples/all-in-one/pkg/authn"
+	"examples/all-in-one/pkg/authz"
+	"examples/all-in-one/pkg/session"
+	"examples/all-in-one/pkg/trace"
+	"examples/all-in-one/pkg/user"
 
 	_ "github.com/yubo/golib/orm/mysql"
 	_ "github.com/yubo/golib/orm/sqlite"

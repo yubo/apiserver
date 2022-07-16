@@ -1,21 +1,43 @@
 .PHONY: clean devrun dev
 
-VERSION=0.0.1
-RELEASE=1
+GORELEASER ?= goreleaser
 APP_NAME=all-in-one
-FILE_NAME=$(APP_NAME)-$(VERSION)-$(RELEASE).$(shell uname -s).$(shell uname -m)
+APP_PATH=./bin/$(APP_NAME)
+BUILD_ENVS=$(shell ./scripts/env.sh)
 DEP_OBJS=$(shell find . -name "*.go" -type f)
-TARGETS=$(APP_NAME)
-CGO_ENABLED=1
+TARGETS=$(APP_PATH)
 
-all: $(APP_NAME)
+all: $(TARGETS)
 
-$(APP_NAME): $(DEP_OBJS)
-	CGO_ENABLED=$(CGO_ENABLED) ./scripts/go-build.sh
+$(APP_PATH): $(DEP_OBJS)
+	$(BUILD_ENVS) go build -o $@ ./cmd/all-in-one
+
+.PHONY: build
+build:
+	$(BUILD_ENVS) $(GORELEASER) build --single-target --snapshot --rm-dist
+
+# https://goreleaser.com/quick-start/
+.PHONY: release
+release: goreleaser
+	$(BUILD_ENVS) $(GORELEASER) release 
+
+.PHONY: pkg
+pkg: goreleaser
+	$(BUILD_ENVS) $(GORELEASER) release --snapshot --rm-dist
+
+.PHONY: goreleaser
+goreleaser:
+	@{ \
+		if ! command -v '$(GORELEASER)' >/dev/null 2>/dev/null; then \
+			echo >&2 '$(GORELEASER) command not found. Please install goreleaser. https://goreleaser.com/install/'; \
+			exit 1; \
+		fi \
+	}
+
 
 
 devrun: $(APP_NAME)
-	@echo "./${APP_NAME} \
+	@echo "${APP_PATH} \
 		-f ./etc/config.yaml \
 		--token-auth-file=./etc/tokens.cvs \
 		--anonymous-auth \
@@ -25,8 +47,8 @@ devrun: $(APP_NAME)
 		#--tls-cert-file=./run/pki/apiserver.crt \
 		#--tls-private-key-file=./run/pki/apiserver.key \
 
-run: $(APP_NAME)
-	./$(APP_NAME) \
+run: $(APP_PATH)
+	$(APP_PATH) \
 		-f ./etc/config.yaml \
 		-v 10 \
 		--cert-dir /tmp/$(APP_NAME) \
@@ -39,13 +61,19 @@ run: $(APP_NAME)
 		#--tls-cert-file=./run/pki/apiserver.crt \
 		#--tls-private-key-file=./run/pki/apiserver.key \
 
-
+.PHONY: docker
+docker: 
+	docker run --rm -it \
+		-v `pwd`/etc/config.yaml:/config.yaml \
+		ybbbbasdf/all-in-all:{VERSION} \
+		-f /config.yaml
+		
 
 dev: $(DEP_OBJS)
 	APP_NAME=$(APP_NAME) watcher --logtostderr -v 3 -e build -e .git -e docs -e vendor -f .go -f .sql -d 1000ms -i ../
 
 clean:
-	rm -f $(APP_NAME)
+	rm -rf ./bin/* ./dist
 
 tools:
 	go get -u google.golang.org/grpc && \

@@ -16,7 +16,7 @@
 # This script was used by bazel as the workspace_status_command to implement
 # build stamping with git information.
 #
-# It is still useful for obtaining kube::version::get_version_vars without
+# It is still useful for obtaining version::get_version_vars without
 # sourcing Kubernetes build internals.
 #
 # Usage: `hack/print-workspace-status.sh`.
@@ -25,10 +25,10 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-KUBE_ROOT=$(dirname "${BASH_SOURCE[0]}")/..
+ROOT=$(dirname "${BASH_SOURCE[0]}")/..
 
-source "${KUBE_ROOT}/scripts/version.sh"
-kube::version::get_version_vars
+source "${ROOT}/scripts/version.sh"
+version::get_version_vars
 
 # Prefix with STABLE_ so that these values are saved to stable-status.txt
 # instead of volatile-status.txt.
