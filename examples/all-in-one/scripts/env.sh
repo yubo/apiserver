@@ -9,6 +9,6 @@ version::get_version_vars
 GOLDFLAGS="${GOLDFLAGS=-s -w} $(version::ldflags)"
 
 cat << EOF
+CGO_ENABLED=1 \
 GOLDFLAGS="$GOLDFLAGS"
-CGO_ENABLED=1
 EOF

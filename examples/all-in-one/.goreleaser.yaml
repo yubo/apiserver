@@ -17,7 +17,7 @@ builds:
     main: ./cmd/all-in-one
     binary: all-in-one
     env:
-      - CGO_ENABLED={{ .Env.CGO_ENABLED }}
+      - CGO_ENABLED=0
     ldflags:
       - "{{ .Env.GOLDFLAGS }}"
     flags:
