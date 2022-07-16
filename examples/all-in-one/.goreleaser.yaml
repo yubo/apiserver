@@ -80,6 +80,7 @@ dockers:
 docker_manifests:
 - name_template: ybbbbasdf/all-in-one:{{ .Version }}
   image_templates:
-  - ybbbbasdf/all-in-one:{{ .Version }}-amd64
+  - ybbbbasdf/all-in-one:latest
+  - ybbbbasdf/all-in-one:{{ .Version }}
 snapshot:
   name_template: "{{ incpatch .Version }}-next"

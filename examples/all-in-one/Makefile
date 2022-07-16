@@ -23,7 +23,7 @@ release: goreleaser
 
 .PHONY: pkg
 pkg: goreleaser
-	$(BUILD_ENVS) $(GORELEASER) release --snapshot --rm-dist
+	$(BUILD_ENVS) $(GORELEASER) release --rm-dist
 
 .PHONY: goreleaser
 goreleaser:
@@ -64,10 +64,12 @@ run: $(APP_PATH)
 .PHONY: docker
 docker: 
 	docker run --rm -it \
-		-v `pwd`/etc/config.yaml:/config.yaml \
-		ybbbbasdf/all-in-all:{VERSION} \
-		-f /config.yaml
-		
+		--network host \
+		-w / \
+		-e USER=apiserver \
+		-v `pwd`/etc:/etc \
+		ybbbbasdf/all-in-one:latest \
+		-f /etc/config.yaml
 
 dev: $(DEP_OBJS)
 	APP_NAME=$(APP_NAME) watcher --logtostderr -v 3 -e build -e .git -e docs -e vendor -f .go -f .sql -d 1000ms -i ../
