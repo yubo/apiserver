@@ -1,5 +1,3 @@
-.PHONY: clean devrun dev
-
 GORELEASER ?= goreleaser
 APP_NAME=all-in-one
 APP_PATH=./bin/$(APP_NAME)
@@ -35,7 +33,7 @@ goreleaser:
 	}
 
 
-
+.PHONY: devrun
 devrun: $(APP_NAME)
 	@echo "${APP_PATH} \
 		-f ./etc/config.yaml \
@@ -47,6 +45,7 @@ devrun: $(APP_NAME)
 		#--tls-cert-file=./run/pki/apiserver.crt \
 		#--tls-private-key-file=./run/pki/apiserver.key \
 
+.PHONY: run
 run: $(APP_PATH)
 	$(APP_PATH) \
 		-f ./etc/config.yaml \
@@ -69,9 +68,11 @@ docker:
 		-f /config.yaml
 		
 
+.PHONY: dev
 dev: $(DEP_OBJS)
-	APP_NAME=$(APP_NAME) watcher --logtostderr -v 3 -e build -e .git -e docs -e vendor -f .go -f .sql -d 1000ms -i ../
+	APP_NAME=$(APP_NAME) watcher --logtostderr -v 3 -e build -e .git -e docs -e vendor -f .go -f .sql -d 1000ms
 
+.PHONY: clean
 clean:
 	rm -rf ./bin/* ./dist
 

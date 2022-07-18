@@ -58,16 +58,6 @@ func (a *audAgnosticRequestAuthenticator) AuthenticateRequest(req *http.Request)
 	})
 }
 
-//func (a *audAgnosticRequestAuthenticator) Name() string {
-//	return a.delegate.Name()
-//}
-//func (a *audAgnosticRequestAuthenticator) Priority() int {
-//	return a.delegate.Priority()
-//}
-//func (a *audAgnosticRequestAuthenticator) Available() bool {
-//	return a.delegate.Available()
-//}
-
 // WrapAudienceAgnosticRequest wraps an audience agnostic request authenticator
 // to restrict its accepted audiences to a set of implicit audiences.
 func WrapAudienceAgnosticRequest(implicit Audiences, delegate Request) Request {
@@ -89,16 +79,6 @@ func (a *audAgnosticTokenAuthenticator) AuthenticateToken(ctx context.Context, t
 		return a.delegate.AuthenticateToken(ctx, tok)
 	})
 }
-
-//func (a *audAgnosticTokenAuthenticator) Name() string {
-//	return a.delegate.Name()
-//}
-//func (a *audAgnosticTokenAuthenticator) Priority() int {
-//	return a.delegate.Priority()
-//}
-//func (a *audAgnosticTokenAuthenticator) Available() bool {
-//	return a.delegate.Available()
-//}
 
 // WrapAudienceAgnosticToken wraps an audience agnostic token authenticator to
 // restrict its accepted audiences to a set of implicit audiences.

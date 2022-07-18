@@ -73,8 +73,7 @@ func factory(ctx context.Context) (authenticator.Request, error) {
 
 	klog.V(5).InfoS("authnModule init", "name", moduleName)
 
-	caBundleProvider, err := dynamiccertificates.NewDynamicCAContentFromFile(
-		"request-header", cf.ClientCAFile)
+	caBundleProvider, err := dynamiccertificates.NewDynamicCAContentFromFile("request-header", cf.ClientCAFile)
 	if err != nil {
 		return nil, err
 	}

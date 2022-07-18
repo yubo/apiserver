@@ -115,37 +115,21 @@ func (p *respWriter) SwaggerHandler(s *spec.Swagger) {
 			panic(err)
 		}
 
-		for status, v := range p.schemas {
-			definition := spec.Schema{}
-			if err := json.Unmarshal([]byte(v), &definition); err != nil {
-				panic(err)
-			}
-
-			modelType := modelTypePrefix + "Output" + strconv.Itoa(status)
-
-			// v is a copy of schema
-			resp, ok := o.Responses.StatusCodeResponses[status]
-			if !ok {
-				resp = spec.Response{}
-				resp.Description = http.StatusText(status)
-			} else {
-				if name := nameOfSchema(resp.Schema); strings.HasPrefix(name, modelTypePrefix) {
-					panic(fmt.Sprintf("method %s:%s invalie prefix model name %s", route.method, route.path, name))
-				} else {
-					modelType = modelTypePrefix + name
-				}
-				definition.Properties["data"] = *resp.Schema
-			}
-
-			{
-				var schema spec.Schema
-				schema.Ref = spec.MustCreateRef("#/definitions/" + modelType)
-				resp.Schema = &schema
-			}
+		for status, schema := range p.schemas {
+			resp, modelType, rawSchema := buildResponse(status, o.Responses)
 
 			o.Responses.StatusCodeResponses[status] = resp
 
 			if _, ok := s.Definitions[modelType]; !ok {
+				definition := spec.Schema{}
+				if err := json.Unmarshal([]byte(schema), &definition); err != nil {
+					panic(err)
+				}
+
+				if rawSchema != nil {
+					definition.Properties["data"] = *rawSchema
+				}
+
 				s.Definitions[modelType] = definition
 			}
 		}
@@ -161,9 +145,9 @@ func init() {
 	rest.ResponseWriterRegister(RespWriter)
 }
 
-func nameOfSchema(prop *spec.Schema) string {
+func nameOfSchema(status int, prop *spec.Schema) string {
 	if prop == nil {
-		return ""
+		return "Response" + strconv.Itoa(status)
 	}
 
 	// ref
@@ -187,4 +171,26 @@ func nameOfSchema(prop *spec.Schema) string {
 	default:
 		panic(fmt.Sprintf("unsupported type %s", t))
 	}
+}
+
+func buildResponse(status int, responses *spec.Responses) (resp spec.Response, modelType string, rawSchema *spec.Schema) {
+	var ok bool
+	if resp, ok = responses.StatusCodeResponses[status]; !ok {
+		resp = spec.Response{}
+		resp.Description = http.StatusText(status)
+	}
+
+	modelType = nameOfSchema(status, resp.Schema)
+	rawSchema = resp.Schema
+
+	if strings.HasPrefix(modelType, modelTypePrefix) {
+		panic(fmt.Sprintf("invalie prefix model name %s", modelTypePrefix))
+	}
+	modelType = modelTypePrefix + modelType
+
+	schema := spec.Schema{}
+	schema.Ref = spec.MustCreateRef("#/definitions/" + modelType)
+	resp.Schema = &schema
+
+	return
 }

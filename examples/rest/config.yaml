@@ -9,6 +9,7 @@ apiserver:
 db:
   connMaxIdletime: 0
   connMaxLifetime: 0
+  maxOpenConns: 1
   driver: sqlite3
   dsn: file:test.db?cache=shared&mode=memory
   ignoreNotFound: true
