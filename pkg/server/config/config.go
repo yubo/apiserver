@@ -27,6 +27,7 @@ func NewConfig() *Config {
 		EnableProfiling:           false,
 		EnableMetrics:             true,
 		EnableOpenAPI:             true,
+		EnableHealthz:             false,
 	}
 }
 

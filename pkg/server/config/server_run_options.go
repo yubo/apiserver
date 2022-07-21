@@ -21,7 +21,7 @@ func NewServerRunOptions() *ServerRunOptions {
 		ShutdownDelayDuration:       api.NewDuration("0s"),
 		JSONPatchMaxCopyBytes:       3 * 1024 * 1024,
 		MaxRequestBodyBytes:         3 * 1024 * 1024,
-		EnablePriorityAndFairness:   true,
+		//EnablePriorityAndFairness:   true,
 	}
 }
 
@@ -47,8 +47,8 @@ type ServerRunOptions struct {
 	// decoded in a write request. 0 means no limit.
 	// We intentionally did not add a flag for this option. Users of the
 	// apiserver library can wire it to a flag.
-	MaxRequestBodyBytes       int64 `json:"maxRequestBodyBytes" flag:"max-resource-write-bytes" description:"The limit on the request body size that would be accepted and decoded in a write request."`
-	EnablePriorityAndFairness bool  `json:"enablePriorityAndFairness" default:"true" flag:"enable-priority-and-fairness" description:"If true and the APIPriorityAndFairness feature gate is enabled, replace the max-in-flight handler with an enhanced one that queues and dispatches with priority and fairness"`
+	MaxRequestBodyBytes int64 `json:"maxRequestBodyBytes" flag:"max-resource-write-bytes" description:"The limit on the request body size that would be accepted and decoded in a write request."`
+	//EnablePriorityAndFairness bool  `json:"enablePriorityAndFairness" default:"true" flag:"enable-priority-and-fairness" description:"If true and the APIPriorityAndFairness feature gate is enabled, replace the max-in-flight handler with an enhanced one that queues and dispatches with priority and fairness"`
 }
 
 func (p *ServerRunOptions) GetTags() map[string]*configer.FieldTag {

@@ -23,7 +23,7 @@ var (
 	securitySchemeCatalog = map[string]*spec.SecurityScheme{}
 	respWriterCatalog     = map[string]RespWriter{}
 	swaggerTags           = []spec.Tag{}
-	DefaultContentTypes   = []string{MIME_ALL, MIME_JSON}
+	DefaultContentTypes   = []string{MIME_JSON}
 )
 
 func WsRouteBuild(opt *WsOption) {

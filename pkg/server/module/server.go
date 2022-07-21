@@ -136,7 +136,7 @@ func (p *serverModule) Info() {
 		return
 	}
 	for _, path := range p.server.Handler.ListedPaths() {
-		klog.Infof("apiserver path %s", path)
+		klog.V(1).Infof("apiserver path %s", path)
 	}
 }
 func (p *serverModule) Config() *server.Config {
