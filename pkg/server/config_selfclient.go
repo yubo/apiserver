@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"net"
 
-	restclient "github.com/yubo/apiserver/pkg/rest"
+	restclient "github.com/yubo/apiserver/pkg/client"
 	netutils "github.com/yubo/golib/util/net"
 )
 

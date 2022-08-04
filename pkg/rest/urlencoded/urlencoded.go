@@ -27,7 +27,7 @@ var _ runtime.Serializer = &Serializer{}
 var _ restful.EntityReaderWriter = &Serializer{}
 
 func (s *Serializer) Decode(data []byte, into runtime.Object) (runtime.Object, error) {
-	err := NewDecoder(bytes.NewReader(data)).Decode(in)
+	err := NewDecoder(bytes.NewReader(data)).Decode(into)
 	if err != nil {
 		return nil, err
 	}

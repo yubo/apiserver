@@ -26,7 +26,7 @@ import (
 	"strings"
 
 	"github.com/imdario/mergo"
-	restclient "github.com/yubo/apiserver/pkg/rest"
+	restclient "github.com/yubo/apiserver/pkg/client"
 	clientcmdapi "github.com/yubo/apiserver/tools/clientcmd/api"
 	"github.com/yubo/golib/runtime"
 	utilerrors "github.com/yubo/golib/util/errors"

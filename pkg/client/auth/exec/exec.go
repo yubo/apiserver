@@ -34,8 +34,8 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/yubo/apiserver/pkg/apis/clientauthentication"
+	"github.com/yubo/apiserver/pkg/client/transport"
 	"github.com/yubo/apiserver/pkg/metrics"
-	"github.com/yubo/apiserver/pkg/rest/transport"
 	"github.com/yubo/apiserver/tools/clientcmd/api"
 	"github.com/yubo/golib/runtime"
 	"github.com/yubo/golib/scheme"

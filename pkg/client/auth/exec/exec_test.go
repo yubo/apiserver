@@ -38,7 +38,7 @@ import (
 	"time"
 
 	"github.com/yubo/apiserver/pkg/apis/clientauthentication"
-	"github.com/yubo/apiserver/pkg/rest/transport"
+	"github.com/yubo/apiserver/pkg/client/transport"
 	"github.com/yubo/apiserver/tools/clientcmd/api"
 	v1 "github.com/yubo/golib/api"
 	"github.com/yubo/golib/runtime"

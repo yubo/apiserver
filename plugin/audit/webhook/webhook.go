@@ -24,7 +24,7 @@ import (
 
 	auditinternal "github.com/yubo/apiserver/pkg/apis/audit"
 	"github.com/yubo/apiserver/pkg/audit"
-	"github.com/yubo/apiserver/pkg/rest"
+	rest "github.com/yubo/apiserver/pkg/client"
 	"github.com/yubo/apiserver/pkg/util/webhook"
 	"github.com/yubo/golib/scheme"
 	utilnet "github.com/yubo/golib/util/net"

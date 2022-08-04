@@ -22,7 +22,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	clientauthentication "github.com/yubo/apiserver/pkg/apis/clientauthentication"
-	"github.com/yubo/apiserver/pkg/rest"
+	rest "github.com/yubo/apiserver/pkg/client"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/runtime"
 )

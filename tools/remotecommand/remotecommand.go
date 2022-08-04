@@ -24,8 +24,8 @@ import (
 
 	"k8s.io/klog/v2"
 
-	restclient "github.com/yubo/apiserver/pkg/rest"
-	spdy "github.com/yubo/apiserver/pkg/rest/transport/spdy"
+	restclient "github.com/yubo/apiserver/pkg/client"
+	spdy "github.com/yubo/apiserver/pkg/client/transport/spdy"
 	"github.com/yubo/golib/util/httpstream"
 	"github.com/yubo/golib/util/remotecommand"
 	"github.com/yubo/golib/util/term"

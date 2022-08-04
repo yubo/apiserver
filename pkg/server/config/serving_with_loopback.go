@@ -21,8 +21,8 @@ import (
 
 	"github.com/google/uuid"
 
+	rest "github.com/yubo/apiserver/pkg/client"
 	"github.com/yubo/apiserver/pkg/dynamiccertificates"
-	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/apiserver/pkg/server"
 	"github.com/yubo/golib/util/cert"
 )

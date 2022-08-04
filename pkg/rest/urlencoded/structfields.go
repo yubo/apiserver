@@ -20,12 +20,12 @@ var fieldCache sync.Map // map[reflect.Type]structFields
 // `param:"query,required" format:"password" description:"aaa"`
 type field struct {
 	fieldProps
-	typ   reflect.Type
+	Type  reflect.Type
 	index []int
 }
 
 func (p field) String() string {
-	return fmt.Sprintf("key %s index %v type %s required %v param %s", p.Key, p.index, p.typ, p.Required, p.ParamType)
+	return fmt.Sprintf("key %s index %v type %s required %v param %s", p.Key, p.index, p.Type, p.Required, p.ParamType)
 }
 
 type fieldProps struct {
@@ -64,7 +64,7 @@ func cachedTypeFields(t reflect.Type) structFields {
 func typeFields(t reflect.Type) structFields {
 	// Anonymous fields to explore at the current level and the next.
 	current := []field{}
-	next := []field{{typ: t}}
+	next := []field{{Type: t}}
 
 	// Count of queued names for current level and the next.
 	var count, nextCount map[reflect.Type]int
@@ -83,14 +83,14 @@ func typeFields(t reflect.Type) structFields {
 		count, nextCount = nextCount, map[reflect.Type]int{}
 
 		for _, f := range current {
-			if visited[f.typ] {
+			if visited[f.Type] {
 				continue
 			}
-			visited[f.typ] = true
+			visited[f.Type] = true
 
 			// Scan f.typ for fields to include.
-			for i := 0; i < f.typ.NumField(); i++ {
-				sf := f.typ.Field(i)
+			for i := 0; i < f.Type.NumField(); i++ {
+				sf := f.Type.Field(i)
 				isUnexported := sf.PkgPath != ""
 				if sf.Anonymous {
 					t := sf.Type
@@ -126,11 +126,11 @@ func typeFields(t reflect.Type) structFields {
 					field := field{
 						fieldProps: opt,
 						index:      index,
-						typ:        ft,
+						Type:       ft,
 					}
 
 					fields = append(fields, field)
-					if count[f.typ] > 1 {
+					if count[f.Type] > 1 {
 						// If there were multiple instances, add a second,
 						// so that the annihilation code will see a duplicate.
 						// It only cares about the distinction between 1 or 2,
@@ -143,7 +143,7 @@ func typeFields(t reflect.Type) structFields {
 				// Record new anonymous struct to explore in next round.
 				nextCount[ft]++
 				if nextCount[ft] == 1 {
-					next = append(next, field{index: index, typ: ft})
+					next = append(next, field{index: index, Type: ft})
 				}
 			}
 		}
@@ -152,7 +152,7 @@ func typeFields(t reflect.Type) structFields {
 	nameIndex := make(map[string]int, len(fields))
 	for i, field := range fields {
 		if _, ok := nameIndex[field.Key]; ok {
-			panicType(field.typ, fmt.Sprintf("duplicate field key %s %s",
+			panicType(field.Type, fmt.Sprintf("duplicate field key %s %s",
 				t.Name(), field))
 		}
 		nameIndex[field.Key] = i

@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/yubo/apiserver/pkg/rest"
+	rest "github.com/yubo/apiserver/pkg/client"
 	"github.com/yubo/apiserver/pkg/server"
 	utilerrors "github.com/yubo/golib/util/errors"
 )

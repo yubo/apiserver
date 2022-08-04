@@ -29,8 +29,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	restclient "github.com/yubo/apiserver/pkg/rest"
-	"github.com/yubo/apiserver/pkg/rest/transport/spdy"
+	restclient "github.com/yubo/apiserver/pkg/client"
+	"github.com/yubo/apiserver/pkg/client/transport/spdy"
 	runtimeapi "github.com/yubo/apiserver/pkg/streaming/api"
 	kubeletportforward "github.com/yubo/apiserver/pkg/streaming/portforward"
 	"github.com/yubo/apiserver/tools/remotecommand"

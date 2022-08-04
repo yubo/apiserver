@@ -26,7 +26,7 @@ import (
 	"strings"
 	"unicode"
 
-	restclient "github.com/yubo/apiserver/pkg/rest"
+	restclient "github.com/yubo/apiserver/pkg/client"
 	clientauth "github.com/yubo/apiserver/tools/auth"
 	clientcmdapi "github.com/yubo/apiserver/tools/clientcmd/api"
 	"k8s.io/klog/v2"

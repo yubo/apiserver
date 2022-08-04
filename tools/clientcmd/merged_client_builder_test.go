@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"testing"
 
-	restclient "github.com/yubo/apiserver/pkg/rest"
+	restclient "github.com/yubo/apiserver/pkg/client"
 	clientcmdapi "github.com/yubo/apiserver/tools/clientcmd/api"
 )
 

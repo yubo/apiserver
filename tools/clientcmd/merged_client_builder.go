@@ -22,7 +22,7 @@ import (
 
 	"k8s.io/klog/v2"
 
-	restclient "github.com/yubo/apiserver/pkg/rest"
+	restclient "github.com/yubo/apiserver/pkg/client"
 	clientcmdapi "github.com/yubo/apiserver/tools/clientcmd/api"
 )
 

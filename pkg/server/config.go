@@ -18,11 +18,11 @@ import (
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	"github.com/yubo/apiserver/pkg/authorization/authorizerfactory"
 	authorizerunion "github.com/yubo/apiserver/pkg/authorization/union"
+	restclient "github.com/yubo/apiserver/pkg/client"
 	"github.com/yubo/apiserver/pkg/dynamiccertificates"
 	"github.com/yubo/apiserver/pkg/filters"
 	apirequest "github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/rest"
-	restclient "github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/apiserver/pkg/server/healthz"
 	"github.com/yubo/apiserver/pkg/server/routes"
 	"github.com/yubo/apiserver/pkg/session/types"
@@ -62,7 +62,7 @@ type Config struct {
 	// LoopbackClientConfig is a config for a privileged loopback connection to the API server
 	// This is required for proper functioning of the PostStartHooks on a GenericAPIServer
 	// TODO: move into SecureServing(WithLoopback) as soon as insecure serving is gone
-	LoopbackClientConfig *rest.Config
+	LoopbackClientConfig *restclient.Config
 
 	// Version will enable the /version endpoint if non-nil
 	Version *version.Info
@@ -264,7 +264,7 @@ func NewRequestInfoResolver(c *Config) *apirequest.RequestInfoFactory {
 	return &apirequest.RequestInfoFactory{
 		APIPrefixes:          apiPrefixes,
 		GrouplessAPIPrefixes: legacyAPIPrefixes,
-		ParameterCodec:       rest.NewParameterCodec(),
+		ParameterCodec:       restclient.ParameterCodec,
 	}
 }
 

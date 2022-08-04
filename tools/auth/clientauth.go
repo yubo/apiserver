@@ -68,7 +68,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	restclient "github.com/yubo/apiserver/pkg/rest"
+	restclient "github.com/yubo/apiserver/pkg/client"
 )
 
 // Info holds Kubernetes API authorization config.  It is intended

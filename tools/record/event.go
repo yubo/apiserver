@@ -21,7 +21,7 @@ import (
 	"math/rand"
 	"time"
 
-	restclient "github.com/yubo/apiserver/pkg/rest"
+	restclient "github.com/yubo/apiserver/pkg/client"
 	"github.com/yubo/apiserver/tools/record/util"
 	ref "github.com/yubo/apiserver/tools/reference"
 	"github.com/yubo/golib/api"

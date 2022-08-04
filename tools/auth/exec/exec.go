@@ -23,7 +23,7 @@ import (
 	"os"
 
 	"github.com/yubo/apiserver/pkg/apis/clientauthentication"
-	"github.com/yubo/apiserver/pkg/rest"
+	rest "github.com/yubo/apiserver/pkg/client"
 	"github.com/yubo/golib/runtime"
 	"github.com/yubo/golib/runtime/serializer"
 )

@@ -7,7 +7,7 @@ import (
 	"os"
 
 	mobyterm "github.com/moby/term"
-	"github.com/yubo/apiserver/pkg/rest"
+	"github.com/yubo/apiserver/pkg/client"
 	"github.com/yubo/apiserver/pkg/streaming/api"
 	"github.com/yubo/apiserver/tools/remotecommand"
 	"github.com/yubo/golib/util/interrupt"
@@ -15,13 +15,13 @@ import (
 )
 
 type ExecClient struct {
-	config *rest.Config
+	config *client.Config
 	verb   string
 	path   string
 }
 
 type execRequest struct {
-	config      *rest.Config
+	config      *client.Config
 	verb        string
 	path        string
 	cmd         []string
@@ -29,7 +29,7 @@ type execRequest struct {
 	ioStreams   *IOStreams
 }
 
-func NewExecClient(config *rest.Config, verb, path string) *ExecClient {
+func NewExecClient(config *client.Config, verb, path string) *ExecClient {
 	return &ExecClient{
 		config: config,
 		verb:   verb,
@@ -76,7 +76,7 @@ func (p *execRequest) IO(ioStreams *IOStreams) *execRequest {
 }
 
 func (p *execRequest) Run() error {
-	client, err := rest.RESTClientFor(p.config)
+	client, err := client.RESTClientFor(p.config)
 	if err != nil {
 		return err
 	}
@@ -192,7 +192,7 @@ func (o *StreamOptions) SetupTTY() *term.TTY {
 }
 
 // DefaultRemoteExecutor is the standard implementation of remote command execution
-func RemoteExecute(method string, url *url.URL, config *rest.Config, stdin io.Reader, stdout, stderr io.Writer, tty bool, terminalSizeQueue term.TerminalSizeQueue) error {
+func RemoteExecute(method string, url *url.URL, config *client.Config, stdin io.Reader, stdout, stderr io.Writer, tty bool, terminalSizeQueue term.TerminalSizeQueue) error {
 	exec, err := remotecommand.NewSPDYExecutor(config, method, url)
 	if err != nil {
 		return err

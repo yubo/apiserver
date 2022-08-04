@@ -26,7 +26,7 @@ import (
 	"strconv"
 
 	lru "github.com/hashicorp/golang-lru"
-	"github.com/yubo/apiserver/pkg/rest"
+	rest "github.com/yubo/apiserver/pkg/client"
 	"github.com/yubo/golib/runtime"
 	"github.com/yubo/golib/runtime/serializer"
 	"github.com/yubo/golib/scheme"

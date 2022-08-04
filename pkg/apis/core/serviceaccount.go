@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/yubo/apiserver/pkg/apis/authentication"
-	"github.com/yubo/apiserver/pkg/rest"
+	"github.com/yubo/apiserver/pkg/client"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/watch"
 )
@@ -33,7 +33,7 @@ type ServiceAccountInterface interface {
 
 // serviceAccounts implements ServiceAccountInterface
 type serviceAccounts struct {
-	client rest.Interface
+	client client.Interface
 	ns     string
 }
 
@@ -51,7 +51,7 @@ func (c *serviceAccounts) Get(ctx context.Context, name string, options api.GetO
 		Namespace(c.ns).
 		Resource("serviceaccounts").
 		Name(name).
-		VersionedParams(&options, rest.NewParameterCodec()).
+		VersionedParams(&options, client.ParameterCodec).
 		Do(ctx).
 		Into(result)
 	return
