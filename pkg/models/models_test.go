@@ -8,18 +8,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/yubo/apiserver/pkg/apis/rbac"
 	"github.com/yubo/apiserver/pkg/storage"
-	storagedb "github.com/yubo/apiserver/pkg/storage/db"
+	dbstore "github.com/yubo/apiserver/pkg/storage/db"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/orm"
 
 	_ "github.com/yubo/golib/orm/mysql"
 	_ "github.com/yubo/golib/orm/sqlite"
-)
-
-var (
-	dsn       string
-	driver    string
-	available bool
 )
 
 func envDef(key, defaultValue string) string {
@@ -29,7 +23,7 @@ func envDef(key, defaultValue string) string {
 	return defaultValue
 }
 
-func runTests(t *testing.T, tests ...func()) {
+func runTests(t *testing.T, tests ...func(*role)) {
 	// See https://github.com/go-sql-driver/mysql/wiki/Testing
 	driver := envDef("TEST_DB_DRIVER", "sqlite3")
 	dsn := envDef("TEST_DB_DSN", "file:test.db?cache=shared&mode=memory")
@@ -41,10 +35,17 @@ func runTests(t *testing.T, tests ...func()) {
 	}
 	defer db.Close()
 
-	SetStorage(storagedb.New(db), "test_")
+	store := dbstore.New(db)
+	defer store.Drop("role")
+
+	m := NewModels(store)
+	m.Register(&role{})
+
+	roles := &role{store: m.NewModelStore("role")}
+	store.AutoMigrate("role", roles.NewObj())
 
 	for _, test := range tests {
-		test()
+		test(roles)
 	}
 }
 
@@ -60,14 +61,7 @@ func TestRole(t *testing.T) {
 	}
 
 	//orm.DEBUG = true
-
-	runTests(t, func() {
-		roles := &role{store: NewStore("role")}
-		roles.store.Drop()
-		defer roles.store.Drop()
-
-		AutoMigrate("role", roles.NewObj())
-
+	runTests(t, func(roles *role) {
 		t.Run("create role", func(t *testing.T) {
 			ret, err := roles.Create(context.TODO(), testRole)
 			assert.NoError(t, err)

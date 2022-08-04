@@ -7,11 +7,11 @@ import (
 	"github.com/yubo/golib/runtime"
 )
 
-var _ storage.KV = &store{}
+var _ storage.Store = &store{}
 
 type store struct{}
 
-func New() storage.KV {
+func New() storage.Store {
 	return newStore()
 }
 

@@ -26,13 +26,13 @@ import (
 	"os"
 	"reflect"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	api "github.com/yubo/apiserver/pkg/apis/audit"
+	auditinternal "github.com/yubo/apiserver/pkg/apis/audit"
 	clientcmdapi "github.com/yubo/apiserver/tools/clientcmd/api"
+	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/runtime"
 	"github.com/yubo/golib/runtime/serializer/json"
 	"github.com/yubo/golib/util/wait"
@@ -105,7 +105,7 @@ func newWebhook(t *testing.T, endpoint string) *backend {
 	require.NoError(t, stdjson.NewEncoder(f).Encode(config), "writing kubeconfig")
 
 	retryBackoff := wait.Backoff{
-		Duration: 500 * time.Millisecond,
+		Duration: api.NewDuration("500ms"),
 		Factor:   1.5,
 		Jitter:   0.2,
 		Steps:    5,
@@ -127,7 +127,7 @@ func TestWebhook(t *testing.T) {
 	backend := newWebhook(t, s.URL)
 
 	// Ensure this doesn't return a serialization error.
-	event := &api.Event{}
+	event := &auditinternal.Event{}
 	require.NoError(t, backend.processEvents(event), fmt.Sprintf("failed to send events"))
 	require.True(t, gotEvents, fmt.Sprintf("no events received"))
 }

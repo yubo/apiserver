@@ -20,7 +20,7 @@ type Pager struct {
 	r *Request
 
 	// term Pager
-	*rest.Pagination
+	*rest.PageParams
 	disablePage bool
 	total       int
 	pageTotal   int
@@ -38,10 +38,10 @@ func NewPager(r *Request, stdout io.Writer, disablePage bool) (*Pager, error) {
 		stdout:      stdout,
 	}
 
-	if pagination, err := getPaginationFrom(r.param); err != nil {
+	if pagination, err := getPageParamsFrom(r.param); err != nil {
 		return nil, err
 	} else {
-		p.Pagination = pagination
+		p.PageParams = pagination
 	}
 
 	if err := outputValidete(r.output); err != nil {
@@ -51,15 +51,15 @@ func NewPager(r *Request, stdout io.Writer, disablePage bool) (*Pager, error) {
 	return p, nil
 }
 
-func getPaginationFrom(input interface{}) (*rest.Pagination, error) {
+func getPageParamsFrom(input interface{}) (*rest.PageParams, error) {
 	rv := reflect.Indirect(reflect.ValueOf(input))
 	if rv.Kind() != reflect.Struct {
 		return nil, fmt.Errorf("request.input must be a pointer to a struct, got %s", rv.Kind())
 	}
 
-	pagination, ok := rv.FieldByName("Pagination").Addr().Interface().(*rest.Pagination)
+	pagination, ok := rv.FieldByName("PageParams").Addr().Interface().(*rest.PageParams)
 	if !ok {
-		return nil, errors.New("expected Pagination field with input struct")
+		return nil, errors.New("expected PageParams field with input struct")
 	}
 
 	return pagination, nil
@@ -115,7 +115,7 @@ func (p *Pager) Render(ctx context.Context, page int, rerend bool) (err error) {
 	if page >= p.pageTotal {
 		page = p.pageTotal
 	}
-	p.CurrentPage = page
+	p.Current = page
 	if err = r.Do(ctx); err != nil {
 		return
 	}
@@ -144,7 +144,7 @@ func (p *Pager) Dump(ctx context.Context) (err error) {
 	r := p.r
 
 	for i := 0; i < pageTotal; i++ {
-		p.CurrentPage = i
+		p.Current = i
 		if err = p.r.Do(ctx); err != nil {
 			return
 		}
@@ -172,7 +172,7 @@ func (p *Pager) Do(ctx context.Context) error {
 		fmt.Fprintf(p.stdout, "\033[?25h\n")
 	}()
 
-	if err := p.Render(ctx, p.CurrentPage, false); err != nil {
+	if err := p.Render(ctx, p.Current, false); err != nil {
 		return err
 	}
 
@@ -188,10 +188,10 @@ func (p *Pager) Do(ctx context.Context) error {
 		case 'q', byte(3), byte(27):
 			return nil
 		case 'n', 'f', ' ':
-			p.Render(ctx, p.CurrentPage+1, true)
+			p.Render(ctx, p.Current+1, true)
 			continue
 		case 'p', 'b':
-			p.Render(ctx, p.CurrentPage-1, true)
+			p.Render(ctx, p.Current-1, true)
 			continue
 		case '0':
 			if len(p.buff) == 0 {
@@ -215,10 +215,10 @@ func (p *Pager) Do(ctx context.Context) error {
 
 		switch keyCode {
 		case term.TERM_CODE_DOWN, term.TERM_CODE_RIGHT:
-			p.Render(ctx, p.CurrentPage+1, true)
+			p.Render(ctx, p.Current+1, true)
 			continue
 		case term.TERM_CODE_UP, term.TERM_CODE_LEFT:
-			p.Render(ctx, p.CurrentPage-1, true)
+			p.Render(ctx, p.Current-1, true)
 			continue
 		}
 	}

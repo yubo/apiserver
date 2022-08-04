@@ -6,15 +6,15 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/yubo/apiserver/pkg/server/httplog"
 	"github.com/yubo/apiserver/pkg/handlers/negotiation"
-	"github.com/yubo/golib/watch"
+	"github.com/yubo/apiserver/pkg/server/httplog"
 	"github.com/yubo/golib/api/errors"
 	"github.com/yubo/golib/runtime"
 	"github.com/yubo/golib/runtime/serializer/streaming"
 	"github.com/yubo/golib/scheme"
 	utilruntime "github.com/yubo/golib/util/runtime"
 	"github.com/yubo/golib/util/wsstream"
+	"github.com/yubo/golib/watch"
 	"golang.org/x/net/websocket"
 	"k8s.io/klog/v2"
 )
@@ -55,7 +55,7 @@ func ServeWatch(watcher watch.Interface, req *http.Request, w http.ResponseWrite
 	}
 	framer := serializer.StreamSerializer.Framer
 	streamSerializer := serializer.StreamSerializer.Serializer
-	encoder := codecs.EncoderForVersion(streamSerializer)
+	//encoder := codecs.EncoderForVersion(streamSerializer)
 	useTextFraming := serializer.EncodesAsText
 	if framer == nil {
 		return fmt.Errorf("no framer defined for %q available for embedded encoding", serializer.MediaType)
@@ -66,17 +66,12 @@ func ServeWatch(watcher watch.Interface, req *http.Request, w http.ResponseWrite
 		mediaType += ";stream=watch"
 	}
 
-	//embeddedEncoder := codecs.EncoderForVersion(serializer.Serializer)
-
 	server := &WatchServer{
-		Watching: watcher,
-
+		Watching:       watcher,
 		UseTextFraming: useTextFraming,
 		MediaType:      mediaType,
 		Framer:         framer,
-		Encoder:        encoder,
-		//EmbeddedEncoder: embeddedEncoder,
-
+		Encoder:        streamSerializer,
 		TimeoutFactory: &realTimeoutFactory{timeout},
 	}
 

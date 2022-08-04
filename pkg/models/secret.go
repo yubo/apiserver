@@ -24,13 +24,13 @@ type Secret interface {
 // pkg/registry/rbac/rest/storage_rbac.go
 func NewSecret() Secret {
 	o := &secret{}
-	o.store = NewStore(o.Name())
+	o.store = NewModelStore(o.Name())
 	return o
 }
 
 // secret implements the role interface.
 type secret struct {
-	store Store
+	store ModelStore
 }
 
 func (p *secret) Name() string {

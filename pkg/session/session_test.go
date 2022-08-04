@@ -3,7 +3,6 @@ package session
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -15,48 +14,44 @@ import (
 	"github.com/yubo/apiserver/pkg/models"
 	"github.com/yubo/apiserver/pkg/session/types"
 	"github.com/yubo/apiserver/pkg/storage"
-	storagedb "github.com/yubo/apiserver/pkg/storage/db"
+	dbstore "github.com/yubo/apiserver/pkg/storage/db"
 	"github.com/yubo/golib/orm"
 	"github.com/yubo/golib/util/clock"
 
+	_ "github.com/yubo/golib/orm/mysql"
 	_ "github.com/yubo/golib/orm/sqlite"
 )
 
-var (
-	driver   = "sqlite3"
-	dsn      = "file:test.db?cache=shared&mode=memory"
-	db       orm.DB
-	sessions *session
-)
-
-func TestMain(m *testing.M) {
-	if err := testInit(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+func envDef(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
 	}
-
-	code := m.Run()
-
-	db.Close()
-
-	os.Exit(code)
+	return defaultValue
 }
 
-func testInit() error {
-	var err error
+func runTests(t *testing.T, tests ...func(*session)) {
+	driver := envDef("TEST_DB_DRIVER", "sqlite3")
+	dsn := envDef("TEST_DB_DSN", "file:test.db?cache=shared&mode=memory")
 
-	// init storage
-	// init models
-	db, err = orm.Open(driver, dsn)
+	db, err := orm.Open(driver, dsn)
 	if err != nil {
-		return fmt.Errorf("open %s err %s", dsn, err)
+		t.Error(err)
+		return
 	}
+	defer db.Close()
 
-	models.SetStorage(storagedb.New(db), "test_")
-	sessions = &session{store: models.NewStore("session")}
-	sessions.store.Drop()
+	store := dbstore.New(db)
+	defer store.Drop("session")
 
-	return nil
+	m := models.NewModels(store)
+	m.Register(&session{})
+
+	sessions := &session{store: m.NewModelStore("session")}
+	store.AutoMigrate("session", sessions.NewObj())
+
+	for _, test := range tests {
+		test(sessions)
+	}
 }
 
 func TestDbSession(t *testing.T) {
@@ -67,95 +62,94 @@ func TestDbSession(t *testing.T) {
 		sid     string
 	)
 
-	cf := NewConfig()
+	runTests(t, func(sessions *session) {
+		cf := NewConfig()
 
-	if sm, err = NewSessionManager(cf, WithModel(sessions)); err != nil {
-		t.Fatalf("error NewSession: %s", err.Error())
-	}
-	defer sm.Stop()
+		if sm, err = NewSessionManager(cf, WithModel(sessions)); err != nil {
+			t.Fatalf("error NewSession: %s", err.Error())
+		}
+		defer sm.Stop()
 
-	models.AutoMigrate("session", sessions.NewObj())
-	defer sessions.store.Drop()
+		r, _ := http.NewRequest("GET", "", bytes.NewBuffer([]byte{}))
+		w := httptest.NewRecorder()
 
-	r, _ := http.NewRequest("GET", "", bytes.NewBuffer([]byte{}))
-	w := httptest.NewRecorder()
+		sessCtx, err = sm.Start(w, r)
+		assert.NoError(t, err)
 
-	sessCtx, err = sm.Start(w, r)
-	assert.NoError(t, err)
+		list, err := sessions.List(context.TODO(), storage.ListOptions{})
+		assert.NoError(t, err)
+		assert.Equal(t, 1, len(list))
 
-	list, err := sessions.List(context.TODO(), storage.ListOptions{})
-	assert.NoError(t, err)
-	assert.Equal(t, 1, len(list))
+		sessCtx.Set("abc", "11223344")
+		err = sessCtx.Update(w)
+		assert.NoError(t, err)
 
-	sessCtx.Set("abc", "11223344")
-	err = sessCtx.Update(w)
-	assert.NoError(t, err)
+		sid = sessCtx.Sid()
 
-	sid = sessCtx.Sid()
+		// new request
+		r, _ = http.NewRequest("GET", "", bytes.NewBuffer([]byte{}))
+		w = httptest.NewRecorder()
 
-	// new request
-	r, _ = http.NewRequest("GET", "", bytes.NewBuffer([]byte{}))
-	w = httptest.NewRecorder()
+		cookie := &http.Cookie{
+			Name:     cf.CookieName,
+			Value:    url.QueryEscape(sid),
+			Path:     "/",
+			HttpOnly: cf.HttpOnly,
+			Domain:   cf.Domain,
+		}
+		if cf.CookieLifetime.Duration > 0 {
+			cookie.Expires = time.Now().Add(cf.CookieLifetime.Duration)
+		}
+		http.SetCookie(w, cookie)
+		r.AddCookie(cookie)
 
-	cookie := &http.Cookie{
-		Name:     cf.CookieName,
-		Value:    url.QueryEscape(sid),
-		Path:     "/",
-		HttpOnly: cf.HttpOnly,
-		Domain:   cf.Domain,
-	}
-	if cf.CookieLifetime.Duration > 0 {
-		cookie.Expires = time.Now().Add(cf.CookieLifetime.Duration)
-	}
-	http.SetCookie(w, cookie)
-	r.AddCookie(cookie)
+		sessCtx, err = sm.Start(w, r)
+		assert.NoError(t, err)
 
-	sessCtx, err = sm.Start(w, r)
-	assert.NoError(t, err)
+		assert.Equal(t, "11223344", sessCtx.Get("abc"))
 
-	assert.Equal(t, "11223344", sessCtx.Get("abc"))
+		sessCtx.Set("abc", "22334455")
+		assert.Equal(t, "22334455", sessCtx.Get("abc"))
 
-	sessCtx.Set("abc", "22334455")
-	assert.Equal(t, "22334455", sessCtx.Get("abc"))
+		list, err = sessions.List(context.TODO(), storage.ListOptions{})
+		assert.NoError(t, err)
+		assert.Equal(t, 1, len(list))
 
-	list, err = sessions.List(context.TODO(), storage.ListOptions{})
-	assert.NoError(t, err)
-	assert.Equal(t, 1, len(list))
-
-	sm.Destroy(w, r)
-	list, err = sessions.List(context.TODO(), storage.ListOptions{})
-	assert.NoError(t, err)
-	assert.Equal(t, 0, len(list))
+		sm.Destroy(w, r)
+		list, err = sessions.List(context.TODO(), storage.ListOptions{})
+		assert.NoError(t, err)
+		assert.Equal(t, 0, len(list))
+	})
 }
 
 func TestDbSessionGC(t *testing.T) {
-	cf := NewConfig()
-	clock := &clock.FakeClock{}
-	clock.SetTime(time.Now())
-	orm.SetClock(clock)
+	runTests(t, func(sessions *session) {
+		cf := NewConfig()
+		clock := &clock.FakeClock{}
+		clock.SetTime(time.Now())
+		orm.SetClock(clock)
 
-	sm, err := NewSessionManager(cf, WithModel(sessions), WithClock(clock))
-	assert.NoError(t, err)
-	sm.GC()
-	defer sm.Stop()
+		sm, err := NewSessionManager(cf, WithModel(sessions), WithClock(clock))
 
-	models.AutoMigrate("session", sessions.NewObj())
-	defer sessions.store.Drop()
+		assert.NoError(t, err)
+		sm.GC()
+		defer sm.Stop()
 
-	r, _ := http.NewRequest("GET", "", bytes.NewBuffer([]byte{}))
-	w := httptest.NewRecorder()
+		r, _ := http.NewRequest("GET", "", bytes.NewBuffer([]byte{}))
+		w := httptest.NewRecorder()
 
-	_, err = sm.Start(w, r)
-	assert.NoError(t, err)
+		_, err = sm.Start(w, r)
+		assert.NoError(t, err)
 
-	list, err := sessions.List(context.TODO(), storage.ListOptions{})
-	assert.NoError(t, err)
-	assert.Equal(t, 1, len(list))
+		list, err := sessions.List(context.TODO(), storage.ListOptions{})
+		assert.NoError(t, err)
+		assert.Equal(t, 1, len(list))
 
-	clock.SetTime(clock.Now().Add(time.Hour * 25))
-	time.Sleep(100 * time.Millisecond)
+		clock.SetTime(clock.Now().Add(time.Hour * 25))
+		time.Sleep(100 * time.Millisecond)
 
-	list, err = sessions.List(context.TODO(), storage.ListOptions{})
-	assert.NoError(t, err)
-	assert.Equal(t, 0, len(list))
+		list, err = sessions.List(context.TODO(), storage.ListOptions{})
+		assert.NoError(t, err)
+		assert.Equal(t, 0, len(list))
+	})
 }

@@ -24,6 +24,7 @@ import (
 	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/logs"
 	"github.com/yubo/golib/proc"
+	"github.com/yubo/golib/runtime"
 	"github.com/yubo/golib/scheme"
 	"github.com/yubo/golib/util/sets"
 	utilwaitgroup "github.com/yubo/golib/util/waitgroup"
@@ -178,6 +179,10 @@ func (p *serverModule) UnlistedHandlePrefix(path string, handler http.Handler) {
 // ListedPaths is an alphabetically sorted list of paths to be reported at /.
 func (p *serverModule) ListedPaths() []string {
 	return p.server.ListedPathProvider.ListedPaths()
+}
+
+func (p *serverModule) Serializer() runtime.NegotiatedSerializer {
+	return p.server.Serializer
 }
 
 // Filter appends a container FilterFunction. These are called before dispatching

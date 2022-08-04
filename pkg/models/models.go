@@ -24,17 +24,17 @@ type module struct {
 	db.DB
 	name   string
 	config *Config
-	kv     storage.KV
+	store  storage.Store
 
 	registry map[string]Model
 	models   []Model
 }
 
 type Config struct {
-	Storage     string `json:"storage" description:"kv storage type, db"`
+	Storage     string `json:"storage" description:"storage type, db"`
 	DBName      string `json:"dbName" flag:"models-db-name" description:"the database name of db.databases"`
 	AutoMigrate bool   `json:"autoMigrate" flag:"models-automigrate" description:"auto migrate"`
-	TablePrefix string `json:"tablePrefix" flag:"models-table-prefix" description:"table name prefix of the database"`
+	//TablePrefix string `json:"tablePrefix" flag:"models-table-prefix" description:"table name prefix of the database"`
 }
 
 func newConfig() *Config {
@@ -79,19 +79,18 @@ func (p *module) init(ctx context.Context) (err error) {
 
 	switch cf.Storage {
 	case "db":
-		var ok bool
-		p.DB, ok = options.DBFrom(ctx, cf.DBName)
-		if !ok {
+		if db, ok := options.DBFrom(ctx, cf.DBName); !ok {
 			return fmt.Errorf("unable to get db[%s] from context", cf.DBName)
+		} else {
+			p.store = dbstore.New(db)
+			p.DB = db
 		}
-
-		p.kv = dbstore.New(p.DB)
 	case "etcd":
-		p.kv = etcd.New()
+		p.store = etcd.New()
 	case "file":
-		p.kv = file.New()
+		p.store = file.New()
 	case "mem":
-		p.kv = mem.New()
+		p.store = mem.New()
 
 	default:
 		return fmt.Errorf("unsupported storage %s", cf.Storage)
@@ -102,17 +101,16 @@ func (p *module) init(ctx context.Context) (err error) {
 
 func (p *module) preStart(ctx context.Context) error {
 	// automigrate
-	if p.config.Storage == "db" && p.config.AutoMigrate {
+	if p.config.AutoMigrate && p.DB != nil {
 		var errs []error
 		for _, m := range p.models {
 			if err := p.AutoMigrate(m.NewObj(), orm.WithTable(m.Name())); err != nil {
 				errs = append(errs, err)
 			}
 		}
-		if err := errors.NewAggregate(errs); err != nil {
-			return err
-		}
+		return errors.NewAggregate(errs)
 	}
+
 	return nil
 }
 
@@ -129,18 +127,26 @@ func (p *module) Register(ms ...Model) {
 	}
 }
 
-func (p *module) NewStore(kind string) Store {
+func (p *module) NewModelStore(kind string) ModelStore {
 	if _, ok := p.registry[kind]; !ok {
 		panic(fmt.Sprintf("model %s that has not been registered", kind))
 	}
 
-	if p.kv == nil {
+	if p.store == nil {
 		panic("storage that has not been set")
 	}
 
-	return Store{
-		kv:       p.kv,
+	return ModelStore{
+		store:    p.store,
 		resource: kind,
+	}
+}
+
+// for test
+func NewModels(s storage.Store) Models {
+	return &module{
+		store:    s,
+		registry: map[string]Model{},
 	}
 }
 
@@ -153,8 +159,8 @@ func Register(ms ...Model) {
 	_module.Register(ms...)
 }
 
-func NewStore(kind string) Store {
-	return _module.NewStore(kind)
+func NewModelStore(kind string) ModelStore {
+	return _module.NewModelStore(kind)
 }
 
 func DB() orm.DB {

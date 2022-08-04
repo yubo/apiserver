@@ -1,13 +1,15 @@
-syntax = "proto3";
-option go_package = "examples/otel-trace-grpc/api";
+syntax = "proto2";
+
 package api;
 
+option go_package = "examples/otel-trace-grpc/api";
+
 message UserGetInput {
-	string Name = 1;
+	required string Name = 1;
 }
 
 message User {
-	string Name = 1;
+	required string Name = 1;
 }
 
 service Service {

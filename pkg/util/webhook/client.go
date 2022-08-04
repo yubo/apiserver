@@ -29,6 +29,7 @@ import (
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/golib/runtime"
 	"github.com/yubo/golib/runtime/serializer"
+	"github.com/yubo/golib/scheme"
 	utilerrors "github.com/yubo/golib/util/errors"
 )
 
@@ -74,9 +75,11 @@ func NewClientManager(addToSchemaFuncs ...func() error) (ClientManager, error) {
 	}
 	return ClientManager{
 		cache: cache,
-		negotiatedSerializer: serializer.NegotiatedSerializerWrapper(runtime.SerializerInfo{
-			Serializer: serializer.NewCodecFactory().LegacyCodec(),
-		}),
+		negotiatedSerializer: serializer.NegotiatedSerializerWrapper(
+			runtime.SerializerInfo{
+				Serializer: scheme.Codec,
+			},
+		),
 	}, nil
 }
 

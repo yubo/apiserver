@@ -73,6 +73,35 @@ func TestRequest(t *testing.T) {
 	}
 }
 
+func TestRequestParam(t *testing.T) {
+	type Foo struct {
+		Namespace string `param:"path" name:"namespace"`
+		Current   int    `param:"query" name:"current"`
+		PageSize  int    `param:"query" name:"pageSize"`
+	}
+
+	testServer, fakeHandler := testServerEnv(t, nil)
+	defer testServer.Close()
+
+	req, err := NewRequest(
+		testServer.URL,
+		WithMethod("GET"),
+		WithPath("/api/v1/{namespace}"),
+		WithParams(&Foo{
+			Namespace: "test",
+			Current:   1,
+			PageSize:  10,
+		}),
+	)
+	assert.NoError(t, err)
+
+	err = req.Do(context.Background())
+	assert.NoError(t, err)
+
+	assert.Equal(t, "/api/v1/test?current=1&pageSize=10", fakeHandler.RequestReceived.RequestURI)
+
+}
+
 func validate(t *testing.T, expectedMethod, expectedPath string, expectedInput interface{}, fakeHandler *utiltesting.FakeHandler) {
 	if expectedInput == nil {
 		fakeHandler.ValidateRequest(t, expectedPath, expectedMethod, nil)
@@ -85,7 +114,7 @@ func validate(t *testing.T, expectedMethod, expectedPath string, expectedInput i
 }
 
 func testServerEnv(t *testing.T, output interface{}) (*httptest.Server, *utiltesting.FakeHandler) {
-	expectedBody, _ := runtime.Encode(scheme.Codecs.LegacyCodec(), output)
+	expectedBody, _ := runtime.Encode(scheme.Codec, output)
 	fakeHandler := utiltesting.FakeHandler{
 		StatusCode:   200,
 		ResponseBody: string(expectedBody),

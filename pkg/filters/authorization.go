@@ -28,6 +28,7 @@ import (
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/responsewriters"
+	"github.com/yubo/golib/runtime"
 )
 
 const (
@@ -42,7 +43,7 @@ const (
 )
 
 // WithAuthorizationCheck passes all authorized requests on to handler, and returns a forbidden error otherwise.
-func WithAuthorization(handler http.Handler, a authorizer.Authorizer) http.Handler {
+func WithAuthorization(handler http.Handler, a authorizer.Authorizer, s runtime.NegotiatedSerializer) http.Handler {
 	if a == nil {
 		klog.Warning("Authorization is disabled")
 		return handler
@@ -75,11 +76,11 @@ func WithAuthorization(handler http.Handler, a authorizer.Authorizer) http.Handl
 		klog.V(4).InfoS("Forbidden", "URI", req.RequestURI, "Reason", reason)
 		audit.LogAnnotation(ae, decisionAnnotationKey, decisionForbid)
 		audit.LogAnnotation(ae, reasonAnnotationKey, reason)
-		responsewriters.Forbidden(ctx, attributes, w, req, reason)
+		responsewriters.Forbidden(ctx, attributes, w, req, reason, s)
 	})
 }
 
-func Authz(a authorizer.Authorizer) restful.FilterFunction {
+func Authz(a authorizer.Authorizer, s runtime.NegotiatedSerializer) restful.FilterFunction {
 	if a == nil {
 		return nil
 	}
@@ -114,7 +115,7 @@ func Authz(a authorizer.Authorizer) restful.FilterFunction {
 		klog.V(4).InfoS("Forbidden", "URI", req.Request.RequestURI, "Reason", reason)
 		audit.LogAnnotation(ae, decisionAnnotationKey, decisionForbid)
 		audit.LogAnnotation(ae, reasonAnnotationKey, reason)
-		responsewriters.Forbidden(ctx, attributes, resp, req.Request, reason)
+		responsewriters.Forbidden(ctx, attributes, resp, req.Request, reason, s)
 	}
 }
 

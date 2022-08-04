@@ -9,9 +9,9 @@ import (
 	"github.com/yubo/golib/runtime"
 )
 
-// KV offers a common interface for object marshaling/unmarshaling operations and
+// Store offers a common interface for object marshaling/unmarshaling operations and
 // hides all the storage-related operations behind it.
-type KV interface {
+type Store interface {
 	Create(ctx context.Context, key string, obj, out runtime.Object) error
 
 	Delete(ctx context.Context, key string, out runtime.Object) error

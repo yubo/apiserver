@@ -93,7 +93,7 @@ func SerializeObject(mediaType string, encoder runtime.Encoder, hw http.Response
 		utiltrace.Field{Key: "url", Value: req.URL.Path},
 		utiltrace.Field{Key: "protocol", Value: req.Proto},
 		utiltrace.Field{Key: "mediaType", Value: mediaType},
-		utiltrace.Field{Key: "encoder", Value: encoder.Identifier()})
+	)
 	defer trace.LogIfLong(5 * time.Second)
 
 	w := &deferredResponseWriter{
@@ -294,10 +294,6 @@ func WriteObjectNegotiated(s runtime.NegotiatedSerializer, w http.ResponseWriter
 
 	encoder := s.EncoderForVersion(serializer.Serializer)
 	SerializeObject(serializer.MediaType, encoder, w, req, statusCode, object)
-}
-
-func Error(err error, w http.ResponseWriter, req *http.Request) int {
-	return ErrorNegotiated(err, serializer, w, req)
 }
 
 // ErrorNegotiated renders an error to the response. Returns the HTTP status code of the error.

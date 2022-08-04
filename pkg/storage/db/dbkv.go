@@ -10,22 +10,18 @@ import (
 	"github.com/yubo/golib/runtime"
 )
 
-var _ storage.KV = &store{}
+var _ storage.Store = &Store{}
 
-// k8s.io/apiserver/pkg/registry/generic/registry/store.go
-type store struct {
+// k8s.io/apiserver/pkg/registry/generic/registry/Store.go
+type Store struct {
 	db orm.Interface
 }
 
-func New(db orm.DB) storage.KV {
-	return newStore(db)
+func New(db orm.DB) *Store {
+	return &Store{db: db}
 }
 
-func newStore(db orm.DB) *store {
-	return &store{db: db}
-}
-
-func (p store) getdb(ctx context.Context) orm.Interface {
+func (p Store) getdb(ctx context.Context) orm.Interface {
 	// for transaction (tx)
 	if db, ok := orm.InterfaceFrom(ctx); ok {
 		return db
@@ -71,7 +67,7 @@ func parseKeyWithSelector(key, selector string) (string, string, error) {
 }
 
 // AutoMigrate create table if not exist
-func (p store) AutoMigrate(key string, obj runtime.Object) error {
+func (p Store) AutoMigrate(key string, obj runtime.Object) error {
 	db := p.getdb(context.TODO())
 	table, _, _ := parseKey(key)
 
@@ -79,7 +75,7 @@ func (p store) AutoMigrate(key string, obj runtime.Object) error {
 }
 
 // drop table if exist
-func (p store) Drop(key string) error {
+func (p Store) Drop(key string) error {
 	db := p.getdb(context.TODO())
 	table, _, _ := parseKey(key)
 
@@ -91,7 +87,7 @@ func (p store) Drop(key string) error {
 	return db.DropTable(opt)
 }
 
-func (p store) Create(ctx context.Context, key string, obj, out runtime.Object) error {
+func (p Store) Create(ctx context.Context, key string, obj, out runtime.Object) error {
 	db := p.getdb(ctx)
 
 	table, selector, err := parseKeyWithSelector(key, "")
@@ -110,7 +106,7 @@ func (p store) Create(ctx context.Context, key string, obj, out runtime.Object) 
 	return p.get(db, table, selector, false, out)
 }
 
-func (p store) Delete(ctx context.Context, key string, out runtime.Object) error {
+func (p Store) Delete(ctx context.Context, key string, out runtime.Object) error {
 	db := p.getdb(ctx)
 
 	table, selector, err := parseKeyWithSelector(key, "")
@@ -127,7 +123,7 @@ func (p store) Delete(ctx context.Context, key string, out runtime.Object) error
 	return db.Delete(nil, orm.WithTable(table), orm.WithSelector(selector))
 }
 
-func (p store) Update(ctx context.Context, key string, obj, out runtime.Object) error {
+func (p Store) Update(ctx context.Context, key string, obj, out runtime.Object) error {
 	db := p.getdb(ctx)
 
 	table, selector, err := parseKeyWithSelector(key, "")
@@ -146,7 +142,7 @@ func (p store) Update(ctx context.Context, key string, obj, out runtime.Object) 
 	return p.get(db, table, selector, false, out)
 }
 
-func (p store) Get(ctx context.Context, key string, opts storage.GetOptions, out runtime.Object) error {
+func (p Store) Get(ctx context.Context, key string, opts storage.GetOptions, out runtime.Object) error {
 	db := p.getdb(ctx)
 
 	table, selector, err := parseKeyWithSelector(key, "")
@@ -157,7 +153,7 @@ func (p store) Get(ctx context.Context, key string, opts storage.GetOptions, out
 	return p.get(db, table, selector, opts.IgnoreNotFound, out)
 }
 
-func (p store) get(db orm.Interface, table, selector string, ignoreNotFound bool, out runtime.Object) error {
+func (p Store) get(db orm.Interface, table, selector string, ignoreNotFound bool, out runtime.Object) error {
 	opts := []orm.Option{orm.WithTable(table), orm.WithSelector(selector)}
 	if ignoreNotFound {
 		opts = append(opts, orm.WithIgnoreNotFoundErr())
@@ -166,7 +162,7 @@ func (p store) get(db orm.Interface, table, selector string, ignoreNotFound bool
 	return db.Get(out, opts...)
 }
 
-func (p store) List(ctx context.Context, key string, opts storage.ListOptions, out runtime.Object, total *int64) error {
+func (p Store) List(ctx context.Context, key string, opts storage.ListOptions, out runtime.Object, total *int64) error {
 	db := p.getdb(ctx)
 	table, _, _ := parseKey(key)
 

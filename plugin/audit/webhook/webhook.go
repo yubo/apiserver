@@ -59,7 +59,7 @@ func retryOnError(err error) bool {
 }
 
 func loadWebhook(configFile string, retryBackoff wait.Backoff, customDial utilnet.DialFunc) (*webhook.GenericWebhook, error) {
-	w, err := webhook.NewGenericWebhook(scheme.Codecs, configFile, retryBackoff, customDial)
+	w, err := webhook.NewGenericWebhook(scheme.Codec, configFile, retryBackoff, customDial)
 	if err != nil {
 		return nil, err
 	}

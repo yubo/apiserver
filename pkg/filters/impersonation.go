@@ -23,19 +23,20 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/yubo/apiserver/pkg/server/httplog"
 	"github.com/yubo/apiserver/pkg/audit"
 	"github.com/yubo/apiserver/pkg/authentication/serviceaccount"
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/responsewriters"
+	"github.com/yubo/apiserver/pkg/server/httplog"
 	"github.com/yubo/golib/api"
+	"github.com/yubo/golib/runtime"
 	"k8s.io/klog/v2"
 )
 
 // WithImpersonation is a filter that will inspect and check requests that attempt to change the user.Info for their requests
-func WithImpersonation(handler http.Handler, a authorizer.Authorizer) http.Handler {
+func WithImpersonation(handler http.Handler, a authorizer.Authorizer, s runtime.NegotiatedSerializer) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		impersonationRequests, err := buildImpersonationRequests(req.Header)
 		if err != nil {
@@ -101,7 +102,7 @@ func WithImpersonation(handler http.Handler, a authorizer.Authorizer) http.Handl
 
 			default:
 				klog.V(4).InfoS("unknown impersonation request type", "Request", impersonationRequest)
-				responsewriters.Forbidden(ctx, actingAsAttributes, w, req, fmt.Sprintf("unknown impersonation request type: %v", impersonationRequest))
+				responsewriters.Forbidden(ctx, actingAsAttributes, w, req, fmt.Sprintf("unknown impersonation request type: %v", impersonationRequest), s)
 				return
 			}
 
@@ -109,7 +110,7 @@ func WithImpersonation(handler http.Handler, a authorizer.Authorizer) http.Handl
 				decision, reason, err := a.Authorize(ctx, actingAsAttributes)
 				if err != nil || decision != authorizer.DecisionAllow {
 					klog.V(4).InfoS("Forbidden", "URI", req.RequestURI, "Reason", reason, "Error", err)
-					responsewriters.Forbidden(ctx, actingAsAttributes, w, req, reason)
+					responsewriters.Forbidden(ctx, actingAsAttributes, w, req, reason, s)
 					return
 				}
 			}

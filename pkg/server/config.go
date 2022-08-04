@@ -138,6 +138,8 @@ type APIServer interface {
 	// Filter appends a container FilterFunction. These are called before dispatching
 	// a http.Request to a WebService from the container
 	Filter(restful.FilterFunction)
+
+	Serializer() runtime.NegotiatedSerializer
 }
 
 type SecureServingInfo struct {
@@ -270,7 +272,7 @@ func DefaultBuildHandlerChain(apiHandler http.Handler, s *Config) http.Handler {
 	handler := apiHandler
 
 	handler = filters.TrackCompleted(apiHandler)
-	handler = filters.WithAuthorization(handler, s.Authorization.Authorizer)
+	handler = filters.WithAuthorization(handler, s.Authorization.Authorizer, s.Serializer)
 	handler = filters.TrackStarted(handler, "authorization")
 
 	// TODO:
@@ -283,14 +285,14 @@ func DefaultBuildHandlerChain(apiHandler http.Handler, s *Config) http.Handler {
 	//}
 
 	handler = filters.TrackCompleted(handler)
-	handler = filters.WithImpersonation(handler, s.Authorization.Authorizer)
+	handler = filters.WithImpersonation(handler, s.Authorization.Authorizer, s.Serializer)
 	handler = filters.TrackStarted(handler, "impersonation")
 
 	handler = filters.TrackCompleted(handler)
 	handler = filters.WithAudit(handler, s.AuditBackend, s.AuditPolicyChecker, s.LongRunningFunc)
 	handler = filters.TrackStarted(handler, "audit")
 
-	failedHandler := filters.Unauthorized()
+	failedHandler := filters.Unauthorized(s.Serializer)
 	failedHandler = filters.WithFailedAuthenticationAudit(failedHandler, s.AuditBackend, s.AuditPolicyChecker)
 
 	failedHandler = filters.TrackCompleted(failedHandler)
@@ -309,7 +311,7 @@ func DefaultBuildHandlerChain(apiHandler http.Handler, s *Config) http.Handler {
 	// context with deadline. The go-routine can keep running, while the timeout logic will return a timeout to the client.
 	handler = filters.WithTimeoutForNonLongRunningRequests(handler, s.LongRunningFunc)
 
-	handler = filters.WithRequestDeadline(handler, s.AuditBackend, s.AuditPolicyChecker, s.LongRunningFunc, s.RequestTimeout)
+	handler = filters.WithRequestDeadline(handler, s.AuditBackend, s.AuditPolicyChecker, s.LongRunningFunc, s.Serializer, s.RequestTimeout)
 	handler = filters.WithWaitGroup(handler, s.LongRunningFunc, s.HandlerChainWaitGroup)
 	handler = filters.WithRequestInfo(handler, s.RequestInfoResolver)
 	//if s.SecureServing != nil && s.GoawayChance > 0 {

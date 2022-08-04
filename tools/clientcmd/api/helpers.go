@@ -41,12 +41,10 @@ func init() {
 	sDec, _ = base64.StdEncoding.DecodeString("DATA+OMITTED")
 	dataOmittedBytes = []byte(string(sDec))
 
-	yamlSerializer := json.NewYAMLSerializer()
-	Codec = versioning.NewDefaultingCodecForScheme(
-		yamlSerializer,
-		yamlSerializer,
+	yamlSerializer := json.NewSerializerWithOptions(
+		json.SerializerOptions{Yaml: true, Pretty: false, Strict: false},
 	)
-
+	Codec = versioning.NewDefaultingCodecForScheme(yamlSerializer, yamlSerializer)
 }
 
 // IsConfigEmpty returns true if the config is empty.

@@ -74,25 +74,6 @@ func LoadExecCredential(data []byte) (runtime.Object, *rest.Config, error) {
 		return nil, nil, fmt.Errorf("decode: %w", err)
 	}
 
-	//expectedGK := schema.GroupKind{
-	//	Group: clientauthentication.SchemeGroupVersion.Group,
-	//	Kind:  "ExecCredential",
-	//}
-	//if gvk.GroupKind() != expectedGK {
-	//	return nil, nil, fmt.Errorf(
-	//		"invalid group/kind: wanted %s, got %s",
-	//		expectedGK.String(),
-	//		gvk.GroupKind().String(),
-	//	)
-	//}
-
-	// Explicitly convert object here so that we can return a nicer error message above for when the
-	// data represents an invalid type.
-	//var execCredential clientauthentication.ExecCredential
-	//if err := scheme.Convert(obj, &execCredential, nil); err != nil {
-	//	return nil, nil, fmt.Errorf("cannot convert to ExecCredential: %w", err)
-	//}
-
 	if obj.Spec.Cluster == nil {
 		return nil, nil, errors.New("ExecCredential does not contain cluster information")
 	}

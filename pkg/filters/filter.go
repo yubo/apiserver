@@ -3,7 +3,6 @@ package filters
 import (
 	"github.com/emicklei/go-restful/v3"
 	"github.com/yubo/apiserver/pkg/request"
-	"github.com/yubo/golib/runtime/serializer"
 )
 
 func HttpFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
@@ -14,5 +13,3 @@ func HttpFilter(req *restful.Request, resp *restful.Response, chain *restful.Fil
 
 	chain.ProcessFilter(req, resp)
 }
-
-var Codecs = serializer.NewCodecFactory()

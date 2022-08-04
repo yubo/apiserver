@@ -24,13 +24,13 @@ type ClusterRole interface {
 // pkg/registry/rbac/rest/storage_rbac.go
 func NewClusterRole() ClusterRole {
 	o := &clusterRole{}
-	o.store = NewStore(o.Name())
+	o.store = NewModelStore(o.Name())
 	return o
 }
 
 // clusterRole implements the role interface.
 type clusterRole struct {
-	store Store
+	store ModelStore
 }
 
 func (p *clusterRole) Name() string {

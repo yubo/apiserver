@@ -22,7 +22,7 @@ type field struct {
 }
 
 func (p field) String() string {
-	return fmt.Sprintf("key %s index %v %s", p.Key, p.index, p.fieldProps)
+	return fmt.Sprintf("key %s index %v %v", p.Key, p.index, p.fieldProps)
 }
 
 type fieldProps struct {

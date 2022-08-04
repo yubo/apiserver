@@ -25,8 +25,8 @@ import (
 	"strings"
 
 	"github.com/yubo/apiserver/pkg/authentication/user"
-	"github.com/yubo/apiserver/plugin/authorizer/abac/api"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
+	"github.com/yubo/apiserver/plugin/authorizer/abac/api"
 	"github.com/yubo/golib/scheme"
 	"k8s.io/klog/v2"
 )
@@ -63,7 +63,7 @@ func NewFromFile(path string) (PolicyList, error) {
 	scanner := bufio.NewScanner(file)
 	pl := make(PolicyList, 0)
 
-	decoder := scheme.Codecs.UniversalDeserializer()
+	decoder := scheme.Decoder
 
 	i := 0
 	unversionedLines := 0

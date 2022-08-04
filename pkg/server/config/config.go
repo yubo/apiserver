@@ -6,6 +6,7 @@ import (
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/apiserver/pkg/server"
 	"github.com/yubo/golib/configer"
+	"github.com/yubo/golib/runtime"
 	"github.com/yubo/golib/scheme"
 	"github.com/yubo/golib/util"
 	utilerrors "github.com/yubo/golib/util/errors"
@@ -62,6 +63,9 @@ type Config struct {
 	EnableHealthz bool `json:"enableHealthz"`
 }
 
+func (p *Config) Default(in runtime.Object) {
+}
+
 func (p *Config) NewServerConfig() *server.Config {
 	return &server.Config{
 		CorsAllowedOriginList:  p.GenericServerRunOptions.CorsAllowedOriginList,
@@ -70,7 +74,7 @@ func (p *Config) NewServerConfig() *server.Config {
 		ShutdownTimeout:        p.GenericServerRunOptions.RequestTimeout.Duration,
 		ShutdownDelayDuration:  p.GenericServerRunOptions.ShutdownDelayDuration.Duration,
 		LegacyAPIGroupPrefixes: sets.NewString(server.DefaultLegacyAPIPrefix),
-		Serializer:             scheme.Codecs.WithoutConversion(),
+		Serializer:             scheme.NegotiatedSerializer,
 		EnableOpenAPI:          p.EnableOpenAPI,
 		SecuritySchemes:        p.SecuritySchemes,
 	}

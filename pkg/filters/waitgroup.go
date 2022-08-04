@@ -23,8 +23,9 @@ import (
 
 	apirequest "github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/responsewriters"
-	"github.com/yubo/golib/runtime"
 	apierrors "github.com/yubo/golib/api/errors"
+	"github.com/yubo/golib/runtime"
+	"github.com/yubo/golib/scheme"
 	utilwaitgroup "github.com/yubo/golib/util/waitgroup"
 )
 
@@ -48,7 +49,7 @@ func WithWaitGroup(handler http.Handler, longRunning apirequest.LongRunningReque
 				w.Header().Set("X-Content-Type-Options", "nosniff")
 				statusErr := apierrors.NewServiceUnavailable("apiserver is shutting down").Status()
 				w.WriteHeader(int(statusErr.Code))
-				fmt.Fprintln(w, runtime.EncodeOrDie(Codecs.LegacyCodec(), &statusErr))
+				fmt.Fprintln(w, runtime.EncodeOrDie(scheme.Codecs.LegacyCodec(), &statusErr))
 				return
 			}
 			defer wg.Done()

@@ -26,29 +26,39 @@ func RouteBuilderReads(b *restful.RouteBuilder, v reflect.Value) error {
 }
 
 func buildParam(b *restful.RouteBuilder, f *field) error {
-	parameter := restful.FormParameter(f.key, f.description)
+	var parameter *restful.Parameter
 
-	switch f.typ.Kind() {
+	switch f.Type.Kind() {
 	case reflect.String:
 		parameter.DataType("string")
 	case reflect.Bool:
-		parameter.DataType("bool")
+		parameter.DataType("boolean")
 	case reflect.Uint, reflect.Int, reflect.Int32, reflect.Int64:
 		parameter.DataType("integer")
 	case reflect.Slice:
-		if typeName := f.typ.Elem().Name(); typeName != "string" {
-			panicType(f.typ, "unsupported param")
+		if typeName := f.Type.Elem().Name(); typeName != "string" {
+			panicType(f.Type, "unsupported param")
 		}
 	default:
-		panicType(f.typ, "unsupported type")
+		panicType(f.Type, "unsupported param")
 	}
 
-	if f.format != "" {
-		parameter.DataFormat(f.format)
+	if f.Required {
+		parameter.Required(true)
 	}
 
-	b.Param(parameter)
+	if f.Minimum != nil {
+		parameter.Minimum(*f.Minimum)
+	}
+	if f.Maximum != nil {
+		parameter.Maximum(*f.Maximum)
+	}
+
+	b.Param(parameter.
+		DataFormat(f.Format).
+		DefaultValue(f.Default).
+		PossibleValues(f.Enum),
+	)
 
 	return nil
-
 }

@@ -12,12 +12,12 @@ import (
 // pkg/registry/rbac/rest/storage_rbac.go
 func NewSession() types.Session {
 	o := &session{}
-	o.store = models.NewStore(o.Name())
+	o.store = models.NewModelStore(o.Name())
 	return o
 }
 
 type session struct {
-	store models.Store
+	store models.ModelStore
 }
 
 func (p *session) Name() string {

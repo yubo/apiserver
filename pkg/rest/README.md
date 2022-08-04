@@ -14,3 +14,10 @@ client-go/plugin/pkg/client/auth -> ./auth
 - minimum
 - default
 
+
+## rest
+
+rest.Config.ContentConfig.ContentType
+- [x] application/json
+- [x] application/yaml
+- [ ] application/x-www-form-urlencoded

@@ -188,7 +188,7 @@ func validate(testParam TestParam, t *testing.T, body []byte, fakeHandler *utilt
 		}
 	}
 	statusOut := &api.Status{}
-	_, err := runtime.Decode(scheme.Codecs.UniversalDeserializer(), body, statusOut)
+	_, err := runtime.Decode(scheme.Decoder, body, statusOut)
 	if testParam.testBody {
 		if testParam.testBodyErrorIsNotNil && err == nil {
 			t.Errorf("Expected Error")
@@ -220,10 +220,7 @@ func testServerEnv(t *testing.T, statusCode int) (*httptest.Server, *utiltesting
 
 func restClient(testServer *httptest.Server) (*RESTClient, error) {
 	c, err := RESTClientFor(&Config{
-		Host: testServer.URL,
-		ContentConfig: ContentConfig{
-			NegotiatedSerializer: scheme.Codecs.WithoutConversion(),
-		},
+		Host:     testServer.URL,
 		Username: "user",
 		Password: "pass",
 	})

@@ -25,6 +25,7 @@ import (
 	genericapirequest "github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/responsewriters"
 	apierrors "github.com/yubo/golib/api/errors"
+	"github.com/yubo/golib/runtime"
 	"k8s.io/klog/v2"
 )
 
@@ -71,10 +72,10 @@ func WithAuthentication(handler http.Handler, auth authenticator.Request, failed
 	})
 }
 
-func Unauthorized() http.Handler {
+func Unauthorized(s runtime.NegotiatedSerializer) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 
-		responsewriters.Error(apierrors.NewUnauthorized("Unauthorized"), w, req)
+		responsewriters.ErrorNegotiated(apierrors.NewUnauthorized("Unauthorized"), s, w, req)
 	})
 }
 

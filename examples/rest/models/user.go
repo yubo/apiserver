@@ -22,13 +22,13 @@ type User interface {
 
 func NewUser() User {
 	o := &user{}
-	o.store = models.NewStore(o.Name())
+	o.store = models.NewModelStore(o.Name())
 	return o
 }
 
 // user implements the user interface.
 type user struct {
-	store models.Store
+	store models.ModelStore
 }
 
 func (p *user) Name() string {

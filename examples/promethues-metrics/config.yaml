@@ -1,0 +1,8 @@
+apiserver:
+  secureServing:
+    enabled: false
+  insecureServing:
+    bindAddress: 0.0.0.0
+    enabled: true
+    bindPort: 8080
+  enableMetrics: true

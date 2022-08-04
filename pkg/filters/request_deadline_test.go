@@ -30,7 +30,7 @@ import (
 	"github.com/yubo/apiserver/pkg/audit/policy"
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/golib/runtime"
-	"github.com/yubo/golib/runtime/serializer"
+	"github.com/yubo/golib/scheme"
 	utilclock "github.com/yubo/golib/util/clock"
 )
 
@@ -176,6 +176,7 @@ func TestWithRequestDeadline(t *testing.T) {
 			fakeChecker := policy.FakeChecker(auditinternal.LevelRequestResponse, nil)
 			withDeadline := WithRequestDeadline(handler, fakeSink, fakeChecker,
 				func(_ *http.Request, _ *request.RequestInfo) bool { return test.longRunning },
+				newSerializer(),
 				requestTimeoutMaximum)
 			withDeadline = WithRequestInfo(withDeadline, &fakeRequestResolver{})
 
@@ -228,7 +229,7 @@ func TestWithRequestDeadlineWithClock(t *testing.T) {
 	fakeSink := &fakeAuditSink{}
 	fakeChecker := policy.FakeChecker(auditinternal.LevelRequestResponse, nil)
 	withDeadline := withRequestDeadline(handler, fakeSink, fakeChecker,
-		func(_ *http.Request, _ *request.RequestInfo) bool { return false }, time.Minute, fakeClock)
+		func(_ *http.Request, _ *request.RequestInfo) bool { return false }, newSerializer(), time.Minute, fakeClock)
 	withDeadline = WithRequestInfo(withDeadline, &fakeRequestResolver{})
 
 	testRequest := newRequest(t, "/api/v1/namespaces?timeout=1s")
@@ -263,7 +264,7 @@ func TestWithRequestDeadlineWithPanic(t *testing.T) {
 	fakeSink := &fakeAuditSink{}
 	fakeChecker := policy.FakeChecker(auditinternal.LevelRequestResponse, nil)
 	withDeadline := WithRequestDeadline(handler, fakeSink, fakeChecker,
-		func(_ *http.Request, _ *request.RequestInfo) bool { return false }, 1*time.Minute)
+		func(_ *http.Request, _ *request.RequestInfo) bool { return false }, newSerializer(), 1*time.Minute)
 	withDeadline = WithRequestInfo(withDeadline, &fakeRequestResolver{})
 	withPanicRecovery := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		defer func() {
@@ -300,7 +301,7 @@ func TestWithRequestDeadlineWithRequestTimesOut(t *testing.T) {
 	fakeSink := &fakeAuditSink{}
 	fakeChecker := policy.FakeChecker(auditinternal.LevelRequestResponse, nil)
 	withDeadline := WithRequestDeadline(handler, fakeSink, fakeChecker,
-		func(_ *http.Request, _ *request.RequestInfo) bool { return false }, 1*time.Minute)
+		func(_ *http.Request, _ *request.RequestInfo) bool { return false }, newSerializer(), 1*time.Minute)
 	withDeadline = WithRequestInfo(withDeadline, &fakeRequestResolver{})
 
 	testRequest := newRequest(t, fmt.Sprintf("/api/v1/namespaces?timeout=%s", timeout))
@@ -330,7 +331,7 @@ func message(err error) string {
 }
 
 func newSerializer() runtime.NegotiatedSerializer {
-	return serializer.NewCodecFactory().WithoutConversion()
+	return scheme.NegotiatedSerializer
 }
 
 type fakeRequestResolver struct{}

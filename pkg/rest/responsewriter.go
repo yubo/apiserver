@@ -6,6 +6,7 @@ import (
 	"github.com/emicklei/go-restful/v3"
 	"github.com/go-openapi/spec"
 	"github.com/yubo/apiserver/pkg/responsewriters"
+	"github.com/yubo/golib/runtime"
 	"k8s.io/klog/v2"
 )
 
@@ -24,7 +25,7 @@ type RespWriter interface {
 	SwaggerHandler(s *spec.Swagger)
 
 	// RespWrite: use to customize response output format
-	RespWrite(resp *restful.Response, req *http.Request, data interface{}, err error)
+	RespWrite(resp *restful.Response, req *http.Request, data interface{}, err error, s runtime.NegotiatedSerializer)
 }
 
 type defaultRespWriter struct{}
@@ -39,9 +40,9 @@ func (p *defaultRespWriter) AddRoute(method, path string) {}
 func (p *defaultRespWriter) SwaggerHandler(s *spec.Swagger) {}
 
 // RespWrite: use to customize response output format
-func (p *defaultRespWriter) RespWrite(resp *restful.Response, req *http.Request, data interface{}, err error) {
+func (p *defaultRespWriter) RespWrite(resp *restful.Response, req *http.Request, data interface{}, err error, s runtime.NegotiatedSerializer) {
 	if err != nil {
-		code := responsewriters.Error(err, resp, req)
+		code := responsewriters.ErrorNegotiated(err, s, resp, req)
 		klog.V(3).Infof("response %d %s", code, err.Error())
 		return
 	}
@@ -52,6 +53,7 @@ func (p *defaultRespWriter) RespWrite(resp *restful.Response, req *http.Request,
 	case *[]byte:
 		resp.Write(*t)
 	default:
-		resp.WriteEntity(t)
+		//resp.WriteEntity(t)
+		responsewriters.WriteObjectNegotiated(s, resp.ResponseWriter, req, 200, data)
 	}
 }

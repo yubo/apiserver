@@ -24,13 +24,13 @@ type RoleBinding interface {
 // pkg/registry/rbac/rest/storage_rbac.go
 func NewRoleBinding() RoleBinding {
 	o := &roleBinding{}
-	o.store = NewStore(o.Name())
+	o.store = NewModelStore(o.Name())
 	return o
 }
 
 // roleBinding implements the role interface.
 type roleBinding struct {
-	store Store
+	store ModelStore
 }
 
 func (p *roleBinding) Name() string {

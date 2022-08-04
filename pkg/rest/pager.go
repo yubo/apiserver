@@ -34,18 +34,18 @@ func SetLimitPage(def, max int) {
 	}
 }
 
-type Pagination struct {
-	Offset      int     `param:"query,hidden" description:"offset, priority is more than currentPage"`
-	Limit       int     `param:"query,hidden" description:"limit, priority is more than pageSize"`
-	PageSize    int     `param:"query" description:"page size" default:"10" maximum:"500"`
-	CurrentPage int     `param:"query" description:"current page number, start at 1(defualt)" default:"1"`
-	Sorter      *string `param:"query" description:"column name"`
-	Order       *string `param:"query" description:"asc(default)/desc" default:"asc" enum:"asc|desc"`
-	Dump        bool    `param:"query,hidden" description:""`
+type PageParams struct {
+	Offset   int     `param:"query,hidden" description:"offset, priority is more than currentPage"`
+	Limit    int     `param:"query,hidden" description:"limit, priority is more than pageSize"`
+	PageSize int     `param:"query" description:"page size" default:"10" maximum:"500"`
+	Current  int     `param:"query" description:"current page number, start at 1(defualt)" default:"1"`
+	Sorter   *string `param:"query" description:"column name"`
+	Order    *string `param:"query" description:"asc(default)/desc" enum:"asc|desc"`
+	Dump     bool    `param:"query,hidden" description:""`
 }
 
 // TODO: validate query
-func (p Pagination) ListOptions(query *string, total *int64, orders ...string) (*storage.ListOptions, error) {
+func (p PageParams) ListOptions(query *string, total *int64, orders ...string) (*storage.ListOptions, error) {
 	offset, limit := p.OffsetLimit()
 	if sorter := util.SnakeCasedName(util.StringValue(p.Sorter)); sorter != "" {
 		orders = append([]string{"`" + sorter + "` " +
@@ -60,21 +60,21 @@ func (p Pagination) ListOptions(query *string, total *int64, orders ...string) (
 	}, nil
 }
 
-func (p *Pagination) GetPageSize() int {
+func (p *PageParams) GetPageSize() int {
 	if p.PageSize == 0 {
 		p.PageSize = defLimitPage
 	}
 	return p.PageSize
 }
 
-func (p *Pagination) GetCurPage() int {
-	if p.CurrentPage == 0 {
-		p.CurrentPage = 1
+func (p *PageParams) GetCurPage() int {
+	if p.Current == 0 {
+		p.Current = 1
 	}
-	return p.CurrentPage
+	return p.Current
 }
 
-func (p *Pagination) OffsetLimit() (offset, limit int) {
+func (p *PageParams) OffsetLimit() (offset, limit int) {
 	limit = p.Limit
 
 	if limit == 0 {
@@ -92,7 +92,7 @@ func (p *Pagination) OffsetLimit() (offset, limit int) {
 	offset = p.Offset
 
 	if offset <= 0 {
-		offset = (p.CurrentPage - 1) * limit
+		offset = (p.Current - 1) * limit
 	}
 
 	if offset < 0 {
@@ -103,7 +103,7 @@ func (p *Pagination) OffsetLimit() (offset, limit int) {
 }
 
 // Deprecated
-func (p Pagination) SqlExtra(orders ...string) string {
+func (p PageParams) SqlExtra(orders ...string) string {
 	offset, limit := p.OffsetLimit()
 
 	var order string
@@ -120,7 +120,7 @@ func (p Pagination) SqlExtra(orders ...string) string {
 }
 
 // Deprecated
-func (p Pagination) SqlExtra2(prefix string, orders ...string) string {
+func (p PageParams) SqlExtra2(prefix string, orders ...string) string {
 	offset, limit := p.OffsetLimit()
 
 	var order string

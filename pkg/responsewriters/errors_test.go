@@ -26,6 +26,7 @@ import (
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	"github.com/yubo/apiserver/pkg/request"
+	"github.com/yubo/golib/scheme"
 )
 
 func TestErrors(t *testing.T) {
@@ -74,7 +75,8 @@ func TestForbidden(t *testing.T) {
 	}
 	for _, test := range cases {
 		observer := httptest.NewRecorder()
-		Forbidden(request.NewDefaultContext(), test.attributes, observer, &http.Request{URL: &url.URL{Path: "/path"}}, test.reason)
+		negotiatedSerializer := scheme.NegotiatedSerializer
+		Forbidden(request.NewDefaultContext(), test.attributes, observer, &http.Request{URL: &url.URL{Path: "/path"}}, test.reason, negotiatedSerializer)
 		result := string(observer.Body.Bytes())
 		if result != test.expected {
 			t.Errorf("Forbidden response body(%#v...)\n expected: %v\ngot:       %v", test.attributes, test.expected, result)

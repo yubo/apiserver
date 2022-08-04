@@ -17,6 +17,34 @@ const (
 	HeaderType = "header"
 )
 
+// NewParameterCodec creates a ParameterCodec capable of transforming url values into versioned objects and back.
+func NewParameterCodec() request.ParameterCodec {
+	return &parameterCodec{}
+}
+
+// parameterCodec {{{
+
+var _ request.ParameterCodec = &parameterCodec{}
+
+// parameterCodec implements conversion to and from query parameters and objects.
+type parameterCodec struct{}
+
+// DecodeParameters converts the provided url.Values into an object of type From with the kind of into, and then
+// converts that object to into (if necessary). Returns an error if the operation cannot be completed.
+func (c *parameterCodec) DecodeParameters(parameters *request.Parameters, into interface{}) error {
+	return decodeParameters(parameters, into)
+}
+
+// EncodeParameters converts the provided object into the to version, then converts that object to url.Values.
+// Returns an error if conversion is not possible.
+func (c *parameterCodec) EncodeParameters(obj interface{}) (*request.Parameters, error) {
+	return encodeParameters(obj)
+}
+
+func (c *parameterCodec) RouteBuilderParameters(b *restful.RouteBuilder, obj interface{}) {
+	buildParameters(b, obj)
+}
+
 func decodeParameters(parameters *request.Parameters, into interface{}) error {
 	if parameters == nil {
 		return nil
@@ -118,7 +146,7 @@ func encodeParameters(obj interface{}) (*request.Parameters, error) {
 	fields := cachedTypeFields(rt)
 
 	for i, f := range fields.list {
-		klog.V(11).InfoS("fileds info", "index", i, "type", rv.Type(),
+		klog.V(10).InfoS("fileds info", "index", i, "type", rv.Type(),
 			"name", f.Name, "key", f.Key, "paramType", f.ParamType,
 			"skip", f.Skip, "required", f.Required, "hidden", f.Hidden,
 			"format", f.Format)
@@ -155,7 +183,7 @@ func encodeParameters(obj interface{}) (*request.Parameters, error) {
 	return params, nil
 }
 
-func buildParameters(rb *restful.RouteBuilder, obj interface{}) {
+func buildParameters(b *restful.RouteBuilder, obj interface{}) {
 	rv := reflect.Indirect(reflect.ValueOf(obj))
 	rt := rv.Type()
 
@@ -165,13 +193,13 @@ func buildParameters(rb *restful.RouteBuilder, obj interface{}) {
 
 	fields := cachedTypeFields(rt)
 	for _, f := range fields.list {
-		if err := setRouteBuilderParam(rb, &f); err != nil {
+		if err := buildParam(b, &f); err != nil {
 			panic(err)
 		}
 	}
 }
 
-func setRouteBuilderParam(rb *restful.RouteBuilder, f *field) error {
+func buildParam(b *restful.RouteBuilder, f *field) error {
 	var parameter *restful.Parameter
 
 	switch f.ParamType {
@@ -217,7 +245,7 @@ func setRouteBuilderParam(rb *restful.RouteBuilder, f *field) error {
 		parameter.Maximum(*f.Maximum)
 	}
 
-	rb.Param(parameter.
+	b.Param(parameter.
 		DataFormat(f.Format).
 		DefaultValue(f.Default).
 		PossibleValues(f.Enum),
@@ -226,26 +254,4 @@ func setRouteBuilderParam(rb *restful.RouteBuilder, f *field) error {
 	return nil
 }
 
-// parameterCodec implements conversion to and from query parameters and objects.
-type parameterCodec struct{}
-
-// DecodeParameters converts the provided url.Values into an object of type From with the kind of into, and then
-// converts that object to into (if necessary). Returns an error if the operation cannot be completed.
-func (c *parameterCodec) DecodeParameters(parameters *request.Parameters, into interface{}) error {
-	return decodeParameters(parameters, into)
-}
-
-// EncodeParameters converts the provided object into the to version, then converts that object to url.Values.
-// Returns an error if conversion is not possible.
-func (c *parameterCodec) EncodeParameters(obj interface{}) (*request.Parameters, error) {
-	return encodeParameters(obj)
-}
-
-func (c *parameterCodec) RouteBuilderParameters(rb *restful.RouteBuilder, obj interface{}) {
-	buildParameters(rb, obj)
-}
-
-// NewParameterCodec creates a ParameterCodec capable of transforming url values into versioned objects and back.
-func NewParameterCodec() request.ParameterCodec {
-	return &parameterCodec{}
-}
+// }}}

@@ -3,6 +3,7 @@ package urlencoded
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -18,27 +19,32 @@ var fieldCache sync.Map // map[reflect.Type]structFields
 // A field represents a single field found in a struct.
 // `param:"query,required" format:"password" description:"aaa"`
 type field struct {
-	tagOpt
+	fieldProps
 	typ   reflect.Type
 	index []int
 }
 
 func (p field) String() string {
-	return fmt.Sprintf("key %s index %v type %s required %v param %s", p.key, p.index, p.typ, p.required, p.paramType)
+	return fmt.Sprintf("key %s index %v type %s required %v param %s", p.Key, p.index, p.typ, p.Required, p.ParamType)
 }
 
-type tagOpt struct {
-	name        string
-	key         string
-	paramType   string
-	format      string
-	skip        bool
-	required    bool
-	description string
+type fieldProps struct {
+	Key string
+
+	ParamType string
+	Skip      bool
+	Required  bool
+
+	Name        string
+	Format      string
+	Description string
+	Enum        []string // enum:<a|b|c>
+	Maximum     *float64 // maximum: 500
+	Minimum     *float64 // minimum: 10
+	Default     string
 }
 
 type structFields struct {
-	hasData   bool
 	list      []field
 	nameIndex map[string]int
 }
@@ -57,7 +63,6 @@ func cachedTypeFields(t reflect.Type) structFields {
 // and then any reachable anonymous structs.
 func typeFields(t reflect.Type) structFields {
 	// Anonymous fields to explore at the current level and the next.
-	hasData := false
 	current := []field{}
 	next := []field{{typ: t}}
 
@@ -102,8 +107,8 @@ func typeFields(t reflect.Type) structFields {
 					// Ignore unexported non-embedded fields.
 					continue
 				}
-				opt := getTagOpt(sf)
-				if opt.skip {
+				opt := getFieldProps(sf)
+				if opt.Skip {
 					continue
 				}
 				index := make([]int, len(f.index)+1)
@@ -117,11 +122,11 @@ func typeFields(t reflect.Type) structFields {
 				}
 
 				// Record found field and index sequence.
-				if opt.name != "" || !sf.Anonymous || ft.Kind() != reflect.Struct {
+				if opt.Name != "" || !sf.Anonymous || ft.Kind() != reflect.Struct {
 					field := field{
-						tagOpt: opt,
-						index:  index,
-						typ:    ft,
+						fieldProps: opt,
+						index:      index,
+						typ:        ft,
 					}
 
 					fields = append(fields, field)
@@ -146,13 +151,13 @@ func typeFields(t reflect.Type) structFields {
 
 	nameIndex := make(map[string]int, len(fields))
 	for i, field := range fields {
-		if _, ok := nameIndex[field.key]; ok {
+		if _, ok := nameIndex[field.Key]; ok {
 			panicType(field.typ, fmt.Sprintf("duplicate field key %s %s",
 				t.Name(), field))
 		}
-		nameIndex[field.key] = i
+		nameIndex[field.Key] = i
 	}
-	return structFields{hasData, fields, nameIndex}
+	return structFields{fields, nameIndex}
 }
 
 func getSubv(rv reflect.Value, index []int, allowCreate bool) (reflect.Value, error) {
@@ -181,29 +186,50 @@ func getSubv(rv reflect.Value, index []int, allowCreate bool) (reflect.Value, er
 // `format:"password"`
 // `description:"ooxxoo"`
 // func getTags(ff reflect.StructField) (name, paramType, format string, skip bool) {
-func getTagOpt(sf reflect.StructField) (opt tagOpt) {
+func getFieldProps(sf reflect.StructField) (opt fieldProps) {
 	if sf.Anonymous {
 		return
 	}
 	tag := sf.Tag.Get("param")
 	typ, opts := parseTag(tag)
 	if typ != "data" {
-		opt.skip = true
+		opt.Skip = true
 		return
 	}
-	opt.paramType = DataType
+	opt.ParamType = DataType
 	if opts.Contains("required") {
-		opt.required = true
+		opt.Required = true
 	}
 
-	opt.name = sf.Tag.Get("name")
-	opt.format = sf.Tag.Get("format")
-	opt.description = sf.Tag.Get("description")
+	opt.Name = sf.Tag.Get("name")
+	opt.Format = sf.Tag.Get("format")
+	opt.Description = sf.Tag.Get("description")
+	opt.Default = sf.Tag.Get("default")
 
-	if opt.name == "" {
-		opt.key = util.LowerCamelCasedName(sf.Name)
+	if v := sf.Tag.Get("enum"); v != "" {
+		opt.Enum = strings.Split(v, "|")
+	}
+
+	if opt.Name == "" {
+		opt.Key = util.LowerCamelCasedName(sf.Name)
 	} else {
-		opt.key = opt.name
+		opt.Key = opt.Name
+	}
+
+	if v := sf.Tag.Get("maximum"); v != "" {
+		f, err := strconv.ParseFloat(v, 64)
+		if err != nil {
+			panic(err)
+		}
+		opt.Maximum = &f
+	}
+
+	if v := sf.Tag.Get("minimum"); v != "" {
+		f, err := strconv.ParseFloat(v, 64)
+		if err != nil {
+			panic(err)
+		}
+		opt.Minimum = &f
 	}
 
 	return

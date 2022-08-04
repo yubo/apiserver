@@ -160,14 +160,19 @@ func WithPrefix(prefix string) RequestOption {
 		o.prefix = prefix
 	}
 }
+func WithPath(path string) RequestOption {
+	return func(o *RequestOptions) {
+		o.prefix = path
+	}
+}
 func WithDebug() RequestOption {
 	return func(o *RequestOptions) {
 		o.debug = true
 	}
 }
 
-// WithParam: encode by request.ParameterCodec for req.{HEAD, Param, Path}
-func WithParam(param interface{}) RequestOption {
+// WithParams: encode by request.ParameterCodec for req.{HEAD, Param, Path}
+func WithParams(param interface{}) RequestOption {
 	return func(o *RequestOptions) {
 		o.param = param
 	}

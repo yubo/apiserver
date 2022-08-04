@@ -33,8 +33,13 @@ func NewSessionManager(cf *Config, optsInput ...Option) (types.SessionManager, e
 		opts.clock = clock.RealClock{}
 	}
 
+	session := opts.sessions
+	if session == nil {
+		session = NewSession()
+	}
+
 	return &sessionManager{
-		Session: NewSession(),
+		Session: session,
 		config:  cf,
 		Options: opts,
 	}, nil

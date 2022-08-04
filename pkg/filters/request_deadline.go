@@ -30,6 +30,7 @@ import (
 	"github.com/yubo/apiserver/pkg/responsewriters"
 	"github.com/yubo/golib/api"
 	apierrors "github.com/yubo/golib/api/errors"
+	"github.com/yubo/golib/runtime"
 	utilclock "github.com/yubo/golib/util/clock"
 	utilruntime "github.com/yubo/golib/util/runtime"
 	"k8s.io/klog/v2"
@@ -47,14 +48,14 @@ const (
 // requestTimeoutMaximum specifies the default request timeout value.
 func WithRequestDeadline(handler http.Handler, sink audit.Sink, policy policy.Checker,
 	longRunning request.LongRunningRequestCheck,
-	//negotiatedSerializer runtime.NegotiatedSerializer,
+	s runtime.NegotiatedSerializer,
 	requestTimeoutMaximum time.Duration,
 ) http.Handler {
-	return withRequestDeadline(handler, sink, policy, longRunning, requestTimeoutMaximum, utilclock.RealClock{})
+	return withRequestDeadline(handler, sink, policy, longRunning, s, requestTimeoutMaximum, utilclock.RealClock{})
 }
 
 func withRequestDeadline(handler http.Handler, sink audit.Sink, policy policy.Checker, longRunning request.LongRunningRequestCheck,
-	requestTimeoutMaximum time.Duration, clock utilclock.PassiveClock) http.Handler {
+	s runtime.NegotiatedSerializer, requestTimeoutMaximum time.Duration, clock utilclock.PassiveClock) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
 
@@ -74,7 +75,7 @@ func withRequestDeadline(handler http.Handler, sink audit.Sink, policy policy.Ch
 
 			klog.Errorf("Error - %s: %#v", err.Error(), req.RequestURI)
 
-			failed := failedErrorHandler(statusErr)
+			failed := failedErrorHandler(s, statusErr)
 			failWithAudit := withFailedRequestAudit(failed, statusErr, sink, policy)
 			failWithAudit.ServeHTTP(w, req)
 			return
@@ -134,9 +135,9 @@ func withFailedRequestAudit(failedHandler http.Handler, statusErr *apierrors.Sta
 
 // failedErrorHandler returns an http.Handler that uses the specified StatusError object
 // to render an error response to the request.
-func failedErrorHandler(statusErr *apierrors.StatusError) http.Handler {
+func failedErrorHandler(s runtime.NegotiatedSerializer, statusErr *apierrors.StatusError) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		responsewriters.Error(statusErr, w, req)
+		responsewriters.ErrorNegotiated(statusErr, s, w, req)
 		//ctx := req.Context()
 		//requestInfo, found := request.RequestInfoFrom(ctx)
 		//if !found {

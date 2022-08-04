@@ -15,6 +15,7 @@ import (
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/responsewriters"
 	"github.com/yubo/apiserver/pkg/rest/urlencoded"
+	"github.com/yubo/golib/runtime"
 	"k8s.io/klog/v2"
 )
 
@@ -53,6 +54,8 @@ type GoRestfulContainer interface {
 	HandlePrefix(path string, handler http.Handler)
 	// UnlistedHandlePrefix is like UnlistedHandle, but matches for anything under the path.  Like a standard golang trailing slash.
 	UnlistedHandlePrefix(path string, handler http.Handler)
+
+	Serializer() runtime.NegotiatedSerializer
 }
 
 // sys.Filters > opt.Filter > opt.Filters > route.acl > route.filter > route.filters
@@ -107,7 +110,7 @@ func (p *WsOption) build() error {
 		p.RespWriter = DefaultRespWriter
 	}
 
-	rb := NewRouteBuilder(p.Ws, p.ParameterCodec)
+	b := NewRouteBuilder(p.Ws, p.ParameterCodec, p.GoRestfulContainer.Serializer())
 
 	for i := range p.Routes {
 		route := &p.Routes[i]
@@ -131,7 +134,7 @@ func (p *WsOption) build() error {
 			route.RespWriter = p.RespWriter
 		}
 
-		if err := rb.Build(route); err != nil {
+		if err := b.Build(route); err != nil {
 			return err
 		}
 	}
@@ -218,13 +221,14 @@ type ApiOutput struct {
 // struct -> RouteBuilder do
 type RouteBuilder struct {
 	ws             *restful.WebService
-	rb             *restful.RouteBuilder
+	b              *restful.RouteBuilder
 	consume        string
 	parameterCodec request.ParameterCodec
+	serializer     runtime.NegotiatedSerializer
 }
 
-func NewRouteBuilder(ws *restful.WebService, codec request.ParameterCodec) *RouteBuilder {
-	return &RouteBuilder{ws: ws, parameterCodec: codec}
+func NewRouteBuilder(ws *restful.WebService, codec request.ParameterCodec, s runtime.NegotiatedSerializer) *RouteBuilder {
+	return &RouteBuilder{ws: ws, parameterCodec: codec, serializer: s}
 }
 
 func (p *RouteBuilder) Build(wr *WsRoute) error {
@@ -242,7 +246,7 @@ func (p *RouteBuilder) Build(wr *WsRoute) error {
 	default:
 		panic("unsupported method " + wr.Method)
 	}
-	p.rb = b
+	p.b = b
 
 	if wr.Deprecated {
 		b.Deprecate()
@@ -403,7 +407,7 @@ func (p *RouteBuilder) registerHandle(b *restful.RouteBuilder, wr *WsRoute) erro
 			body := reflect.New(bodyType).Interface()
 
 			if err := ReadEntity(req, param, body, p.parameterCodec); err != nil {
-				responsewriters.Error(err, resp.ResponseWriter, req.Request)
+				responsewriters.ErrorNegotiated(err, p.serializer, resp.ResponseWriter, req.Request)
 				return
 			}
 
@@ -423,7 +427,7 @@ func (p *RouteBuilder) registerHandle(b *restful.RouteBuilder, wr *WsRoute) erro
 			// with param
 			param := reflect.New(paramType).Interface()
 			if err := ReadEntity(req, param, nil, p.parameterCodec); err != nil {
-				responsewriters.Error(err, resp.ResponseWriter, req.Request)
+				responsewriters.ErrorNegotiated(err, p.serializer, resp.ResponseWriter, req.Request)
 				return
 			}
 
@@ -440,12 +444,12 @@ func (p *RouteBuilder) registerHandle(b *restful.RouteBuilder, wr *WsRoute) erro
 		}
 
 		if numOut == 2 {
-			wr.RespWriter.RespWrite(resp, req.Request, toInterface(ret[0]), toError(ret[1]))
+			wr.RespWriter.RespWrite(resp, req.Request, toInterface(ret[0]), toError(ret[1]), p.serializer)
 			return
 		}
 
 		if numOut == 1 {
-			wr.RespWriter.RespWrite(resp, req.Request, nil, toError(ret[0]))
+			wr.RespWriter.RespWrite(resp, req.Request, nil, toError(ret[0]), p.serializer)
 		}
 	}
 
@@ -461,7 +465,7 @@ func (p *RouteBuilder) registerHandle(b *restful.RouteBuilder, wr *WsRoute) erro
 }
 
 func (p *RouteBuilder) buildParam(param interface{}) *RouteBuilder {
-	p.parameterCodec.RouteBuilderParameters(p.rb, param)
+	p.parameterCodec.RouteBuilderParameters(p.b, param)
 	return p
 }
 
@@ -471,14 +475,14 @@ func (p *RouteBuilder) buildBody(consume string, body interface{}) *RouteBuilder
 
 	klog.V(10).Infof("buildbody %s", rt.Name())
 	if consume == MIME_URL_ENCODED {
-		err := urlencoded.RouteBuilderReads(p.rb, rv)
+		err := urlencoded.RouteBuilderReads(p.b, rv)
 		if err != nil {
 			panic(err)
 		}
 		return p
 	}
 
-	p.rb.Reads(rv.Interface())
+	p.b.Reads(rv.Interface())
 	return p
 }
 

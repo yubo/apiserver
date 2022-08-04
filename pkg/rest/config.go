@@ -34,6 +34,7 @@ import (
 	"github.com/yubo/apiserver/pkg/version"
 	clientcmdapi "github.com/yubo/apiserver/tools/clientcmd/api"
 	"github.com/yubo/golib/runtime"
+	"github.com/yubo/golib/scheme"
 	certutil "github.com/yubo/golib/util/cert"
 	"github.com/yubo/golib/util/flowcontrol"
 	"k8s.io/klog/v2"
@@ -299,7 +300,8 @@ type ContentConfig struct {
 // the Kubernetes conventions, but may not be the Kubernetes API.
 func RESTClientFor(config *Config) (*RESTClient, error) {
 	if config.NegotiatedSerializer == nil {
-		return nil, fmt.Errorf("NegotiatedSerializer is required when initializing a RESTClient")
+		//return nil, fmt.Errorf("NegotiatedSerializer is required when initializing a RESTClient")
+		config.NegotiatedSerializer = scheme.NegotiatedSerializer
 	}
 
 	baseURL, err := defaultServerUrlFor(config)
@@ -335,14 +337,10 @@ func RESTClientFor(config *Config) (*RESTClient, error) {
 		}
 	}
 
-	//if config.GroupVersion != nil {
-	//	gv = *config.GroupVersion
-	//}
 	clientContent := ClientContentConfig{
 		AcceptContentTypes: config.AcceptContentTypes,
 		ContentType:        config.ContentType,
-		//GroupVersion:       gv,
-		Negotiator: runtime.NewClientNegotiator(config.NegotiatedSerializer),
+		Negotiator:         runtime.NewClientNegotiator(config.NegotiatedSerializer),
 	}
 
 	restClient, err := NewRESTClient(baseURL, clientContent, rateLimiter, httpClient)

@@ -40,7 +40,7 @@ const defaultRequestTimeout = 30 * time.Second
 // Handy for the client that provides a custom initial delay only.
 func DefaultRetryBackoffWithInitialDelay(initialBackoffDelay time.Duration) wait.Backoff {
 	return wait.Backoff{
-		Duration: api.Duration{initialBackoffDelay},
+		Duration: api.Duration{Duration: initialBackoffDelay},
 		Factor:   1.5,
 		Jitter:   0.2,
 		Steps:    5,
@@ -72,17 +72,11 @@ func DefaultShouldRetry(err error) bool {
 }
 
 // NewGenericWebhook creates a new GenericWebhook from the provided kubeconfig file.
-func NewGenericWebhook(codecFactory serializer.CodecFactory, configFile string, retryBackoff wait.Backoff, customDial utilnet.DialFunc) (*GenericWebhook, error) {
-	return newGenericWebhook(codecFactory, configFile, retryBackoff, defaultRequestTimeout, customDial)
+func NewGenericWebhook(codec runtime.Codec, configFile string, retryBackoff wait.Backoff, customDial utilnet.DialFunc) (*GenericWebhook, error) {
+	return newGenericWebhook(codec, configFile, retryBackoff, defaultRequestTimeout, customDial)
 }
 
-func newGenericWebhook(codecFactory serializer.CodecFactory, kubeConfigFile string, retryBackoff wait.Backoff, requestTimeout time.Duration, customDial utilnet.DialFunc) (*GenericWebhook, error) {
-	//for _, groupVersion := range groupVersions {
-	//	if !scheme.IsVersionRegistered(groupVersion) {
-	//		return nil, fmt.Errorf("webhook plugin requires enabling extension resource: %s", groupVersion)
-	//	}
-	//}
-
+func newGenericWebhook(codec runtime.Codec, kubeConfigFile string, retryBackoff wait.Backoff, requestTimeout time.Duration, customDial utilnet.DialFunc) (*GenericWebhook, error) {
 	loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
 	loadingRules.ExplicitPath = kubeConfigFile
 	loader := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, &clientcmd.ConfigOverrides{})
@@ -103,8 +97,9 @@ func newGenericWebhook(codecFactory serializer.CodecFactory, kubeConfigFile stri
 	// Rate limiting should happen when deciding how many requests to serve.
 	clientConfig.QPS = -1
 
-	codec := codecFactory.LegacyCodec()
-	clientConfig.ContentConfig.NegotiatedSerializer = serializer.NegotiatedSerializerWrapper(runtime.SerializerInfo{Serializer: codec})
+	clientConfig.ContentConfig.NegotiatedSerializer = serializer.NegotiatedSerializerWrapper(
+		runtime.SerializerInfo{Serializer: codec},
+	)
 
 	clientConfig.Dial = customDial
 

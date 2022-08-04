@@ -13,6 +13,7 @@ import (
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/responsewriters"
 	"github.com/yubo/apiserver/pkg/rest"
+	"github.com/yubo/golib/runtime"
 )
 
 // https://pro.ant.design/zh-CN/docs/request
@@ -84,7 +85,7 @@ func (p *respWriter) Name() string {
 
 // RespWrite: use to customize response output format
 // https://pro.ant.design/zh-CN/docs/request
-func (p *respWriter) RespWrite(resp *restful.Response, req *http.Request, data interface{}, err error) {
+func (p *respWriter) RespWrite(resp *restful.Response, req *http.Request, data interface{}, err error, s runtime.NegotiatedSerializer) {
 	v := map[string]interface{}{
 		"success": true,
 		"host":    _hostname,
@@ -104,7 +105,8 @@ func (p *respWriter) RespWrite(resp *restful.Response, req *http.Request, data i
 		v["errorCode"] = strconv.Itoa(int(responsewriters.ErrorToAPIStatus(err).Code))
 	}
 
-	resp.WriteEntity(v)
+	//	resp.WriteEntity(v)
+	responsewriters.WriteObjectNegotiated(s, resp.ResponseWriter, req, 200, v)
 }
 
 // SwaggerHandler: called at PostBuildSwaggerObjectHandler, use to rewrite the response definitions

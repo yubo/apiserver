@@ -6,12 +6,6 @@ global:
 logging:
   level: info
 
-debug:
-  address: "127.0.0.1:6831"
-  pprof: true
-  expvar: true
-  metrics: true
-
 tracing:
   debug: false
   serviceName: all-in-one

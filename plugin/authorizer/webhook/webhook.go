@@ -246,7 +246,7 @@ func convertToSARExtra(extra map[string][]string) map[string]authorization.Extra
 // and returns a SubjectAccessReviewInterface that uses that client. Note that the client submits SubjectAccessReview
 // requests to the exact path specified in the kubeconfig file, so arbitrary non-API servers can be targeted.
 func subjectAccessReviewInterfaceFromKubeconfig(kubeConfigFile string, retryBackoff wait.Backoff, customDial utilnet.DialFunc) (subjectAccessReviewer, error) {
-	gw, err := webhook.NewGenericWebhook(scheme.Codecs, kubeConfigFile, retryBackoff, customDial)
+	gw, err := webhook.NewGenericWebhook(scheme.Codec, kubeConfigFile, retryBackoff, customDial)
 	if err != nil {
 		return nil, err
 	}
