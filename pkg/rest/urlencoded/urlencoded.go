@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"net/url"
 	"reflect"
-	"strings"
 
 	restful "github.com/emicklei/go-restful/v3"
 	"github.com/yubo/golib/api/errors"
@@ -73,13 +72,13 @@ func (s *Serializer) Write(resp *restful.Response, status int, v interface{}) er
 
 // encode {{{
 type Encoder struct {
-	w      io.Writer
+	writer io.Writer
 	values url.Values
 }
 
 func NewEncoder(w io.Writer) *Encoder {
 	klog.V(5).Info("encoder entering")
-	return &Encoder{w: w, values: make(url.Values)}
+	return &Encoder{writer: w, values: make(url.Values)}
 }
 
 func (p *Encoder) Encode(src interface{}) error {
@@ -88,7 +87,7 @@ func (p *Encoder) Encode(src interface{}) error {
 		return err
 	}
 
-	if _, err := p.w.Write([]byte(p.values.Encode())); err != nil {
+	if _, err := p.writer.Write([]byte(p.values.Encode())); err != nil {
 		return err
 	}
 
@@ -134,40 +133,24 @@ func (p *Encoder) scan(src interface{}) error {
 		return fmt.Errorf("schema: interface must be a struct got %s", rt.String())
 	}
 
-	for i := 0; i < rt.NumField(); i++ {
-		fv := rv.Field(i)
-		ff := rt.Field(i)
-
-		if fv.Kind() == reflect.Ptr {
-			if fv.IsNil() {
-				continue
-			}
-			fv = fv.Elem()
-		}
-
-		if !fv.CanInterface() {
-			continue
-		}
-
-		name, _, skip, inline := getTags(ff)
-		if skip {
-			continue
-		}
-
-		if inline {
-			if err := p.scan(fv.Interface()); err != nil {
-				return err
+	fields := cachedTypeFields(rt)
+	for _, f := range fields.list {
+		subv, err := getSubv(rv, f.index, false)
+		if err != nil || subv.IsZero() {
+			if f.Required {
+				return fmt.Errorf("%v must be set", f.Key)
 			}
 			continue
 		}
 
-		data, err := util.GetValue(fv)
+		key := f.Key
+		data, err := util.GetValue(subv)
 		if err != nil {
 			return err
 		}
 
-		if len(data) > 0 {
-			p.values[name] = data
+		for i := range data {
+			p.values.Add(key, data[i])
 		}
 	}
 
@@ -178,14 +161,14 @@ func (p *Encoder) scan(src interface{}) error {
 
 // decode {{{
 type Decoder struct {
-	r      io.Reader
+	reader io.Reader
 	values url.Values
 	form   url.Values
 }
 
 func NewDecoder(r io.Reader) *Decoder {
 	klog.V(5).Infof("decoder entering")
-	return &Decoder{r: r}
+	return &Decoder{reader: r}
 }
 
 func (p *Decoder) Form(form url.Values) *Decoder {
@@ -197,7 +180,7 @@ func (p *Decoder) Decode(dst interface{}) error {
 	if p.form != nil {
 		p.values = p.form
 	} else {
-		b, err := ioutil.ReadAll(p.r)
+		b, err := ioutil.ReadAll(p.reader)
 		if err != nil {
 			return err
 		}
@@ -238,64 +221,20 @@ func (p *Decoder) decode(rv reflect.Value, rt reflect.Type) error {
 		return errors.NewInternalError(fmt.Errorf("schema: interface must be a pointer to struct"))
 	}
 
-	for i := 0; i < rt.NumField(); i++ {
-		fv := rv.Field(i)
-		ff := rt.Field(i)
-		ft := ff.Type
-
-		name, _, skip, inline := getTags(ff)
-
-		if !fv.CanSet() {
-			klog.V(5).Infof("can't addr name %s, continue", name)
-			continue
+	fields := cachedTypeFields(rt)
+	for _, f := range fields.list {
+		subv, err := getSubv(rv, f.index, true)
+		if err != nil {
+			return err
 		}
 
-		if skip {
-			continue
-		}
-
-		if inline {
-			// use addr() let fv can set
-			util.PrepareValue(fv, ft)
-			if err := p.decode(fv, ft); err != nil {
-				return err
-			}
-			continue
-		}
-
-		if err := util.SetValue(fv, p.values[name]); err != nil {
+		if err := util.SetValue(subv, p.values[f.Key]); err != nil {
 			return err
 		}
 
 	}
+
 	return nil
-}
-
-// `name:"name?(,inline|{format})?"`
-func getTags(rf reflect.StructField) (name, format string, skip, inline bool) {
-	tag, _ := rf.Tag.Lookup("json")
-	if tag == "-" {
-		skip = true
-		return
-	}
-
-	if strings.HasSuffix(tag, ",inline") {
-		inline = true
-		return
-	}
-
-	tags := strings.Split(tag, ",")
-	if len(tags) > 1 {
-		format = tags[1]
-	}
-
-	if tags[0] != "" {
-		name = tags[0]
-		return
-	}
-
-	name = util.LowerCamelCasedName(rf.Name)
-	return
 }
 
 // }}}
