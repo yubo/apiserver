@@ -12,13 +12,28 @@ import (
 	restful "github.com/emicklei/go-restful/v3"
 	"github.com/yubo/golib/api/errors"
 	"github.com/yubo/golib/runtime"
+	"github.com/yubo/golib/runtime/serializer"
 	"github.com/yubo/golib/util"
 	"k8s.io/klog/v2"
 )
 
 const (
-	maxFormSize = int64(1<<63 - 1)
+	maxFormSize      = int64(1<<63 - 1)
+	MIME_URL_ENCODED = "application/x-www-form-urlencoded"
 )
+
+func WithSerializer(options *serializer.CodecFactoryOptions) {
+	options.Serializers = append(options.Serializers, serializer.SerializerType{
+		AcceptContentTypes: []string{MIME_URL_ENCODED},
+		ContentType:        MIME_URL_ENCODED,
+		FileExtensions:     []string{},
+		Serializer:         NewSerializer(),
+	})
+}
+
+func NewSerializer() *Serializer {
+	return &Serializer{}
+}
 
 // Serializer handles encoding versioned objects into the proper wire form
 type Serializer struct{}
@@ -68,7 +83,6 @@ func NewEncoder(w io.Writer) *Encoder {
 }
 
 func (p *Encoder) Encode(src interface{}) error {
-
 	// struct -> values
 	if err := p.scan(src); err != nil {
 		return err
@@ -259,7 +273,7 @@ func (p *Decoder) decode(rv reflect.Value, rt reflect.Type) error {
 
 // `name:"name?(,inline|{format})?"`
 func getTags(rf reflect.StructField) (name, format string, skip, inline bool) {
-	tag, _ := rf.Tag.Lookup("name")
+	tag, _ := rf.Tag.Lookup("json")
 	if tag == "-" {
 		skip = true
 		return

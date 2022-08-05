@@ -27,7 +27,7 @@ func (p *CreateUserInput) User() *User {
 }
 
 type ListInput struct {
-	rest.Pagination
+	rest.PageParams
 	Query *string `param:"query" name:"query" description:"query user"`
 }
 

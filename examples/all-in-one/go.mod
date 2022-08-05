@@ -4,6 +4,8 @@ go 1.16
 
 replace github.com/yubo/apiserver => ../..
 
+replace github.com/yubo/golib => ../../../golib
+
 require (
 	github.com/go-openapi/spec v0.20.5
 	github.com/spf13/cobra v1.4.0

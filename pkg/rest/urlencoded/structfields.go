@@ -24,16 +24,12 @@ type field struct {
 	index []int
 }
 
-func (p field) String() string {
-	return fmt.Sprintf("key %s index %v type %s required %v param %s", p.Key, p.index, p.Type, p.Required, p.ParamType)
-}
-
 type fieldProps struct {
 	Key string
 
-	ParamType string
-	Skip      bool
-	Required  bool
+	Skip     bool
+	Hidden   bool // json:<type>[,hiddent]
+	Required bool
 
 	Name        string
 	Format      string
@@ -181,8 +177,7 @@ func getSubv(rv reflect.Value, index []int, allowCreate bool) (reflect.Value, er
 	return subv, nil
 }
 
-// `param:"(path|header|param|data)?(,required)?"`
-// `name:"keyName"`
+// `json:"[name](,required)?"`
 // `format:"password"`
 // `description:"ooxxoo"`
 // func getTags(ff reflect.StructField) (name, paramType, format string, skip bool) {
@@ -190,30 +185,27 @@ func getFieldProps(sf reflect.StructField) (opt fieldProps) {
 	if sf.Anonymous {
 		return
 	}
-	tag := sf.Tag.Get("param")
-	typ, opts := parseTag(tag)
-	if typ != "data" {
+
+	tag := sf.Tag.Get("json")
+	if tag == "-" || tag == "" {
 		opt.Skip = true
 		return
 	}
-	opt.ParamType = DataType
+	name, opts := parseTag(tag)
 	if opts.Contains("required") {
 		opt.Required = true
 	}
+	if opts.Contains("hidden") {
+		opt.Hidden = true
+	}
 
-	opt.Name = sf.Tag.Get("name")
+	opt.Name = name
 	opt.Format = sf.Tag.Get("format")
 	opt.Description = sf.Tag.Get("description")
 	opt.Default = sf.Tag.Get("default")
 
 	if v := sf.Tag.Get("enum"); v != "" {
 		opt.Enum = strings.Split(v, "|")
-	}
-
-	if opt.Name == "" {
-		opt.Key = util.LowerCamelCasedName(sf.Name)
-	} else {
-		opt.Key = opt.Name
 	}
 
 	if v := sf.Tag.Get("maximum"); v != "" {
@@ -230,6 +222,12 @@ func getFieldProps(sf reflect.StructField) (opt fieldProps) {
 			panic(err)
 		}
 		opt.Minimum = &f
+	}
+
+	if opt.Name == "" {
+		opt.Key = util.LowerCamelCasedName(sf.Name)
+	} else {
+		opt.Key = opt.Name
 	}
 
 	return

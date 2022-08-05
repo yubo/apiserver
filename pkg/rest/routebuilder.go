@@ -54,6 +54,12 @@ func InstallApiDocs(apiPath string, container *restful.Container, infoProps spec
 	return defaultWebServiceBuilder.InstallApiDocs(apiPath, container, infoProps, securitySchemes)
 }
 
+func SwaggerTagsRegister(tags ...spec.Tag) {
+	defaultWebServiceBuilder.SwaggerTagsRegister(tags...)
+}
+func SwaggerTagRegister(name, desc string) {
+	defaultWebServiceBuilder.SwaggerTagRegister(name, desc)
+}
 func ResponseWriterRegister(w RespWriter) error {
 	return defaultWebServiceBuilder.ResponseWriterRegister(w)
 }

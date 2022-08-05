@@ -13,15 +13,15 @@ func TestSerializer(t *testing.T) {
 	var want, got testdata.User
 
 	writer := &bytes.Buffer{}
-	target := NewSerializer()
+	serializer := NewSerializer()
 
 	want.Name = util.String("name")
 	want.Age = util.Int32(16)
 
-	err := target.Encode(&want, writer)
+	err := serializer.Encode(&want, writer)
 	assert.NoError(t, err)
 
-	_, err = target.Decode(writer.Bytes(), &got)
+	_, err = serializer.Decode(writer.Bytes(), &got)
 	assert.NoError(t, err)
 	assert.EqualValues(t, &want, &got)
 }

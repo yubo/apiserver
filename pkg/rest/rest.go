@@ -6,6 +6,7 @@ const (
 	// Accept or Content-Type used in Consumes() and/or Produces()
 	MIME_ALL         = "*/*"
 	MIME_JSON        = "application/json"
+	MIME_YAML        = "application/yaml"
 	MIME_XML         = "application/xml"
 	MIME_TXT         = "text/plain"
 	MIME_URL_ENCODED = "application/x-www-form-urlencoded"

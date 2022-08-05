@@ -9,8 +9,25 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/runtime"
+	"github.com/yubo/golib/runtime/serializer"
 	"github.com/yubo/golib/util/framer"
 )
+
+const (
+	MIME_PROTOBUF = "application/x-protobuf" // Accept or Content-Type used in Consumes() and/or Produces()
+)
+
+func WithSerializer(options *serializer.CodecFactoryOptions) {
+	protoSerializer := NewSerializer()
+	options.Serializers = append(options.Serializers, serializer.SerializerType{
+		AcceptContentTypes: []string{MIME_PROTOBUF},
+		ContentType:        MIME_PROTOBUF,
+		FileExtensions:     []string{"pb"},
+		Serializer:         protoSerializer,
+		Framer:             LengthDelimitedFramer,
+		StreamSerializer:   protoSerializer,
+	})
+}
 
 type errNotMarshalable struct {
 	t reflect.Type

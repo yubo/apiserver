@@ -25,13 +25,13 @@ import (
 	"github.com/yubo/apiserver/pkg/apis/clientauthentication"
 	rest "github.com/yubo/apiserver/pkg/client"
 	"github.com/yubo/golib/runtime"
-	"github.com/yubo/golib/runtime/serializer"
+	"github.com/yubo/golib/scheme"
 )
 
 const execInfoEnv = "KUBERNETES_EXEC_INFO"
 
 //var scheme = runtime.NewScheme()
-var codecs = serializer.NewCodecFactory()
+var codecs = scheme.Codecs
 
 //func init() {
 //	metav1.AddToGroupVersion(scheme, schema.GroupVersion{Version: "v1"})
