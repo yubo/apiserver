@@ -1,5 +1,7 @@
 ## list
 
+![overview](./list.gif)
+
 ```sh
 # server
 $ go run ./server/apiserver-list-server.go

@@ -14,14 +14,14 @@ import (
 )
 
 const (
-	MIME_PROTOBUF = "application/x-protobuf" // Accept or Content-Type used in Consumes() and/or Produces()
+	ContentTypeProtobuf = "application/x-protobuf" // Accept or Content-Type used in Consumes() and/or Produces()
 )
 
 func WithSerializer(options *serializer.CodecFactoryOptions) {
 	protoSerializer := NewSerializer()
 	options.Serializers = append(options.Serializers, serializer.SerializerType{
-		AcceptContentTypes: []string{MIME_PROTOBUF},
-		ContentType:        MIME_PROTOBUF,
+		AcceptContentTypes: []string{ContentTypeProtobuf},
+		ContentType:        ContentTypeProtobuf,
 		FileExtensions:     []string{"pb"},
 		Serializer:         protoSerializer,
 		Framer:             LengthDelimitedFramer,

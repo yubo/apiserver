@@ -193,7 +193,7 @@ func (p *streamingRuntime) newSession(config *execConfig) (*Session, error) {
 
 	p.sessions[id] = s
 
-	klog.V(6).Infof("seesionid %s", id)
+	klog.V(3).Infof("seesionid %s", id)
 	return s, nil
 }
 

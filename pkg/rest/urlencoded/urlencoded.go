@@ -17,14 +17,14 @@ import (
 )
 
 const (
-	maxFormSize      = int64(1<<63 - 1)
-	MIME_URL_ENCODED = "application/x-www-form-urlencoded"
+	maxFormSize           = int64(1<<63 - 1)
+	ContentTypeUrlencoded = "application/x-www-form-urlencoded"
 )
 
 func WithSerializer(options *serializer.CodecFactoryOptions) {
 	options.Serializers = append(options.Serializers, serializer.SerializerType{
-		AcceptContentTypes: []string{MIME_URL_ENCODED},
-		ContentType:        MIME_URL_ENCODED,
+		AcceptContentTypes: []string{ContentTypeUrlencoded},
+		ContentType:        ContentTypeUrlencoded,
 		FileExtensions:     []string{},
 		Serializer:         NewSerializer(),
 	})

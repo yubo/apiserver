@@ -538,6 +538,7 @@ func (p *webserviceBuilder) registerHandle(rb *restful.RouteBuilder, wr *WsRoute
 		handler,
 	)
 
+	klog.V(3).InfoS("route register", "method", wr.Method, "path", p.ws.RootPath()+wr.SubPath, "handle", wr.Handle)
 	rb.To(handler)
 	return nil
 }
@@ -620,7 +621,7 @@ func (p *WsOption) Validate() error {
 	if p.RespWriter == nil {
 		p.RespWriter = DefaultRespWriter
 	}
-	if p.GoRestfulContainer != nil {
+	if p.GoRestfulContainer == nil {
 		klog.Warningf("unable to get RestFulContainer, routebuild %s", p.Path)
 	}
 	return nil

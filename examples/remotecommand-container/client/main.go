@@ -6,7 +6,6 @@ import (
 
 	rest "github.com/yubo/apiserver/pkg/client"
 	"github.com/yubo/apiserver/pkg/cmdcli"
-	"github.com/yubo/golib/scheme"
 	"k8s.io/klog/v2"
 )
 
@@ -18,10 +17,7 @@ func main() {
 }
 
 func run() error {
-	config := &rest.Config{
-		Host:          "127.0.0.1:8080",
-		ContentConfig: rest.ContentConfig{NegotiatedSerializer: scheme.Codecs},
-	}
+	config := &rest.Config{Host: "127.0.0.1:8080"}
 
 	containerId, name, args, err := getArgs()
 	if err != nil {

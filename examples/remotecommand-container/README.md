@@ -1,5 +1,7 @@
 ## Remotecommand - container
 
+![](./remotecommand-container.gif)
+
 #### server
 
 ```sh

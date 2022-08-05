@@ -321,6 +321,7 @@ func (p *serverModule) authInit() error {
 			Modes:      sets.NewString("AlwaysAllow"),
 		}
 	}
+	klog.V(3).InfoS("Authorizer", "modes", s.Authorization.Modes)
 
 	if authn, ok := options.AuthnFrom(p.ctx); ok {
 		s.Authentication = authn
