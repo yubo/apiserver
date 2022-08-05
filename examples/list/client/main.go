@@ -15,7 +15,7 @@ type User struct {
 }
 
 type ListInput struct {
-	rest.Pagination
+	rest.PageParams
 }
 
 type ListOutput struct {
@@ -25,12 +25,12 @@ type ListOutput struct {
 
 func run() error {
 	req, err := cmdcli.NewRequest("127.0.0.1:8080",
-		cmdcli.WithParam(&ListInput{
-			Pagination: rest.Pagination{
+		cmdcli.WithParams(&ListInput{
+			PageParams: rest.PageParams{
 				PageSize: 10,
 			},
 		}),
-		cmdcli.WithPrefix("/users"),
+		cmdcli.WithPath("/users"),
 		cmdcli.WithOutput(&ListOutput{}),
 	)
 	if err != nil {

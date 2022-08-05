@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"net/http/httptest"
 
+	restclient "github.com/yubo/apiserver/pkg/client"
 	"github.com/yubo/apiserver/pkg/cmdcli"
 	"github.com/yubo/apiserver/pkg/responsewriters"
-	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/golib/scheme"
 )
 
@@ -21,10 +21,10 @@ type User struct {
 func requestWithRest(server *httptest.Server) error {
 	user := User{}
 
-	c, err := rest.RESTClientFor(&rest.Config{
+	c, err := restclient.RESTClientFor(&restclient.Config{
 		Host: server.URL,
-		ContentConfig: rest.ContentConfig{
-			NegotiatedSerializer: scheme.Codecs,
+		ContentConfig: restclient.ContentConfig{
+			NegotiatedSerializer: scheme.NegotiatedSerializer,
 		},
 	})
 	if err != nil {

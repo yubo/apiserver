@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	rest "github.com/yubo/apiserver/pkg/client"
 	"github.com/yubo/apiserver/pkg/cmdcli"
-	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/golib/scheme"
 	"k8s.io/klog/v2"
 )

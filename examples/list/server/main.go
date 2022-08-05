@@ -54,7 +54,7 @@ type User struct {
 }
 
 type ListInput struct {
-	rest.Pagination
+	rest.PageParams
 }
 
 type ListOutput struct {

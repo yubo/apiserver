@@ -10,6 +10,7 @@ import (
 	"github.com/yubo/apiserver/pkg/config/configgrpc"
 	"github.com/yubo/apiserver/pkg/config/configtls"
 	"github.com/yubo/apiserver/pkg/grpcclient"
+	"github.com/yubo/golib/util"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
@@ -82,7 +83,7 @@ func makeRequest(ctx context.Context, version int) {
 	}
 	defer conn.Close()
 
-	in := &api.UserGetInput{Name: "tom"}
+	in := &api.UserGetInput{Name: util.String("tom")}
 	var user *api.User
 	switch version {
 	case 1:

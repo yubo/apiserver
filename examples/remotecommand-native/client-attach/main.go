@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	restclient "github.com/yubo/apiserver/pkg/client"
 	"github.com/yubo/apiserver/pkg/cmdcli"
-	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/golib/scheme"
 	"k8s.io/klog/v2"
 )
@@ -22,9 +22,9 @@ func run() error {
 		return fmt.Errorf("Usage: %s <session-id>", os.Args[0])
 	}
 
-	config := &rest.Config{
+	config := &restclient.Config{
 		Host:          "127.0.0.1:8080",
-		ContentConfig: rest.ContentConfig{NegotiatedSerializer: scheme.Codecs},
+		ContentConfig: restclient.ContentConfig{NegotiatedSerializer: scheme.Codecs},
 	}
 
 	return cmdcli.NewExecClient(config, "POST", "/remotecommand/attach").

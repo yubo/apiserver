@@ -40,7 +40,7 @@ type CreateUserInput struct {
 type CreateUserOutput User
 
 type GetUsersInput struct {
-	rest.Pagination
+	rest.PageParams
 	Query *string `param:"query" name:"query" description:"query user name or nick name"`
 	Count bool    `param:"query" name:"count" description:"just response total count"`
 }

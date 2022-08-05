@@ -17,6 +17,7 @@ import (
 	"github.com/yubo/apiserver/pkg/tracing"
 	"github.com/yubo/golib/cli"
 	"github.com/yubo/golib/proc"
+	"github.com/yubo/golib/util"
 	"go.opentelemetry.io/otel/attribute"
 	oteltrace "go.opentelemetry.io/otel/trace"
 
@@ -57,21 +58,21 @@ type grpcserver struct {
 }
 
 func (s *grpcserver) GetUserV1(ctx context.Context, in *api.UserGetInput) (*api.User, error) {
-	_, span := tracing.Start(ctx, "GetUserV1", oteltrace.WithAttributes(attribute.String("name", in.Name)))
+	_, span := tracing.Start(ctx, "GetUserV1", oteltrace.WithAttributes(attribute.String("name", util.StringValue(in.Name))))
 	defer span.End()
 
 	return &api.User{Name: in.Name}, nil
 }
 
 func (s *grpcserver) GetUserV2(ctx context.Context, in *api.UserGetInput) (*api.User, error) {
-	_, span := tracing.Start(ctx, "GetUserV2", oteltrace.WithAttributes(attribute.String("name", in.Name)))
+	_, span := tracing.Start(ctx, "GetUserV2", oteltrace.WithAttributes(attribute.String("name", util.StringValue(in.Name))))
 	defer span.End()
 
 	return s.GetUserV1(ctx, in)
 }
 
 func (s *grpcserver) GetUserV3(ctx context.Context, in *api.UserGetInput) (*api.User, error) {
-	_, span := tracing.Start(ctx, "GetUserV3", oteltrace.WithAttributes(attribute.String("name", in.Name)))
+	_, span := tracing.Start(ctx, "GetUserV3", oteltrace.WithAttributes(attribute.String("name", util.StringValue(in.Name))))
 	defer span.End()
 
 	conn, err := grpcclient.Dial(ctx, &configgrpc.GRPCClientSettings{

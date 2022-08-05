@@ -15,6 +15,7 @@ import (
 	server "github.com/yubo/apiserver/pkg/server/module"
 	"github.com/yubo/golib/cli"
 	"github.com/yubo/golib/proc"
+	"github.com/yubo/golib/scheme"
 
 	_ "github.com/yubo/apiserver/pkg/s3/register"
 	_ "github.com/yubo/apiserver/pkg/server/register"
@@ -78,7 +79,7 @@ func (p *module) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		err = fmt.Errorf("unsupport method %s", req.Method)
 	}
 	if err != nil {
-		responsewriters.Error(err, w, req)
+		responsewriters.ErrorNegotiated(err, scheme.NegotiatedSerializer, w, req)
 	}
 }
 

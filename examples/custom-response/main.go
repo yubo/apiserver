@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/emicklei/go-restful/v3"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/rest"
+	"github.com/yubo/apiserver/plugin/responsewriter/umi"
 	"github.com/yubo/golib/cli"
 	"github.com/yubo/golib/proc"
 	"github.com/yubo/golib/util"
@@ -32,7 +32,7 @@ type User struct {
 }
 
 type GetUsersInput struct {
-	rest.Pagination
+	rest.PageParams
 	Query *string `param:"query" name:"query" description:"query user name or nick name"`
 	Count bool    `param:"query" name:"count" description:"just response total count"`
 }
@@ -84,16 +84,6 @@ func start(ctx context.Context) error {
 	return nil
 }
 
-func respWrite(resp *restful.Response, req *http.Request, data interface{}, err error) {
-	v := map[string]interface{}{"data": data}
-
-	if err != nil {
-		v["err"] = err.Error()
-	}
-
-	resp.WriteEntity(v)
-}
-
 func (p *Module) installWs(http rest.GoRestfulContainer) {
 	rest.SwaggerTagRegister("user", "user Api - swagger api sample")
 	rest.WsRouteBuild(&rest.WsOption{
@@ -102,7 +92,7 @@ func (p *Module) installWs(http rest.GoRestfulContainer) {
 		Consumes:           []string{rest.MIME_JSON},
 		Tags:               []string{"user"},
 		GoRestfulContainer: http,
-		RespWrite:          respWrite,
+		RespWriter:         umi.RespWriter,
 		Routes: []rest.WsRoute{{
 			Method: "GET", SubPath: "/",
 			Desc:   "search/list users",

@@ -26,13 +26,13 @@ type Demo interface {
 // pkg/registry/rbac/rest/storage_rbac.go
 func NewDemo() Demo {
 	o := &demo{}
-	o.store = models.NewStore(o.Name())
+	o.store = models.NewModelStore(o.Name())
 	return o
 }
 
 // demo implements the role interface.
 type demo struct {
-	store models.Store
+	store models.ModelStore
 }
 
 func (p *demo) Name() string {

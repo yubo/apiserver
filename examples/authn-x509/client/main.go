@@ -36,7 +36,7 @@ func main() {
 	flag.Parse()
 
 	if err := func() error {
-		w, err := webhook.NewGenericWebhook(scheme.Codecs, *configFile, retryBackoff, nil)
+		w, err := webhook.NewGenericWebhook(scheme.Codec, *configFile, retryBackoff, nil)
 		if err != nil {
 			return err
 		}
