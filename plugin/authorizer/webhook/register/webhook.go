@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	modeName   = "webhook"
+	modeName   = "Webhook"
 	configPath = "authorization.webhook"
 )
 

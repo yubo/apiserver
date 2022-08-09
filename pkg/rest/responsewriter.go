@@ -47,6 +47,10 @@ func (p *defaultRespWriter) RespWrite(resp *restful.Response, req *http.Request,
 		return
 	}
 
+	if data == nil {
+		return
+	}
+
 	switch t := data.(type) {
 	case []byte:
 		resp.Write(t)

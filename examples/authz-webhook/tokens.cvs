@@ -1,3 +1,1 @@
 token-admin,admin,uid-admin,"apiserver:admin"
-token-reporter,reporter,uid-reporter,"apiserver:reporter"
-token-guest,guest,uid-guest,"apiserver:guest"

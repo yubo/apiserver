@@ -1,7 +1,7 @@
 # apiserver authz rbac
 
-```
 Resource paths
+```
 /apis/{api-group}/{version}/namespaces
 /api/{version}/namespaces
 /api/{version}/namespaces/{namespace}
@@ -9,29 +9,33 @@ Resource paths
 /api/{version}/namespaces/{namespace}/{resource}/{resourceName}
 /api/{version}/{resource}
 /api/{version}/{resource}/{resourceName}
+```
 
 Special verbs without subresources:
+```
 /api/{version}/proxy/{resource}/{resourceName}
 /api/{version}/proxy/namespaces/{namespace}/{resource}/{resourceName}
+```
 
 Special verbs with subresources:
+```
 /api/{version}/watch/{resource}
 /api/{version}/watch/namespaces/{namespace}/{resource}
 ```
 
 ## Authentication
-[tokens.cvs](./tokens.cvs)
+<details><summary> [tokens.cvs](./tokens.cvs) </summary>
 ```csv
 token-admin,admin,uid-admin,"apiserver:admin"
 token-reporter,reporter,uid-reporter,"apiserver:reporter"
 token-guest,guest,uid-guest,"apiserver:guest"
 ```
+</details>
 
 ## Authorization
 
-[rbac.yaml](./testdata/rbac.yaml)
+<details><summary> [rbac.yaml](./testdata/rbac.yaml) </summary>
 
-#### Roles
 ```yaml
 kind: Role
 metadata:
@@ -61,10 +65,7 @@ rules:
     nonResourceURLs:
       - "/unauthenticated"
     verbs: ["get", "list", "watch"]
-```
-
-#### RoleBinding
-```yaml
+---
 kind: RoleBinding
 metadata:
   name: apiserver-admin
@@ -97,19 +98,20 @@ subjects:
   - kind: Group
     name: "*"
 ```
+</details>
 
 ## Test
 
 ```shell
-// run server
-go run ./main.go --token-auth-file=./tokens.cvs --authorization-mode=RBAC --rbac-config-path=./testdata 
+# run server
+go run ./main.go -f config.yaml
 
-// succeed
+# succeed
 curl -X POST http://localhost:8080/api/v1/namespaces/test/users -H "Authorization: Bearer token-admin"
 curl -X GET http://localhost:8080/api/v1/namespaces/test/users -H "Authorization: Bearer token-reporter"
 curl -X GET http://localhost:8080/api/v1/namespaces/test/status
 
-// failed
+# failed
 curl -X GET http://localhost:8080/api/v1/namespaces/test/users -H "Authorization: Bearer token-guest"
 {
   "kind": "Status",

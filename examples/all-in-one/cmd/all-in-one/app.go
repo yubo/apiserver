@@ -30,12 +30,13 @@ import (
 
 	// authn
 	_ "github.com/yubo/apiserver/pkg/authentication/register"
+
 	// 1. headerrequest
 	_ "github.com/yubo/apiserver/plugin/authenticator/headerrequest/register"
 	// 2. x509
 	_ "github.com/yubo/apiserver/plugin/authenticator/x509/register"
-	// 3.session
-	_ "github.com/yubo/apiserver/plugin/authenticator/session/register"
+	// 3.session deprecated
+	//_ "github.com/yubo/apiserver/plugin/authenticator/session/register"
 	// 4. tokenfile
 	_ "github.com/yubo/apiserver/plugin/authenticator/token/tokenfile/register"
 	// 5. service account file <TODO>
@@ -57,7 +58,7 @@ import (
 )
 
 const (
-	moduleName = "all.example.apiserver"
+	moduleName = "all-in-one.example.apiserver"
 )
 
 type config struct {

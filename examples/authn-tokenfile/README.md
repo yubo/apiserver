@@ -9,7 +9,7 @@ token-777,user3,uid3,"group1,group2"
 ```
 
 ```sh
-$ go run ./main.go --token-auth-file=./tokens.cvs
+$ go run ./main.go -f ./config.yaml
 ```
 
 

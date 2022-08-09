@@ -37,7 +37,7 @@ nfpms:
         dst: /etc/all-in-one/all-in-one.conf
         type: config|noreplace
       - src: etc/config.yaml
-        dst: /etc/all-in-one/config.yaml
+        dst: /etc/all-in-one/config.default.yaml
         type: config
     scripts:
       preinstall: misc/all-in-one/preinstall.sh

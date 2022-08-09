@@ -79,3 +79,7 @@ clean:
 tools:
 	go get -u google.golang.org/grpc && \
 	go get -u github.com/golang/protobuf/protoc-gen-go
+
+.PHONY: status
+status:
+	./scripts/print-workspace-status.sh

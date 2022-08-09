@@ -9,7 +9,7 @@
   * [x] [All In One](./examples/all-in-one)
   * [x] [List](./examples/list)
 - Audit
-  * [x] [Audit](./examples/audit)
+  * [x] [Audit log](./examples/audit)
   * [ ] [Audit webhook](./examples/audit-webhook)
 - Authenticate
   * [x] [Authentication Basic](./examples/authn-basic)
@@ -18,11 +18,12 @@
   * [x] [Authentication Token Customize](./examples/authn-token-customize)
   * [x] [Authentication Tokenfile](./examples/authn-tokenfile)
   * [x] [Authentication X509](./examples/authn-x509)
+  * [ ] [Authentication Webhook](./examples/authn-webhook)
 - Authorization
   * [x] [Authorization ABAC](./examples/authz-abac)
   * [x] [Authorization RBAC](./examples/authz-rbac)
   * [x] [Authorization Path](./examples/authz-path)
-  * [ ] [Authorization Webhook](./examples/authz-webhook)
+  * [x] [Authorization Webhook](./examples/authz-webhook)
 - Stream
   * [x] [Remotecommand Container](./examples/remotecommand-container)
   * [x] [Remotecommand Native](./examples/remotecommand-native)

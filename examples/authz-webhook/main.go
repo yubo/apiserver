@@ -21,7 +21,7 @@ import (
 
 	// authz
 	_ "github.com/yubo/apiserver/pkg/authorization/register"
-	_ "github.com/yubo/apiserver/plugin/authorizer/rbac/register"
+	_ "github.com/yubo/apiserver/plugin/authorizer/webhook/register"
 )
 
 const (
@@ -57,20 +57,15 @@ func installWs(http rest.GoRestfulContainer) {
 	rest.WsRouteBuild(&rest.WsOption{
 		Path:               "/api/v1",
 		GoRestfulContainer: http,
-		Routes: []rest.WsRoute{
-			// with clusterRole & ClusterRoleBinding
-			{Method: "GET", SubPath: "/users", Handle: handle},
-			{Method: "POST", SubPath: "/users", Handle: handle},
-			{Method: "GET", SubPath: "/status", Handle: handle},
-
-			// with role & roleBinding (test namespace)
-			{Method: "GET", SubPath: "/namespaces/test/users", Handle: handle},
-			{Method: "POST", SubPath: "/namespaces/test/users", Handle: handle},
-			{Method: "GET", SubPath: "/namespaces/test/status", Handle: handle},
-		},
+		Routes: []rest.WsRoute{{
+			Method:  "GET",
+			SubPath: "/users",
+			Consume: rest.MIME_ALL,
+			Handle:  handle,
+		}},
 	})
 }
 
-func handle(w http.ResponseWriter, req *http.Request) error {
-	return nil
+func handle(w http.ResponseWriter, req *http.Request) ([]byte, error) {
+	return []byte("OK\n"), nil
 }

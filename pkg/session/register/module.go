@@ -3,7 +3,6 @@ package register
 // depend "github.com/yubo/apiserver/pkg/models/register"
 import (
 	"context"
-	"fmt"
 
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/session"
@@ -59,9 +58,6 @@ func startSession(cf *session.Config, ctx context.Context) (types.SessionManager
 	opts := []session.Option{
 		session.WithCtx(ctx),
 		session.WithModel(session.NewSession()),
-	}
-	if cf.CookieName == session.DefCookieName {
-		cf.CookieName = fmt.Sprintf("%s-sid", proc.Name())
 	}
 	return session.NewSessionManager(cf, opts...)
 }

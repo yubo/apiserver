@@ -14,10 +14,6 @@ import (
 	"github.com/yubo/apiserver/pkg/audit/policy"
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/util/webhook"
-	pluginbuffered "github.com/yubo/apiserver/plugin/audit/buffered"
-	pluginlog "github.com/yubo/apiserver/plugin/audit/log"
-	plugintruncate "github.com/yubo/apiserver/plugin/audit/truncate"
-	pluginwebhook "github.com/yubo/apiserver/plugin/audit/webhook"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/proc"
@@ -25,6 +21,11 @@ import (
 	utilnet "github.com/yubo/golib/util/net"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"k8s.io/klog/v2"
+
+	pluginbuffered "github.com/yubo/apiserver/plugin/audit/buffered"
+	pluginlog "github.com/yubo/apiserver/plugin/audit/log"
+	plugintruncate "github.com/yubo/apiserver/plugin/audit/truncate"
+	pluginwebhook "github.com/yubo/apiserver/plugin/audit/webhook"
 )
 
 const (
