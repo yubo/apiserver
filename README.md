@@ -18,7 +18,7 @@
   * [x] [Authentication Token Customize](./examples/authn-token-customize)
   * [x] [Authentication Tokenfile](./examples/authn-tokenfile)
   * [x] [Authentication X509](./examples/authn-x509)
-  * [ ] [Authentication Webhook](./examples/authn-webhook)
+  * [x] [Authentication Webhook](./examples/authn-webhook)
 - Authorization
   * [x] [Authorization ABAC](./examples/authz-abac)
   * [x] [Authorization RBAC](./examples/authz-rbac)

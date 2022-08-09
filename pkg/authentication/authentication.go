@@ -21,8 +21,26 @@ const (
 	moduleName = "authentication"
 )
 
-// config contains all authentication options for API Server
-type config struct {
+type key int
+
+const (
+	configKey key = iota
+)
+
+func WithConfig(parent context.Context, config *Config) context.Context {
+	return context.WithValue(parent, configKey, config)
+}
+
+func ConfigFrom(ctx context.Context) *Config {
+	config, ok := ctx.Value(configKey).(*Config)
+	if !ok {
+		panic("unable to get authn.config from context")
+	}
+	return config
+}
+
+// Config contains all authentication options for API Server
+type Config struct {
 	APIAudiences         []string     `json:"apiAudiences" flag:"api-audiences" description:"Identifiers of the API. The service account token authenticator will validate that tokens used against the API are bound to at least one of these audiences. If the --service-account-issuer flag is configured and this flag is not, this field defaults to a single element list containing the issuer URL."`
 	TokenSuccessCacheTTL api.Duration `json:"tokenSuccessCacheTTL" flag:"token-success-cache-ttl" default:"10s" description:"The duration to cache success token."`
 	TokenFailureCacheTTL api.Duration `json:"tokenFailureCacheTTL" flag:"token-failure-cache-ttl" description:"The duration to cache failure token."`
@@ -30,12 +48,12 @@ type config struct {
 }
 
 // newConfig create a new BuiltInAuthenticationOptions, just set default token cache TTL
-func newConfig() *config {
-	return &config{}
+func newConfig() *Config {
+	return &Config{}
 }
 
 // Validate checks invalid config combination
-func (p *config) Validate() error {
+func (p *Config) Validate() error {
 	return nil
 }
 
@@ -44,6 +62,8 @@ func (p *authentication) initAuthentication() (err error) {
 	var tokenAuthenticators []authenticator.Token
 
 	config := p.config
+
+	p.ctx = WithConfig(p.ctx, config)
 
 	for _, factory := range p.authenticatorFactories {
 		auth, err := factory(p.ctx)
@@ -133,7 +153,7 @@ func APIAudiences() authenticator.Audiences {
 
 type authentication struct {
 	name                        string
-	config                      *config
+	config                      *Config
 	authenticatorFactories      []AuthenticatorFactory
 	tokenAuthenticatorFactories []AuthenticatorTokenFactory
 	authenticator               authenticator.Request

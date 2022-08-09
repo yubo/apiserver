@@ -25,7 +25,7 @@ var (
 	securitySchemeCatalog = map[string]*spec.SecurityScheme{}
 	respWriterCatalog     = map[string]RespWriter{}
 	swaggerTags           = []spec.Tag{}
-	DefaultContentTypes   = []string{MIME_JSON}
+	DefaultContentTypes   = []string{MIME_JSON, MIME_ALL}
 
 	defaultWebServiceBuilder = NewWebServiceBudiler()
 )

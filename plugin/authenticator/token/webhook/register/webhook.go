@@ -2,11 +2,13 @@ package webhook
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/yubo/apiserver/pkg/authentication"
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
+	"github.com/yubo/apiserver/plugin/authenticator/token/webhook"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/proc"
 	"github.com/yubo/golib/util/wait"
@@ -29,9 +31,8 @@ type config struct {
 }
 
 func (o *config) Validate() error {
-	retryBackoff := o.RetryBackoff
-	if retryBackoff != nil && retryBackoff.Steps <= 0 {
-		return fmt.Errorf("number of webhook retry attempts must be greater than 1, but is: %d", retryBackoff.Steps)
+	if o.RetryBackoff != nil && o.RetryBackoff.Steps <= 0 {
+		return fmt.Errorf("number of webhook retry attempts must be greater than 1, but is: %d", o.RetryBackoff.Steps)
 	}
 
 	o.cacheTTL = time.Duration(o.CacheTTL) * time.Second
@@ -51,8 +52,14 @@ func factory(ctx context.Context) (authenticator.Token, error) {
 		return nil, err
 	}
 
+	if cf.RetryBackoff == nil {
+		return nil, errors.New("retry backoff parameters for authorization webhook has not been specified")
+	}
+
+	config := authentication.ConfigFrom(ctx)
+
 	// TODO
-	return nil, nil
+	return webhook.New(cf.ConfigFile, config.APIAudiences, *cf.RetryBackoff, nil)
 }
 
 // DefaultAuthWebhookRetryBackoff is the default backoff parameters for
