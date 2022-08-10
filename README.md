@@ -9,8 +9,8 @@
   * [x] [All In One](./examples/all-in-one)
   * [x] [List](./examples/list)
 - Audit
-  * [x] [Audit log](./examples/audit)
-  * [ ] [Audit webhook](./examples/audit-webhook)
+  * [x] [Audit log](./examples/audit-log)
+  * [x] [Audit webhook](./examples/audit-webhook)
 - Authenticate
   * [x] [Authentication Basic](./examples/authn-basic)
   * [x] [Authentication Bootstrap](./examples/authn-bootstrap)

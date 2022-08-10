@@ -1,4 +1,4 @@
-## APIserver - Authorization - ABAC
+## APIserver - Authorization - ABAC(Attribute-based access control)
 
 This example shows the minimal code needed to get a restful.WebService working.
 
@@ -39,3 +39,7 @@ Content-Length: 123
   "code": 401
 }
 ```
+
+## References
+- https://kubernetes.io/docs/reference/access-authn-authz/abac/
+

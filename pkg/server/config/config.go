@@ -53,9 +53,7 @@ type Config struct {
 	EnableMetrics             bool `json:"enableMetrics"`
 
 	// swagger
-	//Swagger         goswagger.Config         `json:"swagger"`
-	EnableOpenAPI bool `json:"enableOpenAPI" flag:"openapi" description:"enable OpenAPI"`
-	//EnableSwagger   bool                `json:"enableSwagger" flag:"swagger" description:"enable swagger"`
+	EnableOpenAPI   bool                `json:"enableOpenAPI" flag:"openapi" description:"enable OpenAPI/Swagger"`
 	SecuritySchemes []rest.SchemeConfig `json:"securitySchemes"`
 
 	EnableExpvar bool `json:"enableExpvar"`

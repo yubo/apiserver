@@ -31,29 +31,8 @@ type User struct {
 	Phone    *string `json:"phone"`
 }
 
-type GetUsersInput struct {
-	rest.PageParams
-	Query *string `param:"query" name:"query" description:"query user name or nick name"`
-	Count bool    `param:"query" name:"count" description:"just response total count"`
-}
-
-type GetUsersOutput struct {
-	Total int     `json:"total"`
-	List  []*User `json:"list"`
-}
-
-type GetUsersOutputWrapper struct {
-	Data GetUsersOutput `json:"data"`
-	Err  string         `json:"err,omitempty"`
-}
-
 type GetUserInput struct {
 	Name string `param:"path" name:"name" description:"query user name or nick name"`
-}
-
-type GetUserOutputWrapper struct {
-	Data User   `json:"data"`
-	Err  string `json:"err,omitempty"`
 }
 
 type Module struct{}
@@ -87,34 +66,30 @@ func start(ctx context.Context) error {
 func (p *Module) installWs(http rest.GoRestfulContainer) {
 	rest.SwaggerTagRegister("user", "user Api - swagger api sample")
 	rest.WsRouteBuild(&rest.WsOption{
-		Path:               "/api/users",
-		Produces:           []string{rest.MIME_JSON},
-		Consumes:           []string{rest.MIME_JSON},
+		Path:               "/api/v1/users",
+		Tags:               []string{"user"},
+		GoRestfulContainer: http,
+		Routes: []rest.WsRoute{{
+			Method: "GET", SubPath: "/{name}",
+			Desc:   "get user",
+			Handle: p.getUser,
+		}},
+	})
+
+	rest.WsRouteBuild(&rest.WsOption{
+		Path:               "/api/v2/users",
 		Tags:               []string{"user"},
 		GoRestfulContainer: http,
 		RespWriter:         umi.RespWriter,
 		Routes: []rest.WsRoute{{
-			Method: "GET", SubPath: "/",
-			Desc:   "search/list users",
-			Handle: p.getUsers,
-			Output: GetUsersOutputWrapper{},
-		}, {
 			Method: "GET", SubPath: "/{name}",
 			Desc:   "get user",
 			Handle: p.getUser,
-			Output: GetUserOutputWrapper{},
 		}},
 	})
-}
 
-func (p *Module) getUsers(w http.ResponseWriter, req *http.Request, param *GetUsersInput) (*GetUsersOutput, error) {
-	return &GetUsersOutput{
-		Total: 1,
-		List:  []*User{&User{Name: "tom", Phone: util.String("12345")}},
-	}, nil
 }
 
 func (p *Module) getUser(w http.ResponseWriter, req *http.Request, in *GetUserInput) (*User, error) {
-
 	return &User{Name: in.Name, Phone: util.String("12345")}, nil
 }

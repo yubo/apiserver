@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	moduleName = "audit.examples"
+	moduleName = "log.audit.examples"
 )
 
 var (

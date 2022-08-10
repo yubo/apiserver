@@ -6,7 +6,7 @@ rules:
   - level: RequestResponse
     verbs: ["post", "delete"]
     nonResourceURLs:
-      - /api/user
+      - /api/users
   - level: Metadata
     nonResourceURLs:
       - /api/*

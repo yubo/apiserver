@@ -28,7 +28,7 @@ $ curl -X POST -H 'Content-Type:application/json' --cacert ./testdata/ca.crt --c
 {
  "X": 2,
  "User": {
-  "Name": "tome",
+  "Name": "tom",
   "UID": "",
   "Groups": [
    "dev",
@@ -44,6 +44,6 @@ $ curl -X POST -H 'Content-Type:application/json' --cacert ./testdata/ca.crt --c
 ```sh
 $ cd client
 $ go run ./main.go
-I0617 14:34:54.673198    8181 main.go:51] "webhook" input={X:1} output={X:2 User:{Name:tome UID: Groups:[dev admin system:authenticated] Extra:map[]}}
+I0617 14:34:54.673198    8181 main.go:51] "webhook" input={X:1} output={X:2 User:{Name:tom UID: Groups:[dev admin system:authenticated] Extra:map[]}}
 ```
 

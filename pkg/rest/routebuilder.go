@@ -463,13 +463,12 @@ func (p *webserviceBuilder) registerHandle(rb *restful.RouteBuilder, wr *WsRoute
 	{
 		output := wr.Output
 		if numOut == 2 {
-			ot := t.Out(0)
-			if ot.Kind() == reflect.Ptr {
-				ot = ot.Elem()
-			}
-
 			if output == nil {
-				output = reflect.New(ot).Elem().Interface()
+				rt := t.Out(0)
+				if rt.Kind() == reflect.Ptr {
+					rt = rt.Elem()
+				}
+				output = reflect.New(rt).Elem().Interface()
 			}
 		}
 		wr.RespWriter.AddRoute(wr.Method, path.Join(p.ws.RootPath(), wr.SubPath))
@@ -675,12 +674,10 @@ type ApiOutput struct {
 func noneHandle(req *restful.Request, resp *restful.Response) {}
 
 func toInterface(v reflect.Value) interface{} {
-	if v.IsNil() {
-		return nil
-	}
 	if v.CanInterface() {
 		return v.Interface()
 	}
+	klog.Errorf("can't interface typeof %s", v.Kind())
 	return nil
 }
 
