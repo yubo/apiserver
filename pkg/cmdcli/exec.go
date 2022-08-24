@@ -11,7 +11,7 @@ import (
 	"github.com/yubo/apiserver/pkg/streaming/api"
 	"github.com/yubo/apiserver/tools/remotecommand"
 	"github.com/yubo/golib/util/interrupt"
-	"github.com/yubo/golib/util/term"
+	"github.com/yubo/golib/term"
 )
 
 type ExecClient struct {

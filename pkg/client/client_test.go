@@ -8,12 +8,12 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	utiltesting "github.com/yubo/apiserver/pkg/rest/testing"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/api/errors"
 	"github.com/yubo/golib/runtime"
 	"github.com/yubo/golib/scheme"
-	"github.com/yubo/golib/util/diff"
 )
 
 type TestParam struct {
@@ -71,9 +71,7 @@ func TestDoRequestFailed(t *testing.T) {
 		t.Errorf("unexpected error type %v", err)
 	}
 	actual := ss.Status()
-	if !reflect.DeepEqual(status, &actual) {
-		t.Errorf("Unexpected mis-match: %s", diff.ObjectReflectDiff(status, &actual))
-	}
+	assert.Equal(t, status, &actual)
 }
 
 func TestDoRawRequestFailed(t *testing.T) {
@@ -111,9 +109,7 @@ func TestDoRawRequestFailed(t *testing.T) {
 		t.Errorf("unexpected error type %v", err)
 	}
 	actual := ss.Status()
-	if !reflect.DeepEqual(status, &actual) {
-		t.Errorf("Unexpected mis-match: %s", diff.ObjectReflectDiff(status, &actual))
-	}
+	assert.Equal(t, status, &actual)
 }
 
 func TestDoRequestCreated(t *testing.T) {

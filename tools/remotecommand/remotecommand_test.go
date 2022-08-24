@@ -31,10 +31,10 @@ import (
 	rest "github.com/yubo/apiserver/pkg/client"
 	"github.com/yubo/golib/api"
 	apierrors "github.com/yubo/golib/api/errors"
-	"github.com/yubo/golib/util/httpstream"
-	"github.com/yubo/golib/util/httpstream/spdy"
+	"github.com/yubo/golib/stream/httpstream"
+	"github.com/yubo/golib/stream/httpstream/spdy"
 	remotecommandconsts "github.com/yubo/golib/util/remotecommand"
-	"github.com/yubo/golib/util/term"
+	"github.com/yubo/golib/term"
 	"github.com/yubo/golib/util/wait"
 )
 

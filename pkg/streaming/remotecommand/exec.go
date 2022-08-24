@@ -28,7 +28,7 @@ import (
 	utilexec "github.com/yubo/golib/util/exec"
 	remotecommandconsts "github.com/yubo/golib/util/remotecommand"
 	"github.com/yubo/golib/util/runtime"
-	"github.com/yubo/golib/util/term"
+	"github.com/yubo/golib/term"
 )
 
 // Executor knows how to execute a command in a container in a pod.

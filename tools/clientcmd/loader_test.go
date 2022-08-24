@@ -17,7 +17,6 @@ limitations under the License.
 package clientcmd
 
 import (
-	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -27,11 +26,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	clientcmdapi "github.com/yubo/apiserver/tools/clientcmd/api"
 	clientcmdapiv1 "github.com/yubo/apiserver/tools/clientcmd/api/v1"
 	"github.com/yubo/golib/runtime"
-	"github.com/yubo/golib/util/diff"
-	"sigs.k8s.io/yaml"
+	"github.com/yubo/golib/yaml"
 )
 
 var (
@@ -248,9 +247,8 @@ kind: Config
 preferences: {}
 users: null
 `)
-	if !bytes.Equal(expected, data) {
-		t.Error(diff.ObjectReflectDiff(string(expected), string(data)))
-	}
+
+	assert.Equal(t, expected, data)
 }
 
 func TestLoadingEmptyMaps(t *testing.T) {

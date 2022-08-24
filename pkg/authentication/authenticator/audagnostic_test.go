@@ -20,10 +20,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"reflect"
 	"testing"
 
-	"github.com/yubo/golib/util/diff"
+	"github.com/stretchr/testify/assert"
 	"github.com/yubo/apiserver/pkg/authentication/user"
 )
 
@@ -218,9 +217,7 @@ func TestAuthenticate(t *testing.T) {
 						if got, want := ok, treq.wantAuthenticated; got != want {
 							t.Errorf("Unexpected authentication. got=%v, want=%v", got, want)
 						}
-						if got, want := resp, treq.wantResp; !reflect.DeepEqual(got, want) {
-							t.Errorf("Unexpected response. diff:\n%v", diff.ObjectGoPrintDiff(got, want))
-						}
+						assert.Equal(t, treq.wantResp, resp)
 					})
 				}
 			}

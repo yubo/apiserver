@@ -13,7 +13,7 @@ import (
 	"github.com/buger/goterm"
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/golib/util"
-	"github.com/yubo/golib/util/term"
+	"github.com/yubo/golib/term"
 )
 
 type Pager struct {

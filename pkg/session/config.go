@@ -23,14 +23,14 @@ func NewConfig() *Config {
 }
 
 type Config struct {
-	CookieName     string
-	SidLength      int
-	HttpOnly       bool
-	Domain         string
-	GcInterval     api.Duration
-	CookieLifetime api.Duration
-	MaxIdleTime    api.Duration
-	TableName      string `json:"tableName"`
+	CookieName     string       `json:"cookieName"`
+	SidLength      int          `json:"sidLength"`
+	HttpOnly       bool         `json:"httpOnly"`
+	Domain         string       `json:"domain"`
+	GcInterval     api.Duration `json:"gcInterval"`
+	CookieLifetime api.Duration `json:"cookieLifetime"`
+	MaxIdleTime    api.Duration `json:"maxIdleTime"`
+	TableName      string       `json:"tableName"`
 }
 
 func (p *Config) Validate() error {

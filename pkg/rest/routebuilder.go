@@ -2,6 +2,7 @@ package rest
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"path"
 	"reflect"
@@ -11,6 +12,7 @@ import (
 	"github.com/emicklei/go-restful/v3"
 	"github.com/go-openapi/spec"
 	"github.com/yubo/apiserver/pkg/audit"
+	"github.com/yubo/apiserver/pkg/handlers/negotiation"
 	"github.com/yubo/apiserver/pkg/metrics"
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/responsewriters"
@@ -42,6 +44,10 @@ func NewWebServiceBudiler() *WebServiceBuilder {
 
 func WsRouteBuild(opt *WsOption) {
 	defaultWebServiceBuilder.Build(opt)
+}
+
+func SetDefaultAclManager(m AclManager) {
+	defaultWebServiceBuilder.WithAclManager(m)
 }
 
 func ScopeRegister(scope, description string) {
@@ -98,6 +104,7 @@ type WebServiceBuilder struct {
 	respWriterCatalog     map[string]RespWriter
 	swaggerTags           []spec.Tag
 	DefaultContentTypes   []string
+	AclManager            AclManager
 }
 
 func (p *WebServiceBuilder) Build(opt *WsOption) {
@@ -126,6 +133,10 @@ func (p *WebServiceBuilder) newBuilder(opts *WsOption) *webserviceBuilder {
 
 func (p *WebServiceBuilder) ScopeRegister(scope, description string) {
 	p.ScopeCatalog[scope] = description
+}
+
+func (p *WebServiceBuilder) WithAclManager(m AclManager) {
+	p.AclManager = m
 }
 
 func (p *WebServiceBuilder) SecuritySchemeRegister(name string, s *spec.SecurityScheme) error {
@@ -285,13 +296,13 @@ func (p *webserviceBuilder) newRouteBuilder(wr WsRoute) *restful.RouteBuilder {
 			filters = append(filters, opt.Filters...)
 		}
 
-		if wr.Acl != "" && opt.Acl != nil {
-			var filter restful.FilterFunction
-			var err error
-			if filter, wr.Scope, err = opt.Acl(wr.Acl); err != nil {
+		if wr.Acl != "" && opt.AclManager != nil {
+			acl, err := opt.AclManager.Get(wr.Acl)
+			if err != nil {
 				panic(err)
 			}
-			filters = append(filters, filter)
+			filters = append(filters, acl.Filter)
+			wr.Scope = acl.Scope
 		}
 
 		if len(wr.Filters) > 0 {
@@ -389,21 +400,21 @@ func (p *webserviceBuilder) registerHandle(rb *restful.RouteBuilder, wr *WsRoute
 	// func (f HandlerFunc) ServeHTTP(w ResponseWriter, r *Request) {
 	// handle(w ResponseWriter, r *Request, param *struct{}, body *struct{})
 
-	v := reflect.ValueOf(wr.Handle)
-	t := v.Type()
+	rv := reflect.ValueOf(wr.Handle)
+	rt := rv.Type()
 
-	numIn := t.NumIn()
-	numOut := t.NumOut()
+	numIn := rt.NumIn()
+	numOut := rt.NumOut()
 
 	if !((numIn >= 2 && numIn <= 4) && numOut <= 2) {
-		return fmt.Errorf("%s handle in num %d out num %d is Invalid", t.Name(), numIn, numOut)
+		return fmt.Errorf("%s handle in num %d out num %d is Invalid", rt.Name(), numIn, numOut)
 	}
 
-	if arg := t.In(0).String(); arg != "http.ResponseWriter" {
+	if arg := rt.In(0).String(); arg != "http.ResponseWriter" {
 		panic(fmt.Sprintf("unable to get req http.ResponseWriter at in(0), get %s", arg))
 	}
 
-	if arg := t.In(1).String(); arg != "*http.Request" {
+	if arg := rt.In(1).String(); arg != "*http.Request" {
 		panic(fmt.Sprintf("unable to get req *http.Request at in(1), get %s", arg))
 	}
 
@@ -413,7 +424,7 @@ func (p *webserviceBuilder) registerHandle(rb *restful.RouteBuilder, wr *WsRoute
 	// build input param
 	if numIn > 2 {
 		inputParam := wr.InputParam
-		paramType = t.In(2)
+		paramType = rt.In(2)
 
 		switch paramType.Kind() {
 		case reflect.Ptr:
@@ -437,7 +448,7 @@ func (p *webserviceBuilder) registerHandle(rb *restful.RouteBuilder, wr *WsRoute
 	// build intput body
 	if numIn > 3 {
 		inputBody := wr.InputBody
-		bodyType = t.In(3)
+		bodyType = rt.In(3)
 
 		if bodyType.Kind() != reflect.Ptr {
 			return fmt.Errorf("payload must be a ptr, got %s", bodyType.Kind())
@@ -464,7 +475,7 @@ func (p *webserviceBuilder) registerHandle(rb *restful.RouteBuilder, wr *WsRoute
 		output := wr.Output
 		if numOut == 2 {
 			if output == nil {
-				rt := t.Out(0)
+				rt := rt.Out(0)
 				if rt.Kind() == reflect.Ptr {
 					rt = rt.Elem()
 				}
@@ -483,7 +494,7 @@ func (p *webserviceBuilder) registerHandle(rb *restful.RouteBuilder, wr *WsRoute
 			param := reflect.New(paramType).Interface()
 			body := reflect.New(bodyType).Interface()
 
-			if err := readEntity(req, param, body, p.parameterCodec); err != nil {
+			if err := readEntity(req, param, body, p.parameterCodec, p.serializer); err != nil {
 				responsewriters.ErrorNegotiated(err, p.serializer, resp.ResponseWriter, req.Request)
 				return
 			}
@@ -493,7 +504,7 @@ func (p *webserviceBuilder) registerHandle(rb *restful.RouteBuilder, wr *WsRoute
 			audit.LogRequestObject(ae, body, "")
 
 			// TODO: use (w http.ResponseWriter, req *http.Request)
-			ret = v.Call([]reflect.Value{
+			ret = rv.Call([]reflect.Value{
 				reflect.ValueOf(resp.ResponseWriter),
 				reflect.ValueOf(req.Request),
 				reflect.ValueOf(param),
@@ -503,18 +514,18 @@ func (p *webserviceBuilder) registerHandle(rb *restful.RouteBuilder, wr *WsRoute
 		} else if numIn == 3 {
 			// with param
 			param := reflect.New(paramType).Interface()
-			if err := readEntity(req, param, nil, p.parameterCodec); err != nil {
+			if err := readEntity(req, param, nil, p.parameterCodec, p.serializer); err != nil {
 				responsewriters.ErrorNegotiated(err, p.serializer, resp.ResponseWriter, req.Request)
 				return
 			}
 
-			ret = v.Call([]reflect.Value{
+			ret = rv.Call([]reflect.Value{
 				reflect.ValueOf(resp.ResponseWriter),
 				reflect.ValueOf(req.Request),
 				reflect.ValueOf(param),
 			})
 		} else {
-			ret = v.Call([]reflect.Value{
+			ret = rv.Call([]reflect.Value{
 				reflect.ValueOf(resp.ResponseWriter),
 				reflect.ValueOf(req.Request),
 			})
@@ -577,11 +588,20 @@ type GoRestfulContainer interface {
 	Serializer() runtime.NegotiatedSerializer
 }
 
+type AclManager interface {
+	Get(name string) (*Acl, error)
+}
+
+type Acl struct {
+	Filter restful.FilterFunction
+	Scope  string
+}
+
 // sys.Filters > opt.Filter > opt.Filters > route.acl > route.filter > route.filters
 type WsOption struct {
 	Ws                 *restful.WebService
 	Path               string
-	Acl                func(aclName string) (restful.FilterFunction, string, error)
+	AclManager         AclManager
 	Filter             restful.FilterFunction
 	Filters            []restful.FilterFunction
 	Produces           []string
@@ -630,7 +650,7 @@ type NonParam struct{}
 
 type WsRoute struct {
 	//Action string
-	Acl string
+	Acl string // access name
 	//--
 	Method  string
 	SubPath string
@@ -754,9 +774,9 @@ func (p *SchemeConfig) SecurityScheme() (*spec.SecurityScheme, error) {
 }
 
 // dst: must be ptr
-func readEntity(req *restful.Request, param, body interface{}, codec request.ParameterCodec) error {
+func readEntity(req *restful.Request, param, into interface{}, codec request.ParameterCodec, serializer runtime.NegotiatedSerializer) error {
 	ctx := request.WithParam(req.Request.Context(), param)
-	ctx = request.WithBody(ctx, body)
+	ctx = request.WithBody(ctx, into)
 	req.Request = req.Request.WithContext(ctx)
 
 	// param
@@ -775,13 +795,26 @@ func readEntity(req *restful.Request, param, body interface{}, codec request.Par
 
 	// TODO: use scheme.Codecs instead of restful.ReadEntity
 	// body
-	if body != nil {
-		if err := req.ReadEntity(body); err != nil {
-			klog.V(5).Infof("restful.ReadEntity() error %s", err)
+	if into != nil {
+		s, err := negotiation.NegotiateInputSerializer(req.Request, false, serializer)
+		if err != nil {
 			return err
 		}
+
+		body, err := ioutil.ReadAll(req.Request.Body)
+		if err != nil {
+			return err
+		}
+
+		if _, err := s.Serializer.Decode(body, into); err != nil {
+			return err
+		}
+		//if err := req.ReadEntity(into); err != nil {
+		//	klog.V(5).Infof("restful.ReadEntity() error %s", err)
+		//	return err
+		//}
 	}
-	if v, ok := body.(Validator); ok {
+	if v, ok := into.(Validator); ok {
 		if err := v.Validate(); err != nil {
 			return err
 		}

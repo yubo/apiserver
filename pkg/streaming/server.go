@@ -32,7 +32,7 @@ import (
 	remotecommandserver "github.com/yubo/apiserver/pkg/streaming/remotecommand"
 	"github.com/yubo/golib/types"
 	remotecommandconsts "github.com/yubo/golib/util/remotecommand"
-	"github.com/yubo/golib/util/term"
+	"github.com/yubo/golib/term"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

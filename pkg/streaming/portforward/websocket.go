@@ -30,7 +30,7 @@ import (
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/types"
 	"github.com/yubo/golib/util/runtime"
-	"github.com/yubo/golib/util/wsstream"
+	"github.com/yubo/golib/stream/wsstream"
 	"k8s.io/klog/v2"
 )
 

@@ -2,7 +2,7 @@ package dockershim
 
 import (
 	"github.com/yubo/golib/util/runtime"
-	"github.com/yubo/golib/util/term"
+	"github.com/yubo/golib/term"
 )
 
 // HandleResizing spawns a goroutine that processes the resize channel, calling resizeFunc for each

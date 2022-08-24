@@ -11,6 +11,7 @@ import (
 	"github.com/emicklei/go-restful/v3"
 	"github.com/stretchr/testify/assert"
 	"github.com/yubo/apiserver/pkg/client"
+	"github.com/yubo/golib/scheme"
 	"github.com/yubo/golib/util"
 	"k8s.io/klog/v2"
 )
@@ -80,6 +81,7 @@ func TestHttpParam(t *testing.T) {
 	}}
 
 	codec := ParameterCodec
+	serializer := scheme.NegotiatedSerializer
 	for i, c := range cases {
 		container := restful.NewContainer()
 		ws := new(restful.WebService).Path("").Consumes(MIME_JSON)
@@ -90,7 +92,7 @@ func TestHttpParam(t *testing.T) {
 			To(func(req *restful.Request, resp *restful.Response) {
 				param := GetHost{}
 				body := GetHostBody{}
-				err := readEntity(req, &param, &body, codec)
+				err := readEntity(req, &param, &body, codec, serializer)
 				assert.Emptyf(t, err, "case-%d", i)
 				assert.Equalf(t, c.param, &param, "case-%d", i)
 				assert.Equalf(t, c.body, &body, "case-%d", i)

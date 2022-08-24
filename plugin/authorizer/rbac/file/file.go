@@ -13,7 +13,7 @@ import (
 	"github.com/yubo/apiserver/plugin/authorizer/rbac"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/runtime"
-	"github.com/yubo/golib/util/yaml"
+	"github.com/yubo/golib/yaml"
 	"k8s.io/klog/v2"
 )
 

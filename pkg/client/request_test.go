@@ -45,9 +45,8 @@ import (
 	"github.com/yubo/golib/runtime/serializer/streaming"
 	"github.com/yubo/golib/scheme"
 	"github.com/yubo/golib/util/clock"
-	"github.com/yubo/golib/util/diff"
 	"github.com/yubo/golib/util/flowcontrol"
-	"github.com/yubo/golib/util/httpstream"
+	"github.com/yubo/golib/stream/httpstream"
 	"github.com/yubo/golib/watch"
 	"k8s.io/klog/v2"
 )
@@ -1157,9 +1156,7 @@ func TestRequestWatch(t *testing.T) {
 					if !ok {
 						t.Fatalf("Watch closed early, %d/%d read", i, len(testCase.Expect))
 					}
-					if !reflect.DeepEqual(evt, out) {
-						t.Fatalf("Event %d does not match: %s", i, diff.ObjectReflectDiff(evt, out))
-					}
+					assert.Equalf(t, evt, out, "event %d", i)
 				}
 			}
 		})

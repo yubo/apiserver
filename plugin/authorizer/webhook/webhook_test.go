@@ -28,18 +28,17 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"reflect"
 	"strings"
 	"testing"
 	"text/template"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	authorization "github.com/yubo/apiserver/pkg/apis/authorization"
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	v1 "github.com/yubo/apiserver/tools/clientcmd/api/v1"
 	"github.com/yubo/golib/api"
-	"github.com/yubo/golib/util/diff"
 	"github.com/yubo/golib/util/wait"
 )
 
@@ -546,9 +545,7 @@ func TestV1Webhook(t *testing.T) {
 			t.Errorf("case %d: failed to deserialize webhook request: %v", i, err)
 			continue
 		}
-		if !reflect.DeepEqual(gotAttr, tt.want) {
-			t.Errorf("case %d: got != want:\n%s", i, diff.ObjectGoPrintDiff(gotAttr, tt.want))
-		}
+		assert.Equal(t, gotAttr, tt.want)
 	}
 }
 

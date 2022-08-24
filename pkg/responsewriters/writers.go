@@ -38,7 +38,7 @@ import (
 	"github.com/yubo/golib/runtime"
 	"github.com/yubo/golib/util/flushwriter"
 	utilruntime "github.com/yubo/golib/util/runtime"
-	"github.com/yubo/golib/util/wsstream"
+	"github.com/yubo/golib/stream/wsstream"
 
 	//utilfeature "github.com/yubo/golib/util/feature"
 	utiltrace "github.com/yubo/golib/util/trace"

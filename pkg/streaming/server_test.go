@@ -35,7 +35,7 @@ import (
 	kubeletportforward "github.com/yubo/apiserver/pkg/streaming/portforward"
 	"github.com/yubo/apiserver/tools/remotecommand"
 	"github.com/yubo/golib/api"
-	"github.com/yubo/golib/util/term"
+	"github.com/yubo/golib/term"
 )
 
 const (

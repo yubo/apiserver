@@ -51,20 +51,10 @@ func installWs(http rest.GoRestfulContainer) {
 		GoRestfulContainer: http,
 		Routes: []rest.WsRoute{
 			{Method: "GET", SubPath: "/", Handle: hello},
-			{Method: "GET", SubPath: "/array", Handle: helloArray},
-			{Method: "GET", SubPath: "/map", Handle: helloMap},
 		},
 	})
 }
 
 func hello(w http.ResponseWriter, req *http.Request) ([]byte, error) {
 	return []byte("hello, world\n"), nil
-}
-
-func helloArray(w http.ResponseWriter, req *http.Request, _ *rest.NonParam, s *[]string) (string, error) {
-	return fmt.Sprintf("%s", *s), nil
-}
-
-func helloMap(w http.ResponseWriter, req *http.Request, _ *rest.NonParam, m *map[string]string) (string, error) {
-	return fmt.Sprintf("%s", *m), nil
 }

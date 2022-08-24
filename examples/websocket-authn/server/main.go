@@ -16,7 +16,7 @@ import (
 	"github.com/yubo/golib/cli"
 	"github.com/yubo/golib/proc"
 	"github.com/yubo/golib/util/runtime"
-	"github.com/yubo/golib/util/wsstream"
+	"github.com/yubo/golib/stream/wsstream"
 	"golang.org/x/net/websocket"
 
 	_ "github.com/yubo/apiserver/pkg/authentication/register"

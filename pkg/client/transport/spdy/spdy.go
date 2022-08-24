@@ -22,8 +22,8 @@ import (
 	"net/url"
 
 	"github.com/yubo/apiserver/pkg/client"
-	"github.com/yubo/golib/util/httpstream"
-	"github.com/yubo/golib/util/httpstream/spdy"
+	"github.com/yubo/golib/stream/httpstream"
+	"github.com/yubo/golib/stream/httpstream/spdy"
 )
 
 // Upgrader validates a response from the server after a SPDY upgrade.

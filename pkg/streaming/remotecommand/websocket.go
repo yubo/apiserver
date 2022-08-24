@@ -23,7 +23,7 @@ import (
 
 	"github.com/yubo/apiserver/pkg/server/httplog"
 	"github.com/yubo/golib/util/runtime"
-	"github.com/yubo/golib/util/wsstream"
+	"github.com/yubo/golib/stream/wsstream"
 )
 
 const (

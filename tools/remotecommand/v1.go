@@ -23,7 +23,7 @@ import (
 	"net/http"
 
 	"github.com/yubo/golib/api"
-	"github.com/yubo/golib/util/httpstream"
+	"github.com/yubo/golib/stream/httpstream"
 	"k8s.io/klog/v2"
 )
 

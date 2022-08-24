@@ -67,6 +67,7 @@ func NewDB(ctx context.Context, config *Config) (DB, error) {
 
 		if db, err := orm.Open(cf.Driver, cf.Dsn, opts...); err != nil {
 			ret.cancel()
+			klog.Errorf("orm.Open(%s, %s) error %s", cf.Driver, cf.Dsn, err)
 			return nil, err
 		} else {
 			ret.dbs[cf.Name] = db

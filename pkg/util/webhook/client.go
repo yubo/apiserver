@@ -25,12 +25,12 @@ import (
 	"net/url"
 	"strconv"
 
-	lru "github.com/hashicorp/golang-lru"
 	rest "github.com/yubo/apiserver/pkg/client"
 	"github.com/yubo/golib/runtime"
 	"github.com/yubo/golib/runtime/serializer"
 	"github.com/yubo/golib/scheme"
 	utilerrors "github.com/yubo/golib/util/errors"
+	"github.com/yubo/golib/util/lru"
 )
 
 const (

@@ -13,7 +13,7 @@ import (
 	"github.com/yubo/golib/runtime/serializer/streaming"
 	"github.com/yubo/golib/scheme"
 	utilruntime "github.com/yubo/golib/util/runtime"
-	"github.com/yubo/golib/util/wsstream"
+	"github.com/yubo/golib/stream/wsstream"
 	"github.com/yubo/golib/watch"
 	"golang.org/x/net/websocket"
 	"k8s.io/klog/v2"

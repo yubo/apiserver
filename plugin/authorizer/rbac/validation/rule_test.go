@@ -19,14 +19,13 @@ package validation
 import (
 	"hash/fnv"
 	"io"
-	"reflect"
 	"sort"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/yubo/apiserver/pkg/apis/rbac"
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/golib/api"
-	"github.com/yubo/golib/util/diff"
 )
 
 // compute a hash of a policy rule so we can sort in a deterministic order
@@ -155,10 +154,7 @@ func TestDefaultRuleResolver(t *testing.T) {
 		sort.Sort(byHash(rules))
 		sort.Sort(byHash(tc.effectiveRules))
 
-		if !reflect.DeepEqual(rules, tc.effectiveRules) {
-			ruleDiff := diff.ObjectDiff(rules, tc.effectiveRules)
-			t.Errorf("case %d: %s", i, ruleDiff)
-		}
+		assert.Equalf(t, rules, tc.effectiveRules, "case %d", i)
 	}
 }
 

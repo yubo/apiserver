@@ -26,9 +26,9 @@ import (
 
 	restclient "github.com/yubo/apiserver/pkg/client"
 	spdy "github.com/yubo/apiserver/pkg/client/transport/spdy"
-	"github.com/yubo/golib/util/httpstream"
+	"github.com/yubo/golib/stream/httpstream"
 	"github.com/yubo/golib/util/remotecommand"
-	"github.com/yubo/golib/util/term"
+	"github.com/yubo/golib/term"
 )
 
 // StreamOptions holds information pertaining to the current streaming session:

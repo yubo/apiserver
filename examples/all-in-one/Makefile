@@ -8,7 +8,7 @@ TARGETS=$(APP_PATH)
 all: $(TARGETS)
 
 $(APP_PATH): $(DEP_OBJS)
-	$(BUILD_ENVS) go build -o $@ ./cmd/all-in-one
+	go build -ldflags="$(shell ./scripts/ldflags.sh)" -o $@ ./cmd/all-in-one
 
 .PHONY: build
 build:
@@ -70,7 +70,7 @@ docker:
 
 .PHONY: dev
 dev: $(DEP_OBJS)
-	APP_NAME=$(APP_NAME) watcher --logtostderr -v 3 -e build -e .git -e docs -e vendor -f .go -f .sql -d 1000ms
+	APP_NAME=$(APP_NAME) watcher --logtostderr -v 3 -e bin -e dist -e .git -e docs -e vendor -f .go -f .sql -d 1000ms
 
 .PHONY: clean
 clean:

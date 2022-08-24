@@ -19,13 +19,11 @@ package policy
 import (
 	"io/ioutil"
 	"os"
-	"reflect"
 	"strings"
 	"testing"
 
 	"github.com/yubo/apiserver/pkg/apis/audit"
 	"github.com/yubo/golib/api"
-	"github.com/yubo/golib/util/diff"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -102,9 +100,7 @@ func TestParser(t *testing.T) {
 		policy.TypeMeta = api.TypeMeta{}
 
 		assert.Len(t, policy.Rules, 3) // Sanity check.
-		if !reflect.DeepEqual(policy, expectedPolicy) {
-			t.Errorf("Unexpected policy! Diff:\n%s", diff.ObjectDiff(policy, expectedPolicy))
-		}
+		assert.Equal(t, policy, expectedPolicy)
 	}
 }
 

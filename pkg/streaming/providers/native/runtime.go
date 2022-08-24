@@ -12,7 +12,7 @@ import (
 	"github.com/yubo/golib/api/errors"
 	"github.com/yubo/golib/stream"
 	"github.com/yubo/golib/util/rand"
-	"github.com/yubo/golib/util/term"
+	"github.com/yubo/golib/term"
 	"k8s.io/klog/v2"
 )
 

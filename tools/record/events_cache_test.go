@@ -17,15 +17,14 @@ limitations under the License.
 package record
 
 import (
-	"reflect"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/util/clock"
-	"github.com/yubo/golib/util/diff"
 )
 
 func makeObjectReference(kind, name, namespace string) api.ObjectReference {
@@ -119,9 +118,8 @@ func validateEvent(messagePrefix string, actualEvent *api.Event, expectedEvent *
 		t.Errorf("%v - Name '%v' does not contain prefix '%v'", messagePrefix, n, en)
 	}
 	recvEvent.Name = expectedEvent.Name
-	if e, a := expectedEvent, &recvEvent; !reflect.DeepEqual(e, a) {
-		t.Errorf("%v - diff: %s", messagePrefix, diff.ObjectGoPrintDiff(e, a))
-	}
+
+	assert.Equal(t, expectedEvent, &recvEvent)
 	recvEvent.FirstTimestamp = actualFirstTimestamp
 	recvEvent.LastTimestamp = actualLastTimestamp
 	return actualEvent, nil

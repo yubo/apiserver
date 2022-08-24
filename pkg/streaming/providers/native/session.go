@@ -9,7 +9,7 @@ import (
 	"sync"
 
 	"github.com/yubo/golib/stream"
-	"github.com/yubo/golib/util/term"
+	"github.com/yubo/golib/term"
 	"k8s.io/klog/v2"
 )
 

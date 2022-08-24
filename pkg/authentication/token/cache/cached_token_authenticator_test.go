@@ -33,8 +33,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/pkg/authentication/user"
+	"github.com/yubo/golib/util"
 	utilclock "github.com/yubo/golib/util/clock"
-	"github.com/yubo/golib/util/uuid"
 )
 
 func TestCachedTokenAuthenticator(t *testing.T) {
@@ -342,7 +342,7 @@ func (s *singleBenchmark) makeTokens() {
 		// make different combinations of audience, failures, denies for the tokens.
 		auds := []string{}
 		for i := 0; i < rr.Intn(4); i++ {
-			auds = append(auds, string(uuid.NewUUID()))
+			auds = append(auds, string(util.NewUUID()))
 		}
 		choice := rr.Float64()
 		switch {

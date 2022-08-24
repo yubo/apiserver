@@ -24,7 +24,7 @@ type config struct {
 
 	IssuerURL string `json:"issuerURL" flag:"oidc-issuer-url" description:"The URL of the OpenID issuer, only HTTPS scheme will be accepted. If set, it will be used to verify the OIDC JSON Web Token (JWT)."`
 
-	UsernameClaim string `json:"usernameClaim" flag:"oidc-username-claim" description:"The OpenID claim to use as the user name. Note that claims other than the default ('sub') is not guaranteed to be unique and immutable. This flag is experimental, please see the authentication documentation for further details."`
+	UsernameClaim string `json:"usernameClaim" default:"sub" flag:"oidc-username-claim" description:"The OpenID claim to use as the user name. Note that claims other than the default ('sub') is not guaranteed to be unique and immutable. This flag is experimental, please see the authentication documentation for further details."`
 
 	UsernamePrefix string `json:"usernamePrefix" flag:"oidc-username-prefix" description:"If provided, all usernames will be prefixed with this value. If not provided, username claims other than 'email' are prefixed by the issuer URL to avoid clashes. To skip any prefixing, provide the value '-'."`
 

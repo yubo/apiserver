@@ -30,7 +30,7 @@ import (
 	"github.com/yubo/apiserver/pkg/client"
 	"github.com/yubo/golib/util/jsonpath"
 	"github.com/yubo/golib/util/net"
-	"github.com/yubo/golib/util/yaml"
+	"github.com/yubo/golib/yaml"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"k8s.io/klog/v2"

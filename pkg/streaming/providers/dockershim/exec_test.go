@@ -30,7 +30,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	mockclient "github.com/yubo/apiserver/pkg/streaming/providers/dockershim/libdocker/testing"
-	"github.com/yubo/golib/util/term"
+	"github.com/yubo/golib/term"
 )
 
 func TestExecInContainer(t *testing.T) {

@@ -148,8 +148,7 @@ func typeFields(t reflect.Type) structFields {
 	nameIndex := make(map[string]int, len(fields))
 	for i, field := range fields {
 		if _, ok := nameIndex[field.Key]; ok {
-			panicType(field.Type, fmt.Sprintf("duplicate field key %s %s",
-				t.Name(), field))
+			panicType(field.Type, t.Name(), field)
 		}
 		nameIndex[field.Key] = i
 	}

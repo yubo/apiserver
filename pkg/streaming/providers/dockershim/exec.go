@@ -26,7 +26,7 @@ import (
 
 	dockertypes "github.com/docker/docker/api/types"
 	"github.com/yubo/apiserver/pkg/streaming/providers/dockershim/libdocker"
-	"github.com/yubo/golib/util/term"
+	"github.com/yubo/golib/term"
 	"k8s.io/klog/v2"
 )
 

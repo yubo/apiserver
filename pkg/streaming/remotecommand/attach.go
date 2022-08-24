@@ -26,7 +26,7 @@ import (
 	apierrors "github.com/yubo/golib/api/errors"
 	"github.com/yubo/golib/types"
 	"github.com/yubo/golib/util/runtime"
-	"github.com/yubo/golib/util/term"
+	"github.com/yubo/golib/term"
 )
 
 // Attacher knows how to attach to a running container in a pod.

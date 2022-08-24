@@ -23,7 +23,7 @@ import (
 
 	"github.com/yubo/golib/types"
 	"github.com/yubo/golib/util/runtime"
-	"github.com/yubo/golib/util/wsstream"
+	"github.com/yubo/golib/stream/wsstream"
 )
 
 // PortForwarder knows how to forward content from a data stream to/from a port

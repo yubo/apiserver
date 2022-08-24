@@ -26,8 +26,8 @@ import (
 
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/types"
-	"github.com/yubo/golib/util/httpstream"
-	"github.com/yubo/golib/util/httpstream/spdy"
+	"github.com/yubo/golib/stream/httpstream"
+	"github.com/yubo/golib/stream/httpstream/spdy"
 	utilruntime "github.com/yubo/golib/util/runtime"
 
 	"k8s.io/klog/v2"

@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"github.com/yubo/golib/api"
-	"github.com/yubo/golib/util/httpstream"
+	"github.com/yubo/golib/stream/httpstream"
 )
 
 func TestHTTPStreamReceived(t *testing.T) {

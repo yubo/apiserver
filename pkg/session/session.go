@@ -45,14 +45,14 @@ func NewSessionManager(cf *Config, optsInput ...Option) (types.SessionManager, e
 	}, nil
 }
 
-type sessionConn struct {
-	Sid        string `sql:"sid,where,primary_key"`
-	UserName   string
-	Data       map[string]string
-	CookieName string
-	CreatedAt  int64
-	UpdatedAt  int64
-}
+//type sessionConn struct {
+//	Sid        string `sql:"name,where,primary_key"`
+//	UserName   string
+//	Data       map[string]string
+//	CookieName string
+//	CreatedAt  int64
+//	UpdatedAt  int64
+//}
 
 type sessionManager struct {
 	types.Session
