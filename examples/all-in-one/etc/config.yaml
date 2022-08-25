@@ -76,9 +76,5 @@ session:
 db:
   driver: "sqlite3"
   dsn: "file:example-all.db?cache=shared&mode=memory"
-  databases:
-    - name: "apiserver" 
-      driver: "sqlite3"
-      dsn: "file:example-all-apiserver.db?cache=shared&mode=memory"
   #driver: "mysql"
   #dsn: "root:1234@tcp(localhost:3306)/test?loc=Local&parseTime=true"

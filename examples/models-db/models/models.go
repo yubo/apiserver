@@ -30,18 +30,19 @@ func (p *Demo) NewObj() interface{} {
 }
 
 func (p *Demo) Create(ctx context.Context, obj *api.Demo) error {
-	return p.DB.Insert(obj, orm.WithTable(p.Name()))
+	return p.Insert(ctx, obj, orm.WithTable(p.Name()))
 }
 
 // Get retrieves the Secret from the db for a given name.
 func (p *Demo) Get(ctx context.Context, selector string) (ret *api.Demo, err error) {
-	err = p.DB.Get(&ret, orm.WithTable(p.Name()), orm.WithSelector(selector))
+	//err = p.Query(ctx, "select * from demo where name=?", name).Row(&ret)
+	err = p.DB.Get(ctx, &ret, orm.WithTable(p.Name()), orm.WithSelector(selector))
 	return
 }
 
 // List lists all Secrets in the indexer.
 func (p *Demo) List(ctx context.Context, opts storage.ListOptions) (list []*api.Demo, err error) {
-	err = p.DB.List(&list,
+	err = p.DB.List(ctx, &list,
 		orm.WithTable(p.Name()),
 		orm.WithTotal(opts.Total),
 		orm.WithSelector(opts.Query),
@@ -52,11 +53,12 @@ func (p *Demo) List(ctx context.Context, opts storage.ListOptions) (list []*api.
 }
 
 func (p *Demo) Update(ctx context.Context, obj *api.Demo) error {
-	return p.DB.Update(obj, orm.WithTable(p.Name()))
+	return p.DB.Update(ctx, obj, orm.WithTable(p.Name()))
 }
 
 func (p *Demo) Delete(ctx context.Context, selector string) error {
-	return p.DB.Delete(nil, orm.WithTable(p.Name()), orm.WithSelector(selector))
+	//_, err := p.Exec(ctx, "delete demo where name=?", name)
+	return p.DB.Delete(ctx, nil, orm.WithTable(p.Name()), orm.WithSelector(selector))
 }
 
 func init() {

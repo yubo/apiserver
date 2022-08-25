@@ -531,13 +531,19 @@ func (p *webserviceBuilder) registerHandle(rb *restful.RouteBuilder, wr *WsRoute
 			})
 		}
 
+		var err error
 		if numOut == 2 {
-			wr.RespWriter.RespWrite(resp, req.Request, toInterface(ret[0]), toError(ret[1]), p.serializer)
+			err = toError(ret[1])
+			wr.RespWriter.RespWrite(resp, req.Request, toInterface(ret[0]), err, p.serializer)
 			return
 		}
 
 		if numOut == 1 {
-			wr.RespWriter.RespWrite(resp, req.Request, nil, toError(ret[0]), p.serializer)
+			err = toError(ret[0])
+			wr.RespWriter.RespWrite(resp, req.Request, nil, err, p.serializer)
+		}
+		if err != nil {
+			req.SetAttribute("error", err)
 		}
 	}
 

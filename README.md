@@ -39,5 +39,4 @@
 - Misc
   * [x] [Models DB](./examples/models-db)
   * [x] [Models KV](./examples/models-kv)
-  * [x] [Models SQL](./examples/models-sql)
   * [x] [Module Config](./examples/module-config)

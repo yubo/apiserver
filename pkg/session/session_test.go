@@ -41,13 +41,13 @@ func runTests(t *testing.T, tests ...func(*session)) {
 	defer db.Close()
 
 	store := dbstore.New(db)
-	defer store.Drop("session")
+	defer store.Drop(context.Background(), "session")
 
 	m := models.NewModels(store)
 	m.Register(&session{})
 
 	sessions := &session{store: m.NewModelStore("session")}
-	store.AutoMigrate("session", sessions.NewObj())
+	store.AutoMigrate(context.Background(), "session", sessions.NewObj())
 
 	for _, test := range tests {
 		test(sessions)

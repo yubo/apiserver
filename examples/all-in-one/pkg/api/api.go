@@ -1,5 +1,5 @@
 // this is a sample echo rest api module
-package user
+package api
 
 import (
 	"time"
@@ -32,15 +32,15 @@ type ListInput struct {
 }
 
 type ListUserOutput struct {
-	Total int64   `json:"total"`
-	List  []*User `json:"list"`
+	Total int64  `json:"total"`
+	List  []User `json:"list"`
 }
 
-type GetUserInput struct {
+type GetUserParam struct {
 	Name string `param:"path" name:"name"`
 }
 
-func (p *GetUserInput) Validate() error {
+func (p *GetUserParam) Validate() error {
 	return nil
 }
 
@@ -54,6 +54,6 @@ type UpdateUserInput struct {
 	UpdatedAt time.Time `json:"-"`
 }
 
-type DeleteUserInput struct {
+type DeleteUserParam struct {
 	Name string `param:"path" name:"name"`
 }

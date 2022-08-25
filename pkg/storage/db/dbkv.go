@@ -21,15 +21,6 @@ func New(db orm.DB) *Store {
 	return &Store{db: db}
 }
 
-func (p Store) getdb(ctx context.Context) orm.Interface {
-	// for transaction (tx)
-	if db, ok := orm.InterfaceFrom(ctx); ok {
-		return db
-	}
-
-	return p.db
-}
-
 // {table}/{namespace}/{name}
 // {table}/{name}
 // {table}
@@ -67,16 +58,14 @@ func parseKeyWithSelector(key, selector string) (string, string, error) {
 }
 
 // AutoMigrate create table if not exist
-func (p Store) AutoMigrate(key string, obj runtime.Object) error {
-	db := p.getdb(context.TODO())
+func (p Store) AutoMigrate(ctx context.Context, key string, obj runtime.Object) error {
 	table, _, _ := parseKey(key)
 
-	return db.AutoMigrate(obj, orm.WithTable(table))
+	return p.db.AutoMigrate(ctx, obj, orm.WithTable(table))
 }
 
 // drop table if exist
-func (p Store) Drop(key string) error {
-	db := p.getdb(context.TODO())
+func (p Store) Drop(ctx context.Context, key string) error {
 	table, _, _ := parseKey(key)
 
 	opt, err := orm.NewOptions(orm.WithTable(table))
@@ -84,18 +73,16 @@ func (p Store) Drop(key string) error {
 		return err
 	}
 
-	return db.DropTable(opt)
+	return p.db.DropTable(ctx, opt)
 }
 
 func (p Store) Create(ctx context.Context, key string, obj, out runtime.Object) error {
-	db := p.getdb(ctx)
-
 	table, selector, err := parseKeyWithSelector(key, "")
 	if err != nil {
 		return err
 	}
 
-	if err := db.Insert(obj, orm.WithTable(table)); err != nil {
+	if err := p.db.Insert(ctx, obj, orm.WithTable(table)); err != nil {
 		return err
 	}
 
@@ -103,35 +90,31 @@ func (p Store) Create(ctx context.Context, key string, obj, out runtime.Object) 
 		return nil
 	}
 
-	return p.get(db, table, selector, false, out)
+	return p.get(ctx, table, selector, false, out)
 }
 
 func (p Store) Delete(ctx context.Context, key string, out runtime.Object) error {
-	db := p.getdb(ctx)
-
 	table, selector, err := parseKeyWithSelector(key, "")
 	if err != nil {
 		return err
 	}
 
 	if out != nil {
-		if err := p.get(db, table, selector, false, out); err != nil {
+		if err := p.get(ctx, table, selector, false, out); err != nil {
 			return err
 		}
 	}
 
-	return db.Delete(nil, orm.WithTable(table), orm.WithSelector(selector))
+	return p.db.Delete(ctx, nil, orm.WithTable(table), orm.WithSelector(selector))
 }
 
 func (p Store) Update(ctx context.Context, key string, obj, out runtime.Object) error {
-	db := p.getdb(ctx)
-
 	table, selector, err := parseKeyWithSelector(key, "")
 	if err != nil {
 		return err
 	}
 
-	if err := db.Update(obj, orm.WithTable(table)); err != nil {
+	if err := p.db.Update(ctx, obj, orm.WithTable(table)); err != nil {
 		return err
 	}
 
@@ -139,34 +122,32 @@ func (p Store) Update(ctx context.Context, key string, obj, out runtime.Object) 
 		return nil
 	}
 
-	return p.get(db, table, selector, false, out)
+	return p.get(ctx, table, selector, false, out)
 }
 
 func (p Store) Get(ctx context.Context, key string, opts storage.GetOptions, out runtime.Object) error {
-	db := p.getdb(ctx)
-
 	table, selector, err := parseKeyWithSelector(key, "")
 	if err != nil {
 		return err
 	}
 
-	return p.get(db, table, selector, opts.IgnoreNotFound, out)
+	return p.get(ctx, table, selector, opts.IgnoreNotFound, out)
 }
 
-func (p Store) get(db orm.Interface, table, selector string, ignoreNotFound bool, out runtime.Object) error {
+func (p Store) get(ctx context.Context, table, selector string, ignoreNotFound bool, out runtime.Object) error {
 	opts := []orm.Option{orm.WithTable(table), orm.WithSelector(selector)}
 	if ignoreNotFound {
 		opts = append(opts, orm.WithIgnoreNotFoundErr())
 	}
 
-	return db.Get(out, opts...)
+	return p.db.Get(ctx, out, opts...)
 }
 
 func (p Store) List(ctx context.Context, key string, opts storage.ListOptions, out runtime.Object, total *int64) error {
-	db := p.getdb(ctx)
 	table, _, _ := parseKey(key)
 
-	return db.List(
+	return p.db.List(
+		ctx,
 		out,
 		orm.WithTable(table),
 		orm.WithTotal(total),

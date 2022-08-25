@@ -10,28 +10,32 @@ import (
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/apiserver/pkg/server"
 
+	"examples/all-in-one/pkg/api"
+	"examples/all-in-one/pkg/filters"
+	"examples/all-in-one/pkg/models"
+
 	_ "github.com/yubo/apiserver/pkg/models/register"
 )
 
-type Module struct {
+type User struct {
 	Name string
-	UserModel
-	ctx context.Context
+	user *models.User
+	ctx  context.Context
 }
 
-func New(ctx context.Context) *Module {
-	return &Module{
+func New(ctx context.Context) *User {
+	return &User{
 		ctx: ctx,
 	}
 }
 
-func (p *Module) Start() error {
+func (p *User) Start() error {
 	http, ok := options.APIServerFrom(p.ctx)
 	if !ok {
 		return fmt.Errorf("unable to get API server from the context")
 	}
 
-	p.UserModel = NewUser()
+	p.user = models.NewUser()
 
 	p.installWs(http)
 
@@ -39,7 +43,7 @@ func (p *Module) Start() error {
 	return nil
 }
 
-func (p *Module) installWs(http server.APIServer) {
+func (p *User) installWs(http server.APIServer) {
 	rest.SwaggerTagRegister("user", "user Api - for restful sample")
 
 	rest.WsRouteBuild(&rest.WsOption{
@@ -63,6 +67,7 @@ func (p *Module) installWs(http server.APIServer) {
 		}, {
 			Method: "PUT", SubPath: "/{name}",
 			Desc:   "update user",
+			Filter: filters.WithTx,
 			Handle: p.update,
 		}, {
 			Method: "DELETE", SubPath: "/{name}",
@@ -72,33 +77,33 @@ func (p *Module) installWs(http server.APIServer) {
 	})
 }
 
-func (p *Module) create(w http.ResponseWriter, req *http.Request, _ *rest.NonParam, in *CreateUserInput) (*User, error) {
-	return p.Create(req.Context(), in.User())
+func (p *User) create(w http.ResponseWriter, req *http.Request, _ *rest.NonParam, in *api.CreateUserInput) error {
+	return p.user.Create(req.Context(), in.User())
 }
 
-func (p *Module) get(w http.ResponseWriter, req *http.Request, in *GetUserInput) (*User, error) {
-	return p.Get(req.Context(), in.Name)
+func (p *User) get(w http.ResponseWriter, req *http.Request, in *api.GetUserParam) (*api.User, error) {
+	return p.user.Get(req.Context(), in.Name)
 }
 
-func (p *Module) list(w http.ResponseWriter, req *http.Request, in *ListInput) (ret *ListUserOutput, err error) {
-	ret = &ListUserOutput{}
+func (p *User) list(w http.ResponseWriter, req *http.Request, in *api.ListInput) (ret *api.ListUserOutput, err error) {
+	ret = &api.ListUserOutput{}
 
 	opts, err := in.ListOptions(in.Query, &ret.Total)
 	if err != nil {
 		return nil, err
 	}
 
-	ret.List, err = p.List(req.Context(), *opts)
+	ret.List, err = p.user.List(req.Context(), *opts)
 	return ret, err
 }
 
-func (p *Module) update(w http.ResponseWriter, req *http.Request, param *UpdateUserParam, in *UpdateUserInput) (*User, error) {
+func (p *User) update(w http.ResponseWriter, req *http.Request, param *api.UpdateUserParam, in *api.UpdateUserInput) error {
 	in.Name = param.Name
-	return p.Update(req.Context(), in)
+	return p.user.Update(req.Context(), in)
 }
 
-func (p *Module) delete(w http.ResponseWriter, req *http.Request, in *DeleteUserInput) (*User, error) {
-	return p.Delete(req.Context(), in.Name)
+func (p *User) delete(w http.ResponseWriter, req *http.Request, in *api.DeleteUserParam) error {
+	return p.user.Delete(req.Context(), in.Name)
 }
 
 func addAuthScope() {

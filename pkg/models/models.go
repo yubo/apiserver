@@ -104,7 +104,7 @@ func (p *module) preStart(ctx context.Context) error {
 	if p.config.AutoMigrate && p.DB != nil {
 		var errs []error
 		for _, m := range p.models {
-			if err := p.AutoMigrate(m.NewObj(), orm.WithTable(m.Name())); err != nil {
+			if err := p.AutoMigrate(ctx, m.NewObj(), orm.WithTable(m.Name())); err != nil {
 				errs = append(errs, err)
 			}
 		}

@@ -1,7 +1,0 @@
-db:
-  driver: sqlite3
-  dsn: file:test.db?cache=shared&mode=memory
-
-models:
-  autoMigrate: true
-  dbName: "__default__"

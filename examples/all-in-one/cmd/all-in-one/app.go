@@ -2,18 +2,12 @@ package main
 
 import (
 	"context"
+	"examples/all-in-one/pkg/allinone"
 
 	"github.com/go-openapi/spec"
 	"github.com/spf13/cobra"
 	"github.com/yubo/apiserver/pkg/version"
 	"github.com/yubo/golib/proc"
-	"k8s.io/klog/v2"
-
-	"examples/all-in-one/pkg/authn"
-	"examples/all-in-one/pkg/authz"
-	"examples/all-in-one/pkg/session"
-	"examples/all-in-one/pkg/trace"
-	"examples/all-in-one/pkg/user"
 
 	_ "github.com/yubo/golib/orm/mysql"
 	_ "github.com/yubo/golib/orm/sqlite"
@@ -108,21 +102,7 @@ func newServerCmd() *cobra.Command {
 }
 
 func start(ctx context.Context) error {
-	klog.Info("start")
-
-	if err := session.New(ctx).Start(); err != nil {
-		return err
-	}
-	if err := trace.New(ctx).Start(); err != nil {
-		return err
-	}
-	if err := user.New(ctx).Start(); err != nil {
-		return err
-	}
-	if err := authn.New(ctx).Start(); err != nil {
-		return err
-	}
-	if err := authz.New(ctx).Start(); err != nil {
+	if err := allinone.New(ctx).Start(); err != nil {
 		return err
 	}
 
