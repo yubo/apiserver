@@ -3,6 +3,7 @@ package session
 
 import (
 	"context"
+	"examples/all-in-one/pkg/allinone/config"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -10,44 +11,25 @@ import (
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/rest"
-	"github.com/yubo/apiserver/pkg/server"
-	session "github.com/yubo/apiserver/pkg/session/types"
+	"github.com/yubo/apiserver/pkg/session/types"
 
 	_ "github.com/yubo/apiserver/pkg/session/register"
 )
 
-type module struct {
-	Name    string
-	http    server.APIServer
-	session session.SessionManager
-	ctx     context.Context
-}
-
-func New(ctx context.Context) *module {
-	return &module{
-		ctx: ctx,
-	}
-}
-
-func (p *module) Start() error {
-	var ok bool
-
-	p.http, ok = options.APIServerFrom(p.ctx)
-	if !ok {
-		return fmt.Errorf("unable to get http server from the context")
+func New(ctx context.Context, cf *config.Config) *session {
+	return &session{
+		container: options.APIServerMustFrom(ctx),
+		session:   options.SessionManagerMustFrom(ctx),
 	}
 
-	p.session, ok = options.SessionManagerFrom(p.ctx)
-	if !ok {
-		return fmt.Errorf("unable to get session manager from the context")
-	}
-
-	p.installWs()
-
-	return nil
 }
 
-func (p *module) installWs() {
+type session struct {
+	container rest.GoRestfulContainer
+	session   types.SessionManager
+}
+
+func (p *session) Install() {
 	rest.SwaggerTagRegister("session", "demo session")
 	rest.WsRouteBuild(&rest.WsOption{
 		// << set filter >>
@@ -56,7 +38,7 @@ func (p *module) installWs() {
 		Path:               "/session",
 		Consumes:           []string{"*/*"},
 		Tags:               []string{"session"},
-		GoRestfulContainer: p.http,
+		GoRestfulContainer: p.container,
 		Routes: []rest.WsRoute{{
 			Method: "GET", SubPath: "/",
 			Desc:   "get session info",
@@ -74,7 +56,7 @@ func (p *module) installWs() {
 }
 
 // show session information
-func (p *module) info(w http.ResponseWriter, req *http.Request) (string, error) {
+func (p *session) info(w http.ResponseWriter, req *http.Request) (string, error) {
 	sess, ok := request.SessionFrom(req.Context())
 	if !ok {
 		return "can't get session info", nil
@@ -96,7 +78,7 @@ func (p *module) info(w http.ResponseWriter, req *http.Request) (string, error) 
 }
 
 // set session
-func (p *module) set(w http.ResponseWriter, req *http.Request) (string, error) {
+func (p *session) set(w http.ResponseWriter, req *http.Request) (string, error) {
 	sess, ok := request.SessionFrom(req.Context())
 	if ok {
 		sess.Set("userName", "tom")
@@ -106,7 +88,7 @@ func (p *module) set(w http.ResponseWriter, req *http.Request) (string, error) {
 }
 
 // reset session
-func (p *module) reset(w http.ResponseWriter, req *http.Request) (string, error) {
+func (p *session) reset(w http.ResponseWriter, req *http.Request) (string, error) {
 	sess, ok := request.SessionFrom(req.Context())
 	if ok {
 		sess.Reset()

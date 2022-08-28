@@ -3,47 +3,31 @@ package user
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/rest"
-	"github.com/yubo/apiserver/pkg/server"
 
+	"examples/all-in-one/pkg/allinone/config"
 	"examples/all-in-one/pkg/api"
 	"examples/all-in-one/pkg/filters"
 	"examples/all-in-one/pkg/models"
-
-	_ "github.com/yubo/apiserver/pkg/models/register"
 )
 
-type User struct {
-	Name string
-	user *models.User
-	ctx  context.Context
-}
-
-func New(ctx context.Context) *User {
-	return &User{
-		ctx: ctx,
+func New(ctx context.Context, cf *config.Config) *user {
+	return &user{
+		container: options.APIServerMustFrom(ctx),
+		user:      models.NewUser(),
 	}
 }
 
-func (p *User) Start() error {
-	http, ok := options.APIServerFrom(p.ctx)
-	if !ok {
-		return fmt.Errorf("unable to get API server from the context")
-	}
-
-	p.user = models.NewUser()
-
-	p.installWs(http)
-
-	addAuthScope()
-	return nil
+type user struct {
+	container rest.GoRestfulContainer
+	user      *models.User
 }
 
-func (p *User) installWs(http server.APIServer) {
+func (p *user) Install() {
+	rest.ScopeRegister("user:write", "user")
 	rest.SwaggerTagRegister("user", "user Api - for restful sample")
 
 	rest.WsRouteBuild(&rest.WsOption{
@@ -51,7 +35,7 @@ func (p *User) installWs(http server.APIServer) {
 		Produces:           []string{rest.MIME_JSON},
 		Consumes:           []string{rest.MIME_JSON},
 		Tags:               []string{"user"},
-		GoRestfulContainer: http,
+		GoRestfulContainer: p.container,
 		Routes: []rest.WsRoute{{
 			Method: "POST", SubPath: "/",
 			Desc:   "create user",
@@ -72,21 +56,21 @@ func (p *User) installWs(http server.APIServer) {
 		}, {
 			Method: "DELETE", SubPath: "/{name}",
 			Desc:   "delete user",
-			Handle: p.delete,
+			Handle: p.del,
 		}},
 	})
 }
 
-func (p *User) create(w http.ResponseWriter, req *http.Request, _ *rest.NonParam, in *api.CreateUserInput) error {
+func (p *user) create(w http.ResponseWriter, req *http.Request, _ *rest.NonParam, in *createInput) error {
 	return p.user.Create(req.Context(), in.User())
 }
 
-func (p *User) get(w http.ResponseWriter, req *http.Request, in *api.GetUserParam) (*api.User, error) {
+func (p *user) get(w http.ResponseWriter, req *http.Request, in *nameParam) (*api.User, error) {
 	return p.user.Get(req.Context(), in.Name)
 }
 
-func (p *User) list(w http.ResponseWriter, req *http.Request, in *api.ListInput) (ret *api.ListUserOutput, err error) {
-	ret = &api.ListUserOutput{}
+func (p *user) list(w http.ResponseWriter, req *http.Request, in *listParam) (ret *listOutput, err error) {
+	ret = &listOutput{}
 
 	opts, err := in.ListOptions(in.Query, &ret.Total)
 	if err != nil {
@@ -97,15 +81,49 @@ func (p *User) list(w http.ResponseWriter, req *http.Request, in *api.ListInput)
 	return ret, err
 }
 
-func (p *User) update(w http.ResponseWriter, req *http.Request, param *api.UpdateUserParam, in *api.UpdateUserInput) error {
-	in.Name = param.Name
-	return p.user.Update(req.Context(), in)
+func (p *user) update(w http.ResponseWriter, req *http.Request, param *nameParam, in *updateInput) error {
+	in.Name = &param.Name
+	return p.user.Update(req.Context(), in.User())
 }
 
-func (p *User) delete(w http.ResponseWriter, req *http.Request, in *api.DeleteUserParam) error {
+func (p *user) del(w http.ResponseWriter, req *http.Request, in *nameParam) error {
 	return p.user.Delete(req.Context(), in.Name)
 }
 
-func addAuthScope() {
-	rest.ScopeRegister("user:write", "user")
+type createInput struct {
+	Name string
+	Age  int
+}
+
+func (p *createInput) User() *api.User {
+	return &api.User{
+		Name: &p.Name,
+		Age:  &p.Age,
+	}
+}
+
+type nameParam struct {
+	Name string `param:"path"`
+}
+
+type listParam struct {
+	rest.PageParams
+	Query string `param:"query" description:"query user"`
+}
+
+type listOutput struct {
+	List  []api.User `json:"list"`
+	Total int        `json:"total"`
+}
+
+type updateInput struct {
+	Name *string `json:"-"` // from UpdateUserParam
+	Age  *int    `json:"age"`
+}
+
+func (p *updateInput) User() *api.User {
+	return &api.User{
+		Name: p.Name,
+		Age:  p.Age,
+	}
 }

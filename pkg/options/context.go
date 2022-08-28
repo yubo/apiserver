@@ -114,7 +114,13 @@ func SessionManagerFrom(ctx context.Context) (types.SessionManager, bool) {
 	sm, ok := proc.AttrMustFrom(ctx)[sessionManagerKey].(types.SessionManager)
 	return sm, ok
 }
-
+func SessionManagerMustFrom(ctx context.Context) types.SessionManager {
+	sm, ok := proc.AttrMustFrom(ctx)[sessionManagerKey].(types.SessionManager)
+	if !ok {
+		panic("unable get session manager")
+	}
+	return sm
+}
 func WithDB(ctx context.Context, db db.DB) {
 	klog.V(5).Infof("attr with db %v attr %p", db, proc.AttrMustFrom(ctx))
 	proc.AttrMustFrom(ctx)[dbKey] = db

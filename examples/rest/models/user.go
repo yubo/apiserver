@@ -2,70 +2,62 @@ package models
 
 import (
 	"context"
-
 	"examples/rest/api"
 
 	"github.com/yubo/apiserver/pkg/models"
 	"github.com/yubo/apiserver/pkg/storage"
+	"github.com/yubo/golib/orm"
 )
 
-type User interface {
-	Name() string
-	NewObj() interface{}
-
-	List(ctx context.Context, opts storage.ListOptions) ([]api.User, error)
-	Get(ctx context.Context, name string) (*api.User, error)
-	Create(ctx context.Context, obj *api.User) (*api.User, error)
-	Update(ctx context.Context, obj *api.UpdateUserInput) (*api.User, error)
-	Delete(ctx context.Context, name string) (*api.User, error)
+func NewUser() *User {
+	return &User{DB: models.DB()}
 }
 
-func NewUser() User {
-	o := &user{}
-	o.store = models.NewModelStore(o.Name())
-	return o
+type User struct {
+	orm.DB
 }
 
-// user implements the user interface.
-type user struct {
-	store models.ModelStore
-}
-
-func (p *user) Name() string {
+func (p *User) Name() string {
 	return "user"
 }
 
-func (p *user) NewObj() interface{} {
+func (p *User) NewObj() interface{} {
 	return &api.User{}
 }
 
-func (p *user) Create(ctx context.Context, obj *api.User) (ret *api.User, err error) {
-	err = p.store.Create(ctx, obj.Name, obj, &ret)
-	return
+func (p *User) Create(ctx context.Context, obj *api.User) error {
+	return p.Insert(ctx, obj, orm.WithTable(p.Name()))
 }
 
 // Get retrieves the User from the db for a given name.
-func (p *user) Get(ctx context.Context, name string) (ret *api.User, err error) {
-	err = p.store.Get(ctx, name, false, &ret)
+func (p *User) Get(ctx context.Context, name string) (ret *api.User, err error) {
+	err = p.Query(ctx, "select * from user where name=?", name).Row(&ret)
 	return
 }
 
 // List lists all Users in the indexer.
-func (p *user) List(ctx context.Context, opts storage.ListOptions) (list []api.User, err error) {
-	err = p.store.List(ctx, opts, &list, opts.Total)
+func (p *User) List(ctx context.Context, opts storage.ListOptions) (list []api.User, err error) {
+	err = p.DB.List(
+		ctx,
+		&list,
+		orm.WithTable(p.Name()),
+		orm.WithTotal(opts.Total),
+		orm.WithSelector(opts.Query),
+		orm.WithOrderby(opts.Orderby...),
+		orm.WithLimit(opts.Offset, opts.Limit),
+	)
 	return
 }
 
-func (p *user) Update(ctx context.Context, obj *api.UpdateUserInput) (ret *api.User, err error) {
-	err = p.store.Update(ctx, obj.Name, obj, &ret)
-	return
+func (p *User) Update(ctx context.Context, obj *api.User) error {
+	return p.DB.Update(ctx, obj, orm.WithTable(p.Name()))
 }
 
-func (p *user) Delete(ctx context.Context, name string) (ret *api.User, err error) {
-	err = p.store.Delete(ctx, name, &ret)
-	return
+func (p *User) Delete(ctx context.Context, name string) error {
+	_, err := p.DB.Exec(ctx, "delete user where name=?", name)
+	return err
 }
 
 func init() {
-	models.Register(&user{})
+	models.Register(&User{})
 }

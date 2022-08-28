@@ -3,6 +3,7 @@ package authz
 
 import (
 	"context"
+	"examples/all-in-one/pkg/allinone/config"
 	"fmt"
 	"net/http"
 
@@ -11,40 +12,23 @@ import (
 	"k8s.io/klog/v2"
 )
 
-type authz struct {
-	ctx context.Context
-}
-
-func New(ctx context.Context) *authz {
-	return &authz{ctx: ctx}
-}
-
-func (p *authz) Start() error {
-	http, ok := options.APIServerFrom(p.ctx)
-	if !ok {
-		return fmt.Errorf("unable to get http server from the context")
+func New(ctx context.Context, cf *config.Config) *authz {
+	return &authz{
+		container: options.APIServerMustFrom(ctx),
 	}
-
-	p.installWs(http)
-
-	return nil
 }
 
-type AuthzInput struct {
-	Namespace string `param:"path" name:"namespace"`
-	Name      string `param:"path" name:"name"`
-}
-type AuthzBodyInput struct {
-	Msg string `json:"msg"`
+type authz struct {
+	container rest.GoRestfulContainer
 }
 
-func (p *authz) installWs(http rest.GoRestfulContainer) {
+func (p *authz) Install() {
 	rest.SwaggerTagRegister("authorization", "authorization sample")
 
 	rest.WsRouteBuild(&rest.WsOption{
 		Path:               "/api/v1/namespaces/{namespace}/pods",
 		Tags:               []string{"authorization"},
-		GoRestfulContainer: http,
+		GoRestfulContainer: p.container,
 		Routes: []rest.WsRoute{{
 			Method: "GET", SubPath: "/{name}",
 			Desc:   "get pod info",
@@ -73,4 +57,12 @@ func (p *authz) ns(w http.ResponseWriter, req *http.Request, in *AuthzInput) (st
 func (p *authz) nsbody(w http.ResponseWriter, req *http.Request, in *AuthzInput, body *AuthzBodyInput) (string, error) {
 	klog.Infof("http authz %s %s %s", req.Method, in.Namespace, body.Msg)
 	return fmt.Sprintf("%s %s %s", req.Method, in.Namespace, body.Msg), nil
+}
+
+type AuthzInput struct {
+	Namespace string `param:"path" name:"namespace"`
+	Name      string `param:"path" name:"name"`
+}
+type AuthzBodyInput struct {
+	Msg string `json:"msg"`
 }

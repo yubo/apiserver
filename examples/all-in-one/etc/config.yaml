@@ -1,3 +1,6 @@
+allinone:
+  debug: true
+
 tracing:
   debug: false
   serviceName: all-in-one

@@ -26,7 +26,7 @@ func RouteBuilderReads(b *restful.RouteBuilder, v reflect.Value) error {
 }
 
 func buildParam(b *restful.RouteBuilder, f *field) error {
-	var parameter *restful.Parameter
+	parameter := restful.FormParameter(f.Name, f.Description)
 
 	switch f.Type.Kind() {
 	case reflect.String:

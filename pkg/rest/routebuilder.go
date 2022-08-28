@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"path"
 	"reflect"
+	goruntime "runtime"
 	"strings"
 
 	restfulspec "github.com/emicklei/go-restful-openapi/v2"
@@ -407,67 +408,66 @@ func (p *webserviceBuilder) registerHandle(rb *restful.RouteBuilder, wr *WsRoute
 	numOut := rt.NumOut()
 
 	if !((numIn >= 2 && numIn <= 4) && numOut <= 2) {
-		return fmt.Errorf("%s handle in num %d out num %d is Invalid", rt.Name(), numIn, numOut)
+		klog.FatalfDepth(5, "%s handle in num %d out num %d is Invalid %s %s", rt.Name(), numIn, numOut, goruntime.FuncForPC(rv.Pointer()).Name(), rt.String())
 	}
 
 	if arg := rt.In(0).String(); arg != "http.ResponseWriter" {
-		panic(fmt.Sprintf("unable to get req http.ResponseWriter at in(0), get %s", arg))
+		klog.FatalfDepth(5, "unable to get func(*http.Request, http.ResponseWriter, ...) %s %s", goruntime.FuncForPC(rv.Pointer()).Name(), rt.String())
 	}
 
 	if arg := rt.In(1).String(); arg != "*http.Request" {
-		panic(fmt.Sprintf("unable to get req *http.Request at in(1), get %s", arg))
+		klog.FatalfDepth(5, "unable to get func(*http.Request, http.ResponseWriter, ...) %s %s", goruntime.FuncForPC(rv.Pointer()).Name(), rt.String())
 	}
 
 	var paramType reflect.Type
 	var bodyType reflect.Type
 
 	// build input param
+	inputParam := wr.InputParam
 	if numIn > 2 {
-		inputParam := wr.InputParam
 		paramType = rt.In(2)
 
 		switch paramType.Kind() {
 		case reflect.Ptr:
 			paramType = paramType.Elem()
 			if paramType.Kind() != reflect.Struct {
-				return fmt.Errorf("param must ptr to struct, got ptr -> %s", paramType.Kind())
+				klog.FatalfDepth(5, "param just support ptr to struct %s %s", goruntime.FuncForPC(rv.Pointer()).Name(), rt.String())
 			}
 		default:
-			return fmt.Errorf("param just support ptr to struct")
+			klog.FatalfDepth(5, "param just support ptr to struct %s %s", goruntime.FuncForPC(rv.Pointer()).Name(), rt.String())
 		}
 
-		if wr.InputParam == nil {
+		if inputParam == nil {
 			inputParam = reflect.New(paramType).Elem().Interface()
 		}
 
-		if inputParam != nil {
-			p.parameterCodec.RouteBuilderParameters(rb, inputParam)
-		}
+	}
+	if inputParam != nil {
+		p.parameterCodec.RouteBuilderParameters(rb, inputParam)
 	}
 
 	// build intput body
+	inputBody := wr.InputBody
 	if numIn > 3 {
-		inputBody := wr.InputBody
 		bodyType = rt.In(3)
 
 		if bodyType.Kind() != reflect.Ptr {
-			return fmt.Errorf("payload must be a ptr, got %s", bodyType.Kind())
+			klog.FatalfDepth(5, "payload must be a ptr %s %s", goruntime.FuncForPC(rv.Pointer()).Name(), rt.String())
 		}
 		bodyType = bodyType.Elem()
 
 		switch bodyType.Kind() {
 		case reflect.Struct, reflect.Slice, reflect.Map:
 		default:
-			return fmt.Errorf("just support ptr to struct|slice|map")
+			klog.FatalfDepth(5, "just support ptr to struct|slice|map %s %s", goruntime.FuncForPC(rv.Pointer()).Name(), rt.String())
 		}
 
-		if wr.InputBody == nil {
+		if inputBody == nil {
 			inputBody = reflect.New(bodyType).Elem().Interface()
 		}
-
-		if inputBody != nil {
-			p.buildBody(rb, wr.Consume, inputBody)
-		}
+	}
+	if inputBody != nil {
+		p.buildBody(rb, wr.Consume, inputBody)
 	}
 
 	// build output head & body

@@ -25,7 +25,7 @@ func (p ModelStore) Get(ctx context.Context, name string, ignoreNotFound bool, o
 	return p.store.Get(ctx, p.resource+"/"+name, storage.GetOptions{IgnoreNotFound: ignoreNotFound}, out)
 }
 
-func (p ModelStore) List(ctx context.Context, opts storage.ListOptions, out runtime.Object, count *int64) error {
+func (p ModelStore) List(ctx context.Context, opts storage.ListOptions, out runtime.Object, count *int) error {
 	return p.store.List(ctx, p.resource, opts, out, count)
 }
 

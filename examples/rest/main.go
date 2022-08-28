@@ -2,12 +2,9 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"examples/rest/user"
 	"os"
 
-	"examples/rest/routes"
-
-	"github.com/yubo/apiserver/pkg/options"
 	server "github.com/yubo/apiserver/pkg/server/module"
 	"github.com/yubo/golib/cli"
 	"github.com/yubo/golib/proc"
@@ -40,12 +37,8 @@ func main() {
 }
 
 func start(ctx context.Context) error {
-	http, ok := options.APIServerFrom(ctx)
-	if !ok {
-		return fmt.Errorf("unable to get http server from the context")
-	}
 
-	routes.InstallUser(http)
+	user.New(ctx).Install()
 
 	return nil
 }

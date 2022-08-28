@@ -5,7 +5,7 @@ package trace
 
 import (
 	"context"
-	"fmt"
+	"examples/all-in-one/pkg/allinone/config"
 	"net/http"
 
 	"github.com/yubo/apiserver/pkg/options"
@@ -15,38 +15,23 @@ import (
 	oteltrace "go.opentelemetry.io/otel/trace"
 )
 
-const (
-	moduleName = "trace"
-)
-
-type Module struct {
-	Name string
-	ctx  context.Context
+type trace struct {
+	container rest.GoRestfulContainer
 }
 
-func New(ctx context.Context) *Module {
-	return &Module{
-		ctx: ctx,
+func New(ctx context.Context, cf *config.Config) *trace {
+	return &trace{
+		container: options.APIServerMustFrom(ctx),
 	}
 }
 
-func (p *Module) Start() error {
-	http, ok := options.APIServerFrom(p.ctx)
-	if !ok {
-		return fmt.Errorf("unable to get http server from the context")
-	}
-
-	p.installWs(http)
-	return nil
-}
-
-func (p *Module) installWs(http rest.GoRestfulContainer) {
+func (p *trace) Install() {
 	rest.SwaggerTagRegister("tracing", "tracing demo")
 
 	rest.WsRouteBuild(&rest.WsOption{
 		Path:               "/tracing",
 		Tags:               []string{"tracing"},
-		GoRestfulContainer: http,
+		GoRestfulContainer: p.container,
 		Routes: []rest.WsRoute{
 			{Method: "GET", SubPath: "v1/users/{name}", Handle: getUser},
 			{Method: "GET", SubPath: "v2/users/{name}", Handle: getUser2},

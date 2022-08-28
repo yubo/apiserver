@@ -6,7 +6,7 @@ replace github.com/yubo/apiserver => ../..
 
 require (
 	github.com/yubo/apiserver v0.0.0-00010101000000-000000000000
-	github.com/yubo/golib v0.0.3-0.20220825061925-f4cd420e40b5
+	github.com/yubo/golib v0.0.3-0.20220827194340-6449945d29d1
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.30.0
 	go.opentelemetry.io/otel v1.5.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.5.0

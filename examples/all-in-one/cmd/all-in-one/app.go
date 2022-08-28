@@ -102,7 +102,7 @@ func newServerCmd() *cobra.Command {
 }
 
 func start(ctx context.Context) error {
-	if err := allinone.New(ctx).Start(); err != nil {
+	if err := allinone.New().Start(ctx); err != nil {
 		return err
 	}
 

@@ -20,7 +20,7 @@ type Store interface {
 
 	Get(ctx context.Context, key string, opts GetOptions, out runtime.Object) error
 
-	List(ctx context.Context, key string, opts ListOptions, out runtime.Object, count *int64) error
+	List(ctx context.Context, key string, opts ListOptions, out runtime.Object, total *int) error
 }
 
 // GetOptions provides the options that may be provided for storage get operations.
@@ -34,9 +34,9 @@ type GetOptions struct {
 type ListOptions struct {
 	Query   string
 	Orderby []string
-	Offset  *int64
-	Limit   *int64
+	Offset  int
+	Limit   int
 
 	// for output count(*)
-	Total *int64
+	Total *int
 }

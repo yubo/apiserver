@@ -34,26 +34,26 @@ func SetLimitPage(def, max int) {
 }
 
 type PageParams struct {
-	Offset   int     `param:"query,hidden" description:"offset, priority is more than currentPage"`
-	Limit    int     `param:"query,hidden" description:"limit, priority is more than pageSize"`
-	PageSize int     `param:"query" description:"page size" default:"10" maximum:"500"`
-	Current  int     `param:"query" description:"current page number, start at 1(defualt)" default:"1"`
-	Sorter   *string `param:"query" description:"column name"`
-	Order    *string `param:"query" description:"asc(default)/desc" enum:"asc|desc"`
-	Dump     bool    `param:"query,hidden" description:""`
+	Offset   int    `param:"query,hidden" description:"offset, priority is more than currentPage"`
+	Limit    int    `param:"query,hidden" description:"limit, priority is more than pageSize"`
+	PageSize int    `param:"query" description:"page size" default:"10" maximum:"500"`
+	Current  int    `param:"query" description:"current page number, start at 1(defualt)" default:"1"`
+	Sorter   string `param:"query" description:"column name"`
+	Order    string `param:"query" description:"asc(default)/desc" enum:"asc|desc"`
+	Dump     bool   `param:"query,hidden" description:""`
 }
 
 // TODO: validate query
-func (p PageParams) ListOptions(query *string, total *int64, orders ...string) (*storage.ListOptions, error) {
+func (p PageParams) ListOptions(query string, total *int, orders ...string) (*storage.ListOptions, error) {
 	offset, limit := p.OffsetLimit()
-	if sorter := util.SnakeCasedName(util.StringValue(p.Sorter)); sorter != "" {
+	if sorter := util.SnakeCasedName(p.Sorter); sorter != "" {
 		orders = append([]string{"`" + sorter + "` " +
-			sqlOrder(util.StringValue(p.Order))}, orders...)
+			sqlOrder(p.Order)}, orders...)
 	}
 	return &storage.ListOptions{
-		Query:   util.StringValue(query),
-		Offset:  util.Int64(int64(offset)),
-		Limit:   util.Int64(int64(limit)),
+		Query:   query,
+		Offset:  offset,
+		Limit:   limit,
 		Total:   total,
 		Orderby: orders,
 	}, nil

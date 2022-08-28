@@ -14,7 +14,6 @@ func NewUser() *User {
 	return &User{DB: models.DB()}
 }
 
-// User implements the User interface.
 type User struct {
 	orm.DB
 }
@@ -51,7 +50,7 @@ func (p *User) List(ctx context.Context, opts storage.ListOptions) (list []api.U
 	return
 }
 
-func (p *User) Update(ctx context.Context, obj *api.UpdateUserInput) error {
+func (p *User) Update(ctx context.Context, obj *api.User) error {
 	return p.DB.Update(ctx, obj, orm.WithTable(p.Name()))
 }
 

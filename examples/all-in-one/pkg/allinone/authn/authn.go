@@ -3,6 +3,7 @@ package authn
 
 import (
 	"context"
+	"examples/all-in-one/pkg/allinone/config"
 	"fmt"
 	"net/http"
 
@@ -12,32 +13,23 @@ import (
 	"github.com/yubo/apiserver/pkg/rest"
 )
 
-type authn struct {
-	ctx context.Context
-}
-
-func New(ctx context.Context) *authn {
-	return &authn{ctx: ctx}
-}
-
-func (p *authn) Start() error {
-	http, ok := options.APIServerFrom(p.ctx)
-	if !ok {
-		return fmt.Errorf("unable to get http server from the context")
+func New(ctx context.Context, cf *config.Config) *authn {
+	return &authn{
+		container: options.APIServerMustFrom(ctx),
 	}
-
-	p.installWs(http)
-
-	return nil
 }
 
-func (p *authn) installWs(http rest.GoRestfulContainer) {
+type authn struct {
+	container rest.GoRestfulContainer
+}
+
+func (p *authn) Install() {
 	rest.SwaggerTagRegister("authentication", "authentication sample")
 
 	rest.WsRouteBuild(&rest.WsOption{
 		Path:               "/authn",
 		Tags:               []string{"authentication"},
-		GoRestfulContainer: http,
+		GoRestfulContainer: p.container,
 		Routes: []rest.WsRoute{{
 			Method: "GET", SubPath: "/",
 			Desc:   "get authentication info",

@@ -1,22 +1,30 @@
-package routes
+package user
 
 import (
+	"context"
 	"net/http"
 
 	"examples/rest/api"
 	"examples/rest/models"
 
+	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/apiserver/plugin/responsewriter/umi"
 )
 
-type route struct {
-	models.User
+func New(ctx context.Context) *user {
+	return &user{
+		container: options.APIServerMustFrom(ctx),
+		user:      models.NewUser(),
+	}
 }
 
-func InstallUser(http rest.GoRestfulContainer) {
-	r := &route{models.NewUser()}
+type user struct {
+	container rest.GoRestfulContainer
+	user      *models.User
+}
 
+func (p *user) Install() {
 	rest.SwaggerTagRegister("v1", "user Api - for restful sample")
 	rest.SwaggerTagRegister("v2", "user Api(umi styles) - for restful sample - https://pro.ant.design/zh-CN/docs/request")
 
@@ -25,44 +33,44 @@ func InstallUser(http rest.GoRestfulContainer) {
 		Produces:           []string{rest.MIME_JSON},
 		Consumes:           []string{rest.MIME_JSON},
 		Tags:               []string{"v1"},
-		GoRestfulContainer: http,
+		GoRestfulContainer: p.container,
 		Routes: []rest.WsRoute{{
 			Method:    "POST",
 			SubPath:   "/users",
 			Operation: "createUser",
 			Desc:      "create User",
-			Handle:    r.createUser,
+			Handle:    p.create,
 		}, {
 			Method:    "GET",
 			SubPath:   "/users",
 			Operation: "listUser",
 			Desc:      "list User",
-			Handle:    r.listUser,
+			Handle:    p.list,
 		}, {
 			Method:     "GET",
 			SubPath:    "/user/{name}",
 			Operation:  "getUserByName",
 			Desc:       "get user by name",
 			Deprecated: true,
-			Handle:     r.getUser,
+			Handle:     p.get,
 		}, {
 			Method:    "GET",
 			SubPath:   "/users/{name}",
 			Desc:      "get user by name",
 			Operation: "getUser",
-			Handle:    r.getUser,
+			Handle:    p.get,
 		}, {
 			Method:    "PUT",
 			SubPath:   "/users/{name}",
 			Desc:      "update user by name",
 			Operation: "updateUser",
-			Handle:    r.updateUser,
+			Handle:    p.update,
 		}, {
 			Method:    "DELETE",
 			SubPath:   "/users/{name}",
 			Desc:      "delete user by name",
 			Operation: "deleteUser",
-			Handle:    r.deleteUser,
+			Handle:    p.del,
 		}},
 	})
 
@@ -72,84 +80,112 @@ func InstallUser(http rest.GoRestfulContainer) {
 		Consumes:           []string{rest.MIME_JSON},
 		Tags:               []string{"v2"},
 		RespWriter:         umi.RespWriter,
-		GoRestfulContainer: http,
+		GoRestfulContainer: p.container,
 		Routes: []rest.WsRoute{{
 			Method:    "POST",
 			SubPath:   "/users",
 			Operation: "createUserV2",
 			Desc:      "create user",
-			Handle:    r.createUser,
+			Handle:    p.create,
 		}, {
 			Method:    "GET",
 			SubPath:   "/users",
 			Operation: "listUserV2",
 			Desc:      "list user",
-			Handle:    r.listUser,
+			Handle:    p.list,
 		}, {
 			Method:     "GET",
 			SubPath:    "/user/{name}",
 			Operation:  "getUserByNameV2",
 			Desc:       "get user by name",
 			Deprecated: true,
-			Handle:     r.getUser,
+			Handle:     p.get,
 		}, {
 			Method:    "GET",
 			SubPath:   "/users/{name}",
 			Operation: "getUserV2",
 			Desc:      "get user by name",
-			Handle:    r.getUser,
+			Handle:    p.get,
 		}, {
 			Method:    "PUT",
 			SubPath:   "/users/{name}",
 			Operation: "updateUserV2",
 			Desc:      "update user",
-			Handle:    r.updateUser,
+			Handle:    p.update,
 		}, {
 			Method:    "DELETE",
 			SubPath:   "/users/{name}",
 			Operation: "deleteUserV2",
 			Desc:      "delete user",
-			Handle:    r.deleteUser,
+			Handle:    p.del,
 		}},
 	})
 }
 
-func (p *route) createUser(w http.ResponseWriter, req *http.Request, _ *rest.NonParam, in *api.CreateUserInput) (*api.User, error) {
-	return p.Create(req.Context(), in.User())
+func (p *user) create(w http.ResponseWriter, req *http.Request, _ *rest.NonParam, in *createInput) error {
+	return p.user.Create(req.Context(), in.User())
 }
 
-func (p *route) getUser(w http.ResponseWriter, req *http.Request, in *api.GetUserInput) (*api.User, error) {
-	return p.Get(req.Context(), in.Name)
+func (p *user) get(w http.ResponseWriter, req *http.Request, in *nameParam) (*api.User, error) {
+	return p.user.Get(req.Context(), in.Name)
 }
 
 // default styles
-func (p *route) listUser(w http.ResponseWriter, req *http.Request, in *api.ListInput) (ret *api.ListUserOutput, err error) {
-	ret = &api.ListUserOutput{}
+func (p *user) list(w http.ResponseWriter, req *http.Request, in *listParam) (ret *listOutput, err error) {
+	ret = &listOutput{}
 
-	var total int64
-	opts, err := in.ListOptions(in.Query, &total)
+	opts, err := in.ListOptions(in.Query, &ret.Total)
 	if err != nil {
 		return nil, err
 	}
 
-	list, err := p.List(req.Context(), *opts)
-	if err != nil {
-		return nil, err
+	ret.List, err = p.user.List(req.Context(), *opts)
+	return
+}
+
+func (p *user) update(w http.ResponseWriter, req *http.Request, param *nameParam, in *updateInput) error {
+	in.Name = &param.Name
+	return p.user.Update(req.Context(), in.User())
+}
+
+func (p *user) del(w http.ResponseWriter, req *http.Request, in *nameParam) error {
+	return p.user.Delete(req.Context(), in.Name)
+}
+
+type createInput struct {
+	Name string
+	Age  int
+}
+
+func (p *createInput) User() *api.User {
+	return &api.User{
+		Name: &p.Name,
+		Age:  &p.Age,
 	}
-
-	return &api.ListUserOutput{
-		List:        list,
-		CurrentPage: in.GetCurPage(),
-		PageSize:    in.GetPageSize(),
-		Total:       total,
-	}, nil
 }
 
-func (p *route) updateUser(w http.ResponseWriter, req *http.Request, param *api.UpdateUserParam, in *api.UpdateUserInput) (*api.User, error) {
-	in.Name = param.Name
-	return p.Update(req.Context(), in)
+type nameParam struct {
+	Name string `param:"path"`
 }
 
-func (p *route) deleteUser(w http.ResponseWriter, req *http.Request, in *api.DeleteUserInput) (*api.User, error) {
-	return p.Delete(req.Context(), in.Name)
+type listParam struct {
+	rest.PageParams
+	Query string `param:"query" description:"query user"`
+}
+
+type listOutput struct {
+	List  []api.User `json:"list"`
+	Total int        `json:"total"`
+}
+
+type updateInput struct {
+	Name *string `json:"-"` // from UpdateUserParam
+	Age  *int    `json:"age"`
+}
+
+func (p *updateInput) User() *api.User {
+	return &api.User{
+		Name: p.Name,
+		Age:  p.Age,
+	}
 }

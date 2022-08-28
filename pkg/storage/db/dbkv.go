@@ -143,7 +143,7 @@ func (p Store) get(ctx context.Context, table, selector string, ignoreNotFound b
 	return p.db.Get(ctx, out, opts...)
 }
 
-func (p Store) List(ctx context.Context, key string, opts storage.ListOptions, out runtime.Object, total *int64) error {
+func (p Store) List(ctx context.Context, key string, opts storage.ListOptions, out runtime.Object, total *int) error {
 	table, _, _ := parseKey(key)
 
 	return p.db.List(

@@ -35,6 +35,6 @@ func (p store) Get(ctx context.Context, key string, opts storage.GetOptions, out
 	return nil
 }
 
-func (p store) List(ctx context.Context, key string, opts storage.ListOptions, out runtime.Object, total *int64) error {
+func (p store) List(ctx context.Context, key string, opts storage.ListOptions, out runtime.Object, total *int) error {
 	return nil
 }
