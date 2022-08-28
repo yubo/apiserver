@@ -57,7 +57,7 @@ func (p *Demo) Update(ctx context.Context, obj *api.Demo) error {
 }
 
 func (p *Demo) Delete(ctx context.Context, selector string) error {
-	//_, err := p.Exec(ctx, "delete demo where name=?", name)
+	//_, err := p.Exec(ctx, "delete from demo where name=?", name)
 	return p.DB.Delete(ctx, nil, orm.WithTable(p.Name()), orm.WithSelector(selector))
 }
 

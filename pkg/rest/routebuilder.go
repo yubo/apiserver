@@ -655,9 +655,7 @@ func (p *WsOption) Validate() error {
 type NonParam struct{}
 
 type WsRoute struct {
-	//Action string
-	Acl string // access name
-	//--
+	Acl     string // access name
 	Method  string
 	SubPath string
 	Desc    string

@@ -350,7 +350,7 @@ func (p *serverModule) handlerInit() error {
 	}
 	apiServerHandler := server.NewAPIServerHandler("apiserver", s.Serializer, handlerChainBuilder, nil)
 	s.Handler = apiServerHandler
-	s.ListedPathProvider = apiServerHandler
+	s.ListedPathProvider = routes.ListedPathProviders{apiServerHandler}
 
 	return nil
 }

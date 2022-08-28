@@ -4,17 +4,15 @@ import (
 	"context"
 	"net/http"
 	"time"
-
-	"github.com/yubo/apiserver/pkg/storage"
 )
 
 type SessionConn struct {
-	Sid        string `sql:"name,where,primary_key"`
+	Sid        string `sql:",where,primary_key"`
 	UserName   string
 	Data       map[string]string
 	CookieName string
 	CreatedAt  int64
-	UpdatedAt  int64
+	UpdatedAt  int64 `sql:",index"`
 }
 
 type SessionContext interface {
@@ -25,18 +23,6 @@ type SessionContext interface {
 	Reset() error
 	Sid() string
 	Update(w http.ResponseWriter) error
-}
-
-// session model
-type Session interface {
-	Name() string
-	NewObj() interface{}
-
-	List(ctx context.Context, opts storage.ListOptions) ([]*SessionConn, error)
-	Get(ctx context.Context, sid string) (*SessionConn, error)
-	Create(ctx context.Context, obj *SessionConn) (*SessionConn, error)
-	Update(ctx context.Context, obj *SessionConn) (*SessionConn, error)
-	Delete(ctx context.Context, sid string) (*SessionConn, error)
 }
 
 type SessionManager interface {

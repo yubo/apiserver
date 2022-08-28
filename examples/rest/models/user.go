@@ -54,7 +54,7 @@ func (p *User) Update(ctx context.Context, obj *api.User) error {
 }
 
 func (p *User) Delete(ctx context.Context, name string) error {
-	_, err := p.DB.Exec(ctx, "delete user where name=?", name)
+	_, err := p.DB.Exec(ctx, "delete from user where name=?", name)
 	return err
 }
 
