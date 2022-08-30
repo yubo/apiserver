@@ -135,12 +135,7 @@ func (p Store) Get(ctx context.Context, key string, opts storage.GetOptions, out
 }
 
 func (p Store) get(ctx context.Context, table, selector string, ignoreNotFound bool, out runtime.Object) error {
-	opts := []orm.Option{orm.WithTable(table), orm.WithSelector(selector)}
-	if ignoreNotFound {
-		opts = append(opts, orm.WithIgnoreNotFoundErr())
-	}
-
-	return p.db.Get(ctx, out, opts...)
+	return p.db.Get(ctx, out, orm.WithTable(table), orm.WithSelector(selector), orm.WithIgnoreNotFoundErr(ignoreNotFound))
 }
 
 func (p Store) List(ctx context.Context, key string, opts storage.ListOptions, out runtime.Object, total *int) error {

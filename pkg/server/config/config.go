@@ -53,8 +53,9 @@ type Config struct {
 	EnableMetrics             bool `json:"enableMetrics"`
 
 	// swagger
-	EnableOpenAPI   bool                `json:"enableOpenAPI" flag:"openapi" description:"enable OpenAPI/Swagger"`
-	SecuritySchemes []rest.SchemeConfig `json:"securitySchemes"`
+	EnableOpenAPI           bool                `json:"enableOpenAPI" flag:"openapi" description:"enable OpenAPI/Swagger"`
+	KeepAuthorizationHeader bool                `json:"keepAuthorizationHeader" description:"KeepAuthorizationHeader after a successful authentication"`
+	SecuritySchemes         []rest.SchemeConfig `json:"securitySchemes"`
 
 	EnableExpvar bool `json:"enableExpvar"`
 
@@ -66,15 +67,16 @@ func (p *Config) Default(in runtime.Object) {
 
 func (p *Config) NewServerConfig() *server.Config {
 	return &server.Config{
-		CorsAllowedOriginList:  p.GenericServerRunOptions.CorsAllowedOriginList,
-		HSTSDirectives:         p.GenericServerRunOptions.HSTSDirectives,
-		RequestTimeout:         p.GenericServerRunOptions.RequestTimeout.Duration,
-		ShutdownTimeout:        p.GenericServerRunOptions.RequestTimeout.Duration,
-		ShutdownDelayDuration:  p.GenericServerRunOptions.ShutdownDelayDuration.Duration,
-		LegacyAPIGroupPrefixes: sets.NewString(server.DefaultLegacyAPIPrefix),
-		Serializer:             scheme.NegotiatedSerializer,
-		EnableOpenAPI:          p.EnableOpenAPI,
-		SecuritySchemes:        p.SecuritySchemes,
+		CorsAllowedOriginList:   p.GenericServerRunOptions.CorsAllowedOriginList,
+		HSTSDirectives:          p.GenericServerRunOptions.HSTSDirectives,
+		RequestTimeout:          p.GenericServerRunOptions.RequestTimeout.Duration,
+		ShutdownTimeout:         p.GenericServerRunOptions.RequestTimeout.Duration,
+		ShutdownDelayDuration:   p.GenericServerRunOptions.ShutdownDelayDuration.Duration,
+		LegacyAPIGroupPrefixes:  sets.NewString(server.DefaultLegacyAPIPrefix),
+		Serializer:              scheme.NegotiatedSerializer,
+		EnableOpenAPI:           p.EnableOpenAPI,
+		KeepAuthorizationHeader: p.EnableOpenAPI,
+		SecuritySchemes:         p.SecuritySchemes,
 	}
 }
 

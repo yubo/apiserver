@@ -111,8 +111,9 @@ type Config struct {
 	// ListedPathProvider is a lister which provides the set of paths to show at /
 	ListedPathProvider routes.ListedPathProvider
 
-	EnableOpenAPI   bool
-	SecuritySchemes []rest.SchemeConfig
+	EnableOpenAPI           bool
+	KeepAuthorizationHeader bool
+	SecuritySchemes         []rest.SchemeConfig
 }
 
 type APIServer interface {
@@ -298,7 +299,7 @@ func DefaultBuildHandlerChain(apiHandler http.Handler, s *Config) http.Handler {
 	failedHandler = filters.TrackCompleted(failedHandler)
 
 	handler = filters.TrackCompleted(handler)
-	handler = filters.WithAuthentication(handler, s.Authentication.Authenticator, failedHandler, s.Authentication.APIAudiences)
+	handler = filters.WithAuthentication(handler, s.Authentication.Authenticator, failedHandler, s.Authentication.APIAudiences, s.KeepAuthorizationHeader)
 	handler = filters.TrackStarted(handler, "authentication")
 
 	if s.Session != nil {
@@ -322,6 +323,7 @@ func DefaultBuildHandlerChain(apiHandler http.Handler, s *Config) http.Handler {
 	handler = filters.WithCacheControl(handler)
 	handler = filters.WithHSTS(handler, s.HSTSDirectives)
 	handler = filters.WithRequestReceivedTimestamp(handler)
+	handler = filters.WithHttpDump(handler)
 	handler = filters.WithPanicRecovery(handler, s.RequestInfoResolver)
 	return handler
 }

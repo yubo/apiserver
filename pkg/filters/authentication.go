@@ -33,7 +33,7 @@ import (
 // stores any such user found onto the provided context for the request. If authentication fails or returns an error
 // the failed handler is used. On success, "Authorization" header is removed from the request and handler
 // is invoked to serve the request.
-func WithAuthentication(handler http.Handler, auth authenticator.Request, failed http.Handler, apiAuds authenticator.Audiences) http.Handler {
+func WithAuthentication(handler http.Handler, auth authenticator.Request, failed http.Handler, apiAuds authenticator.Audiences, keepAuthoriztionHeader bool) http.Handler {
 	if auth == nil {
 		klog.V(1).Info("Authentication is disabled")
 		return handler
@@ -64,7 +64,9 @@ func WithAuthentication(handler http.Handler, auth authenticator.Request, failed
 		}
 
 		// authorization header is not required anymore in case of a successful authentication.
-		req.Header.Del("Authorization")
+		if !keepAuthoriztionHeader {
+			req.Header.Del("Authorization")
+		}
 
 		req = req.WithContext(genericapirequest.WithUser(req.Context(), resp.User))
 		klog.V(8).InfoS("leaving authn filter", "user", resp.User.GetName(), "groups", resp.User.GetGroups())
