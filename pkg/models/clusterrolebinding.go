@@ -5,69 +5,57 @@ import (
 
 	"github.com/yubo/apiserver/pkg/apis/rbac"
 	"github.com/yubo/apiserver/pkg/storage"
+	"github.com/yubo/golib/orm"
 )
 
-// ClusterRoleBindingLister helps list RolesBinding.
-// All objects returned here must be treated as read-only.
-type ClusterRoleBinding interface {
-	Name() string
-	NewObj() interface{}
-
-	List(ctx context.Context, opts storage.ListOptions) ([]*rbac.ClusterRoleBinding, error)
-	Get(ctx context.Context, name string) (*rbac.ClusterRoleBinding, error)
-	Create(ctx context.Context, obj *rbac.ClusterRoleBinding) (*rbac.ClusterRoleBinding, error)
-	Update(ctx context.Context, obj *rbac.ClusterRoleBinding) (*rbac.ClusterRoleBinding, error)
-	Delete(ctx context.Context, name string) (*rbac.ClusterRoleBinding, error)
+func NewClusterRoleBinding() *ClusterRoleBinding {
+	return &ClusterRoleBinding{DB: DB()}
 }
 
-// pkg/registry/rbac/role/storage/storage.go
-// pkg/registry/rbac/rest/storage_rbac.go
-func NewClusterRoleBinding() ClusterRoleBinding {
-	o := &clusterRoleBinding{}
-	o.store = NewModelStore(o.Name())
-	return o
+// ClusterRoleBinding implements the role interface.
+type ClusterRoleBinding struct {
+	orm.DB
 }
 
-// clusterRoleBinding implements the role interface.
-type clusterRoleBinding struct {
-	store ModelStore
-}
-
-func (p *clusterRoleBinding) Name() string {
+func (p *ClusterRoleBinding) Name() string {
 	return "cluster_role_binding"
 }
 
-func (p *clusterRoleBinding) NewObj() interface{} {
+func (p *ClusterRoleBinding) NewObj() interface{} {
 	return &rbac.ClusterRoleBinding{}
 }
 
-func (p *clusterRoleBinding) Create(ctx context.Context, obj *rbac.ClusterRoleBinding) (ret *rbac.ClusterRoleBinding, err error) {
-	err = p.store.Create(ctx, obj.Name, obj, &ret)
-	return
+func (p *ClusterRoleBinding) Create(ctx context.Context, obj *rbac.ClusterRoleBinding) error {
+	return p.Insert(ctx, obj)
 }
 
 // Get retrieves the ClusterRoleBinding from the db for a given name.
-func (p *clusterRoleBinding) Get(ctx context.Context, name string) (ret *rbac.ClusterRoleBinding, err error) {
-	err = p.store.Get(ctx, name, false, &ret)
+func (p *ClusterRoleBinding) Get(ctx context.Context, name string) (ret *rbac.ClusterRoleBinding, err error) {
+	err = p.Query(ctx, "select * from cluster_role_binding where name=?", name).Row(&ret)
 	return
 }
 
 // List lists all ClusterRoleBindings in the indexer.
-func (p *clusterRoleBinding) List(ctx context.Context, opts storage.ListOptions) (list []*rbac.ClusterRoleBinding, err error) {
-	err = p.store.List(ctx, opts, &list, opts.Total)
+func (p *ClusterRoleBinding) List(ctx context.Context, o storage.ListOptions) (list []*rbac.ClusterRoleBinding, err error) {
+	err = p.DB.List(ctx, &list,
+		orm.WithTable(p.Name()),
+		orm.WithTotal(o.Total),
+		orm.WithSelector(o.Query),
+		orm.WithOrderby(o.Orderby...),
+		orm.WithLimit(o.Offset, o.Limit),
+	)
 	return
 }
 
-func (p *clusterRoleBinding) Update(ctx context.Context, obj *rbac.ClusterRoleBinding) (ret *rbac.ClusterRoleBinding, err error) {
-	err = p.store.Update(ctx, obj.Name, obj, &ret)
-	return
+func (p *ClusterRoleBinding) Update(ctx context.Context, obj *rbac.ClusterRoleBinding) error {
+	return p.DB.Update(ctx, obj)
 }
 
-func (p *clusterRoleBinding) Delete(ctx context.Context, name string) (ret *rbac.ClusterRoleBinding, err error) {
-	err = p.store.Delete(ctx, name, &ret)
-	return
+func (p *ClusterRoleBinding) Delete(ctx context.Context, name string) error {
+	_, err := p.Exec(ctx, "delete from cluster_role_binding where name=?", name)
+	return err
 }
 
 func init() {
-	Register(&clusterRoleBinding{})
+	Register(&ClusterRoleBinding{})
 }

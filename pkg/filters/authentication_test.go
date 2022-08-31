@@ -18,13 +18,14 @@ package filters
 
 import (
 	"errors"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	genericapirequest "github.com/yubo/apiserver/pkg/request"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 )
 
 func TestAuthenticateRequestWithAud(t *testing.T) {
@@ -91,6 +92,7 @@ func TestAuthenticateRequestWithAud(t *testing.T) {
 					}
 				}),
 				tc.apiAuds,
+				false,
 			)
 			auth.ServeHTTP(httptest.NewRecorder(), &http.Request{Header: map[string][]string{"Authorization": {"Something"}}})
 			if tc.expectSuccess {
@@ -128,6 +130,7 @@ func TestAuthenticateRequest(t *testing.T) {
 			t.Errorf("unexpected call to failed")
 		}),
 		nil,
+		false,
 	)
 
 	auth.ServeHTTP(httptest.NewRecorder(), &http.Request{Header: map[string][]string{"Authorization": {"Something"}}})
@@ -148,6 +151,7 @@ func TestAuthenticateRequestFailed(t *testing.T) {
 			close(failed)
 		}),
 		nil,
+		false,
 	)
 
 	auth.ServeHTTP(httptest.NewRecorder(), &http.Request{})
@@ -168,6 +172,7 @@ func TestAuthenticateRequestError(t *testing.T) {
 			close(failed)
 		}),
 		nil,
+		false,
 	)
 
 	auth.ServeHTTP(httptest.NewRecorder(), &http.Request{})

@@ -303,11 +303,6 @@ func (p *serverModule) servingInit() error {
 func (p *serverModule) authInit() error {
 	s := p.server
 
-	// Deprecated
-	if session, ok := options.SessionManagerFrom(p.ctx); ok {
-		s.Session = session
-	}
-
 	if audit, ok := options.AuditFrom(p.ctx); ok {
 		s.AuditBackend = audit.Backend()
 		s.AuditPolicyChecker = audit.Checker()

@@ -5,6 +5,7 @@ import (
 
 	"github.com/yubo/apiserver/pkg/models"
 	"github.com/yubo/apiserver/pkg/options"
+	"github.com/yubo/apiserver/pkg/session/filter"
 	"github.com/yubo/golib/proc"
 )
 
@@ -28,25 +29,23 @@ var (
 type sessionModule struct{}
 
 func (p *sessionModule) init(ctx context.Context) error {
-	cf := NewConfig()
+	cf := newConfig()
 	if err := proc.ReadConfig(moduleName, cf); err != nil {
 		return err
 	}
 
-	manager, err := NewSessionManager(cf, WithCtx(ctx), WithModel(NewSessionConn()))
-	if err != nil {
-		return err
-	}
+	manager := newManager(ctx, cf, nil)
 
 	manager.GC()
 
-	options.WithSessionManager(ctx, manager)
+	filter.SetManager(manager)
 
 	return nil
 }
+
 func Register() {
 	proc.RegisterHooks(hookOps)
-	proc.AddConfig(moduleName, NewConfig(), proc.WithConfigGroup("session"))
+	proc.AddConfig(moduleName, newConfig(), proc.WithConfigGroup("session"))
 }
 
 func init() {

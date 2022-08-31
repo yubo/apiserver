@@ -9,25 +9,21 @@ import (
 	"sync"
 	"time"
 
-	"github.com/yubo/apiserver/pkg/models"
 	"github.com/yubo/apiserver/pkg/session/types"
-	"github.com/yubo/apiserver/pkg/storage"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/api/errors"
-	"github.com/yubo/golib/orm"
 	"github.com/yubo/golib/util"
 	"github.com/yubo/golib/util/clock"
 	"k8s.io/klog/v2"
 )
 
 const (
-	DefCookieName = "sid"
+	CookieName = "sid"
 )
 
-// config {{{
-func NewConfig() *Config {
+func newConfig() *Config {
 	return &Config{
-		CookieName:     DefCookieName,
+		CookieName:     CookieName,
 		SidLength:      32,
 		HttpOnly:       true,
 		GcInterval:     api.NewDuration("600s"),
@@ -37,6 +33,7 @@ func NewConfig() *Config {
 	}
 }
 
+// config {{{
 type Config struct {
 	CookieName     string       `json:"cookieName"`
 	SidLength      int          `json:"sidLength"`
@@ -58,7 +55,7 @@ func (p *Config) Validate() error {
 	}
 
 	if p.CookieName == "" {
-		p.CookieName = DefCookieName
+		p.CookieName = CookieName
 	}
 
 	return nil
@@ -66,43 +63,29 @@ func (p *Config) Validate() error {
 
 // }}}
 
-//  sessionManager {{{
-func NewSessionManager(cf *Config, optsInput ...Option) (types.SessionManager, error) {
-	opts := Options{}
-
-	for _, opt := range optsInput {
-		opt(&opts)
+func newManager(ctx context.Context, cf *Config, c clock.Clock) *manager {
+	if util.IsNil(c) {
+		c = clock.RealClock{}
 	}
 
-	if opts.ctx == nil {
-		opts.ctx = context.Background()
-	}
-	opts.ctx, opts.cancel = context.WithCancel(opts.ctx)
-
-	if opts.clock == nil {
-		opts.clock = clock.RealClock{}
-	}
-
-	session := opts.sessions
-	if session == nil {
-		session = NewSessionConn()
-	}
-
-	return &sessionManager{
-		session: session,
+	return &manager{
+		ctx:     ctx,
 		config:  cf,
-		Options: opts,
-	}, nil
+		session: NewSessionConn(),
+		clock:   c,
+	}
 }
 
-type sessionManager struct {
-	Options
+// manager {{{
+type manager struct {
+	ctx     context.Context
 	session *SessionConn
 	config  *Config
 	once    sync.Once
+	clock   clock.Clock
 }
 
-func (p *sessionManager) GC() {
+func (p *manager) GC() {
 	p.once.Do(func() {
 		cookieName := p.config.CookieName
 		gcInterval := p.config.GcInterval.Duration
@@ -123,7 +106,7 @@ func (p *sessionManager) GC() {
 
 // SessionStart generate or read the session id from http request.
 // if session id exists, return SessionStore with this id.
-func (p *sessionManager) Start(w http.ResponseWriter, req *http.Request) (sess types.SessionContext, err error) {
+func (p *manager) Start(w http.ResponseWriter, req *http.Request) (sess types.Session, err error) {
 	var sid string
 
 	if sid, err = p.getSid(req); err != nil {
@@ -131,7 +114,7 @@ func (p *sessionManager) Start(w http.ResponseWriter, req *http.Request) (sess t
 	}
 
 	if sid != "" {
-		if sess, err := p.getSessionStore(req.Context(), sid, false); err == nil {
+		if sess, err := p.getConnection(req.Context(), sid, false); err == nil {
 			return sess, nil
 		}
 	}
@@ -139,7 +122,7 @@ func (p *sessionManager) Start(w http.ResponseWriter, req *http.Request) (sess t
 	// Generate a new session
 	sid = util.RandString(p.config.SidLength)
 
-	sess, err = p.getSessionStore(req.Context(), sid, true)
+	sess, err = p.getConnection(req.Context(), sid, true)
 	if err != nil {
 		return nil, err
 	}
@@ -158,13 +141,7 @@ func (p *sessionManager) Start(w http.ResponseWriter, req *http.Request) (sess t
 	return
 }
 
-func (p *sessionManager) Stop() {
-	if p.cancel != nil {
-		p.cancel()
-	}
-}
-
-func (p *sessionManager) Destroy(w http.ResponseWriter, req *http.Request) error {
+func (p *manager) Destroy(w http.ResponseWriter, req *http.Request) error {
 	cookie, err := req.Cookie(p.config.CookieName)
 	if err != nil || cookie.Value == "" {
 		return errors.NewUnauthorized("Have not login yet")
@@ -185,16 +162,16 @@ func (p *sessionManager) Destroy(w http.ResponseWriter, req *http.Request) error
 	return nil
 }
 
-func (p *sessionManager) Get(ctx context.Context, sid string) (types.SessionContext, error) {
-	return p.getSessionStore(ctx, sid, true)
+func (p *manager) Get(ctx context.Context, sid string) (types.Session, error) {
+	return p.getConnection(ctx, sid, true)
 }
 
-func (p *sessionManager) Exist(sid string) bool {
+func (p *manager) Exist(sid string) bool {
 	_, err := p.Get(context.Background(), sid)
 	return !errors.IsNotFound(err)
 }
 
-func (p *sessionManager) getSid(r *http.Request) (string, error) {
+func (p *manager) getSid(r *http.Request) (string, error) {
 	cookie, err := r.Cookie(p.config.CookieName)
 	if err != nil || cookie.Value == "" {
 		return "", nil
@@ -203,186 +180,106 @@ func (p *sessionManager) getSid(r *http.Request) (string, error) {
 	return url.QueryUnescape(cookie.Value)
 }
 
-func (p *sessionManager) getSessionStore(ctx context.Context, sid string, create bool) (types.SessionContext, error) {
-	sc, err := p.session.Get(ctx, sid)
+func (p *manager) getConnection(ctx context.Context, sid string, create bool) (types.Session, error) {
+	return getConnection(ctx, p.session, p.config.CookieName, sid, create, p.clock)
+}
+
+//}}}
+
+func getConnection(ctx context.Context, session *SessionConn, cookieName, sid string, create bool, clock clock.Clock) (*connection, error) {
+	sc, err := session.Get(ctx, sid)
 	if errors.IsNotFound(err) && create {
-		ts := p.clock.Now().Unix()
+		ts := clock.Now().Unix()
 		sc = &types.SessionConn{
 			Sid:        sid,
-			CookieName: p.config.CookieName,
+			CookieName: cookieName,
 			CreatedAt:  ts,
 			UpdatedAt:  ts,
-			Data:       make(map[string]string),
+			Data:       make(url.Values),
 		}
-		err = p.session.Create(ctx, sc)
+		err = session.Create(ctx, sc)
 	}
 	if err != nil {
 		return nil, err
 	}
-	return &sessionContext{manager: p, conn: sc}, nil
+
+	return &connection{session: session, conn: sc, clock: clock}, nil
+
 }
 
-// }}}
+// connection {{{
 
-// sessionContext {{{
-
-// sessionContext mysql sessionContext store
-type sessionContext struct {
-	sync.RWMutex
+// connection mysql connection store
+type connection struct {
 	conn    *types.SessionConn
-	manager *sessionManager
-}
-
-// Set value in mysql session.
-// it is temp value in map.
-func (p *sessionContext) Set(key, value string) error {
-	p.Lock()
-	defer p.Unlock()
-
-	switch strings.ToLower(key) {
-	case "username":
-		p.conn.UserName = value
-	default:
-		p.conn.Data[key] = value
-	}
-	return nil
+	session *SessionConn
+	clock   clock.Clock
 }
 
 // Get value from mysql session
-func (p *sessionContext) Get(key string) string {
-	p.RLock()
-	defer p.RUnlock()
-
+func (p *connection) Get(key string) string {
 	switch strings.ToLower(key) {
 	case "username":
 		return p.conn.UserName
 	default:
-		return p.conn.Data[key]
+		return p.conn.Data.Get(key)
 	}
 }
 
-func (p *sessionContext) CreatedAt() time.Time {
-	return time.Unix(p.conn.CreatedAt, 0)
+// Get value from mysql session
+func (p *connection) GetValues() map[string][]string {
+	return p.conn.Data
 }
 
-// Delete value in mysql session
-func (p *sessionContext) Delete(key string) error {
-	p.Lock()
-	defer p.Unlock()
-
-	delete(p.conn.Data, key)
+// Set value in mysql session.
+// it is temp value in map.
+func (p *connection) Set(key, value string) error {
+	switch strings.ToLower(key) {
+	case "username":
+		p.conn.UserName = value
+	default:
+		p.conn.Data.Set(key, value)
+	}
 	return nil
 }
 
-// Reset clear all values in mysql session
-func (p *sessionContext) Reset() error {
-	p.Lock()
-	defer p.Unlock()
+func (p *connection) Add(key, value string) error {
+	switch strings.ToLower(key) {
+	case "username":
+		p.conn.UserName = value
+	default:
+		p.conn.Data.Add(key, value)
+	}
+	return nil
+}
 
+func (p *connection) Del(key string) {
+	p.conn.Data.Del(key)
+}
+
+func (p *connection) Has(key string) bool {
+	return p.conn.Data.Has(key)
+}
+
+// Reset clear all values in mysql session
+func (p *connection) Reset() error {
 	p.conn.UserName = ""
-	p.conn.Data = make(map[string]string)
+	p.conn.Data = make(url.Values)
 	return nil
 }
 
 // Sid get session id of this mysql session store
-func (p *sessionContext) Sid() string {
+func (p *connection) Sid() string {
 	return p.conn.Sid
 }
 
-func (p *sessionContext) Update(w http.ResponseWriter) error {
-	p.conn.UpdatedAt = p.manager.clock.Now().Unix()
-	return p.manager.session.Update(context.Background(), p.conn)
+func (p *connection) Update(w http.ResponseWriter) error {
+	p.conn.UpdatedAt = p.clock.Now().Unix()
+	return p.session.Update(context.Background(), p.conn)
 }
 
-// }}}
-
-// Options {{{
-
-type Options struct {
-	ctx      context.Context
-	cancel   context.CancelFunc
-	clock    clock.Clock
-	sessions *SessionConn
-}
-
-type Option func(*Options)
-
-func WithCtx(ctx context.Context) Option {
-	return func(o *Options) {
-		o.ctx = ctx
-		o.cancel = nil
-	}
-}
-
-func WithModel(m *SessionConn) Option {
-	return func(o *Options) {
-		o.sessions = m
-	}
-}
-
-func WithClock(clock clock.Clock) Option {
-	return func(o *Options) {
-		o.clock = clock
-	}
-}
-
-// }}}
-
-// sessionConn {{{
-
-// pkg/registry/rbac/role/storage/storage.go
-// pkg/registry/rbac/rest/storage_rbac.go
-func NewSessionConn() *SessionConn {
-	o := &SessionConn{DB: models.DB()}
-	return o
-}
-
-type SessionConn struct {
-	orm.DB
-}
-
-func (p *SessionConn) Name() string {
-	return "session_conn"
-}
-
-func (p *SessionConn) NewObj() interface{} {
-	return &types.SessionConn{}
-}
-
-func (p *SessionConn) Create(ctx context.Context, obj *types.SessionConn) error {
-	return p.Insert(ctx, obj, orm.WithTable(p.Name()))
-}
-
-// Get retrieves the session from the db for a given sid.
-func (p *SessionConn) Get(ctx context.Context, sid string) (ret *types.SessionConn, err error) {
-	err = p.Query(ctx, "select * from session_conn where sid=?", sid).Row(&ret)
-	return
-}
-
-// List lists all sessions in the indexer.
-func (p *SessionConn) List(ctx context.Context, o *storage.ListOptions, opts ...orm.Option) (list []types.SessionConn, err error) {
-	err = p.DB.List(ctx, &list, append(opts,
-		orm.WithTable(p.Name()),
-		orm.WithTotal(o.Total),
-		orm.WithSelector(o.Query),
-		orm.WithOrderby(o.Orderby...),
-		orm.WithLimit(o.Offset, o.Limit))...,
-	)
-	return
-}
-
-func (p *SessionConn) Update(ctx context.Context, obj *types.SessionConn) error {
-	return p.DB.Update(ctx, obj, orm.WithTable(p.Name()))
-}
-
-func (p *SessionConn) Delete(ctx context.Context, sid string) error {
-	_, err := p.Exec(ctx, "delete from session_conn where sid=?", sid)
-	return err
-}
-
-func (p *SessionConn) Clean(ctx context.Context, expiresAt int64, cookieName string) error {
-	_, err := p.Exec(ctx, "delete from session_conn where updated_at<? and cookie_name=?", expiresAt, cookieName)
-	return err
+func (p *connection) CreatedAt() time.Time {
+	return time.Unix(p.conn.CreatedAt, 0)
 }
 
 // }}}

@@ -23,7 +23,7 @@ func envDef(key, defaultValue string) string {
 	return defaultValue
 }
 
-func runTests(t *testing.T, tests ...func(*role)) {
+func runTests(t *testing.T, tests ...func(*Role)) {
 	// See https://github.com/go-sql-driver/mysql/wiki/Testing
 	driver := envDef("TEST_DB_DRIVER", "sqlite3")
 	dsn := envDef("TEST_DB_DSN", "file:test.db?cache=shared&mode=memory")
@@ -39,9 +39,9 @@ func runTests(t *testing.T, tests ...func(*role)) {
 	defer store.Drop(context.Background(), "role")
 
 	m := NewModels(store)
-	m.Register(&role{})
+	m.Register(&Role{})
 
-	roles := &role{store: m.NewModelStore("role")}
+	roles := &Role{DB: db}
 	store.AutoMigrate(context.Background(), "role", roles.NewObj())
 
 	for _, test := range tests {
@@ -61,17 +61,16 @@ func TestRole(t *testing.T) {
 	}
 
 	//orm.DEBUG = true
-	runTests(t, func(roles *role) {
+	runTests(t, func(roles *Role) {
 		t.Run("create role", func(t *testing.T) {
-			ret, err := roles.Create(context.TODO(), testRole)
+			err := roles.Create(context.TODO(), testRole)
 			assert.NoError(t, err)
-			assert.NotNil(t, ret)
 		})
 
 		t.Run("get role", func(t *testing.T) {
 			ret, err := roles.Get(context.TODO(), "test-role")
-			assert.NotNil(t, ret)
 			assert.NoError(t, err)
+			assert.NotNil(t, ret)
 		})
 
 		t.Run("list roles", func(t *testing.T) {
@@ -82,15 +81,14 @@ func TestRole(t *testing.T) {
 
 		testRole.Rules[0].Verbs = []string{"get"}
 		t.Run("update role", func(t *testing.T) {
-			ret, err := roles.Update(context.TODO(), testRole)
-			assert.NotNil(t, ret)
+			err := roles.Update(context.TODO(), testRole)
 			assert.NoError(t, err)
 		})
 
 		t.Run("delete role", func(t *testing.T) {
-			ret, err := roles.Delete(context.TODO(), "test-role")
-			assert.NotNil(t, ret)
+			err := roles.Delete(context.TODO(), "test-role")
 			assert.NoError(t, err)
+
 		})
 	})
 }

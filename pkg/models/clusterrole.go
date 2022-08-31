@@ -5,32 +5,18 @@ import (
 
 	"github.com/yubo/apiserver/pkg/apis/rbac"
 	"github.com/yubo/apiserver/pkg/storage"
+	"github.com/yubo/golib/orm"
 )
-
-// ClusterRoleLister helps list RolesBinding.
-// All objects returned here must be treated as read-only.
-type ClusterRole interface {
-	Name() string
-	NewObj() interface{}
-
-	List(ctx context.Context, opts storage.ListOptions) ([]*rbac.ClusterRole, error)
-	Get(ctx context.Context, name string) (*rbac.ClusterRole, error)
-	Create(ctx context.Context, obj *rbac.ClusterRole) (*rbac.ClusterRole, error)
-	Update(ctx context.Context, obj *rbac.ClusterRole) (*rbac.ClusterRole, error)
-	Delete(ctx context.Context, name string) (*rbac.ClusterRole, error)
-}
 
 // pkg/registry/rbac/role/storage/storage.go
 // pkg/registry/rbac/rest/storage_rbac.go
-func NewClusterRole() ClusterRole {
-	o := &clusterRole{}
-	o.store = NewModelStore(o.Name())
-	return o
+func NewClusterRole() *clusterRole {
+	return &clusterRole{DB: DB()}
 }
 
 // clusterRole implements the role interface.
 type clusterRole struct {
-	store ModelStore
+	orm.DB
 }
 
 func (p *clusterRole) Name() string {
@@ -41,31 +27,35 @@ func (p *clusterRole) NewObj() interface{} {
 	return &rbac.ClusterRole{}
 }
 
-func (p *clusterRole) Create(ctx context.Context, obj *rbac.ClusterRole) (ret *rbac.ClusterRole, err error) {
-	err = p.store.Create(ctx, obj.Name, obj, &ret)
-	return
+func (p *clusterRole) Create(ctx context.Context, obj *rbac.ClusterRole) error {
+	return p.Insert(ctx, obj)
 }
 
 // Get retrieves the ClusterRole from the db for a given name.
 func (p *clusterRole) Get(ctx context.Context, name string) (ret *rbac.ClusterRole, err error) {
-	err = p.store.Get(ctx, name, false, &ret)
+	err = p.Query(ctx, "select * from cluster_role where name=?", name).Row(&ret)
 	return
 }
 
 // List lists all ClusterRoles in the indexer.
-func (p *clusterRole) List(ctx context.Context, opts storage.ListOptions) (list []*rbac.ClusterRole, err error) {
-	err = p.store.List(ctx, opts, &list, opts.Total)
+func (p *clusterRole) List(ctx context.Context, o storage.ListOptions) (list []*rbac.ClusterRole, err error) {
+	err = p.DB.List(ctx, &list,
+		orm.WithTable(p.Name()),
+		orm.WithTotal(o.Total),
+		orm.WithSelector(o.Query),
+		orm.WithOrderby(o.Orderby...),
+		orm.WithLimit(o.Offset, o.Limit),
+	)
 	return
 }
 
-func (p *clusterRole) Update(ctx context.Context, obj *rbac.ClusterRole) (ret *rbac.ClusterRole, err error) {
-	err = p.store.Update(ctx, obj.Name, obj, &ret)
-	return
+func (p *clusterRole) Update(ctx context.Context, obj *rbac.ClusterRole) error {
+	return p.DB.Update(ctx, obj)
 }
 
-func (p *clusterRole) Delete(ctx context.Context, name string) (ret *rbac.ClusterRole, err error) {
-	err = p.store.Delete(ctx, name, &ret)
-	return
+func (p *clusterRole) Delete(ctx context.Context, name string) error {
+	_, err := p.Exec(ctx, "delete cluster_role role where name=?", name)
+	return err
 }
 
 func init() {

@@ -5,69 +5,59 @@ import (
 
 	"github.com/yubo/apiserver/pkg/storage"
 	"github.com/yubo/golib/api"
+	"github.com/yubo/golib/orm"
 )
-
-// SecretLister helps list RolesBinding.
-// All objects returned here must be treated as read-only.
-type Secret interface {
-	Name() string
-	NewObj() interface{}
-
-	List(ctx context.Context, opts storage.ListOptions) ([]*api.Secret, error)
-	Get(ctx context.Context, name string) (*api.Secret, error)
-	Create(ctx context.Context, obj *api.Secret) (*api.Secret, error)
-	Update(ctx context.Context, obj *api.Secret) (*api.Secret, error)
-	Delete(ctx context.Context, name string) (*api.Secret, error)
-}
 
 // pkg/registry/rbac/role/storage/storage.go
 // pkg/registry/rbac/rest/storage_rbac.go
-func NewSecret() Secret {
-	o := &secret{}
-	o.store = NewModelStore(o.Name())
-	return o
+func NewSecret() *Secret {
+	return &Secret{DB: DB()}
 }
 
-// secret implements the role interface.
-type secret struct {
-	store ModelStore
+// Secret implements the role interface.
+type Secret struct {
+	orm.DB
 }
 
-func (p *secret) Name() string {
+func (p *Secret) Name() string {
 	return "secret"
 }
 
-func (p *secret) NewObj() interface{} {
+func (p *Secret) NewObj() interface{} {
 	return &api.Secret{}
 }
 
-func (p *secret) Create(ctx context.Context, obj *api.Secret) (ret *api.Secret, err error) {
-	err = p.store.Create(ctx, obj.Name, obj, &ret)
-	return
+func (p *Secret) Create(ctx context.Context, obj *api.Secret) (err error) {
+	return p.Insert(ctx, obj)
 }
 
 // Get retrieves the Secret from the db for a given name.
-func (p *secret) Get(ctx context.Context, name string) (ret *api.Secret, err error) {
-	err = p.store.Get(ctx, name, false, &ret)
+func (p *Secret) Get(ctx context.Context, name string) (ret *api.Secret, err error) {
+	err = p.Query(ctx, "select * from secret where name=?", name).Row(&ret)
 	return
 }
 
 // List lists all Secrets in the indexer.
-func (p *secret) List(ctx context.Context, opts storage.ListOptions) (list []*api.Secret, err error) {
-	err = p.store.List(ctx, opts, &list, opts.Total)
+func (p *Secret) List(ctx context.Context, o storage.ListOptions) (list []*api.Secret, err error) {
+	err = p.DB.List(ctx, &list,
+		orm.WithTable(p.Name()),
+		orm.WithTotal(o.Total),
+		orm.WithSelector(o.Query),
+		orm.WithOrderby(o.Orderby...),
+		orm.WithLimit(o.Offset, o.Limit),
+	)
 	return
 }
 
-func (p *secret) Update(ctx context.Context, obj *api.Secret) (ret *api.Secret, err error) {
-	err = p.store.Update(ctx, obj.Name, obj, &ret)
-	return
+func (p *Secret) Update(ctx context.Context, obj *api.Secret) error {
+	return p.DB.Update(ctx, obj)
 }
 
-func (p *secret) Delete(ctx context.Context, name string) (ret *api.Secret, err error) {
-	err = p.store.Delete(ctx, name, &ret)
-	return
+func (p *Secret) Delete(ctx context.Context, name string) error {
+	_, err := p.Exec(ctx, "delete from secret where name=?", name)
+	return err
 }
 
 func init() {
-	Register(&secret{})
+	Register(&Secret{})
 }

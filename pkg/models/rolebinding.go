@@ -5,69 +5,59 @@ import (
 
 	"github.com/yubo/apiserver/pkg/apis/rbac"
 	"github.com/yubo/apiserver/pkg/storage"
+	"github.com/yubo/golib/orm"
 )
-
-// RoleBindingLister helps list RolesBinding.
-// All objects returned here must be treated as read-only.
-type RoleBinding interface {
-	Name() string
-	NewObj() interface{}
-
-	List(ctx context.Context, opts storage.ListOptions) ([]*rbac.RoleBinding, error)
-	Get(ctx context.Context, name string) (*rbac.RoleBinding, error)
-	Create(ctx context.Context, obj *rbac.RoleBinding) (*rbac.RoleBinding, error)
-	Update(ctx context.Context, obj *rbac.RoleBinding) (*rbac.RoleBinding, error)
-	Delete(ctx context.Context, name string) (*rbac.RoleBinding, error)
-}
 
 // pkg/registry/rbac/role/storage/storage.go
 // pkg/registry/rbac/rest/storage_rbac.go
-func NewRoleBinding() RoleBinding {
-	o := &roleBinding{}
-	o.store = NewModelStore(o.Name())
-	return o
+func NewRoleBinding() *RoleBinding {
+	return &RoleBinding{DB: DB()}
 }
 
-// roleBinding implements the role interface.
-type roleBinding struct {
-	store ModelStore
+// RoleBinding implements the role interface.
+type RoleBinding struct {
+	orm.DB
 }
 
-func (p *roleBinding) Name() string {
+func (p *RoleBinding) Name() string {
 	return "role_binding"
 }
 
-func (p *roleBinding) NewObj() interface{} {
+func (p *RoleBinding) NewObj() interface{} {
 	return &rbac.RoleBinding{}
 }
 
-func (p *roleBinding) Create(ctx context.Context, obj *rbac.RoleBinding) (ret *rbac.RoleBinding, err error) {
-	err = p.store.Create(ctx, obj.Name, obj, &ret)
-	return
+func (p *RoleBinding) Create(ctx context.Context, obj *rbac.RoleBinding) error {
+	return p.Insert(ctx, obj)
 }
 
 // Get retrieves the RoleBinding from the db for a given name.
-func (p *roleBinding) Get(ctx context.Context, name string) (ret *rbac.RoleBinding, err error) {
-	err = p.store.Get(ctx, name, false, &ret)
+func (p *RoleBinding) Get(ctx context.Context, name string) (ret *rbac.RoleBinding, err error) {
+	err = p.Query(ctx, "select * from role_binding where name=?", name).Row(&ret)
 	return
 }
 
 // List lists all RoleBindings in the indexer.
-func (p *roleBinding) List(ctx context.Context, opts storage.ListOptions) (list []*rbac.RoleBinding, err error) {
-	err = p.store.List(ctx, opts, &list, opts.Total)
+func (p *RoleBinding) List(ctx context.Context, o storage.ListOptions) (list []*rbac.RoleBinding, err error) {
+	err = p.DB.List(ctx, &list,
+		orm.WithTable(p.Name()),
+		orm.WithTotal(o.Total),
+		orm.WithSelector(o.Query),
+		orm.WithOrderby(o.Orderby...),
+		orm.WithLimit(o.Offset, o.Limit),
+	)
 	return
 }
 
-func (p *roleBinding) Update(ctx context.Context, obj *rbac.RoleBinding) (ret *rbac.RoleBinding, err error) {
-	err = p.store.Update(ctx, obj.Name, obj, &ret)
-	return
+func (p *RoleBinding) Update(ctx context.Context, obj *rbac.RoleBinding) error {
+	return p.DB.Update(ctx, obj)
 }
 
-func (p *roleBinding) Delete(ctx context.Context, name string) (ret *rbac.RoleBinding, err error) {
-	err = p.store.Delete(ctx, name, &ret)
-	return
+func (p *RoleBinding) Delete(ctx context.Context, name string) error {
+	_, err := p.Exec(ctx, "delete from role_binding where name=?", name)
+	return err
 }
 
 func init() {
-	Register(&roleBinding{})
+	Register(&RoleBinding{})
 }

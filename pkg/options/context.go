@@ -10,7 +10,6 @@ import (
 	"github.com/yubo/apiserver/pkg/dynamiccertificates"
 	"github.com/yubo/apiserver/pkg/s3"
 	"github.com/yubo/apiserver/pkg/server"
-	"github.com/yubo/apiserver/pkg/session/types"
 	"github.com/yubo/golib/proc"
 	"google.golang.org/grpc"
 	"k8s.io/klog/v2"
@@ -25,11 +24,10 @@ const (
 	s3Key
 	apiServerKey
 	grpcserverKey
-	authnKey          // Authentication
-	sessionManagerKey //
-	authzKey          // authorization
-	auditKey          // audit
-	clientCAKey       // clientCA
+	authnKey    // Authentication
+	authzKey    // authorization
+	auditKey    // audit
+	clientCAKey // clientCA
 )
 
 // WithValue returns a copy of parent in which the value associated with key is val.
@@ -105,22 +103,6 @@ func APIServerMustFrom(ctx context.Context) server.APIServer {
 	return server
 }
 
-func WithSessionManager(ctx context.Context, sm types.SessionManager) {
-	klog.V(5).Infof("attr with session manager")
-	proc.AttrMustFrom(ctx)[sessionManagerKey] = sm
-}
-
-func SessionManagerFrom(ctx context.Context) (types.SessionManager, bool) {
-	sm, ok := proc.AttrMustFrom(ctx)[sessionManagerKey].(types.SessionManager)
-	return sm, ok
-}
-func SessionManagerMustFrom(ctx context.Context) types.SessionManager {
-	sm, ok := proc.AttrMustFrom(ctx)[sessionManagerKey].(types.SessionManager)
-	if !ok {
-		panic("unable get session manager")
-	}
-	return sm
-}
 func WithDB(ctx context.Context, db db.DB) {
 	klog.V(5).Infof("attr with db %v attr %p", db, proc.AttrMustFrom(ctx))
 	proc.AttrMustFrom(ctx)[dbKey] = db

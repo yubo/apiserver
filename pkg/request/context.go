@@ -152,13 +152,13 @@ func TraceIDFrom(ctx context.Context) (string, bool) {
 }
 
 // WithrSession returns a copy of parent in which the session value is set
-func WithSession(parent context.Context, sess types.SessionContext) context.Context {
+func WithSession(parent context.Context, sess types.Session) context.Context {
 	return WithValue(parent, sessionKey, sess)
 }
 
 // SessionFrom returns the value of the session key on the ctx
-func SessionFrom(ctx context.Context) (types.SessionContext, bool) {
-	s, ok := ctx.Value(sessionKey).(types.SessionContext)
+func SessionFrom(ctx context.Context) (types.Session, bool) {
+	s, ok := ctx.Value(sessionKey).(types.Session)
 	return s, ok
 }
 

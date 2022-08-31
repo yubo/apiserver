@@ -1,37 +1,30 @@
 package types
 
 import (
-	"context"
 	"net/http"
+	"net/url"
 	"time"
 )
 
 type SessionConn struct {
 	Sid        string `sql:",where,primary_key"`
 	UserName   string
-	Data       map[string]string
+	Data       url.Values
 	CookieName string
 	CreatedAt  int64
 	UpdatedAt  int64 `sql:",index"`
 }
 
-type SessionContext interface {
-	Set(key, value string) error
+type Session interface {
 	Get(key string) string
-	CreatedAt() time.Time
-	Delete(key string) error
+	GetValues() map[string][]string
+	Set(key, value string) error
+	Add(key, value string) error
+	Del(key string)
+	Has(key string) bool
+
 	Reset() error
 	Sid() string
 	Update(w http.ResponseWriter) error
-}
-
-type SessionManager interface {
-	// start a session connection
-	Start(w http.ResponseWriter, r *http.Request) (SessionContext, error)
-	// stop session manager
-	Stop()
-	// start session connection GC
-	GC()
-	Destroy(w http.ResponseWriter, r *http.Request) error
-	Get(ctx context.Context, sid string) (SessionContext, error)
+	CreatedAt() time.Time
 }

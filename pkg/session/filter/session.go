@@ -1,4 +1,4 @@
-package filters
+package filter
 
 import (
 	"fmt"
@@ -8,15 +8,31 @@ import (
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/responsewriters"
 	"github.com/yubo/apiserver/pkg/session/types"
+	"github.com/yubo/golib/util"
 	"k8s.io/klog/v2"
 )
 
+var (
+	defaultManager manager
+)
+
+type manager interface {
+	Start(w http.ResponseWriter, r *http.Request) (types.Session, error)
+}
+
+func SetManager(m manager) {
+	defaultManager = m
+}
+
 // http filter
-func WithSession(handler http.Handler, sm types.SessionManager) http.Handler {
+func WithSession(handler http.Handler) http.Handler {
+	if util.IsNil(defaultManager) {
+		return handler
+	}
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		defer klog.V(8).Infof("leaving filters.WithSession")
 
-		s, err := sm.Start(w, req)
+		s, err := defaultManager.Start(w, req)
 		if err != nil {
 			responsewriters.InternalError(w, req, err)
 			return
@@ -30,9 +46,13 @@ func WithSession(handler http.Handler, sm types.SessionManager) http.Handler {
 }
 
 // go-restful filter
-func Session(sm types.SessionManager) restful.FilterFunction {
+func SessionFilter() restful.FilterFunction {
+	if util.IsNil(defaultManager) {
+		return nil
+	}
+
 	return func(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
-		s, err := sm.Start(resp, req.Request)
+		s, err := defaultManager.Start(resp, req.Request)
 		if err != nil {
 			responsewriters.InternalError(resp, req.Request, fmt.Errorf("session start err %s", err))
 			return

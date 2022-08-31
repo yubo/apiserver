@@ -51,19 +51,22 @@ func runTests(t *testing.T, tests ...func(*SessionConn)) {
 
 func TestDbSession(t *testing.T) {
 	var (
-		sm      types.SessionManager
-		sessCtx types.SessionContext
+		sessCtx types.Session
 		err     error
 		sid     string
 	)
 
 	runTests(t, func(sessions *SessionConn) {
-		cf := NewConfig()
+		cf := newConfig()
+		ctx, cancel := context.WithCancel(context.TODO())
 
-		if sm, err = NewSessionManager(cf, WithModel(sessions)); err != nil {
-			t.Fatalf("error NewSession: %s", err.Error())
+		sm := &manager{
+			ctx:     ctx,
+			config:  cf,
+			session: sessions,
+			clock:   clock.RealClock{},
 		}
-		defer sm.Stop()
+		defer cancel()
 
 		req, _ := http.NewRequest("GET", "", bytes.NewBuffer([]byte{}))
 		w := httptest.NewRecorder()
@@ -121,21 +124,26 @@ func TestDbSession(t *testing.T) {
 
 func TestDbSessionGC(t *testing.T) {
 	runTests(t, func(sessions *SessionConn) {
-		cf := NewConfig()
+		ctx, cancel := context.WithCancel(context.TODO())
+		cf := newConfig()
 		clock := &clock.FakeClock{}
 		clock.SetTime(time.Now())
 		orm.SetClock(clock)
 
-		sm, err := NewSessionManager(cf, WithModel(sessions), WithClock(clock))
+		sm := &manager{
+			ctx:     ctx,
+			config:  cf,
+			session: sessions,
+			clock:   clock,
+		}
+		defer cancel()
 
-		assert.NoError(t, err)
 		sm.GC()
-		defer sm.Stop()
 
 		r, _ := http.NewRequest("GET", "", bytes.NewBuffer([]byte{}))
 		w := httptest.NewRecorder()
 
-		_, err = sm.Start(w, r)
+		_, err := sm.Start(w, r)
 		assert.NoError(t, err)
 
 		list, err := sessions.List(context.TODO(), &storage.ListOptions{})
