@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"reflect"
 	"strings"
 
 	"github.com/emicklei/go-restful/v3"
@@ -96,6 +97,8 @@ type ParameterCodec interface {
 	EncodeParameters(obj interface{}) (*Parameters, error)
 
 	RouteBuilderParameters(rb *restful.RouteBuilder, obj interface{})
+
+	ValidateParamType(rt reflect.Type) error
 }
 
 type Parameters struct {

@@ -369,6 +369,10 @@ func (r *Request) VersionedParams(obj runtime.Object, codec request.ParameterCod
 	return r.SpecificallyVersionedParams(obj, codec)
 }
 
+func (r *Request) Params(obj runtime.Object) *Request {
+	return r.SpecificallyVersionedParams(obj, ParameterCodec)
+}
+
 func (r *Request) SpecificallyVersionedParams(obj runtime.Object, codec request.ParameterCodec) *Request {
 	if r.err != nil {
 		return r
@@ -988,14 +992,14 @@ func (r *Request) request(ctx context.Context, fn func(*http.Request, *http.Resp
 			if err != nil {
 				return err
 			}
-			klog.InfoS("client.Do", "request", string(dump))
+			klog.V(3).InfoS("client.Do", "request", string(dump))
 		}
 
 		resp, err := client.Do(req)
 
 		if r.debug && resp != nil {
 			if dump, err := httputil.DumpResponse(resp, true); err == nil {
-				klog.InfoS("client.Do", "response", string(dump))
+				klog.V(3).InfoS("client.Do", "response", string(dump))
 			}
 		}
 

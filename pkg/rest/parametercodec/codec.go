@@ -83,6 +83,18 @@ func decodeParameters(parameters *request.Parameters, into interface{}) error {
 	return nil
 }
 
+func (c *parameterCodec) ValidateParamType(rt reflect.Type) error {
+	if rt.String() == "time.Time" {
+		return fmt.Errorf("schema: interface must be a pointer to struct")
+	}
+
+	fields := cachedTypeFields(rt)
+	if len(fields.list) == 0 {
+		return fmt.Errorf("schema: can not find param tag from struct")
+	}
+	return nil
+}
+
 func setFieldValue(p *request.Parameters, f *field, dstValue reflect.Value) error {
 	var data []string
 	var value string

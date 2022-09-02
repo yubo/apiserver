@@ -1,57 +1,19 @@
 package rest
 
 import (
-	"bytes"
 	"fmt"
 	"net/http"
 	"reflect"
-	"sort"
 	"strings"
-	"unicode"
 
+	"github.com/emicklei/go-restful/v3"
 	"github.com/go-openapi/spec"
-	"github.com/yubo/golib/util"
-	"k8s.io/klog/v2"
+	"github.com/yubo/golib/runtime"
+	"github.com/yubo/golib/scheme"
 )
 
 type Validator interface {
 	Validate() error
-}
-
-func Req2curl(req *http.Request, body []byte, inputFile, outputFile *string) string {
-	buf := bytes.Buffer{}
-	buf.WriteString("curl -X " + escapeShell(req.Method))
-
-	if inputFile != nil {
-		buf.WriteString(" -T " + escapeShell(*inputFile))
-	}
-
-	if outputFile != nil {
-		buf.WriteString(" -o " + escapeShell(*outputFile))
-	}
-
-	if len(body) > 0 {
-		data := printStr(util.SubStr3(string(body), 512, -512))
-		buf.WriteString(" -d " + escapeShell(data))
-	}
-
-	var keys []string
-	for k := range req.Header {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-
-	for _, k := range keys {
-		buf.WriteString(" -H " + escapeShell(fmt.Sprintf("%s: %s", k, strings.Join(req.Header[k], " "))))
-	}
-
-	buf.WriteString(" " + escapeShell(req.URL.String()))
-
-	return buf.String()
-}
-
-func escapeShell(in string) string {
-	return `'` + strings.Replace(in, `'`, `'\''`, -1) + `'`
 }
 
 // TODO: remove
@@ -71,50 +33,6 @@ func IsEmptyValue(v reflect.Value) bool {
 		return v.IsNil()
 	}
 	return false
-}
-
-// isVowel returns true if the rune is a vowel (case insensitive).
-func isVowel(c rune) bool {
-	vowels := []rune{'a', 'e', 'i', 'o', 'u'}
-	for _, value := range vowels {
-		if value == unicode.ToLower(c) {
-			return true
-		}
-	}
-	return false
-}
-
-func rvInfo(rv reflect.Value) {
-	if klog.V(5).Enabled() {
-		klog.InfoDepth(1, fmt.Sprintf("isValid %v", rv.IsValid()))
-		klog.InfoDepth(1, fmt.Sprintf("rv string %s kind %s", rv.String(), rv.Kind()))
-	}
-}
-
-func printStr(in string) string {
-	return strings.Map(func(r rune) rune {
-		if unicode.IsPrint(r) {
-			return r
-		}
-		return '.'
-	}, in)
-}
-
-// github.com/emicklei/go-restful-openapi/definition_builder.go
-func KeyFrom(st reflect.Type, modelTypeNameFn func(t reflect.Type) (string, bool)) string {
-	key := st.String()
-	if modelTypeNameFn != nil {
-		if name, ok := modelTypeNameFn(st); ok {
-			key = name
-		}
-	}
-	if len(st.Name()) == 0 { // unnamed type
-		// If it is an array, remove the leading []
-		key = strings.TrimPrefix(key, "[]")
-		// Swagger UI has special meaning for [
-		key = strings.Replace(key, "[]", "||", -1)
-	}
-	return key
 }
 
 func OperationFrom(s *spec.Swagger, method, path string) (*spec.Operation, error) {
@@ -151,4 +69,52 @@ func OperationFrom(s *spec.Swagger, method, path string) (*spec.Operation, error
 	}
 
 	return ret, nil
+}
+
+func sqlOrder(order string) string {
+	switch strings.ToLower(order) {
+	case "ascend", "asc":
+		return "ASC"
+	case "descend", "desc":
+		return "DESC"
+	default:
+		return "ASC"
+	}
+}
+
+func newInterface(rt reflect.Type) interface{} {
+	if rt == nil {
+		return nil
+	}
+
+	return reflect.New(rt).Interface()
+}
+
+func newInterfaceFromInterface(i interface{}) interface{} {
+	rt := reflect.ValueOf(i).Type()
+	if rt.Kind() == reflect.Ptr {
+		rt = rt.Elem()
+	}
+
+	return reflect.New(rt).Interface()
+}
+
+//var _ GoRestfulContainer = new(BaseContainer)
+
+type BaseContainer struct {
+	*restful.Container
+	runtime.NegotiatedSerializer
+}
+
+func (p *BaseContainer) Remove(*restful.WebService) error                       { return nil }
+func (p *BaseContainer) UnlistedHandle(path string, handler http.Handler)       {}
+func (p *BaseContainer) HandlePrefix(path string, handler http.Handler)         {}
+func (p *BaseContainer) UnlistedHandlePrefix(path string, handler http.Handler) {}
+func (p *BaseContainer) Serializer() runtime.NegotiatedSerializer               { return p.NegotiatedSerializer }
+
+func NewBaseContainer() *BaseContainer {
+	ret := &BaseContainer{}
+	ret.Container = restful.NewContainer()
+	ret.NegotiatedSerializer = scheme.NegotiatedSerializer
+	return ret
 }

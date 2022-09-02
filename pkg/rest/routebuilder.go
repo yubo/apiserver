@@ -1,25 +1,20 @@
 package rest
 
 import (
-	"fmt"
-	"io/ioutil"
 	"net/http"
 	"path"
 	"reflect"
-	goruntime "runtime"
 	"strings"
 
 	restfulspec "github.com/emicklei/go-restful-openapi/v2"
 	"github.com/emicklei/go-restful/v3"
 	"github.com/go-openapi/spec"
-	"github.com/yubo/apiserver/pkg/audit"
-	"github.com/yubo/apiserver/pkg/handlers/negotiation"
 	"github.com/yubo/apiserver/pkg/metrics"
 	"github.com/yubo/apiserver/pkg/request"
-	"github.com/yubo/apiserver/pkg/responsewriters"
 	"github.com/yubo/apiserver/pkg/rest/urlencoded"
 	"github.com/yubo/golib/runtime"
 	"github.com/yubo/golib/scheme"
+	"github.com/yubo/golib/util/errors"
 	"k8s.io/klog/v2"
 )
 
@@ -121,7 +116,7 @@ func (p *WebServiceBuilder) newBuilder(opts *WsOption) *webserviceBuilder {
 		WebServiceBuilder: p,
 		WsOption:          opts,
 		ws:                opts.Ws,
-		parameterCodec:    ParameterCodec,
+		parameterCodec:    opts.ParameterCodec,
 		container:         opts.GoRestfulContainer,
 		serializer:        scheme.NegotiatedSerializer,
 	}
@@ -142,7 +137,7 @@ func (p *WebServiceBuilder) WithAclManager(m AclManager) {
 
 func (p *WebServiceBuilder) SecuritySchemeRegister(name string, s *spec.SecurityScheme) error {
 	if p.securitySchemeCatalog[name] != nil {
-		return fmt.Errorf("SecuritySchemeRegister %s exists", name)
+		return errors.Errorf("SecuritySchemeRegister %s exists", name)
 	}
 
 	for scope, desc := range p.ScopeCatalog {
@@ -201,7 +196,7 @@ func (p *WebServiceBuilder) SwaggerTagRegister(name, desc string) {
 func (p *WebServiceBuilder) ResponseWriterRegister(w RespWriter) error {
 	name := w.Name()
 	if p.respWriterCatalog[name] != nil {
-		return fmt.Errorf("ResponseWriterRegister %s exists", name)
+		return errors.Errorf("ResponseWriterRegister %s exists", name)
 	}
 
 	klog.V(3).Infof("add resp writer %s", name)
@@ -339,7 +334,7 @@ func (p *webserviceBuilder) newRouteBuilder(wr WsRoute) *restful.RouteBuilder {
 	case "DELETE":
 		rb = p.ws.DELETE(wr.SubPath)
 	default:
-		panic("unsupported method " + wr.Method)
+		klog.FatalfDepth(4, "register %s unsupported method %s", path.Join(p.ws.RootPath(), wr.SubPath), wr.Method)
 	}
 
 	if wr.Deprecated {
@@ -375,7 +370,7 @@ func (p *webserviceBuilder) newRouteBuilder(wr WsRoute) *restful.RouteBuilder {
 	}
 
 	if err := p.registerHandle(rb, &wr); err != nil {
-		panic(err)
+		klog.FatalfDepth(4, "register %s err %s", path.Join(p.ws.RootPath(), wr.SubPath), err)
 	}
 
 	rb.Doc(wr.Desc)
@@ -390,57 +385,15 @@ func (p *webserviceBuilder) registerHandle(rb *restful.RouteBuilder, wr *WsRoute
 		return nil
 	}
 
-	// handle(req *restful.Request, resp *restful.Response)
-	// handle(req *restful.Request, resp *restful.Response, param *struct{})
-	// handle(req *restful.Request, resp *restful.Response, param *struct{}, body *slice)
-	// handle(req *restful.Request, resp *restful.Response, param *struct{}, body *map)
-	// handle(req *restful.Request, resp *restful.Response, param *struct{}, body *struct)
-	// handle(...) error
-	// handle(...) (out *struct{}, err error)
-
-	// func (f HandlerFunc) ServeHTTP(w ResponseWriter, r *Request) {
-	// handle(w ResponseWriter, r *Request, param *struct{}, body *struct{})
-
-	rv := reflect.ValueOf(wr.Handle)
-	rt := rv.Type()
-
-	numIn := rt.NumIn()
-	numOut := rt.NumOut()
-
-	if !((numIn >= 2 && numIn <= 4) && numOut <= 2) {
-		klog.FatalfDepth(5, "%s handle in num %d out num %d is Invalid %s %s", rt.Name(), numIn, numOut, goruntime.FuncForPC(rv.Pointer()).Name(), rt.String())
+	rh, err := NewRouteHandle(wr.Handle, p.parameterCodec, p.serializer, p.RespWriter)
+	if err != nil {
+		return errors.Wrapf(err, "new route handle")
 	}
-
-	if arg := rt.In(0).String(); arg != "http.ResponseWriter" {
-		klog.FatalfDepth(5, "unable to get func(*http.Request, http.ResponseWriter, ...) %s %s", goruntime.FuncForPC(rv.Pointer()).Name(), rt.String())
-	}
-
-	if arg := rt.In(1).String(); arg != "*http.Request" {
-		klog.FatalfDepth(5, "unable to get func(*http.Request, http.ResponseWriter, ...) %s %s", goruntime.FuncForPC(rv.Pointer()).Name(), rt.String())
-	}
-
-	var paramType reflect.Type
-	var bodyType reflect.Type
 
 	// build input param
 	inputParam := wr.InputParam
-	if numIn > 2 {
-		paramType = rt.In(2)
-
-		switch paramType.Kind() {
-		case reflect.Ptr:
-			paramType = paramType.Elem()
-			if paramType.Kind() != reflect.Struct {
-				klog.FatalfDepth(5, "param just support ptr to struct %s %s", goruntime.FuncForPC(rv.Pointer()).Name(), rt.String())
-			}
-		default:
-			klog.FatalfDepth(5, "param just support ptr to struct %s %s", goruntime.FuncForPC(rv.Pointer()).Name(), rt.String())
-		}
-
-		if inputParam == nil {
-			inputParam = reflect.New(paramType).Elem().Interface()
-		}
-
+	if inputParam == nil {
+		inputParam = newInterface(rh.param)
 	}
 	if inputParam != nil {
 		p.parameterCodec.RouteBuilderParameters(rb, inputParam)
@@ -448,104 +401,23 @@ func (p *webserviceBuilder) registerHandle(rb *restful.RouteBuilder, wr *WsRoute
 
 	// build intput body
 	inputBody := wr.InputBody
-	if numIn > 3 {
-		bodyType = rt.In(3)
-
-		if bodyType.Kind() != reflect.Ptr {
-			klog.FatalfDepth(5, "payload must be a ptr %s %s", goruntime.FuncForPC(rv.Pointer()).Name(), rt.String())
-		}
-		bodyType = bodyType.Elem()
-
-		switch bodyType.Kind() {
-		case reflect.Struct, reflect.Slice, reflect.Map:
-		default:
-			klog.FatalfDepth(5, "just support ptr to struct|slice|map %s %s", goruntime.FuncForPC(rv.Pointer()).Name(), rt.String())
-		}
-
-		if inputBody == nil {
-			inputBody = reflect.New(bodyType).Elem().Interface()
-		}
+	if inputBody == nil {
+		inputBody = newInterface(rh.body)
 	}
 	if inputBody != nil {
 		p.buildBody(rb, wr.Consume, inputBody)
 	}
 
 	// build output head & body
-	{
-		output := wr.Output
-		if numOut == 2 {
-			if output == nil {
-				rt := rt.Out(0)
-				if rt.Kind() == reflect.Ptr {
-					rt = rt.Elem()
-				}
-				output = reflect.New(rt).Elem().Interface()
-			}
-		}
-		wr.RespWriter.AddRoute(wr.Method, path.Join(p.ws.RootPath(), wr.SubPath))
-		rb.Returns(http.StatusOK, http.StatusText(http.StatusOK), output)
+	output := wr.Output
+	if output == nil {
+		output = newInterface(rh.out)
 	}
+	rb.Returns(http.StatusOK, http.StatusText(http.StatusOK), output)
 
-	handler := func(req *restful.Request, resp *restful.Response) {
-		var ret []reflect.Value
+	wr.RespWriter.AddRoute(wr.Method, path.Join(p.ws.RootPath(), wr.SubPath))
 
-		if numIn == 4 {
-			// with param & body
-			param := reflect.New(paramType).Interface()
-			body := reflect.New(bodyType).Interface()
-
-			if err := readEntity(req, param, body, p.parameterCodec, p.serializer); err != nil {
-				responsewriters.ErrorNegotiated(err, p.serializer, resp.ResponseWriter, req.Request)
-				return
-			}
-
-			// audit
-			ae := request.AuditEventFrom(req.Request.Context())
-			audit.LogRequestObject(ae, body, "")
-
-			// TODO: use (w http.ResponseWriter, req *http.Request)
-			ret = rv.Call([]reflect.Value{
-				reflect.ValueOf(resp.ResponseWriter),
-				reflect.ValueOf(req.Request),
-				reflect.ValueOf(param),
-				reflect.ValueOf(body),
-			})
-
-		} else if numIn == 3 {
-			// with param
-			param := reflect.New(paramType).Interface()
-			if err := readEntity(req, param, nil, p.parameterCodec, p.serializer); err != nil {
-				responsewriters.ErrorNegotiated(err, p.serializer, resp.ResponseWriter, req.Request)
-				return
-			}
-
-			ret = rv.Call([]reflect.Value{
-				reflect.ValueOf(resp.ResponseWriter),
-				reflect.ValueOf(req.Request),
-				reflect.ValueOf(param),
-			})
-		} else {
-			ret = rv.Call([]reflect.Value{
-				reflect.ValueOf(resp.ResponseWriter),
-				reflect.ValueOf(req.Request),
-			})
-		}
-
-		var err error
-		if numOut == 2 {
-			err = toError(ret[1])
-			wr.RespWriter.RespWrite(resp, req.Request, toInterface(ret[0]), err, p.serializer)
-			return
-		}
-
-		if numOut == 1 {
-			err = toError(ret[0])
-			wr.RespWriter.RespWrite(resp, req.Request, nil, err, p.serializer)
-		}
-		if err != nil {
-			req.SetAttribute("error", err)
-		}
-	}
+	handler := rh.Handler()
 
 	handler = metrics.InstrumentRouteFunc(wr.Method,
 		path.Join(p.ws.RootPath(), wr.SubPath),
@@ -652,8 +524,6 @@ func (p *WsOption) Validate() error {
 	return nil
 }
 
-type NonParam struct{}
-
 type WsRoute struct {
 	Acl     string // access name
 	Method  string
@@ -728,44 +598,44 @@ type SchemeConfig struct {
 
 func (p *SchemeConfig) SecurityScheme() (*spec.SecurityScheme, error) {
 	if p.Name == "" {
-		return nil, fmt.Errorf("name must be set")
+		return nil, errors.New("name must be set")
 	}
 	switch p.Type {
 	case SecurityTypeBase:
 		return spec.BasicAuth(), nil
 	case SecurityTypeApiKey:
 		if p.FieldName == "" {
-			return nil, fmt.Errorf("fieldName must be set for %s", p.Type)
+			return nil, errors.Errorf("fieldName must be set for %s", p.Type)
 		}
 		if p.ValueSource == "" {
-			return nil, fmt.Errorf("valueSource must be set for %s", p.Type)
+			return nil, errors.Errorf("valueSource must be set for %s", p.Type)
 		}
 		return spec.APIKeyAuth(p.FieldName, p.ValueSource), nil
 	case SecurityTypeImplicit:
 		if p.AuthorizationURL == "" {
-			return nil, fmt.Errorf("authorizationURL must be set for %s", p.Type)
+			return nil, errors.Errorf("authorizationURL must be set for %s", p.Type)
 		}
 		return spec.OAuth2Implicit(p.AuthorizationURL), nil
 	case SecurityTypePassword:
 		if p.TokenURL == "" {
-			return nil, fmt.Errorf("tokenURL must be set for %s", p.Type)
+			return nil, errors.Errorf("tokenURL must be set for %s", p.Type)
 		}
 		return spec.OAuth2Password(p.TokenURL), nil
 	case SecurityTypeApplication:
 		if p.TokenURL == "" {
-			return nil, fmt.Errorf("tokenURL must be set for %s", p.Type)
+			return nil, errors.Errorf("tokenURL must be set for %s", p.Type)
 		}
 		return spec.OAuth2Application(p.TokenURL), nil
 	case SecurityTypeAccessCode:
 		if p.TokenURL == "" {
-			return nil, fmt.Errorf("tokenURL must be set for %s", p.Type)
+			return nil, errors.Errorf("tokenURL must be set for %s", p.Type)
 		}
 		if p.AuthorizationURL == "" {
-			return nil, fmt.Errorf("authorizationURL must be set for %s", p.Type)
+			return nil, errors.Errorf("authorizationURL must be set for %s", p.Type)
 		}
 		return spec.OAuth2AccessToken(p.AuthorizationURL, p.TokenURL), nil
 	default:
-		return nil, fmt.Errorf("scheme.type %s is invalid, should be one of %s", p.Type,
+		return nil, errors.Errorf("scheme.type %s is invalid, should be one of %s", p.Type,
 			strings.Join([]string{
 				string(SecurityTypeBase),
 				string(SecurityTypeApiKey),
@@ -775,54 +645,4 @@ func (p *SchemeConfig) SecurityScheme() (*spec.SecurityScheme, error) {
 				string(SecurityTypeAccessCode),
 			}, ", "))
 	}
-}
-
-// dst: must be ptr
-func readEntity(req *restful.Request, param, into interface{}, codec request.ParameterCodec, serializer runtime.NegotiatedSerializer) error {
-	ctx := request.WithParam(req.Request.Context(), param)
-	ctx = request.WithBody(ctx, into)
-	req.Request = req.Request.WithContext(ctx)
-
-	// param
-	if err := codec.DecodeParameters(&request.Parameters{
-		Header: req.Request.Header,
-		Path:   req.PathParameters(),
-		Query:  req.Request.URL.Query(),
-	}, param); err != nil {
-		return nil
-	}
-	if v, ok := param.(Validator); ok {
-		if err := v.Validate(); err != nil {
-			return err
-		}
-	}
-
-	// TODO: use scheme.Codecs instead of restful.ReadEntity
-	// body
-	if into != nil {
-		s, err := negotiation.NegotiateInputSerializer(req.Request, false, serializer)
-		if err != nil {
-			return err
-		}
-
-		body, err := ioutil.ReadAll(req.Request.Body)
-		if err != nil {
-			return err
-		}
-
-		if _, err := s.Serializer.Decode(body, into); err != nil {
-			return err
-		}
-		//if err := req.ReadEntity(into); err != nil {
-		//	klog.V(5).Infof("restful.ReadEntity() error %s", err)
-		//	return err
-		//}
-	}
-	if v, ok := into.(Validator); ok {
-		if err := v.Validate(); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
