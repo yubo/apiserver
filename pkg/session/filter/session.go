@@ -8,7 +8,6 @@ import (
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/responsewriters"
 	"github.com/yubo/apiserver/pkg/session/types"
-	"github.com/yubo/golib/util"
 	"k8s.io/klog/v2"
 )
 
@@ -26,7 +25,7 @@ func SetManager(m manager) {
 
 // http filter
 func WithSession(handler http.Handler) http.Handler {
-	if util.IsNil(defaultManager) {
+	if defaultManager == nil {
 		return handler
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
@@ -47,7 +46,7 @@ func WithSession(handler http.Handler) http.Handler {
 
 // go-restful filter
 func SessionFilter() restful.FilterFunction {
-	if util.IsNil(defaultManager) {
+	if defaultManager == nil {
 		return nil
 	}
 
