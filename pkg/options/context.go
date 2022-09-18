@@ -98,7 +98,7 @@ func APIServerFrom(ctx context.Context) (server.APIServer, bool) {
 func APIServerMustFrom(ctx context.Context) server.APIServer {
 	server, ok := proc.AttrMustFrom(ctx)[apiServerKey].(server.APIServer)
 	if !ok {
-		panic("unable get APIServer module")
+		panic("unable to get APIServer module")
 	}
 	return server
 }
@@ -127,7 +127,7 @@ func DBFrom(ctx context.Context, name string) (db.DB, bool) {
 func DBMustFrom(ctx context.Context, name string) db.DB {
 	db, ok := DBFrom(ctx, name)
 	if !ok {
-		panic("unable get db." + name)
+		panic("unable to get db." + name)
 	}
 	return db
 }
@@ -150,4 +150,12 @@ func WithS3Client(ctx context.Context, cli s3.S3Client) {
 func S3ClientFrom(ctx context.Context) (s3.S3Client, bool) {
 	cli, ok := proc.AttrMustFrom(ctx)[s3Key].(s3.S3Client)
 	return cli, ok
+}
+
+func S3ClientMustFrom(ctx context.Context) s3.S3Client {
+	cli, ok := proc.AttrMustFrom(ctx)[s3Key].(s3.S3Client)
+	if !ok {
+		panic("unable to get s3 client from context")
+	}
+	return cli
 }

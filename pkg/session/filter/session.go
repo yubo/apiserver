@@ -28,6 +28,7 @@ func WithSession(handler http.Handler) http.Handler {
 	if defaultManager == nil {
 		return handler
 	}
+	klog.V(1).Infof("added filters.WithSession")
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		defer klog.V(8).Infof("leaving filters.WithSession")
 
@@ -50,6 +51,7 @@ func SessionFilter() restful.FilterFunction {
 		return nil
 	}
 
+	klog.V(1).Infof("added sessionFilter")
 	return func(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
 		s, err := defaultManager.Start(resp, req.Request)
 		if err != nil {

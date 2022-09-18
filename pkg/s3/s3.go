@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"path"
+	"strings"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
@@ -15,6 +16,7 @@ import (
 
 type Config struct {
 	Endpoint        string                     `json:"endpoint" description:"s3 endpoint, e.g. 127.0.0.1:9000"`
+	ExternAddress   string                     `json:"externAddress" description:"s3 extern address, e.g. http://127.0.0.1:9000"`
 	AccessKeyID     string                     `json:"accessKeyID"`
 	SecretAccessKey string                     `json:"secretAccessKey"`
 	BucketName      string                     `json:"bucketName"`
@@ -37,8 +39,9 @@ type S3Client interface {
 
 type minioClient struct {
 	*minio.Client
-	bucketName string
-	endpoint   string
+	bucketName    string
+	endpoint      string
+	externAddress string
 }
 
 func New(cf *Config) (S3Client, error) {
@@ -47,8 +50,9 @@ func New(cf *Config) (S3Client, error) {
 	}
 
 	client := &minioClient{
-		bucketName: cf.BucketName,
-		endpoint:   fmt.Sprintf("http://%s/", cf.Endpoint),
+		bucketName:    cf.BucketName,
+		endpoint:      fmt.Sprintf("http://%s/", cf.Endpoint),
+		externAddress: strings.TrimRight(cf.ExternAddress, "/") + "/",
 	}
 
 	if cf.TLS.Insecure {
@@ -64,6 +68,10 @@ func New(cf *Config) (S3Client, error) {
 		opts.Transport = transport
 
 		client.endpoint = fmt.Sprintf("https://%s/", cf.Endpoint)
+	}
+
+	if client.externAddress == "" {
+		client.externAddress = client.endpoint
 	}
 
 	cli, err := minio.New(cf.Endpoint, opts)
@@ -92,5 +100,5 @@ func (p *minioClient) Remove(ctx context.Context, objectPath string) error {
 }
 
 func (p *minioClient) Location(objectPath string) string {
-	return p.endpoint + path.Join(p.bucketName, objectPath)
+	return p.externAddress + path.Join(p.bucketName, objectPath)
 }
