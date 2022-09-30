@@ -96,6 +96,7 @@ func (p *minioClient) Put(ctx context.Context, objectPath, contentType string, r
 }
 
 func (p *minioClient) Remove(ctx context.Context, objectPath string) error {
+	objectPath = strings.TrimPrefix(objectPath, p.externAddress)
 	return p.RemoveObject(ctx, p.bucketName, objectPath, minio.RemoveObjectOptions{})
 }
 

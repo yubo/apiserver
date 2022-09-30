@@ -14,6 +14,9 @@ import (
 	"github.com/yubo/apiserver/pkg/responsewriters"
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/golib/runtime"
+	"github.com/yubo/golib/util"
+	"github.com/yubo/golib/util/errors"
+	"k8s.io/klog/v2"
 )
 
 // https://pro.ant.design/zh-CN/docs/request
@@ -118,7 +121,11 @@ func (p *respWriter) SwaggerHandler(s *spec.Swagger) {
 		}
 
 		for status, schema := range p.schemas {
-			resp, modelType, rawSchema := buildResponse(status, o.Responses)
+			resp, modelType, rawSchema, err := buildResponse(status, o.Responses)
+			if err != nil {
+				klog.ErrorS(err, "swaggerHandler.buildResponse", "method", route.method, "path", route.path)
+				panic(err)
+			}
 
 			o.Responses.StatusCodeResponses[status] = resp
 
@@ -164,18 +171,21 @@ func nameOfSchema(status int, prop *spec.Schema) string {
 
 	switch t := prop.Type[0]; t {
 	case "array":
-		if len(prop.Items.Schema.Type) == 0 || prop.Items.Schema.Type[0] == "" {
-			panic("array's type is not set")
+		if u := prop.Items.Schema.Ref.GetURL(); u != nil {
+			return t + "." + strings.TrimPrefix(u.String(), "#/definitions/")
 		}
-		return t + "." + prop.Items.Schema.Type[0]
+		if len(prop.Items.Schema.Type) > 0 && prop.Items.Schema.Type[0] != "" {
+			return t + "." + prop.Items.Schema.Type[0]
+		}
+		panic(fmt.Sprintf("invalid array type %s", util.JsonStr(prop)))
 	case "integer", "number", "boolean", "string":
 		return t
 	default:
-		panic(fmt.Sprintf("unsupported type %s", t))
+		panic(fmt.Sprintf("unsupported type %s", util.JsonStr(prop)))
 	}
 }
 
-func buildResponse(status int, responses *spec.Responses) (resp spec.Response, modelType string, rawSchema *spec.Schema) {
+func buildResponse(status int, responses *spec.Responses) (resp spec.Response, modelType string, rawSchema *spec.Schema, err error) {
 	var ok bool
 	if resp, ok = responses.StatusCodeResponses[status]; !ok {
 		resp = spec.Response{}
@@ -186,7 +196,8 @@ func buildResponse(status int, responses *spec.Responses) (resp spec.Response, m
 	rawSchema = resp.Schema
 
 	if strings.HasPrefix(modelType, modelTypePrefix) {
-		panic(fmt.Sprintf("invalie prefix model name %s", modelTypePrefix))
+		err = errors.Errorf("invalie prefix model name %s", modelType)
+		return
 	}
 	modelType = modelTypePrefix + modelType
 
