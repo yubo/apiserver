@@ -499,6 +499,9 @@ func (p *WsOption) Validate() error {
 	if p.Path != "" {
 		p.Ws = p.Ws.Path(p.Path)
 	}
+	if p.AclManager == nil {
+		p.AclManager = defaultWebServiceBuilder.AclManager
+	}
 	if p.Ws.RootPath() == "/" {
 		klog.Warningf("rootpath is set to /, which may overwrite the existing route")
 	}
