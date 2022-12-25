@@ -46,8 +46,5 @@ func (p *sessionModule) init(ctx context.Context) error {
 func Register() {
 	proc.RegisterHooks(hookOps)
 	proc.AddConfig(moduleName, newConfig(), proc.WithConfigGroup("session"))
-}
-
-func init() {
 	models.Register(&SessionConn{})
 }

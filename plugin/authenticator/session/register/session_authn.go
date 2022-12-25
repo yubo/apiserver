@@ -28,6 +28,7 @@ func (a *Authenticator) AuthenticateRequest(req *http.Request) (*authenticator.R
 	return &authenticator.Response{User: &user.DefaultInfo{
 		Name:   userName,
 		Groups: strings.Split(sess.Get("groups"), ","),
+		Extra:  sess.GetValues(),
 	}}, true, nil
 }
 

@@ -9,12 +9,18 @@ import (
 	"github.com/yubo/golib/cli"
 	"github.com/yubo/golib/proc"
 
-	server "github.com/yubo/apiserver/pkg/server/module"
 	_ "github.com/yubo/apiserver/pkg/server/register"
 )
 
 const (
 	moduleName = "prometheus-metrics.examples"
+)
+
+var (
+	opsProcessed = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "myapp_processed_ops_total",
+		Help: "The total number of processed events",
+	})
 )
 
 func recordMetrics() {
@@ -26,17 +32,9 @@ func recordMetrics() {
 	}()
 }
 
-var (
-	opsProcessed = promauto.NewCounter(prometheus.CounterOpts{
-		Name: "myapp_processed_ops_total",
-		Help: "The total number of processed events",
-	})
-)
-
 func main() {
 	recordMetrics()
 
-	command := proc.NewRootCmd(server.WithoutTLS())
-	code := cli.Run(command)
+	code := cli.Run(proc.NewRootCmd())
 	os.Exit(code)
 }

@@ -38,6 +38,8 @@ type Config struct {
 	CookieName     string       `json:"cookieName"`
 	SidLength      int          `json:"sidLength"`
 	HttpOnly       bool         `json:"httpOnly"`
+	Secure         bool         `json:"secure"`
+	SameSite       string       `json:"sameSite"`
 	Domain         string       `json:"domain"`
 	GcInterval     api.Duration `json:"gcInterval"`
 	CookieLifetime api.Duration `json:"cookieLifetime"`
@@ -68,21 +70,35 @@ func newManager(ctx context.Context, cf *Config, c clock.Clock) *manager {
 		c = clock.RealClock{}
 	}
 
-	return &manager{
+	ret := &manager{
 		ctx:     ctx,
 		config:  cf,
 		session: NewSessionConn(),
 		clock:   c,
 	}
+
+	switch strings.ToLower(cf.SameSite) {
+	case "lax":
+		ret.sameSite = http.SameSiteLaxMode
+	case "strict":
+		ret.sameSite = http.SameSiteStrictMode
+	case "none":
+		ret.sameSite = http.SameSiteNoneMode
+	default:
+		ret.sameSite = http.SameSiteDefaultMode
+	}
+
+	return ret
 }
 
 // manager {{{
 type manager struct {
-	ctx     context.Context
-	session *SessionConn
-	config  *Config
-	once    sync.Once
-	clock   clock.Clock
+	ctx      context.Context
+	session  *SessionConn
+	config   *Config
+	once     sync.Once
+	clock    clock.Clock
+	sameSite http.SameSite
 }
 
 func (p *manager) GC() {
@@ -131,6 +147,8 @@ func (p *manager) Start(w http.ResponseWriter, req *http.Request) (sess types.Se
 		Value:    url.QueryEscape(sid),
 		Path:     "/",
 		HttpOnly: p.config.HttpOnly,
+		Secure:   p.config.Secure,
+		SameSite: p.sameSite,
 		Domain:   p.config.Domain,
 	}
 	if n := int(p.config.CookieLifetime.Duration.Seconds()); n > 0 {
