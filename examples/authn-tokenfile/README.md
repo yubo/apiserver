@@ -18,7 +18,7 @@ $ go run ./main.go -f ./config.yaml
 #### curl 
 
 ```sh
-$ curl -H 'Content-Type:application/json' -H 'Authorization: bearer token-777' http://localhost:8080/hello
+$ curl -H 'Content-Type:application/json' -H 'Authorization: bearer 123' http://localhost:8080/hello
 {
  "Name": "user3",
  "UID": "uid3",

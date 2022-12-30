@@ -146,7 +146,7 @@ func (p *Module) installWs(http rest.GoRestfulContainer) {
 	})
 }
 
-func (p *Module) createUser(w http.ResponseWriter, req *http.Request, _ *rest.NonParam, in *CreateUserInput) (CreateUserOutput, error) {
+func (p *Module) createUser(w http.ResponseWriter, req *http.Request, in *CreateUserInput) (CreateUserOutput, error) {
 	user := User{
 		Name:     in.Name,
 		NickName: in.NickName,

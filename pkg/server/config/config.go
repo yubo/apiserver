@@ -121,10 +121,8 @@ func (p *Config) Validate() error {
 
 	if len(p.SecuritySchemes) == 0 {
 		p.SecuritySchemes = []rest.SchemeConfig{{
-			Name:        "BearerToken",
-			Type:        "apiKey",
-			FieldName:   "authorization",
-			ValueSource: "header",
+			Name: "BearerToken",
+			Type: "bearer",
 		}}
 	}
 

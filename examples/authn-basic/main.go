@@ -10,16 +10,19 @@ import (
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/rest"
-	"github.com/yubo/apiserver/plugin/authenticator/basic"
 	"github.com/yubo/golib/cli"
 	"github.com/yubo/golib/proc"
 
 	// http
-	server "github.com/yubo/apiserver/pkg/server/module"
 	_ "github.com/yubo/apiserver/pkg/server/register"
+
+	// authz
+	_ "github.com/yubo/apiserver/pkg/authorization/register"
+	_ "github.com/yubo/apiserver/plugin/authorizer/abac/register"
 
 	// authn
 	_ "github.com/yubo/apiserver/pkg/authentication/register"
+	"github.com/yubo/apiserver/plugin/authenticator/basic"
 )
 
 const (
@@ -37,8 +40,9 @@ var (
 
 func main() {
 	basic.RegisterAuthn(&basicAuthenticator{})
+	rest.ScopeRegister("auth", "auth description")
 
-	command := proc.NewRootCmd(server.WithoutTLS(), proc.WithHooks(hookOps...))
+	command := proc.NewRootCmd(proc.WithHooks(hookOps...))
 	code := cli.Run(command)
 	os.Exit(code)
 }
@@ -53,11 +57,12 @@ func start(ctx context.Context) error {
 }
 
 func installWs(http rest.GoRestfulContainer) {
+	rest.SwaggerTagRegister("demo", "demo Api - swagger api sample")
 	rest.WsRouteBuild(&rest.WsOption{
 		Path:               "/hello",
 		GoRestfulContainer: http,
 		Routes: []rest.WsRoute{
-			{Method: "GET", SubPath: "/", Handle: hw},
+			{Method: "GET", SubPath: "/", Handle: hw, Scope: "auth"},
 		},
 	})
 }

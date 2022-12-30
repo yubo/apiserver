@@ -122,7 +122,7 @@ func (p *user) Install() {
 	})
 }
 
-func (p *user) create(w http.ResponseWriter, req *http.Request, _ *rest.NonParam, in *createInput) error {
+func (p *user) create(w http.ResponseWriter, req *http.Request, in *createInput) error {
 	return p.user.Create(req.Context(), in.User())
 }
 

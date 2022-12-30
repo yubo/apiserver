@@ -27,13 +27,13 @@ Content-Length: 128
 Content-Type: application/json
 User-Agent: Go-http-client/1.1
 
-{"metadata":{"creationTimestamp":"0001-01-01T00:00:00Z"},"spec":{"token":"token-777","audiences":["api"]},"status":{"user":{}}}
+{"metadata":{"creationTimestamp":"0001-01-01T00:00:00Z"},"spec":{"token":"123","audiences":["api"]},"status":{"user":{}}}
 ```
 
 ### Client
 
 ```sh
-$ curl -H 'Content-Type:application/json' -H 'Authorization: bearer token-777' http://localhot:8080/hello
+$ curl -H 'Content-Type:application/json' -H 'Authorization: bearer 123' http://localhot:8080/hello
 {
   "Name": "test",
   "UID": "u110",

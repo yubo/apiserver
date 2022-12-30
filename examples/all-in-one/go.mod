@@ -6,7 +6,7 @@ replace github.com/yubo/apiserver => ../..
 
 require (
 	github.com/emicklei/go-restful/v3 v3.7.4
-	github.com/go-openapi/spec v0.20.5
+	github.com/go-openapi/spec v0.20.7
 	github.com/spf13/cobra v1.4.0
 	github.com/yubo/apiserver v0.1.0
 	github.com/yubo/golib v0.0.3-0.20220902030005-7f15ca001a44

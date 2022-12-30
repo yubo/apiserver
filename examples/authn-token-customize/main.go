@@ -19,6 +19,10 @@ import (
 	server "github.com/yubo/apiserver/pkg/server/module"
 	_ "github.com/yubo/apiserver/pkg/server/register"
 
+	// authz
+	_ "github.com/yubo/apiserver/pkg/authorization/register"
+	_ "github.com/yubo/apiserver/plugin/authorizer/abac/register"
+
 	// authn
 	_ "github.com/yubo/apiserver/pkg/authentication/register"
 )
@@ -60,7 +64,7 @@ func installWs(http rest.GoRestfulContainer) {
 		Path:               "/hello",
 		GoRestfulContainer: http,
 		Routes: []rest.WsRoute{
-			{Method: "GET", SubPath: "/", Handle: hw},
+			{Method: "GET", SubPath: "/", Handle: hw, Scope: "auth"},
 		},
 	})
 }

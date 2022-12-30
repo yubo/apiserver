@@ -1,5 +1,7 @@
 apiserver:
   insecureServing:
+    bindAddress: 0.0.0.0
+    bindNework: tcp
     bindPort: 8080
     enabled: true
   secureServing:
@@ -9,9 +11,7 @@ apiserver:
       type: bearer
 
 authentication:
-  tokenAuthFile: ./tokens.cvs
   anonymous: true
-
 
 authorization:
   modes:

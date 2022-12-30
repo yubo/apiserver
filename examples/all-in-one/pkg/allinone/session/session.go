@@ -11,7 +11,6 @@ import (
 	"github.com/yubo/apiserver/pkg/options"
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/rest"
-	"github.com/yubo/apiserver/pkg/session/types"
 
 	_ "github.com/yubo/apiserver/pkg/session/register"
 )
@@ -19,14 +18,12 @@ import (
 func New(ctx context.Context, cf *config.Config) *session {
 	return &session{
 		container: options.APIServerMustFrom(ctx),
-		session:   options.SessionManagerMustFrom(ctx),
 	}
 
 }
 
 type session struct {
 	container rest.GoRestfulContainer
-	session   types.SessionManager
 }
 
 func (p *session) Install() {

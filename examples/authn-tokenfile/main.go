@@ -20,6 +20,10 @@ import (
 	// authn
 	_ "github.com/yubo/apiserver/pkg/authentication/register"
 	_ "github.com/yubo/apiserver/plugin/authenticator/token/tokenfile/register"
+
+	// authz
+	_ "github.com/yubo/apiserver/pkg/authorization/register"
+	_ "github.com/yubo/apiserver/plugin/authorizer/abac/register"
 )
 
 const (
@@ -55,7 +59,7 @@ func installWs(http rest.GoRestfulContainer) {
 		Path:               "/hello",
 		GoRestfulContainer: http,
 		Routes: []rest.WsRoute{
-			{Method: "GET", SubPath: "/", Handle: hw},
+			{Method: "GET", SubPath: "/", Handle: hw, Scope: "auth"},
 		},
 	})
 }

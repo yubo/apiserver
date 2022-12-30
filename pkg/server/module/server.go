@@ -398,8 +398,7 @@ func (p *serverModule) Start(stopCh <-chan struct{}, done chan struct{}) error {
 	s := p.server
 
 	if s.EnableOpenAPI {
-		routes.OpenAPI{}.Install(
-			server.APIDocsPath,
+		err := routes.OpenAPI{}.Install(server.APIDocsPath,
 			p.server.Handler.GoRestfulContainer,
 			spec.InfoProps{
 				Description: proc.Description(),
@@ -410,6 +409,9 @@ func (p *serverModule) Start(stopCh <-chan struct{}, done chan struct{}) error {
 			},
 			s.SecuritySchemes,
 		)
+		if err != nil {
+			return err
+		}
 	}
 
 	delayedStopCh := make(chan struct{})

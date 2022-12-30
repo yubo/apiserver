@@ -8,9 +8,6 @@ import (
 
 type OpenAPI struct{}
 
-func (p OpenAPI) Install(apiPath string, container *restful.Container,
-	infoProps spec.InfoProps, securitySchemes []rest.SchemeConfig) error {
-
-	rest.InstallApiDocs(apiPath, container, infoProps, securitySchemes)
-	return nil
+func (p OpenAPI) Install(apiPath string, container *restful.Container, infoProps spec.InfoProps, securitySchemes []rest.SchemeConfig) error {
+	return rest.InstallApiDocs(apiPath, container, infoProps, securitySchemes)
 }

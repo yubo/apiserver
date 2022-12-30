@@ -3,7 +3,7 @@
 ### server
 
 ```sh
-$ go run ./main.go
+$ go run ./main.go -f ./config.yaml
 ```
 
 ### client
@@ -11,7 +11,7 @@ $ go run ./main.go
 #### curl
 
 ```sh
-$ curl -Ss  -u steve:123 http://localhost:8080/hello
+$ curl -Ss -u steve:123 http://localhost:8080/hello
 {
  "Name": "steve",
  "UID": "",

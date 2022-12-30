@@ -68,7 +68,7 @@ type Output struct {
 	User user.DefaultInfo
 }
 
-func inc(w http.ResponseWriter, req *http.Request, _ *rest.NonParam, input *Input) (*Output, error) {
+func inc(w http.ResponseWriter, req *http.Request, input *Input) (*Output, error) {
 	u, ok := request.UserFrom(req.Context())
 	if !ok {
 		return nil, fmt.Errorf("unable to get user info")

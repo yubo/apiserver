@@ -1,17 +1,17 @@
 apiserver:
   insecureServing:
+    bindAddress: 0.0.0.0
+    bindNework: tcp
     bindPort: 8080
     enabled: true
   secureServing:
     enabled: false
   securitySchemes:
-    - name: BearerToken
-      type: bearer
+    - name: BaseAuth
+      type: base
 
 authentication:
-  tokenAuthFile: ./tokens.cvs
   anonymous: true
-
 
 authorization:
   modes:
@@ -20,3 +20,5 @@ authorization:
   alwaysAllowPaths:
     - /apidocs.json
     - /swagger/*
+    - /healthz
+

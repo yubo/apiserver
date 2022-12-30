@@ -24,8 +24,9 @@ type SecurityType string
 
 const (
 	SecurityTypeBase        SecurityType = "base"
-	SecurityTypeApiKey      SecurityType = "apiKey"
-	SecurityTypeImplicit    SecurityType = "implicity"
+	SecurityTypeBearer      SecurityType = "bearer"
+	SecurityTypeAPIKey      SecurityType = "apiKey"
+	SecurityTypeImplicit    SecurityType = "implicit"
 	SecurityTypePassword    SecurityType = "password"
 	SecurityTypeApplication SecurityType = "application"
 	SecurityTypeAccessCode  SecurityType = "accessCode" // same as oauth2

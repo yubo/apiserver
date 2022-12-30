@@ -19,11 +19,7 @@ import (
 )
 
 var (
-	ScopeCatalog          = map[string]string{}
-	securitySchemeCatalog = map[string]*spec.SecurityScheme{}
-	respWriterCatalog     = map[string]RespWriter{}
-	swaggerTags           = []spec.Tag{}
-	DefaultContentTypes   = []string{MIME_JSON, MIME_ALL}
+	defaultContentTypes = []string{MIME_JSON}
 
 	defaultWebServiceBuilder = NewWebServiceBudiler()
 )
@@ -34,7 +30,6 @@ func NewWebServiceBudiler() *WebServiceBuilder {
 		securitySchemeCatalog: map[string]*spec.SecurityScheme{},
 		respWriterCatalog:     map[string]RespWriter{},
 		swaggerTags:           []spec.Tag{},
-		DefaultContentTypes:   []string{MIME_JSON},
 	}
 }
 
@@ -71,7 +66,7 @@ func SchemeRegisterBasicAuth() error {
 }
 
 func SchemeRegisterApiKey(fieldName, valueSource string) error {
-	return SecuritySchemeRegister(string(SecurityTypeApiKey),
+	return SecuritySchemeRegister(string(SecurityTypeAPIKey),
 		spec.APIKeyAuth(fieldName, valueSource))
 }
 
@@ -99,7 +94,6 @@ type WebServiceBuilder struct {
 	securitySchemeCatalog map[string]*spec.SecurityScheme
 	respWriterCatalog     map[string]RespWriter
 	swaggerTags           []spec.Tag
-	DefaultContentTypes   []string
 	AclManager            AclManager
 }
 
@@ -218,7 +212,7 @@ func (p *WebServiceBuilder) swaggerWithSecurityScheme(wss []*restful.WebService,
 
 	s.Info = &spec.Info{InfoProps: infoProps}
 	s.Tags = p.swaggerTags
-	s.SecurityDefinitions = securitySchemeCatalog
+	s.SecurityDefinitions = p.securitySchemeCatalog
 
 	if len(s.SecurityDefinitions) == 0 {
 		return
@@ -508,12 +502,12 @@ func (p *WsOption) Validate() error {
 	if len(p.Produces) > 0 {
 		p.Ws.Produces(p.Produces...)
 	} else {
-		p.Ws.Produces(DefaultContentTypes...)
+		p.Ws.Produces(defaultContentTypes...)
 	}
 	if len(p.Consumes) > 0 {
 		p.Ws.Consumes(p.Consumes...)
 	} else {
-		p.Ws.Consumes(DefaultContentTypes...)
+		p.Ws.Consumes(defaultContentTypes...)
 	}
 	if p.ParameterCodec == nil {
 		p.ParameterCodec = ParameterCodec
@@ -592,9 +586,9 @@ func toError(v reflect.Value) error {
 
 type SchemeConfig struct {
 	Name             string       `json:"name"`
-	Type             SecurityType `json:"type" description:"base|apiKey|implicit|password|application|accessCode"`
-	FieldName        string       `json:"fieldName" description:"used for apiKey"`
-	ValueSource      string       `json:"valueSource" description:"used for apiKey, header|query|cookie"`
+	Type             SecurityType `json:"type" description:"base|bearer|token|implicit|password|application|accessCode"`
+	FieldName        string       `json:"fieldName" description:"used for token"`
+	ValueSource      string       `json:"valueSource" description:"used for token, header|query|cookie"`
 	AuthorizationURL string       `json:"authorizationURL" description:"used for OAuth2"`
 	TokenURL         string       `json:"tokenURL" description:"used for OAuth2"`
 }
@@ -603,10 +597,12 @@ func (p *SchemeConfig) SecurityScheme() (*spec.SecurityScheme, error) {
 	if p.Name == "" {
 		return nil, errors.New("name must be set")
 	}
-	switch p.Type {
-	case SecurityTypeBase:
+	switch strings.ToLower(string(p.Type)) {
+	case string(SecurityTypeBase):
 		return spec.BasicAuth(), nil
-	case SecurityTypeApiKey:
+	case string(SecurityTypeBearer):
+		return spec.APIKeyAuth("Authorization", "header"), nil
+	case string(SecurityTypeAPIKey):
 		if p.FieldName == "" {
 			return nil, errors.Errorf("fieldName must be set for %s", p.Type)
 		}
@@ -614,22 +610,22 @@ func (p *SchemeConfig) SecurityScheme() (*spec.SecurityScheme, error) {
 			return nil, errors.Errorf("valueSource must be set for %s", p.Type)
 		}
 		return spec.APIKeyAuth(p.FieldName, p.ValueSource), nil
-	case SecurityTypeImplicit:
+	case string(SecurityTypeImplicit):
 		if p.AuthorizationURL == "" {
 			return nil, errors.Errorf("authorizationURL must be set for %s", p.Type)
 		}
 		return spec.OAuth2Implicit(p.AuthorizationURL), nil
-	case SecurityTypePassword:
+	case string(SecurityTypePassword):
 		if p.TokenURL == "" {
 			return nil, errors.Errorf("tokenURL must be set for %s", p.Type)
 		}
 		return spec.OAuth2Password(p.TokenURL), nil
-	case SecurityTypeApplication:
+	case string(SecurityTypeApplication):
 		if p.TokenURL == "" {
 			return nil, errors.Errorf("tokenURL must be set for %s", p.Type)
 		}
 		return spec.OAuth2Application(p.TokenURL), nil
-	case SecurityTypeAccessCode:
+	case string(SecurityTypeAccessCode):
 		if p.TokenURL == "" {
 			return nil, errors.Errorf("tokenURL must be set for %s", p.Type)
 		}
@@ -641,7 +637,8 @@ func (p *SchemeConfig) SecurityScheme() (*spec.SecurityScheme, error) {
 		return nil, errors.Errorf("scheme.type %s is invalid, should be one of %s", p.Type,
 			strings.Join([]string{
 				string(SecurityTypeBase),
-				string(SecurityTypeApiKey),
+				string(SecurityTypeBearer),
+				string(SecurityTypeAPIKey),
 				string(SecurityTypeImplicit),
 				string(SecurityTypePassword),
 				string(SecurityTypeApplication),

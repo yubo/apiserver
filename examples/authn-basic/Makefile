@@ -2,4 +2,4 @@ all: run
 
 .PHONY: run
 run:
-	go run ./main.go
+	go run ./main.go -f ./config.yaml
