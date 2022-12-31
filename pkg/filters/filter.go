@@ -6,6 +6,7 @@ import (
 
 	"github.com/emicklei/go-restful/v3"
 	"github.com/yubo/apiserver/pkg/request"
+	httplib "github.com/yubo/golib/net/http"
 	"github.com/yubo/golib/stream/wsstream"
 	"k8s.io/klog/v2"
 )
@@ -28,8 +29,15 @@ func WithHttpDump(handler http.Handler) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		if !wsstream.IsWebSocketRequest(req) {
-			b, err := httputil.DumpRequest(req, true)
-			klog.InfoS("httpdump", "req", string(b), "err", err)
+			// req
+			b1, e1 := httputil.DumpRequest(req, true)
+			recorder := httplib.NewResponseWriterRecorder(w, req)
+			w = recorder
+
+			defer func() {
+				b2, e2 := recorder.Dump(true)
+				klog.InfoS("httpdump", "req", string(b1), "req_err", e1, "resp", string(b2), "resp_err", e2)
+			}()
 		}
 
 		handler.ServeHTTP(w, req)

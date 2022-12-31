@@ -36,9 +36,9 @@ import (
 	"github.com/yubo/apiserver/pkg/metrics"
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/golib/runtime"
+	"github.com/yubo/golib/stream/wsstream"
 	"github.com/yubo/golib/util/flushwriter"
 	utilruntime "github.com/yubo/golib/util/runtime"
-	"github.com/yubo/golib/stream/wsstream"
 
 	//utilfeature "github.com/yubo/golib/util/feature"
 	utiltrace "github.com/yubo/golib/util/trace"
@@ -318,7 +318,7 @@ func ErrorNegotiated(err error, s runtime.NegotiatedSerializer, w http.ResponseW
 
 // WriteRawJSON writes a non-API object in JSON.
 func WriteRawJSON(statusCode int, object interface{}, w http.ResponseWriter) {
-	output, err := json.MarshalIndent(object, "", "  ")
+	output, err := json.Marshal(object)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
