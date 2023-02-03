@@ -1,18 +1,19 @@
-client-go/rest -> .
-client-go/rest/transport -> ./transport
-client-go/plugin/pkg/client/auth -> ./auth
-
 ## param tag
-- param:<type>[,request][,hiddent]
-    - type: (path|header|param|data)
+- param:"(path|header|query)?(,required|hidden)?"
 - name
-- json
+  * `name:"username"`
 - format
+  * `format:"password"`
 - description
+  * `description:"user name"`
 - enum
+  * `enum:"ture|false"`
 - maximum
+  * `maximum:"200"`
 - minimum
+  * `minimum:"5"`
 - default
+  * `default:"10"`
 
 
 ## rest

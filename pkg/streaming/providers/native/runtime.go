@@ -11,8 +11,8 @@ import (
 	"github.com/yubo/apiserver/pkg/streaming"
 	"github.com/yubo/golib/api/errors"
 	"github.com/yubo/golib/stream"
-	"github.com/yubo/golib/util/rand"
 	"github.com/yubo/golib/term"
+	"github.com/yubo/golib/util/rand"
 	"k8s.io/klog/v2"
 )
 

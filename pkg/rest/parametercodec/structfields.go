@@ -64,7 +64,7 @@ func cachedTypeFields(t reflect.Type) structFields {
 	return f.(structFields)
 }
 
-// typeFields returns a list of fields that JSON should recognize for the given type.
+// typeFields returns a list of fields that should recognize for the given type.
 // The algorithm is breadth-first search over the set of structs to include - the top struct
 // and then any reachable anonymous structs.
 func typeFields(t reflect.Type) structFields {
@@ -187,11 +187,11 @@ func getSubv(rv reflect.Value, index []int, allowCreate bool) (reflect.Value, er
 	return subv, nil
 }
 
-// tagOptions is the string following a comma in a struct field's "json"
+// tagOptions is the string following a comma in a struct field's
 // tag, or the empty string. It does not include the leading comma.
 type tagOptions string
 
-// parseTag splits a struct field's json tag into its name and
+// parseTag splits a struct field's tag into its name and
 // comma-separated options.
 func parseTag(tag string) (string, tagOptions) {
 	if idx := strings.Index(tag, ","); idx != -1 {
@@ -222,9 +222,8 @@ func (o tagOptions) Contains(optionName string) bool {
 	return false
 }
 
-// `param:"(path|header|param)?(,required|hidden)?"`
+// `param:"(path|header|query)?(,required|hidden)?"`
 // `name:"keyName"`
-// `json:"keyName"`
 // `format:"password"`
 // `description:"ooxxoo"`
 // func getTags(ff reflect.StructField) (name, paramType, format string, skip, bool) {

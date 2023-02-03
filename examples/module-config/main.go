@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/yubo/golib/proc"
-	"github.com/yubo/golib/yaml"
+	"github.com/yubo/golib/util/yaml"
 )
 
 const (

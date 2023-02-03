@@ -9,7 +9,6 @@ import (
 	"github.com/yubo/apiserver/pkg/audit"
 	"github.com/yubo/apiserver/pkg/handlers/negotiation"
 	"github.com/yubo/apiserver/pkg/request"
-	"github.com/yubo/apiserver/pkg/responsewriters"
 	"github.com/yubo/golib/runtime"
 	"github.com/yubo/golib/util/errors"
 )
@@ -162,7 +161,7 @@ func (p *routeHandle) Handler() func(req *restful.Request, resp *restful.Respons
 		body := newInterface(p.body)
 
 		if err := p.readEntity(req, param, body); err != nil {
-			responsewriters.ErrorNegotiated(err, p.serializer, resp.ResponseWriter, req.Request)
+			p.respWriter.RespWrite(resp, req.Request, nil, err, p.serializer)
 			return
 		}
 

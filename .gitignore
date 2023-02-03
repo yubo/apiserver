@@ -7,3 +7,4 @@ shell/
 *.bak
 *.log
 *.tar.gz
+r.sh

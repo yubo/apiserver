@@ -342,7 +342,7 @@ func (s *singleBenchmark) makeTokens() {
 		// make different combinations of audience, failures, denies for the tokens.
 		auds := []string{}
 		for i := 0; i < rr.Intn(4); i++ {
-			auds = append(auds, string(util.NewUUID()))
+			auds = append(auds, util.NewUUID())
 		}
 		choice := rr.Float64()
 		switch {
