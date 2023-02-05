@@ -33,8 +33,8 @@ import (
 	"testing"
 	"time"
 
-	rest "github.com/yubo/apiserver/pkg/client"
-	v1 "github.com/yubo/apiserver/tools/clientcmd/api/v1"
+	"github.com/yubo/client-go/rest"
+	v1 "github.com/yubo/client-go/tools/clientcmd/api/v1"
 	"github.com/yubo/golib/api"
 	apierrors "github.com/yubo/golib/api/errors"
 	"github.com/yubo/golib/scheme"

@@ -20,8 +20,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	rest "github.com/yubo/apiserver/pkg/client"
-	clientcmdapi "github.com/yubo/apiserver/tools/clientcmd/api"
+	"github.com/yubo/client-go/rest"
+	clientcmdapi "github.com/yubo/client-go/tools/clientcmd/api"
 )
 
 func TestAuthenticationDetection(t *testing.T) {

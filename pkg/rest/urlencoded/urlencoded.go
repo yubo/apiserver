@@ -31,11 +31,15 @@ func WithSerializer(options *serializer.CodecFactoryOptions) {
 }
 
 func NewSerializer() *Serializer {
-	return &Serializer{}
+	return &Serializer{
+		identifier: runtime.Identifier("url_encoded"),
+	}
 }
 
 // Serializer handles encoding versioned objects into the proper wire form
-type Serializer struct{}
+type Serializer struct {
+	identifier runtime.Identifier
+}
 
 var _ runtime.Serializer = &Serializer{}
 var _ restful.EntityReaderWriter = &Serializer{}
@@ -52,6 +56,11 @@ func (s *Serializer) Decode(data []byte, into runtime.Object) (runtime.Object, e
 // Encode serializes the provided object to the given writer.
 func (s *Serializer) Encode(obj runtime.Object, w io.Writer) error {
 	return NewEncoder(w).Encode(obj)
+}
+
+// Identifier implements runtime.Encoder interface.
+func (s *Serializer) Identifier() runtime.Identifier {
+	return s.identifier
 }
 
 // Read unmarshalls the value from byte slice and using urlencoded to unmarshal

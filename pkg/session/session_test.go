@@ -12,9 +12,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/yubo/apiserver/pkg/session/types"
-	"github.com/yubo/apiserver/pkg/storage"
+	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/orm"
 	"github.com/yubo/golib/util/clock"
+	testingclock "github.com/yubo/golib/util/clock/testing"
 
 	_ "github.com/yubo/golib/orm/mysql"
 	_ "github.com/yubo/golib/orm/sqlite"
@@ -74,7 +75,7 @@ func TestDbSession(t *testing.T) {
 		sessCtx, err = sm.Start(w, req)
 		assert.NoError(t, err)
 
-		list, err := sessions.List(context.TODO(), &storage.ListOptions{})
+		list, err := sessions.List(context.TODO(), &api.GetListOptions{})
 		assert.NoError(t, err)
 		assert.Equal(t, 1, len(list))
 
@@ -109,14 +110,14 @@ func TestDbSession(t *testing.T) {
 		sessCtx.Set("abc", "22334455")
 		assert.Equal(t, "22334455", sessCtx.Get("abc"))
 
-		list, err = sessions.List(context.TODO(), &storage.ListOptions{})
+		list, err = sessions.List(context.TODO(), &api.GetListOptions{})
 		assert.NoError(t, err)
 		assert.Equal(t, 1, len(list))
 
 		err = sm.Destroy(w, req)
 		assert.NoError(t, err)
 
-		list, err = sessions.List(context.TODO(), &storage.ListOptions{})
+		list, err = sessions.List(context.TODO(), &api.GetListOptions{})
 		assert.NoError(t, err)
 		assert.Equal(t, 0, len(list))
 	})
@@ -126,7 +127,7 @@ func TestDbSessionGC(t *testing.T) {
 	runTests(t, func(sessions *SessionConn) {
 		ctx, cancel := context.WithCancel(context.TODO())
 		cf := newConfig()
-		clock := &clock.FakeClock{}
+		clock := &testingclock.FakeClock{}
 		clock.SetTime(time.Now())
 		orm.SetClock(clock)
 
@@ -146,14 +147,14 @@ func TestDbSessionGC(t *testing.T) {
 		_, err := sm.Start(w, r)
 		assert.NoError(t, err)
 
-		list, err := sessions.List(context.TODO(), &storage.ListOptions{})
+		list, err := sessions.List(context.TODO(), &api.GetListOptions{})
 		assert.NoError(t, err)
 		assert.Equal(t, 1, len(list))
 
 		clock.SetTime(clock.Now().Add(time.Hour * 25))
 		time.Sleep(100 * time.Millisecond)
 
-		list, err = sessions.List(context.TODO(), &storage.ListOptions{})
+		list, err = sessions.List(context.TODO(), &api.GetListOptions{})
 		assert.NoError(t, err)
 		assert.Equal(t, 0, len(list))
 	})

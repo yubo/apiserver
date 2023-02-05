@@ -27,6 +27,7 @@ import (
 	"github.com/emicklei/go-restful/v3"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/api/validation/path"
+	"github.com/yubo/golib/fields"
 	"github.com/yubo/golib/util/sets"
 	"k8s.io/klog/v2"
 )
@@ -92,23 +93,17 @@ type RequestInfoFactory struct {
 type ParameterCodec interface {
 	// DecodeParameters takes the given url.Values in the specified group version and decodes them
 	// into the provided object, or returns an error.
-	DecodeParameters(parameter *Parameters, into interface{}) error
+	DecodeParameters(parameter *api.Parameters, into interface{}) error
 	// EncodeParameters encodes the provided object as query parameters or returns an error.
-	EncodeParameters(obj interface{}) (*Parameters, error)
+	EncodeParameters(obj interface{}) (*api.Parameters, error)
 
 	RouteBuilderParameters(rb *restful.RouteBuilder, obj interface{})
 
 	ValidateParamType(rt reflect.Type) error
 }
 
-type Parameters struct {
-	Header http.Header
-	Query  url.Values
-	Path   map[string]string
-}
-
-func NewParameters() *Parameters {
-	return &Parameters{
+func NewParameters() *api.Parameters {
+	return &api.Parameters{
 		Header: make(http.Header),
 		Query:  make(url.Values),
 		Path:   make(map[string]string),
@@ -240,7 +235,7 @@ func (r *RequestInfoFactory) NewRequestInfo(req *http.Request) (*RequestInfo, er
 	// if there's no name on the request and we thought it was a get before, then the actual verb is a list or a watch
 	if len(requestInfo.Name) == 0 && requestInfo.Verb == "get" {
 		opts := api.ListOptions{}
-		if err := r.ParameterCodec.DecodeParameters(&Parameters{Query: req.URL.Query()}, &opts); err != nil {
+		if err := r.ParameterCodec.DecodeParameters(&api.Parameters{Query: req.URL.Query()}, &opts); err != nil {
 			// An error in parsing request will result in default to "list" and not setting "name" field.
 			klog.ErrorS(err, "Couldn't parse request", "Request", req.URL.Query())
 			// Reset opts to not rely on partial results from parsing.
@@ -261,10 +256,13 @@ func (r *RequestInfoFactory) NewRequestInfo(req *http.Request) (*RequestInfo, er
 			requestInfo.Verb = "list"
 		}
 
-		if opts.FieldSelector != nil {
-			if name, ok := opts.FieldSelector.RequiresExactMatch("metadata.name"); ok {
-				if len(path.IsValidPathSegmentName(name)) == 0 {
-					requestInfo.Name = name
+		if opts.FieldSelector != "" {
+			selector, err := fields.ParseSelector(opts.FieldSelector)
+			if err != nil {
+				if name, ok := selector.RequiresExactMatch("metadata.name"); ok {
+					if len(path.IsValidPathSegmentName(name)) == 0 {
+						requestInfo.Name = name
+					}
 				}
 			}
 		}

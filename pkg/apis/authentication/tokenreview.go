@@ -19,7 +19,8 @@ package authentication
 import (
 	"context"
 
-	rest "github.com/yubo/apiserver/pkg/client"
+	"github.com/yubo/apiserver/pkg/scheme"
+	"github.com/yubo/client-go/rest"
 	"github.com/yubo/golib/api"
 )
 
@@ -52,7 +53,7 @@ func (c *tokenReviews) Create(ctx context.Context, tokenReview *TokenReview, opt
 	result = &TokenReview{}
 	err = c.client.Post().
 		Resource("tokenreviews").
-		VersionedParams(&opts, rest.ParameterCodec).
+		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(tokenReview).
 		Do(ctx).
 		Into(result)

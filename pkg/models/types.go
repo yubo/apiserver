@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/yubo/apiserver/pkg/storage"
+	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/runtime"
 )
 
@@ -22,10 +23,10 @@ func (p ModelStore) Create(ctx context.Context, name string, obj, out runtime.Ob
 	return p.store.Create(ctx, p.resource+"/"+name, obj, out)
 }
 func (p ModelStore) Get(ctx context.Context, name string, ignoreNotFound bool, out runtime.Object) error {
-	return p.store.Get(ctx, p.resource+"/"+name, storage.GetOptions{IgnoreNotFound: ignoreNotFound}, out)
+	return p.store.Get(ctx, p.resource+"/"+name, api.GetOptions{IgnoreNotFound: ignoreNotFound}, out)
 }
 
-func (p ModelStore) List(ctx context.Context, opts storage.ListOptions, out runtime.Object, count *int) error {
+func (p ModelStore) List(ctx context.Context, opts api.GetListOptions, out runtime.Object, count *int) error {
 	return p.store.List(ctx, p.resource, opts, out, count)
 }
 

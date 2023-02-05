@@ -6,8 +6,11 @@ import (
 
 	"github.com/go-openapi/spec"
 	"github.com/spf13/cobra"
-	"github.com/yubo/apiserver/pkg/version"
-	"github.com/yubo/golib/proc"
+	"github.com/yubo/apiserver/components/version"
+	"github.com/yubo/apiserver/pkg/proc"
+	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
+
+	_ "github.com/yubo/apiserver/components/logs/json/register"
 
 	_ "github.com/yubo/golib/orm/mysql"
 	_ "github.com/yubo/golib/orm/sqlite"
@@ -65,11 +68,11 @@ func newConfig() *config {
 }
 
 var (
-	hookOps = []proc.HookOps{{
+	hookOps = []v1.HookOps{{
 		Hook:     start,
 		Owner:    moduleName,
-		HookNum:  proc.ACTION_START,
-		Priority: proc.PRI_MODULE,
+		HookNum:  v1.ACTION_START,
+		Priority: v1.PRI_MODULE,
 	}}
 	license = spec.License{
 		LicenseProps: spec.LicenseProps{

@@ -8,13 +8,13 @@ import (
 	"path"
 	"strings"
 
-	"github.com/yubo/apiserver/pkg/options"
+	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/responsewriters"
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/apiserver/pkg/s3"
 	server "github.com/yubo/apiserver/pkg/server/module"
-	"github.com/yubo/golib/cli"
-	"github.com/yubo/golib/proc"
+	"github.com/yubo/apiserver/components/cli"
+	"github.com/yubo/apiserver/pkg/proc"
 	"github.com/yubo/golib/scheme"
 
 	_ "github.com/yubo/apiserver/pkg/s3/register"
@@ -32,11 +32,11 @@ type module struct {
 
 var (
 	_module = &module{name: moduleName}
-	hookOps = []proc.HookOps{{
+	hookOps = []v1.HookOps{{
 		Hook:     _module.start,
 		Owner:    moduleName,
-		HookNum:  proc.ACTION_START,
-		Priority: proc.PRI_MODULE,
+		HookNum:  v1.ACTION_START,
+		Priority: v1.PRI_MODULE,
 	}}
 )
 

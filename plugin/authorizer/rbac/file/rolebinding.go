@@ -6,7 +6,7 @@ import (
 
 	"github.com/yubo/apiserver/pkg/apis/rbac"
 	"github.com/yubo/apiserver/pkg/listers"
-	"github.com/yubo/apiserver/pkg/storage"
+	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/api/errors"
 )
 
@@ -21,7 +21,7 @@ func NewRoleBindingLister(f *FileStorage) listers.RoleBindingLister {
 }
 
 // List lists all RoleBindings in the indexer.
-func (p *roleBindingLister) List(ctx context.Context, opts storage.ListOptions) (ret []*rbac.RoleBinding, err error) {
+func (p *roleBindingLister) List(ctx context.Context, opts api.GetListOptions) (ret []*rbac.RoleBinding, err error) {
 	return p.roleBindings, nil
 }
 

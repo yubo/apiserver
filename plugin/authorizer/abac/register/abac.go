@@ -8,7 +8,7 @@ import (
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	"github.com/yubo/apiserver/plugin/authorizer/abac"
 	"github.com/yubo/apiserver/plugin/authorizer/abac/api"
-	"github.com/yubo/golib/proc"
+	"github.com/yubo/apiserver/pkg/proc"
 	"github.com/yubo/golib/util/errors"
 )
 

@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/yubo/apiserver/pkg/apis/rbac"
-	"github.com/yubo/apiserver/pkg/storage"
+	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/orm"
 )
 
@@ -36,7 +36,7 @@ func (p *ClusterRoleBinding) Get(ctx context.Context, name string) (ret *rbac.Cl
 }
 
 // List lists all ClusterRoleBindings in the indexer.
-func (p *ClusterRoleBinding) List(ctx context.Context, o storage.ListOptions) (list []*rbac.ClusterRoleBinding, err error) {
+func (p *ClusterRoleBinding) List(ctx context.Context, o api.GetListOptions) (list []*rbac.ClusterRoleBinding, err error) {
 	err = p.DB.List(ctx, &list,
 		orm.WithTable(p.Name()),
 		orm.WithTotal(o.Total),

@@ -18,14 +18,15 @@ import (
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	"github.com/yubo/apiserver/pkg/authorization/authorizerfactory"
 	authorizerunion "github.com/yubo/apiserver/pkg/authorization/union"
-	restclient "github.com/yubo/apiserver/pkg/client"
 	"github.com/yubo/apiserver/pkg/dynamiccertificates"
 	"github.com/yubo/apiserver/pkg/filters"
 	apirequest "github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/rest"
+	"github.com/yubo/apiserver/pkg/scheme"
 	"github.com/yubo/apiserver/pkg/server/healthz"
 	"github.com/yubo/apiserver/pkg/server/routes"
 	sessionfilter "github.com/yubo/apiserver/pkg/session/filter"
+	restclient "github.com/yubo/client-go/rest"
 	"github.com/yubo/golib/runtime"
 	utilnet "github.com/yubo/golib/util/net"
 	"github.com/yubo/golib/util/sets"
@@ -265,7 +266,7 @@ func NewRequestInfoResolver(c *Config) *apirequest.RequestInfoFactory {
 	return &apirequest.RequestInfoFactory{
 		APIPrefixes:          apiPrefixes,
 		GrouplessAPIPrefixes: legacyAPIPrefixes,
-		ParameterCodec:       restclient.ParameterCodec,
+		ParameterCodec:       scheme.ParameterCodec,
 	}
 }
 

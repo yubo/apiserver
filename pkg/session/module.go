@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"github.com/yubo/apiserver/pkg/models"
-	"github.com/yubo/apiserver/pkg/options"
+	"github.com/yubo/apiserver/pkg/proc"
+	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
 	"github.com/yubo/apiserver/pkg/session/filter"
-	"github.com/yubo/golib/proc"
 )
 
 // depend "github.com/yubo/apiserver/pkg/models/register"
@@ -17,12 +17,12 @@ const (
 
 var (
 	module  = &sessionModule{}
-	hookOps = []proc.HookOps{{
+	hookOps = []v1.HookOps{{
 		Hook:        module.init,
 		Owner:       moduleName,
-		HookNum:     proc.ACTION_START,
-		Priority:    proc.PRI_SYS_INIT,
-		SubPriority: options.PRI_M_AUTHN - 1,
+		HookNum:     v1.ACTION_START,
+		Priority:    v1.PRI_SYS_INIT,
+		SubPriority: v1.PRI_M_AUTHN - 1,
 	}}
 )
 

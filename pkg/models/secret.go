@@ -3,7 +3,6 @@ package models
 import (
 	"context"
 
-	"github.com/yubo/apiserver/pkg/storage"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/orm"
 )
@@ -38,7 +37,7 @@ func (p *Secret) Get(ctx context.Context, name string) (ret *api.Secret, err err
 }
 
 // List lists all Secrets in the indexer.
-func (p *Secret) List(ctx context.Context, o storage.ListOptions) (list []*api.Secret, err error) {
+func (p *Secret) List(ctx context.Context, o api.GetListOptions) (list []*api.Secret, err error) {
 	err = p.DB.List(ctx, &list,
 		orm.WithTable(p.Name()),
 		orm.WithTotal(o.Total),

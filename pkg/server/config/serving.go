@@ -13,7 +13,7 @@ import (
 
 	"github.com/yubo/apiserver/pkg/dynamiccertificates"
 	"github.com/yubo/apiserver/pkg/server"
-	cliflag "github.com/yubo/golib/cli/flag"
+	cliflag "github.com/yubo/apiserver/components/cli/flag"
 	"github.com/yubo/golib/configer"
 	utilcert "github.com/yubo/golib/util/cert"
 	utilerrors "github.com/yubo/golib/util/errors"

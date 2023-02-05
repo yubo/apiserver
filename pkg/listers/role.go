@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/yubo/apiserver/pkg/apis/rbac"
-	"github.com/yubo/apiserver/pkg/storage"
+	"github.com/yubo/golib/api"
 )
 
 // RoleLister helps list Roles.
@@ -12,6 +12,6 @@ import (
 type RoleLister interface {
 	// List lists all Roles in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(ctx context.Context, opts storage.ListOptions) (list []*rbac.Role, err error)
+	List(ctx context.Context, opts api.GetListOptions) (list []*rbac.Role, err error)
 	Get(ctx context.Context, name string) (*rbac.Role, error)
 }

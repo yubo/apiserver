@@ -9,11 +9,12 @@ import (
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	"github.com/yubo/apiserver/pkg/authorization/authorizerfactory"
 	"github.com/yubo/apiserver/pkg/authorization/union"
-	"github.com/yubo/apiserver/pkg/options"
+	"github.com/yubo/apiserver/pkg/proc"
+	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
+	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/server"
 	"github.com/yubo/apiserver/plugin/authorizer/path"
 	"github.com/yubo/golib/configer"
-	"github.com/yubo/golib/proc"
 	"github.com/yubo/golib/util"
 	utilerrors "github.com/yubo/golib/util/errors"
 	"github.com/yubo/golib/util/sets"
@@ -34,18 +35,18 @@ var (
 		name:                moduleName,
 		authorizerFactories: map[string]authorizer.AuthorizerFactory{},
 	}
-	hookOps = []proc.HookOps{{
+	hookOps = []v1.HookOps{{
 		Hook:        _authz.init,
 		Owner:       moduleName,
-		HookNum:     proc.ACTION_START,
-		Priority:    proc.PRI_SYS_INIT,
-		SubPriority: options.PRI_M_AUTHZ,
+		HookNum:     v1.ACTION_START,
+		Priority:    v1.PRI_SYS_INIT,
+		SubPriority: v1.PRI_M_AUTHZ,
 	}, {
 		Hook:        _authz.stop,
 		Owner:       moduleName,
-		HookNum:     proc.ACTION_STOP,
-		Priority:    proc.PRI_SYS_START,
-		SubPriority: options.PRI_M_AUTHZ,
+		HookNum:     v1.ACTION_STOP,
+		Priority:    v1.PRI_SYS_START,
+		SubPriority: v1.PRI_M_AUTHZ,
 	}}
 	//Config *config
 

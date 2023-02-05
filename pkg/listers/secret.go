@@ -3,7 +3,6 @@ package listers
 import (
 	"context"
 
-	"github.com/yubo/apiserver/pkg/storage"
 	"github.com/yubo/golib/api"
 )
 
@@ -12,7 +11,7 @@ import (
 type SecretLister interface {
 	// List lists all Secrets in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(ctx context.Context, opts storage.ListOptions) ([]*api.Secret, error)
+	List(ctx context.Context, opts api.GetListOptions) ([]*api.Secret, error)
 	// Get retrieves the Secret from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
 	Get(ctx context.Context, name string) (*api.Secret, error)

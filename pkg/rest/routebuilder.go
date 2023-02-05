@@ -12,8 +12,8 @@ import (
 	"github.com/yubo/apiserver/pkg/metrics"
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/rest/urlencoded"
+	"github.com/yubo/apiserver/pkg/scheme"
 	"github.com/yubo/golib/runtime"
-	"github.com/yubo/golib/scheme"
 	"github.com/yubo/golib/util/errors"
 	"k8s.io/klog/v2"
 )
@@ -510,7 +510,7 @@ func (p *WsOption) Validate() error {
 		p.Ws.Consumes(defaultContentTypes...)
 	}
 	if p.ParameterCodec == nil {
-		p.ParameterCodec = ParameterCodec
+		p.ParameterCodec = scheme.ParameterCodec
 	}
 	if p.RespWriter == nil {
 		p.RespWriter = DefaultRespWriter

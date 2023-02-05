@@ -33,7 +33,7 @@ import (
 
 	"github.com/yubo/apiserver/pkg/dynamiccertificates"
 	"github.com/yubo/apiserver/pkg/metrics"
-	"github.com/yubo/golib/cli/flag"
+	"github.com/yubo/apiserver/components/cli/flag"
 	utilruntime "github.com/yubo/golib/util/runtime"
 )
 

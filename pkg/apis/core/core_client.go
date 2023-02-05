@@ -17,7 +17,7 @@ limitations under the License.
 package core
 
 import (
-	rest "github.com/yubo/apiserver/pkg/client"
+	"github.com/yubo/client-go/rest"
 	"github.com/yubo/golib/scheme"
 )
 

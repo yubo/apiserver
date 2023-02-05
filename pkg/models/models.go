@@ -5,14 +5,15 @@ import (
 	"fmt"
 
 	"github.com/yubo/apiserver/pkg/db"
-	"github.com/yubo/apiserver/pkg/options"
+	"github.com/yubo/apiserver/pkg/proc"
+	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
+	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/storage"
 	dbstore "github.com/yubo/apiserver/pkg/storage/db"
 	"github.com/yubo/apiserver/pkg/storage/etcd"
 	"github.com/yubo/apiserver/pkg/storage/file"
 	"github.com/yubo/apiserver/pkg/storage/mem"
 	"github.com/yubo/golib/orm"
-	"github.com/yubo/golib/proc"
 	"github.com/yubo/golib/util/errors"
 )
 
@@ -50,20 +51,20 @@ var (
 		name:     moduleName,
 		registry: make(map[string]Model),
 	}
-	hookOps = []proc.HookOps{{
+	hookOps = []v1.HookOps{{
 		Hook:        _module.init,
 		Owner:       moduleName,
-		HookNum:     proc.ACTION_START,
-		Priority:    proc.PRI_SYS_INIT,
-		SubPriority: options.PRI_M_DB + 1,
+		HookNum:     v1.ACTION_START,
+		Priority:    v1.PRI_SYS_INIT,
+		SubPriority: v1.PRI_M_DB + 1,
 	}, {
 		// after moduels start
 		// before services start
 		Hook:        _module.preStart,
 		Owner:       moduleName,
-		HookNum:     proc.ACTION_START,
-		Priority:    proc.PRI_SYS_PRESTART,
-		SubPriority: options.PRI_M_DB + 1,
+		HookNum:     v1.ACTION_START,
+		Priority:    v1.PRI_SYS_PRESTART,
+		SubPriority: v1.PRI_M_DB + 1,
 	}}
 )
 

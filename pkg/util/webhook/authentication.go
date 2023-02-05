@@ -25,9 +25,9 @@ import (
 	"strings"
 	"time"
 
-	rest "github.com/yubo/apiserver/pkg/client"
-	"github.com/yubo/apiserver/tools/clientcmd"
-	clientcmdapi "github.com/yubo/apiserver/tools/clientcmd/api"
+	"github.com/yubo/client-go/rest"
+	"github.com/yubo/client-go/tools/clientcmd"
+	clientcmdapi "github.com/yubo/client-go/tools/clientcmd/api"
 	"github.com/yubo/golib/api"
 )
 

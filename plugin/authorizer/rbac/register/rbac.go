@@ -8,7 +8,7 @@ import (
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	"github.com/yubo/apiserver/plugin/authorizer/rbac/db"
 	"github.com/yubo/apiserver/plugin/authorizer/rbac/file"
-	"github.com/yubo/golib/proc"
+	"github.com/yubo/apiserver/pkg/proc"
 	"github.com/yubo/golib/util/errors"
 	"k8s.io/klog/v2"
 )

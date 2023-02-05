@@ -8,7 +8,7 @@ import (
 	"net/http"
 
 	"github.com/yubo/apiserver/pkg/authentication/user"
-	"github.com/yubo/apiserver/pkg/options"
+	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/rest"
 )

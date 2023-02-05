@@ -15,7 +15,7 @@ type Demo interface {
 	Name() string
 	NewObj() interface{}
 
-	List(ctx context.Context, opts storage.ListOptions) ([]*api.Demo, error)
+	List(ctx context.Context, opts api.GetListOptions) ([]*api.Demo, error)
 	Get(ctx context.Context, name string) (*api.Demo, error)
 	Create(ctx context.Context, obj *api.Demo) (*api.Demo, error)
 	Update(ctx context.Context, obj *api.Demo) (*api.Demo, error)
@@ -55,7 +55,7 @@ func (p *demo) Get(ctx context.Context, name string) (ret *api.Demo, err error) 
 }
 
 // List lists all Secrets in the indexer.
-func (p *demo) List(ctx context.Context, opts storage.ListOptions) (list []*api.Demo, err error) {
+func (p *demo) List(ctx context.Context, opts api.GetListOptions) (list []*api.Demo, err error) {
 	err = p.store.List(ctx, opts, &list, opts.Total)
 	return
 }

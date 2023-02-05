@@ -6,7 +6,7 @@ import (
 	"github.com/yubo/apiserver/pkg/authentication"
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/plugin/authenticator/token/tokenfile"
-	"github.com/yubo/golib/proc"
+	"github.com/yubo/apiserver/pkg/proc"
 	"k8s.io/klog/v2"
 )
 

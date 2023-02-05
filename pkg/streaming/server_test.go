@@ -29,12 +29,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	restclient "github.com/yubo/apiserver/pkg/client"
-	"github.com/yubo/apiserver/pkg/client/transport/spdy"
-	runtimeapi "github.com/yubo/apiserver/pkg/streaming/api"
-	kubeletportforward "github.com/yubo/apiserver/pkg/streaming/portforward"
-	"github.com/yubo/apiserver/tools/remotecommand"
+	"github.com/yubo/apiserver/pkg/streaming/portforward"
+	"github.com/yubo/client-go/rest"
+	"github.com/yubo/client-go/tools/remotecommand"
+	"github.com/yubo/client-go/transport/spdy"
 	"github.com/yubo/golib/api"
+	runtimeapi "github.com/yubo/golib/api"
 	"github.com/yubo/golib/term"
 )
 
@@ -281,10 +281,10 @@ func TestServePortForward(t *testing.T) {
 	reqURL, err := url.Parse(resp.Url)
 	require.NoError(t, err)
 
-	transport, upgrader, err := spdy.RoundTripperFor(&restclient.Config{})
+	transport, upgrader, err := spdy.RoundTripperFor(&rest.Config{})
 	require.NoError(t, err)
 	dialer := spdy.NewDialer(upgrader, &http.Client{Transport: transport}, "POST", reqURL)
-	streamConn, _, err := dialer.Dial(kubeletportforward.ProtocolV1Name)
+	streamConn, _, err := dialer.Dial(portforward.ProtocolV1Name)
 	require.NoError(t, err)
 	defer streamConn.Close()
 
@@ -347,7 +347,7 @@ func runRemoteCommandTest(t *testing.T, commandType string) {
 
 	go func() {
 		defer wg.Done()
-		exec, err := remotecommand.NewSPDYExecutor(&restclient.Config{}, "POST", reqURL)
+		exec, err := remotecommand.NewSPDYExecutor(&rest.Config{}, "POST", reqURL)
 		require.NoError(t, err)
 
 		opts := remotecommand.StreamOptions{

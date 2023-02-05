@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"net"
 
-	restclient "github.com/yubo/apiserver/pkg/client"
+	"github.com/yubo/client-go/rest"
 	netutils "github.com/yubo/golib/util/net"
 )
 
@@ -28,7 +28,7 @@ import (
 // select the loopback certificate via SNI if TLS is used.
 const LoopbackClientServerNameOverride = "apiserver-loopback-client"
 
-func (s *SecureServingInfo) NewClientConfig(caCert []byte) (*restclient.Config, error) {
+func (s *SecureServingInfo) NewClientConfig(caCert []byte) (*rest.Config, error) {
 	if s == nil || (s.Cert == nil && len(s.SNICerts) == 0) {
 		return nil, nil
 	}
@@ -38,19 +38,19 @@ func (s *SecureServingInfo) NewClientConfig(caCert []byte) (*restclient.Config, 
 		return nil, err
 	}
 
-	return &restclient.Config{
+	return &rest.Config{
 		// Do not limit loopback client QPS.
 		QPS:  -1,
 		Host: "https://" + net.JoinHostPort(host, port),
 		// override the ServerName to select our loopback certificate via SNI. This name is also
 		// used by the client to compare the returns server certificate against.
-		TLSClientConfig: restclient.TLSClientConfig{
+		TLSClientConfig: rest.TLSClientConfig{
 			CAData: caCert,
 		},
 	}, nil
 }
 
-func (s *SecureServingInfo) NewLoopbackClientConfig(token string, loopbackCert []byte) (*restclient.Config, error) {
+func (s *SecureServingInfo) NewLoopbackClientConfig(token string, loopbackCert []byte) (*rest.Config, error) {
 	c, err := s.NewClientConfig(loopbackCert)
 	if err != nil || c == nil {
 		return c, err

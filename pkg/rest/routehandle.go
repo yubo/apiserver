@@ -9,6 +9,7 @@ import (
 	"github.com/yubo/apiserver/pkg/audit"
 	"github.com/yubo/apiserver/pkg/handlers/negotiation"
 	"github.com/yubo/apiserver/pkg/request"
+	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/runtime"
 	"github.com/yubo/golib/util/errors"
 )
@@ -209,7 +210,7 @@ func readEntity(req *restful.Request, param, body interface{}, codec request.Par
 		//ctx := request.WithParam(req.Request.Context(), param)
 		//req.Request = req.Request.WithContext(ctx)
 
-		if err := codec.DecodeParameters(&request.Parameters{
+		if err := codec.DecodeParameters(&api.Parameters{
 			Header: req.Request.Header,
 			Path:   req.PathParameters(),
 			Query:  req.Request.URL.Query(),

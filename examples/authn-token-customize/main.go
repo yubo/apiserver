@@ -9,11 +9,11 @@ import (
 	"github.com/yubo/apiserver/pkg/authentication"
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/pkg/authentication/user"
-	"github.com/yubo/apiserver/pkg/options"
+	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/rest"
-	"github.com/yubo/golib/cli"
-	"github.com/yubo/golib/proc"
+	"github.com/yubo/apiserver/components/cli"
+	"github.com/yubo/apiserver/pkg/proc"
 
 	// http
 	server "github.com/yubo/apiserver/pkg/server/module"
@@ -32,11 +32,11 @@ const (
 )
 
 var (
-	hookOps = []proc.HookOps{{
+	hookOps = []v1.HookOps{{
 		Hook:     start,
 		Owner:    moduleName,
-		HookNum:  proc.ACTION_START,
-		Priority: proc.PRI_MODULE,
+		HookNum:  v1.ACTION_START,
+		Priority: v1.PRI_MODULE,
 	}}
 )
 

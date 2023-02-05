@@ -9,7 +9,7 @@ import (
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	"github.com/yubo/apiserver/plugin/authorizer/webhook"
 	"github.com/yubo/golib/api"
-	"github.com/yubo/golib/proc"
+	"github.com/yubo/apiserver/pkg/proc"
 	utilerrors "github.com/yubo/golib/util/errors"
 	"github.com/yubo/golib/util/wait"
 )

@@ -4,8 +4,9 @@ import (
 	"context"
 
 	"github.com/yubo/apiserver/pkg/db"
-	"github.com/yubo/apiserver/pkg/options"
-	"github.com/yubo/golib/proc"
+	"github.com/yubo/apiserver/pkg/proc"
+	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
+	"github.com/yubo/apiserver/pkg/proc/options"
 )
 
 const (
@@ -19,18 +20,18 @@ type module struct {
 
 var (
 	_module = &module{name: moduleName}
-	hookOps = []proc.HookOps{{
+	hookOps = []v1.HookOps{{
 		Hook:        _module.init,
 		Owner:       moduleName,
-		HookNum:     proc.ACTION_START,
-		Priority:    proc.PRI_SYS_INIT,
-		SubPriority: options.PRI_M_DB,
+		HookNum:     v1.ACTION_START,
+		Priority:    v1.PRI_SYS_INIT,
+		SubPriority: v1.PRI_M_DB,
 	}, {
 		Hook:        _module.stop,
 		Owner:       moduleName,
-		HookNum:     proc.ACTION_STOP,
-		Priority:    proc.PRI_SYS_INIT,
-		SubPriority: options.PRI_M_DB,
+		HookNum:     v1.ACTION_STOP,
+		Priority:    v1.PRI_SYS_INIT,
+		SubPriority: v1.PRI_M_DB,
 	}}
 )
 

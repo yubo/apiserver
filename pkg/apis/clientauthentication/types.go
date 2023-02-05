@@ -89,7 +89,7 @@ type Response struct {
 //
 // To ensure that this struct contains everything someone would need to communicate
 // with a kubernetes cluster (just like they would via a kubeconfig), the fields
-// should shadow "github.com/yubo/apiserver/tools/clientcmd/api/v1".Cluster, with the exception
+// should shadow "github.com/yubo/client-go/tools/clientcmd/api/v1".Cluster, with the exception
 // of CertificateAuthority, since CA data will always be passed to the plugin as bytes.
 type Cluster struct {
 	// Server is the address of the kubernetes cluster (https://hostname:port).

@@ -71,17 +71,6 @@ func OperationFrom(s *spec.Swagger, method, path string) (*spec.Operation, error
 	return ret, nil
 }
 
-func sqlOrder(order string) string {
-	switch strings.ToLower(order) {
-	case "ascend", "asc":
-		return "ASC"
-	case "descend", "desc":
-		return "DESC"
-	default:
-		return "ASC"
-	}
-}
-
 func newInterface(rt reflect.Type) interface{} {
 	if rt == nil {
 		return nil

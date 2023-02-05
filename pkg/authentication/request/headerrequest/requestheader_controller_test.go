@@ -23,9 +23,9 @@ package headerrequest
 //
 //	corev1 "k8s.io/api/core/v1"
 //	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-//	"k8s.io/client-go/kubernetes/fake"
-//	corev1listers "k8s.io/client-go/listers/core/v1"
-//	"k8s.io/client-go/tools/cache"
+//	"github.com/yubo/client-go/kubernetes/fake"
+//	corev1listers "github.com/yubo/client-go/listers/core/v1"
+//	"github.com/yubo/client-go/tools/cache"
 //)
 //
 //const (

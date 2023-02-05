@@ -31,7 +31,7 @@ import (
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/golib/runtime"
 	"github.com/yubo/golib/scheme"
-	utilclock "github.com/yubo/golib/util/clock"
+	testingclock "github.com/yubo/golib/util/clock/testing"
 )
 
 func TestParseTimeout(t *testing.T) {
@@ -224,7 +224,7 @@ func TestWithRequestDeadlineWithClock(t *testing.T) {
 	// if the deadline filter uses the clock instead of using the request started timestamp from the context
 	// then we will see a request deadline of about a minute.
 	receivedTimestampExpected := time.Now().Add(time.Minute)
-	fakeClock := utilclock.NewFakeClock(receivedTimestampExpected)
+	fakeClock := testingclock.NewFakeClock(receivedTimestampExpected)
 
 	fakeSink := &fakeAuditSink{}
 	fakeChecker := policy.FakeChecker(auditinternal.LevelRequestResponse, nil)

@@ -28,11 +28,11 @@ package dynamiccertificates
 //	"k8s.io/apimachinery/pkg/fields"
 //	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 //	"k8s.io/apimachinery/pkg/util/wait"
-//	corev1informers "k8s.io/client-go/informers/core/v1"
-//	"k8s.io/client-go/kubernetes"
-//	corev1listers "k8s.io/client-go/listers/core/v1"
-//	"k8s.io/client-go/tools/cache"
-//	"k8s.io/client-go/util/workqueue"
+//	corev1informers "github.com/yubo/client-go/informers/core/v1"
+//	"github.com/yubo/client-go/kubernetes"
+//	corev1listers "github.com/yubo/client-go/listers/core/v1"
+//	"github.com/yubo/client-go/tools/cache"
+//	"github.com/yubo/client-go/util/workqueue"
 //	"k8s.io/klog/v2"
 //)
 //

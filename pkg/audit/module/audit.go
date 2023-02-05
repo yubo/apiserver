@@ -12,11 +12,12 @@ import (
 	auditinternal "github.com/yubo/apiserver/pkg/apis/audit"
 	"github.com/yubo/apiserver/pkg/audit"
 	"github.com/yubo/apiserver/pkg/audit/policy"
-	"github.com/yubo/apiserver/pkg/options"
+	"github.com/yubo/apiserver/pkg/proc"
+	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
+	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/util/webhook"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/configer"
-	"github.com/yubo/golib/proc"
 	"github.com/yubo/golib/util/errors"
 	utilnet "github.com/yubo/golib/util/net"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -454,18 +455,18 @@ func defaultLogBatchConfig() pluginbuffered.BatchConfig {
 
 var (
 	_module = &module{name: moduleName}
-	hookOps = []proc.HookOps{{
+	hookOps = []v1.HookOps{{
 		Hook:        _module.init,
 		Owner:       moduleName,
-		HookNum:     proc.ACTION_START,
-		Priority:    proc.PRI_SYS_INIT,
-		SubPriority: options.PRI_M_AUDIT,
+		HookNum:     v1.ACTION_START,
+		Priority:    v1.PRI_SYS_INIT,
+		SubPriority: v1.PRI_M_AUDIT,
 	}, {
 		Hook:        _module.stop,
 		Owner:       moduleName,
-		HookNum:     proc.ACTION_STOP,
-		Priority:    proc.PRI_SYS_START,
-		SubPriority: options.PRI_M_AUDIT,
+		HookNum:     v1.ACTION_STOP,
+		Priority:    v1.PRI_SYS_START,
+		SubPriority: v1.PRI_M_AUDIT,
 	}}
 )
 

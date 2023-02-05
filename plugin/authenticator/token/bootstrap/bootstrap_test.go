@@ -24,7 +24,6 @@ import (
 
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	bootstrapapi "github.com/yubo/apiserver/pkg/cluster-bootstrap/token/api"
-	"github.com/yubo/apiserver/pkg/storage"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/api/errors"
 )
@@ -33,7 +32,7 @@ type lister struct {
 	secrets []*api.Secret
 }
 
-func (l *lister) List(ctx context.Context, selector storage.ListOptions) (ret []*api.Secret, err error) {
+func (l *lister) List(ctx context.Context, selector api.GetListOptions) (ret []*api.Secret, err error) {
 	return l.secrets, nil
 }
 

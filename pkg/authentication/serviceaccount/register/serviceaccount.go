@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/yubo/apiserver/pkg/options"
-	"github.com/yubo/golib/proc"
+	"github.com/yubo/apiserver/pkg/proc/options"
+	"github.com/yubo/apiserver/pkg/proc"
 	utilerrors "github.com/yubo/golib/util/errors"
 )
 
@@ -20,12 +20,12 @@ const (
 
 var (
 	_auth   = &authModule{name: moduleName}
-	hookOps = []proc.HookOps{{
+	hookOps = []v1.HookOps{{
 		Hook:        _auth.init,
 		Owner:       moduleName,
-		HookNum:     proc.ACTION_START,
-		Priority:    proc.PRI_SYS_INIT,
-		SubPriority: options.PRI_M_AUTHN - 1,
+		HookNum:     v1.ACTION_START,
+		Priority:    v1.PRI_SYS_INIT,
+		SubPriority: v1.PRI_M_AUTHN - 1,
 	}}
 	_config *config
 )

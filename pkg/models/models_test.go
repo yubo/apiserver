@@ -7,7 +7,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/yubo/apiserver/pkg/apis/rbac"
-	"github.com/yubo/apiserver/pkg/storage"
 	dbstore "github.com/yubo/apiserver/pkg/storage/db"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/orm"
@@ -74,7 +73,7 @@ func TestRole(t *testing.T) {
 		})
 
 		t.Run("list roles", func(t *testing.T) {
-			list, err := roles.List(context.TODO(), storage.ListOptions{})
+			list, err := roles.List(context.TODO(), api.GetListOptions{})
 			assert.NoError(t, err)
 			assert.NotNil(t, list)
 		})

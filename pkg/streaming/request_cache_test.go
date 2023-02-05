@@ -25,7 +25,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/yubo/golib/util/clock"
+	testingclock "github.com/yubo/golib/util/clock/testing"
 )
 
 func TestInsert(t *testing.T) {
@@ -199,9 +199,9 @@ func TestGC(t *testing.T) {
 	assertCacheSize(t, c, 1)
 }
 
-func newTestCache() (*requestCache, *clock.FakeClock) {
+func newTestCache() (*requestCache, *testingclock.FakeClock) {
 	c := newRequestCache()
-	fakeClock := clock.NewFakeClock(time.Now())
+	fakeClock := testingclock.NewFakeClock(time.Now())
 	c.clock = fakeClock
 	return c, fakeClock
 }

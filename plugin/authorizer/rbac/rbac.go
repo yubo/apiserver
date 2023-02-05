@@ -28,8 +28,8 @@ import (
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	"github.com/yubo/apiserver/pkg/listers"
-	"github.com/yubo/apiserver/pkg/storage"
 	rbacregistryvalidation "github.com/yubo/apiserver/plugin/authorizer/rbac/validation"
+	"github.com/yubo/golib/api"
 	utilerrors "github.com/yubo/golib/util/errors"
 )
 
@@ -221,7 +221,7 @@ type RoleBindingLister struct {
 func (l *RoleBindingLister) ListRoleBindings(namespace string) ([]*rbac.RoleBinding, error) {
 	if namespace != "" {
 	}
-	list, err := l.Lister.List(context.TODO(), storage.ListOptions{})
+	list, err := l.Lister.List(context.TODO(), api.GetListOptions{})
 	return list, err
 }
 
@@ -238,6 +238,6 @@ type ClusterRoleBindingLister struct {
 }
 
 func (l *ClusterRoleBindingLister) ListClusterRoleBindings() ([]*rbac.ClusterRoleBinding, error) {
-	list, err := l.Lister.List(context.TODO(), storage.ListOptions{})
+	list, err := l.Lister.List(context.TODO(), api.GetListOptions{})
 	return list, err
 }

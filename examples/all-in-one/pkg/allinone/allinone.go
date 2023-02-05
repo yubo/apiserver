@@ -10,7 +10,7 @@ import (
 	"examples/all-in-one/pkg/allinone/trace"
 	"examples/all-in-one/pkg/allinone/user"
 
-	"github.com/yubo/golib/proc"
+	"github.com/yubo/apiserver/pkg/proc"
 )
 
 type allinone struct {

@@ -145,7 +145,7 @@ version::ldflags() {
     local val=${2}
     # If you update these, also update the list component-base/version/def.bzl.
     ldflags+=(
-      "-X 'github.com/yubo/apiserver/pkg/version.${key}=${val}'"
+      "-X 'github.com/yubo/apiserver/components/version.${key}=${val}'"
     )
   }
 

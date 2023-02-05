@@ -9,12 +9,12 @@ import (
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	bootstrapapi "github.com/yubo/apiserver/pkg/cluster-bootstrap/token/api"
 	"github.com/yubo/apiserver/pkg/models"
-	"github.com/yubo/apiserver/pkg/options"
+	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/golib/api"
-	"github.com/yubo/golib/cli"
-	"github.com/yubo/golib/proc"
+	"github.com/yubo/apiserver/components/cli"
+	"github.com/yubo/apiserver/pkg/proc"
 	"k8s.io/klog/v2"
 
 	// api server
@@ -41,11 +41,11 @@ const (
 )
 
 var (
-	hookOps = []proc.HookOps{{
+	hookOps = []v1.HookOps{{
 		Hook:     start,
 		Owner:    moduleName,
-		HookNum:  proc.ACTION_START,
-		Priority: proc.PRI_MODULE,
+		HookNum:  v1.ACTION_START,
+		Priority: v1.PRI_MODULE,
 	}}
 )
 

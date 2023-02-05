@@ -6,6 +6,7 @@ import (
 
 	"github.com/emicklei/go-restful/v3"
 	"github.com/yubo/apiserver/pkg/request"
+	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/api/errors"
 	"github.com/yubo/golib/util"
 	"k8s.io/klog/v2"
@@ -31,13 +32,13 @@ type parameterCodec struct{}
 
 // DecodeParameters converts the provided url.Values into an object of type From with the kind of into, and then
 // converts that object to into (if necessary). Returns an error if the operation cannot be completed.
-func (c *parameterCodec) DecodeParameters(parameters *request.Parameters, into interface{}) error {
+func (c *parameterCodec) DecodeParameters(parameters *api.Parameters, into interface{}) error {
 	return decodeParameters(parameters, into)
 }
 
 // EncodeParameters converts the provided object into the to version, then converts that object to url.Values.
 // Returns an error if conversion is not possible.
-func (c *parameterCodec) EncodeParameters(obj interface{}) (*request.Parameters, error) {
+func (c *parameterCodec) EncodeParameters(obj interface{}) (*api.Parameters, error) {
 	return encodeParameters(obj)
 }
 
@@ -45,7 +46,7 @@ func (c *parameterCodec) RouteBuilderParameters(b *restful.RouteBuilder, obj int
 	buildParameters(b, obj)
 }
 
-func decodeParameters(parameters *request.Parameters, into interface{}) error {
+func decodeParameters(parameters *api.Parameters, into interface{}) error {
 	if parameters == nil {
 		return nil
 	}
@@ -95,7 +96,7 @@ func (c *parameterCodec) ValidateParamType(rt reflect.Type) error {
 	return nil
 }
 
-func setFieldValue(p *request.Parameters, f *field, dstValue reflect.Value) error {
+func setFieldValue(p *api.Parameters, f *field, dstValue reflect.Value) error {
 	var data []string
 	var value string
 	var ok bool
@@ -144,7 +145,7 @@ type Validator interface {
 	Validate() error
 }
 
-func encodeParameters(obj interface{}) (*request.Parameters, error) {
+func encodeParameters(obj interface{}) (*api.Parameters, error) {
 	if v, ok := obj.(Validator); ok {
 		if err := v.Validate(); err != nil {
 			return nil, err

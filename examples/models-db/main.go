@@ -8,8 +8,8 @@ import (
 	"examples/models/models"
 
 	server "github.com/yubo/apiserver/pkg/server/module"
-	"github.com/yubo/golib/cli"
-	"github.com/yubo/golib/proc"
+	"github.com/yubo/apiserver/components/cli"
+	"github.com/yubo/apiserver/pkg/proc"
 	"k8s.io/klog/v2"
 
 	// models
@@ -25,11 +25,11 @@ const (
 )
 
 var (
-	hookOps = []proc.HookOps{{
+	hookOps = []v1.HookOps{{
 		Hook:     start,
 		Owner:    moduleName,
-		HookNum:  proc.ACTION_START,
-		Priority: proc.PRI_MODULE,
+		HookNum:  v1.ACTION_START,
+		Priority: v1.PRI_MODULE,
 	}}
 )
 

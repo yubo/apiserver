@@ -23,7 +23,7 @@ import (
 
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/pkg/authentication/user"
-	rest "github.com/yubo/apiserver/pkg/client"
+	"github.com/yubo/client-go/rest"
 	"k8s.io/klog/v2"
 )
 

@@ -22,8 +22,8 @@ import (
 	"fmt"
 	"time"
 
-	rest "github.com/yubo/apiserver/pkg/client"
-	"github.com/yubo/apiserver/tools/clientcmd"
+	"github.com/yubo/client-go/rest"
+	"github.com/yubo/client-go/tools/clientcmd"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/api/errors"
 	"github.com/yubo/golib/runtime"

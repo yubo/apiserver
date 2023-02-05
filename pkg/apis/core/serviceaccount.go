@@ -5,7 +5,8 @@ import (
 	"time"
 
 	"github.com/yubo/apiserver/pkg/apis/authentication"
-	"github.com/yubo/apiserver/pkg/client"
+	"github.com/yubo/apiserver/pkg/scheme"
+	"github.com/yubo/client-go/rest"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/watch"
 )
@@ -33,7 +34,7 @@ type ServiceAccountInterface interface {
 
 // serviceAccounts implements ServiceAccountInterface
 type serviceAccounts struct {
-	client client.Interface
+	client rest.Interface
 	ns     string
 }
 
@@ -51,7 +52,7 @@ func (c *serviceAccounts) Get(ctx context.Context, name string, options api.GetO
 		Namespace(c.ns).
 		Resource("serviceaccounts").
 		Name(name).
-		VersionedParams(&options, client.ParameterCodec).
+		VersionedParams(&options, scheme.ParameterCodec).
 		Do(ctx).
 		Into(result)
 	return
@@ -67,7 +68,7 @@ func (c *serviceAccounts) List(ctx context.Context, opts api.ListOptions) (resul
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("serviceaccounts").
-		VersionedParams(&opts, c.client.Codec()).
+		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
 		Do(ctx).
 		Into(result)
@@ -83,7 +84,7 @@ func (c *serviceAccounts) Watch(ctx context.Context, opts api.ListOptions) (watc
 	opts.Watch = true
 	return c.client.Get().
 		Resource("serviceaccounts").
-		VersionedParams(&opts, c.client.Codec()).
+		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
 		Watch(ctx, c)
 }
@@ -94,7 +95,7 @@ func (c *serviceAccounts) Create(ctx context.Context, serviceAccount *api.Servic
 	err = c.client.Post().
 		Namespace(c.ns).
 		Resource("serviceaccounts").
-		VersionedParams(&opts, c.client.Codec()).
+		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(serviceAccount).
 		Do(ctx).
 		Into(result)
@@ -108,7 +109,7 @@ func (c *serviceAccounts) Update(ctx context.Context, serviceAccount *api.Servic
 		Namespace(c.ns).
 		Resource("serviceaccounts").
 		Name(serviceAccount.Name).
-		VersionedParams(&opts, c.client.Codec()).
+		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(serviceAccount).
 		Do(ctx).
 		Into(result)
@@ -135,7 +136,7 @@ func (c *serviceAccounts) DeleteCollection(ctx context.Context, opts api.DeleteO
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("serviceaccounts").
-		VersionedParams(&listOpts, c.client.Codec()).
+		VersionedParams(&listOpts, scheme.ParameterCodec).
 		Timeout(timeout).
 		Body(&opts).
 		Do(ctx).
@@ -165,7 +166,7 @@ func (c *serviceAccounts) CreateToken(ctx context.Context, serviceAccountName st
 		Resource("serviceaccounts").
 		Name(serviceAccountName).
 		SubResource("token").
-		VersionedParams(&opts, c.client.Codec()).
+		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(tokenRequest).
 		Do(ctx).
 		Into(result)

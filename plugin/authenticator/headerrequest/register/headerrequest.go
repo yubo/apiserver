@@ -9,7 +9,7 @@ import (
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/pkg/authentication/request/headerrequest"
 	"github.com/yubo/apiserver/pkg/dynamiccertificates"
-	"github.com/yubo/golib/proc"
+	"github.com/yubo/apiserver/pkg/proc"
 	"github.com/yubo/golib/util/errors"
 	"k8s.io/klog/v2"
 )

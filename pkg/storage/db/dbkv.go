@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/yubo/apiserver/pkg/storage"
+	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/orm"
 	"github.com/yubo/golib/runtime"
 )
@@ -125,7 +126,7 @@ func (p Store) Update(ctx context.Context, key string, obj, out runtime.Object) 
 	return p.get(ctx, table, selector, false, out)
 }
 
-func (p Store) Get(ctx context.Context, key string, opts storage.GetOptions, out runtime.Object) error {
+func (p Store) Get(ctx context.Context, key string, opts api.GetOptions, out runtime.Object) error {
 	table, selector, err := parseKeyWithSelector(key, "")
 	if err != nil {
 		return err
@@ -138,7 +139,7 @@ func (p Store) get(ctx context.Context, table, selector string, ignoreNotFound b
 	return p.db.Get(ctx, out, orm.WithTable(table), orm.WithSelector(selector), orm.WithIgnoreNotFoundErr(ignoreNotFound))
 }
 
-func (p Store) List(ctx context.Context, key string, opts storage.ListOptions, out runtime.Object, total *int) error {
+func (p Store) List(ctx context.Context, key string, opts api.GetListOptions, out runtime.Object, total *int) error {
 	table, _, _ := parseKey(key)
 
 	return p.db.List(

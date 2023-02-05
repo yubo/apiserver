@@ -12,18 +12,19 @@ import (
 	"github.com/emicklei/go-restful/v3"
 	"github.com/go-openapi/spec"
 	"github.com/google/uuid"
+	"github.com/yubo/apiserver/components/logs"
+	"github.com/yubo/apiserver/components/version"
 	"github.com/yubo/apiserver/pkg/authorization/authorizerfactory"
-	rest "github.com/yubo/apiserver/pkg/client"
 	"github.com/yubo/apiserver/pkg/filters"
-	"github.com/yubo/apiserver/pkg/options"
+	"github.com/yubo/apiserver/pkg/proc"
+	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
+	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/server"
 	"github.com/yubo/apiserver/pkg/server/config"
 	"github.com/yubo/apiserver/pkg/server/healthz"
 	"github.com/yubo/apiserver/pkg/server/routes"
-	"github.com/yubo/apiserver/pkg/version"
+	"github.com/yubo/client-go/rest"
 	"github.com/yubo/golib/configer"
-	"github.com/yubo/golib/logs"
-	"github.com/yubo/golib/proc"
 	"github.com/yubo/golib/runtime"
 	"github.com/yubo/golib/scheme"
 	"github.com/yubo/golib/util/sets"
@@ -37,30 +38,30 @@ const (
 
 var (
 	_module = &serverModule{name: moduleName}
-	hookOps = []proc.HookOps{{
+	hookOps = []v1.HookOps{{
 		Hook:        _module.init,
 		Owner:       moduleName,
-		HookNum:     proc.ACTION_START,
-		Priority:    proc.PRI_SYS_INIT,
-		SubPriority: options.PRI_M_HTTP,
+		HookNum:     v1.ACTION_START,
+		Priority:    v1.PRI_SYS_INIT,
+		SubPriority: v1.PRI_M_HTTP,
 	}, {
 		Hook:        _module.init2,
 		Owner:       moduleName,
-		HookNum:     proc.ACTION_START,
-		Priority:    proc.PRI_SYS_INIT,
-		SubPriority: options.PRI_M_HTTP2,
+		HookNum:     v1.ACTION_START,
+		Priority:    v1.PRI_SYS_INIT,
+		SubPriority: v1.PRI_M_HTTP2,
 	}, {
 		Hook:        _module.start,
 		Owner:       moduleName,
-		HookNum:     proc.ACTION_START,
-		Priority:    proc.PRI_SYS_START,
-		SubPriority: options.PRI_M_HTTP,
+		HookNum:     v1.ACTION_START,
+		Priority:    v1.PRI_SYS_START,
+		SubPriority: v1.PRI_M_HTTP,
 	}, {
 		Hook:        _module.stop,
 		Owner:       moduleName,
-		HookNum:     proc.ACTION_STOP,
-		Priority:    proc.PRI_SYS_START,
-		SubPriority: options.PRI_M_HTTP,
+		HookNum:     v1.ACTION_STOP,
+		Priority:    v1.PRI_SYS_START,
+		SubPriority: v1.PRI_M_HTTP,
 	}}
 )
 

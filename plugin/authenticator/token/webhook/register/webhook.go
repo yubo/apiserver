@@ -10,7 +10,7 @@ import (
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/plugin/authenticator/token/webhook"
 	"github.com/yubo/golib/api"
-	"github.com/yubo/golib/proc"
+	"github.com/yubo/apiserver/pkg/proc"
 	"github.com/yubo/golib/util/wait"
 )
 

@@ -25,7 +25,7 @@ import (
 	"net/url"
 	"strconv"
 
-	rest "github.com/yubo/apiserver/pkg/client"
+	"github.com/yubo/client-go/rest"
 	"github.com/yubo/golib/runtime"
 	"github.com/yubo/golib/runtime/serializer"
 	"github.com/yubo/golib/scheme"

@@ -6,6 +6,7 @@ package storage
 import (
 	"context"
 
+	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/runtime"
 )
 
@@ -18,25 +19,25 @@ type Store interface {
 
 	Update(ctx context.Context, key string, obj, out runtime.Object) error
 
-	Get(ctx context.Context, key string, opts GetOptions, out runtime.Object) error
+	Get(ctx context.Context, key string, opts api.GetOptions, out runtime.Object) error
 
-	List(ctx context.Context, key string, opts ListOptions, out runtime.Object, total *int) error
+	List(ctx context.Context, key string, opts api.GetListOptions, out runtime.Object, total *int) error
 }
 
 // GetOptions provides the options that may be provided for storage get operations.
-type GetOptions struct {
-	// IgnoreNotFound determines what is returned if the requested object is not found. If
-	// true, a zero object is returned. If false, an error is returned.
-	IgnoreNotFound bool
-}
+//type GetOptions struct {
+//	// IgnoreNotFound determines what is returned if the requested object is not found. If
+//	// true, a zero object is returned. If false, an error is returned.
+//	IgnoreNotFound bool
+//}
 
 // ListOptions provides the options that may be provided for storage list operations.
-type ListOptions struct {
-	Query   string
-	Orderby []string
-	Offset  int
-	Limit   int
-
-	// for output count(*)
-	Total *int
-}
+//type ListOptions struct {
+//	Query   string
+//	Orderby []string
+//	Offset  int
+//	Limit   int
+//
+//	// for output count(*)
+//	Total *int
+//}

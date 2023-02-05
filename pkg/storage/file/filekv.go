@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/yubo/apiserver/pkg/storage"
+	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/runtime"
 )
 
@@ -31,10 +32,10 @@ func (p store) Update(ctx context.Context, key string, obj, out runtime.Object) 
 	return nil
 }
 
-func (p store) Get(ctx context.Context, key string, opts storage.GetOptions, out runtime.Object) error {
+func (p store) Get(ctx context.Context, key string, opts api.GetOptions, out runtime.Object) error {
 	return nil
 }
 
-func (p store) List(ctx context.Context, key string, opts storage.ListOptions, out runtime.Object, total *int) error {
+func (p store) List(ctx context.Context, key string, opts api.GetListOptions, out runtime.Object, total *int) error {
 	return nil
 }

@@ -7,7 +7,7 @@ import (
 	"examples/rest/api"
 	"examples/rest/models"
 
-	"github.com/yubo/apiserver/pkg/options"
+	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/apiserver/plugin/responsewriter/umi"
 )

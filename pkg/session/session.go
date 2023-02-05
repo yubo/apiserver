@@ -65,7 +65,7 @@ func (p *Config) Validate() error {
 
 // }}}
 
-func newManager(ctx context.Context, cf *Config, c clock.Clock) *manager {
+func newManager(ctx context.Context, cf *Config, c clock.WithTicker) *manager {
 	if util.IsNil(c) {
 		c = clock.RealClock{}
 	}
@@ -97,7 +97,7 @@ type manager struct {
 	session  *SessionConn
 	config   *Config
 	once     sync.Once
-	clock    clock.Clock
+	clock    clock.WithTicker
 	sameSite http.SameSite
 }
 

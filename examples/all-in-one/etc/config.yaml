@@ -1,6 +1,16 @@
 allinone:
   debug: true
 
+logging:
+  format: text
+  flushFrequency: 10s
+  verbosity: 5
+  vmodule:
+  options:
+    json:
+      #splitStream: false
+      #infoBufferSize: 5M
+
 tracing:
   debug: false
   serviceName: all-in-one
@@ -34,7 +44,7 @@ apiserver:
     http2MaxStreamsPerConnection: 0
     permitPortSharing: false
     serverCert:
-      certDir: /var/run/all
+      certDir: ./etc/cert
       pairName: apiserver
   enableContentionProfiling: true
   enableIndex: false

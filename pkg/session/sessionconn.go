@@ -5,7 +5,7 @@ import (
 
 	"github.com/yubo/apiserver/pkg/models"
 	"github.com/yubo/apiserver/pkg/session/types"
-	"github.com/yubo/apiserver/pkg/storage"
+	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/orm"
 )
 
@@ -38,7 +38,7 @@ func (p *SessionConn) Get(ctx context.Context, sid string) (ret *types.SessionCo
 }
 
 // List lists all sessions in the indexer.
-func (p *SessionConn) List(ctx context.Context, o *storage.ListOptions, opts ...orm.Option) (list []types.SessionConn, err error) {
+func (p *SessionConn) List(ctx context.Context, o *api.GetListOptions, opts ...orm.QueryOption) (list []types.SessionConn, err error) {
 	err = p.DB.List(ctx, &list, append(opts,
 		orm.WithTable(p.Name()),
 		orm.WithTotal(o.Total),

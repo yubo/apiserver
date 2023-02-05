@@ -1,7 +1,5 @@
 package rest
 
-import "github.com/yubo/apiserver/pkg/rest/parametercodec"
-
 const (
 	// Accept or Content-Type used in Consumes() and/or Produces()
 	MIME_ALL         = "*/*"
@@ -30,10 +28,6 @@ const (
 	SecurityTypePassword    SecurityType = "password"
 	SecurityTypeApplication SecurityType = "application"
 	SecurityTypeAccessCode  SecurityType = "accessCode" // same as oauth2
-)
-
-var (
-	ParameterCodec = parametercodec.New()
 )
 
 func init() {

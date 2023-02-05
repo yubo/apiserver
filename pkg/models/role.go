@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/yubo/apiserver/pkg/apis/rbac"
-	"github.com/yubo/apiserver/pkg/storage"
+	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/orm"
 )
 
@@ -38,7 +38,7 @@ func (p *Role) Get(ctx context.Context, name string) (ret *rbac.Role, err error)
 }
 
 // List lists all Roles in the indexer.
-func (p *Role) List(ctx context.Context, o storage.ListOptions) (list []*rbac.Role, err error) {
+func (p *Role) List(ctx context.Context, o api.GetListOptions) (list []*rbac.Role, err error) {
 	err = p.DB.List(ctx, &list,
 		orm.WithTable(p.Name()),
 		orm.WithTotal(o.Total),

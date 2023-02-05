@@ -9,7 +9,8 @@ import (
 
 	"github.com/emicklei/go-restful/v3"
 	"github.com/stretchr/testify/require"
-	"github.com/yubo/apiserver/pkg/client"
+	"github.com/yubo/apiserver/pkg/scheme"
+	"github.com/yubo/client-go/rest"
 	"github.com/yubo/golib/util"
 	"k8s.io/klog/v2"
 )
@@ -83,7 +84,7 @@ func TestHttpParam(t *testing.T) {
 		require.NoError(t, err)
 
 		err = cli.Post().Prefix("/dirs/{dir}/hosts/{name}").
-			Params(c.param).
+			VersionedParams(c.param, scheme.ParameterCodec).
 			Body(c.body).Do(context.Background()).Error()
 		require.NoErrorf(t, err, "case-%d", i)
 	}
@@ -209,7 +210,7 @@ func TestRouteBuild(t *testing.T) {
 			req := cli.Verb(c.method).Prefix(c.path).Debug()
 
 			if c.param != nil {
-				req = req.Params(c.param)
+				req = req.VersionedParams(c.param, scheme.ParameterCodec)
 			}
 			if c.body != nil {
 				req = req.Body(c.body)
@@ -241,6 +242,6 @@ func dumpRequest(t *testing.T) func(*restful.Request, *restful.Response, *restfu
 	}
 }
 
-func restClient(testServer *httptest.Server) (*client.RESTClient, error) {
-	return client.RESTClientFor(&client.Config{Host: testServer.URL})
+func restClient(testServer *httptest.Server) (*rest.RESTClient, error) {
+	return rest.RESTClientFor(&rest.Config{Host: testServer.URL})
 }

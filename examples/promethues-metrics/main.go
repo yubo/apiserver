@@ -6,8 +6,8 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"github.com/yubo/golib/cli"
-	"github.com/yubo/golib/proc"
+	"github.com/yubo/apiserver/components/cli"
+	"github.com/yubo/apiserver/pkg/proc"
 
 	_ "github.com/yubo/apiserver/pkg/server/register"
 )

@@ -7,16 +7,16 @@ import (
 	"os"
 	"time"
 
-	"github.com/yubo/apiserver/pkg/options"
+	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/rest"
 	servermodule "github.com/yubo/apiserver/pkg/server/module"
 	"github.com/yubo/apiserver/pkg/streaming"
-	"github.com/yubo/apiserver/pkg/streaming/api"
+	"github.com/yubo/golib/api"
 	"github.com/yubo/apiserver/pkg/streaming/portforward"
 	"github.com/yubo/apiserver/pkg/streaming/providers/dockershim"
 	remotecommandserver "github.com/yubo/apiserver/pkg/streaming/remotecommand"
-	"github.com/yubo/golib/cli"
-	"github.com/yubo/golib/proc"
+	"github.com/yubo/apiserver/components/cli"
+	"github.com/yubo/apiserver/pkg/proc"
 	"k8s.io/klog/v2"
 
 	_ "github.com/yubo/apiserver/pkg/server/register"
@@ -33,11 +33,11 @@ const (
 )
 
 var (
-	hookOps = []proc.HookOps{{
+	hookOps = []v1.HookOps{{
 		Hook:     start,
 		Owner:    moduleName,
-		HookNum:  proc.ACTION_START,
-		Priority: proc.PRI_MODULE,
+		HookNum:  v1.ACTION_START,
+		Priority: v1.PRI_MODULE,
 	}}
 	_server = &server{
 		config:   streaming.DefaultConfig,

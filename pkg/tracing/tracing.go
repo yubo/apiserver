@@ -7,9 +7,10 @@ import (
 	"path/filepath"
 
 	"github.com/emicklei/go-restful/v3"
-	"github.com/yubo/apiserver/pkg/options"
+	"github.com/yubo/apiserver/pkg/proc"
+	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
+	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/request"
-	"github.com/yubo/golib/proc"
 	"github.com/yubo/golib/util"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -32,18 +33,18 @@ const (
 
 var (
 	_module = &tracing{name: moduleName}
-	hookOps = []proc.HookOps{{
+	hookOps = []v1.HookOps{{
 		Hook:        _module.start,
 		Owner:       moduleName,
-		HookNum:     proc.ACTION_START,
-		Priority:    proc.PRI_SYS_INIT,
-		SubPriority: options.PRI_M_TRACING,
+		HookNum:     v1.ACTION_START,
+		Priority:    v1.PRI_SYS_INIT,
+		SubPriority: v1.PRI_M_TRACING,
 	}, {
 		Hook:        _module.stop,
 		Owner:       moduleName,
-		HookNum:     proc.ACTION_STOP,
-		Priority:    proc.PRI_SYS_INIT,
-		SubPriority: options.PRI_M_TRACING,
+		HookNum:     v1.ACTION_STOP,
+		Priority:    v1.PRI_SYS_INIT,
+		SubPriority: v1.PRI_M_TRACING,
 	}}
 )
 

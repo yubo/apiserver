@@ -41,7 +41,7 @@ func (p *Demo) Get(ctx context.Context, selector string) (ret *api.Demo, err err
 }
 
 // List lists all Secrets in the indexer.
-func (p *Demo) List(ctx context.Context, opts storage.ListOptions) (list []*api.Demo, err error) {
+func (p *Demo) List(ctx context.Context, opts api.GetListOptions) (list []*api.Demo, err error) {
 	err = p.DB.List(ctx, &list,
 		orm.WithTable(p.Name()),
 		orm.WithTotal(opts.Total),

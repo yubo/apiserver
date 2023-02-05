@@ -6,7 +6,7 @@ import (
 
 	"github.com/yubo/apiserver/pkg/apis/rbac"
 	"github.com/yubo/apiserver/pkg/listers"
-	"github.com/yubo/apiserver/pkg/storage"
+	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/api/errors"
 )
 
@@ -21,7 +21,7 @@ func NewClusterRoleLister(f *FileStorage) listers.ClusterRoleLister {
 }
 
 // List lists all ClusterRoles in the indexer.
-func (p *clusterRoleLister) List(ctx context.Context, opts storage.ListOptions) ([]*rbac.ClusterRole, error) {
+func (p *clusterRoleLister) List(ctx context.Context, opts api.GetListOptions) ([]*rbac.ClusterRole, error) {
 	return p.clusterRoles, nil
 }
 

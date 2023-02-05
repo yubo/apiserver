@@ -5,11 +5,11 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/yubo/apiserver/pkg/rest/protobuf"
-	"github.com/yubo/apiserver/pkg/rest/protobuf/testdata"
 	"github.com/yubo/apiserver/pkg/rest/urlencoded"
 	"github.com/yubo/golib/runtime"
 	"github.com/yubo/golib/runtime/serializer"
+	"github.com/yubo/golib/runtime/serializer/protobuf"
+	"github.com/yubo/golib/runtime/serializer/protobuf/testdata"
 	"github.com/yubo/golib/util"
 )
 

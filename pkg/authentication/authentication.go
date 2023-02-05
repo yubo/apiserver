@@ -11,10 +11,11 @@ import (
 	"github.com/yubo/apiserver/pkg/authentication/request/websocket"
 	tokencache "github.com/yubo/apiserver/pkg/authentication/token/cache"
 	tokenunion "github.com/yubo/apiserver/pkg/authentication/token/union"
-	"github.com/yubo/apiserver/pkg/options"
+	"github.com/yubo/apiserver/pkg/proc"
+	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
+	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/server"
 	"github.com/yubo/golib/api"
-	"github.com/yubo/golib/proc"
 )
 
 const (
@@ -119,18 +120,18 @@ func (p *authentication) initAuthentication() (err error) {
 
 var (
 	_authn  = &authentication{name: moduleName}
-	hookOps = []proc.HookOps{{
+	hookOps = []v1.HookOps{{
 		Hook:        _authn.init,
 		Owner:       moduleName,
-		HookNum:     proc.ACTION_START,
-		Priority:    proc.PRI_SYS_INIT,
-		SubPriority: options.PRI_M_AUTHN,
+		HookNum:     v1.ACTION_START,
+		Priority:    v1.PRI_SYS_INIT,
+		SubPriority: v1.PRI_M_AUTHN,
 	}, {
 		Hook:        _authn.stop,
 		Owner:       moduleName,
-		HookNum:     proc.ACTION_STOP,
-		Priority:    proc.PRI_SYS_START,
-		SubPriority: options.PRI_M_AUTHN,
+		HookNum:     v1.ACTION_STOP,
+		Priority:    v1.PRI_SYS_START,
+		SubPriority: v1.PRI_M_AUTHN,
 	}}
 )
 

@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/yubo/golib/proc"
+	"github.com/yubo/apiserver/pkg/proc"
 	"github.com/yubo/golib/util/yaml"
 )
 
@@ -16,11 +16,11 @@ const (
 
 var (
 	_module = &module{name: moduleName}
-	hookOps = []proc.HookOps{{
+	hookOps = []v1.HookOps{{
 		Hook:     _module.start,
 		Owner:    moduleName,
-		HookNum:  proc.ACTION_START,
-		Priority: proc.PRI_MODULE,
+		HookNum:  v1.ACTION_START,
+		Priority: v1.PRI_MODULE,
 	}}
 )
 

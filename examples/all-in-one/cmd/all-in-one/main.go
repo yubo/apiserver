@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/yubo/golib/cli"
+	"github.com/yubo/apiserver/components/cli"
 )
 
 func main() {

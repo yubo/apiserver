@@ -31,7 +31,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	auditinternal "github.com/yubo/apiserver/pkg/apis/audit"
-	clientcmdapi "github.com/yubo/apiserver/tools/clientcmd/api"
+	clientcmdapi "github.com/yubo/client-go/tools/clientcmd/api"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/runtime"
 	"github.com/yubo/golib/runtime/serializer/json"

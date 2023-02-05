@@ -35,6 +35,7 @@ import (
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/golib/util"
 	utilclock "github.com/yubo/golib/util/clock"
+	testingclock "github.com/yubo/golib/util/clock/testing"
 )
 
 func TestCachedTokenAuthenticator(t *testing.T) {
@@ -49,7 +50,7 @@ func TestCachedTokenAuthenticator(t *testing.T) {
 		calledWithToken = append(calledWithToken, token)
 		return &authenticator.Response{User: resultUsers[token]}, resultOk, resultErr
 	})
-	fakeClock := utilclock.NewFakeClock(time.Now())
+	fakeClock := testingclock.NewFakeClock(time.Now())
 
 	a := newWithClock(fakeAuth, true, time.Minute, 0, fakeClock)
 
@@ -123,7 +124,7 @@ func TestCachedTokenAuthenticatorWithAudiences(t *testing.T) {
 		auds, _ := authenticator.AudiencesFrom(ctx)
 		return &authenticator.Response{User: resultUsers[auds[0]+token]}, true, nil
 	})
-	fakeClock := utilclock.NewFakeClock(time.Now())
+	fakeClock := testingclock.NewFakeClock(time.Now())
 
 	a := newWithClock(fakeAuth, true, time.Minute, 0, fakeClock)
 

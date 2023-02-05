@@ -27,7 +27,7 @@ import (
 	"time"
 
 	restful "github.com/emicklei/go-restful/v3"
-	"github.com/yubo/apiserver/pkg/streaming/api"
+	"github.com/yubo/golib/api"
 	"github.com/yubo/apiserver/pkg/streaming/portforward"
 	remotecommandserver "github.com/yubo/apiserver/pkg/streaming/remotecommand"
 	"github.com/yubo/golib/types"

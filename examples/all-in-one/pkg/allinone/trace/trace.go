@@ -8,7 +8,7 @@ import (
 	"examples/all-in-one/pkg/allinone/config"
 	"net/http"
 
-	"github.com/yubo/apiserver/pkg/options"
+	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/apiserver/pkg/tracing"
 	"go.opentelemetry.io/otel/attribute"

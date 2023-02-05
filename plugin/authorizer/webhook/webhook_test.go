@@ -37,7 +37,7 @@ import (
 	authorization "github.com/yubo/apiserver/pkg/apis/authorization"
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
-	v1 "github.com/yubo/apiserver/tools/clientcmd/api/v1"
+	v1 "github.com/yubo/client-go/tools/clientcmd/api/v1"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/util/wait"
 )

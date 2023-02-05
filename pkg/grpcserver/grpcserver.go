@@ -4,8 +4,9 @@ import (
 	"context"
 
 	"github.com/yubo/apiserver/pkg/config/configgrpc"
-	"github.com/yubo/apiserver/pkg/options"
-	"github.com/yubo/golib/proc"
+	"github.com/yubo/apiserver/pkg/proc"
+	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
+	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/golib/util"
 	"go.opentelemetry.io/otel"
 	"google.golang.org/grpc"
@@ -32,24 +33,24 @@ type grpcServer struct {
 
 var (
 	_module = &grpcServer{name: moduleName}
-	hookOps = []proc.HookOps{{
+	hookOps = []v1.HookOps{{
 		Hook:        _module.init,
 		Owner:       moduleName,
-		HookNum:     proc.ACTION_START,
-		Priority:    proc.PRI_SYS_INIT,
-		SubPriority: options.PRI_M_GRPC,
+		HookNum:     v1.ACTION_START,
+		Priority:    v1.PRI_SYS_INIT,
+		SubPriority: v1.PRI_M_GRPC,
 	}, {
 		Hook:        _module.start,
 		Owner:       moduleName,
-		HookNum:     proc.ACTION_START,
-		Priority:    proc.PRI_SYS_START,
-		SubPriority: options.PRI_M_GRPC,
+		HookNum:     v1.ACTION_START,
+		Priority:    v1.PRI_SYS_START,
+		SubPriority: v1.PRI_M_GRPC,
 	}, {
 		Hook:        _module.stop,
 		Owner:       moduleName,
-		HookNum:     proc.ACTION_STOP,
-		Priority:    proc.PRI_SYS_START,
-		SubPriority: options.PRI_M_GRPC,
+		HookNum:     v1.ACTION_STOP,
+		Priority:    v1.PRI_SYS_START,
+		SubPriority: v1.PRI_M_GRPC,
 	}}
 )
 

@@ -36,7 +36,7 @@ func (p *User) Get(ctx context.Context, name string) (ret *api.User, err error) 
 }
 
 // List lists all Users in the indexer.
-func (p *User) List(ctx context.Context, opts storage.ListOptions) (list []api.User, err error) {
+func (p *User) List(ctx context.Context, opts api.GetListOptions) (list []api.User, err error) {
 	err = p.DB.List(
 		ctx,
 		&list,

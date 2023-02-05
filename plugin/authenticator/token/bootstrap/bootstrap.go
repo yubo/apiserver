@@ -32,7 +32,7 @@ import (
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/api/errors"
 
-	//corev1listers "k8s.io/client-go/listers/core/v1"
+	//corev1listers "github.com/yubo/client-go/listers/core/v1"
 	bootstrapapi "github.com/yubo/apiserver/pkg/cluster-bootstrap/token/api"
 	bootstrapsecretutil "github.com/yubo/apiserver/pkg/cluster-bootstrap/util/secrets"
 	bootstraptokenutil "github.com/yubo/apiserver/pkg/cluster-bootstrap/util/tokens"
