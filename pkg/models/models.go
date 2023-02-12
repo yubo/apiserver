@@ -165,5 +165,8 @@ func NewModelStore(kind string) ModelStore {
 }
 
 func DB() orm.DB {
+	if _module.DB == nil {
+		panic("invalid db")
+	}
 	return _module.DB
 }

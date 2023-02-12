@@ -14,10 +14,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/yubo/apiserver/pkg/proc/options"
-	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/apiserver/components/cli"
 	"github.com/yubo/apiserver/pkg/proc"
+	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
+	"github.com/yubo/apiserver/pkg/proc/options"
+	"github.com/yubo/apiserver/pkg/rest"
 	jose "gopkg.in/square/go-jose.v2"
 	"k8s.io/klog/v2"
 

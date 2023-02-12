@@ -17,6 +17,8 @@ limitations under the License.
 package v1
 
 import (
+	"strconv"
+
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/api/resource"
 )
@@ -96,3 +98,20 @@ type VModuleItem struct {
 
 // VerbosityLevel represents a klog or logr verbosity threshold.
 type VerbosityLevel uint32
+
+func (v VerbosityLevel) String() string {
+	return strconv.FormatUint(uint64(uint32(v)), 10)
+}
+
+func (v *VerbosityLevel) Set(s string) error {
+	i, err := strconv.ParseUint(s, 10, 32)
+	if err != nil {
+		return err
+	}
+	*v = VerbosityLevel(uint32(i))
+	return nil
+}
+
+func (v VerbosityLevel) Type() string {
+	return "VerbosityLevel"
+}

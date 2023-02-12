@@ -34,6 +34,6 @@ User-Agent: Go-http-client/1.1
 client
 
 ```sh
-$ curl -X POST http://localhost:8081/audit/hello
+$ curl -X POST http://localhost:8080/audit/hello -H 'Content-Type: application/json'
 "hello, world"
 ```

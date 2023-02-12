@@ -1,0 +1,21 @@
+apiserver:
+  insecureServing:
+    bindAddress: 0.0.0.0
+    bindNework: tcp
+    bindPort: 8080
+    enabled: true
+  secureServing:
+    enabled: false
+
+authentication:
+  anonymous: true
+
+db:
+  driver: sqlite3
+  dsn: file:test.db?cache=shared&mode=memory
+
+authorization:
+  modes:
+    - ABAC 
+  policyFile: ./abac.json
+

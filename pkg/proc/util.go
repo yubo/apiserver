@@ -112,5 +112,5 @@ func SdNotify(unsetEnvironment bool, state string) (bool, error) {
 
 func loggingRegister() {
 	RegisterHooks(logging.HookOps)
-	AddConfig(logging.ModuleName, logging.NewConfig(), WithConfigGroup("logging"))
+	AddConfig(logging.ModuleName, logging.NewConfig())
 }

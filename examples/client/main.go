@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	restclient "github.com/yubo/apiserver/pkg/client"
-	"github.com/yubo/apiserver/pkg/cmdcli"
+	"github.com/yubo/apiserver/pkg/client"
 	"github.com/yubo/apiserver/pkg/responsewriters"
+	"github.com/yubo/client-go/rest"
 	"github.com/yubo/golib/scheme"
 )
 
@@ -18,12 +18,12 @@ type User struct {
 }
 
 // curl -X GET http://localhost/
-func requestWithRest(server *httptest.Server) error {
+func requestWithClientGo(server *httptest.Server) error {
 	user := User{}
 
-	c, err := restclient.RESTClientFor(&restclient.Config{
+	c, err := rest.RESTClientFor(&rest.Config{
 		Host: server.URL,
-		ContentConfig: restclient.ContentConfig{
+		ContentConfig: rest.ContentConfig{
 			NegotiatedSerializer: scheme.NegotiatedSerializer,
 		},
 	})
@@ -40,13 +40,13 @@ func requestWithRest(server *httptest.Server) error {
 }
 
 // curl -X GET http://localhost/
-func requestWithCmdcli(server *httptest.Server) error {
+func requestWithClient(server *httptest.Server) error {
 	user := User{}
 
-	req, err := cmdcli.NewRequest(server.URL,
-		cmdcli.WithOutput(&user),
-		cmdcli.WithMethod("GET"),
-		cmdcli.WithPrefix("/"),
+	req, err := client.NewRequest(server.URL,
+		client.WithOutput(&user),
+		client.WithMethod("GET"),
+		client.WithPrefix("/"),
 	)
 	if err != nil {
 		return err
@@ -67,10 +67,10 @@ func main() {
 		}))
 	defer server.Close()
 
-	if err := requestWithRest(server); err != nil {
+	if err := requestWithClientGo(server); err != nil {
 		fmt.Println("err:", err)
 	}
-	if err := requestWithCmdcli(server); err != nil {
+	if err := requestWithClient(server); err != nil {
 		fmt.Println("err:", err)
 	}
 	// output:

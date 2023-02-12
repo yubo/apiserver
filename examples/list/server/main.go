@@ -6,10 +6,12 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/yubo/apiserver/pkg/proc/options"
-	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/apiserver/components/cli"
 	"github.com/yubo/apiserver/pkg/proc"
+	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
+	"github.com/yubo/apiserver/pkg/proc/options"
+	"github.com/yubo/apiserver/pkg/rest"
+	"github.com/yubo/golib/api"
 
 	server "github.com/yubo/apiserver/pkg/server/module"
 	_ "github.com/yubo/apiserver/pkg/server/register"
@@ -54,7 +56,7 @@ type User struct {
 }
 
 type ListInput struct {
-	rest.PageParams
+	api.PageParams
 }
 
 type ListOutput struct {

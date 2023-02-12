@@ -1,9 +1,13 @@
 ## Authentication - bootstrap
 
+depend on
+  - models.secret
+
+
 ### server
 
 ```sh
-$ go run ./main.go --db-driver=sqlite3 --db-dsn="file:test.db?cache=shared&mode=memory"
+$ go run ./main.go -f ./config.yaml
 ```
 
 

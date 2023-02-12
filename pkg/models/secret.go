@@ -7,8 +7,8 @@ import (
 	"github.com/yubo/golib/orm"
 )
 
-// pkg/registry/rbac/role/storage/storage.go
-// pkg/registry/rbac/rest/storage_rbac.go
+// depended by
+//   plugin/authenticator/token/bootstrap
 func NewSecret() *Secret {
 	return &Secret{DB: DB()}
 }

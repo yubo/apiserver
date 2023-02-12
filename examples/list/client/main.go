@@ -4,8 +4,8 @@ import (
 	"context"
 	"os"
 
-	"github.com/yubo/apiserver/pkg/cmdcli"
-	"github.com/yubo/apiserver/pkg/rest"
+	"github.com/yubo/apiserver/pkg/client"
+	"github.com/yubo/golib/api"
 	"k8s.io/klog/v2"
 )
 
@@ -15,7 +15,7 @@ type User struct {
 }
 
 type ListInput struct {
-	rest.PageParams
+	api.PageParams
 }
 
 type ListOutput struct {
@@ -24,14 +24,14 @@ type ListOutput struct {
 }
 
 func run() error {
-	req, err := cmdcli.NewRequest("127.0.0.1:8080",
-		cmdcli.WithParams(&ListInput{
-			PageParams: rest.PageParams{
+	req, err := client.NewRequest("127.0.0.1:8080",
+		client.WithParams(&ListInput{
+			PageParams: api.PageParams{
 				PageSize: 10,
 			},
 		}),
-		cmdcli.WithPath("/users"),
-		cmdcli.WithOutput(&ListOutput{}),
+		client.WithPath("/users"),
+		client.WithOutput(&ListOutput{}),
 	)
 	if err != nil {
 		return err

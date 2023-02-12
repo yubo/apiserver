@@ -6,20 +6,24 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/yubo/apiserver/components/cli"
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	bootstrapapi "github.com/yubo/apiserver/pkg/cluster-bootstrap/token/api"
 	"github.com/yubo/apiserver/pkg/models"
+	"github.com/yubo/apiserver/pkg/proc"
+	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
 	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/golib/api"
-	"github.com/yubo/apiserver/components/cli"
-	"github.com/yubo/apiserver/pkg/proc"
 	"k8s.io/klog/v2"
 
 	// api server
-	server "github.com/yubo/apiserver/pkg/server/module"
 	_ "github.com/yubo/apiserver/pkg/server/register"
+
+	// authz
+	_ "github.com/yubo/apiserver/pkg/authorization/register"
+	_ "github.com/yubo/apiserver/plugin/authorizer/abac/register"
 
 	// authn
 	_ "github.com/yubo/apiserver/pkg/authentication/register"
@@ -50,10 +54,7 @@ var (
 )
 
 func main() {
-	command := proc.NewRootCmd(
-		server.WithoutTLS(),
-		proc.WithHooks(hookOps...),
-	)
+	command := proc.NewRootCmd(proc.WithHooks(hookOps...))
 	code := cli.Run(command)
 	os.Exit(code)
 }

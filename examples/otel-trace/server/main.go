@@ -9,12 +9,13 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/yubo/apiserver/pkg/cmdcli"
+	"github.com/yubo/apiserver/components/cli"
+	"github.com/yubo/apiserver/pkg/client"
+	"github.com/yubo/apiserver/pkg/proc"
+	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
 	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/apiserver/pkg/tracing"
-	"github.com/yubo/apiserver/components/cli"
-	"github.com/yubo/apiserver/pkg/proc"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/attribute"
 	oteltrace "go.opentelemetry.io/otel/trace"
@@ -98,15 +99,15 @@ func makeRequest(ctx context.Context, host, path string) (*User, error) {
 	user := &User{}
 
 	// Trace an HTTP client by wrapping the transport
-	client := &http.Client{
+	c := &http.Client{
 		Transport: otelhttp.NewTransport(http.DefaultTransport),
 	}
 
-	req, err := cmdcli.NewRequest(host,
-		cmdcli.WithOutput(user),
-		cmdcli.WithMethod("GET"),
-		cmdcli.WithPrefix(path),
-		cmdcli.WithClient(client),
+	req, err := client.NewRequest(host,
+		client.WithOutput(user),
+		client.WithMethod("GET"),
+		client.WithPrefix(path),
+		client.WithClient(c),
 	)
 	if err != nil {
 		return nil, err

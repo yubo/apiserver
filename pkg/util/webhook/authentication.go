@@ -29,6 +29,7 @@ import (
 	"github.com/yubo/client-go/tools/clientcmd"
 	clientcmdapi "github.com/yubo/client-go/tools/clientcmd/api"
 	"github.com/yubo/golib/api"
+	"k8s.io/klog/v2"
 )
 
 // AuthenticationInfoResolverWrapper can be used to inject Dial function to the
@@ -212,6 +213,7 @@ func (c *defaultAuthenticationInfoResolver) clientConfig(target string) (*rest.C
 }
 
 func restConfigFromKubeconfig(configAuthInfo *clientcmdapi.AuthInfo) (*rest.Config, error) {
+	klog.InfoS("debug", "config", configAuthInfo)
 	config := &rest.Config{}
 
 	// blindly overwrite existing values based on precedence

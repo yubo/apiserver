@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"math/rand"
 	"os"
 	"os/signal"
@@ -201,7 +200,6 @@ func (p *Process) NewRootCmd(opts ...ProcessOption) *cobra.Command {
 			return p.Start(cmd.Flags())
 		},
 		Args: func(cmd *cobra.Command, args []string) error {
-			log.Printf("2\n")
 			for _, arg := range args {
 				if len(arg) > 0 {
 					return fmt.Errorf("%q does not take any arguments, got %q", cmd.CommandPath(), args)

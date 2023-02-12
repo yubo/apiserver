@@ -3,7 +3,7 @@
 ### server
 
 ```sh
-$ go run ./main.go
+$ go run ./main.go -f ./config.yaml
 ```
 
 ### client

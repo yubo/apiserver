@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	rest "github.com/yubo/apiserver/pkg/client"
-	"github.com/yubo/apiserver/pkg/cmdcli"
+	"github.com/yubo/apiserver/pkg/client"
+	"github.com/yubo/client-go/rest"
 	"github.com/yubo/golib/scheme"
 	"k8s.io/klog/v2"
 )
@@ -28,7 +28,7 @@ func run() error {
 		ContentConfig: rest.ContentConfig{NegotiatedSerializer: scheme.NegotiatedSerializer},
 	}
 
-	return cmdcli.NewExecClient(config, "POST", "/remotecommand/exec").
+	return client.NewExecClient(config, "POST", "/remotecommand/exec").
 		Command(name, args...).
 		Run()
 }
