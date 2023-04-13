@@ -156,7 +156,7 @@ func TestDescClearState(t *testing.T) {
 			descA.ClearState()
 
 			// create
-			if !reflect.DeepEqual(*descA, *descB) {
+			if !reflect.DeepEqual(descA, descB) {
 				t.Fatal("descriptor state hasn't be cleaned up")
 			}
 		})

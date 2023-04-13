@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/api/resource"
 	"sigs.k8s.io/json"
 )
@@ -168,7 +169,7 @@ func TestCompatibility(t *testing.T) {
 			expectAllFields: true,
 			expectConfig: LoggingConfiguration{
 				Format:         JSONLogFormat,
-				FlushFrequency: time.Nanosecond,
+				FlushFrequency: api.Duration{Duration: time.Nanosecond},
 				Verbosity:      VerbosityLevel(5),
 				VModule: VModuleConfiguration{
 					{

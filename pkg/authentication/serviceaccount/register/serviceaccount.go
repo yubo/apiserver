@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/proc"
+	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
 	utilerrors "github.com/yubo/golib/util/errors"
 )
 
