@@ -4,12 +4,13 @@ import (
 	"context"
 	"os"
 
-	"examples/models/api"
-	"examples/models/models"
+	"examples/models-db/api"
+	"examples/models-db/models"
 
-	server "github.com/yubo/apiserver/pkg/server/module"
 	"github.com/yubo/apiserver/components/cli"
 	"github.com/yubo/apiserver/pkg/proc"
+	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
+	server "github.com/yubo/apiserver/pkg/server/module"
 	"k8s.io/klog/v2"
 
 	// models

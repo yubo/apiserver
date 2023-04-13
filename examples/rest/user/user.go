@@ -10,6 +10,7 @@ import (
 	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/apiserver/plugin/responsewriter/umi"
+	libapi "github.com/yubo/golib/api"
 )
 
 func New(ctx context.Context) *user {
@@ -134,7 +135,7 @@ func (p *user) get(w http.ResponseWriter, req *http.Request, in *nameParam) (*ap
 func (p *user) list(w http.ResponseWriter, req *http.Request, in *listParam) (ret *listOutput, err error) {
 	ret = &listOutput{}
 
-	opts, err := in.ListOptions(in.Query, &ret.Total)
+	opts, err := in.GetListOptions(in.Query, &ret.Total)
 	if err != nil {
 		return nil, err
 	}
@@ -169,7 +170,7 @@ type nameParam struct {
 }
 
 type listParam struct {
-	rest.PageParams
+	libapi.PageParams
 	Query string `param:"query" description:"query user"`
 }
 

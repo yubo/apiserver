@@ -6,11 +6,13 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/yubo/apiserver/pkg/proc/options"
-	"github.com/yubo/apiserver/pkg/rest"
-	"github.com/yubo/golib/api/errors"
 	"github.com/yubo/apiserver/components/cli"
 	"github.com/yubo/apiserver/pkg/proc"
+	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
+	"github.com/yubo/apiserver/pkg/proc/options"
+	"github.com/yubo/apiserver/pkg/rest"
+	"github.com/yubo/golib/api"
+	"github.com/yubo/golib/api/errors"
 	"github.com/yubo/golib/util"
 
 	server "github.com/yubo/apiserver/pkg/server/module"
@@ -40,7 +42,7 @@ type CreateUserInput struct {
 type CreateUserOutput User
 
 type GetUsersInput struct {
-	rest.PageParams
+	api.PageParams
 	Query *string `param:"query" name:"query" description:"query user name or nick name"`
 	Count bool    `param:"query" name:"count" description:"just response total count"`
 }

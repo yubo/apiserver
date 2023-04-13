@@ -1,14 +1,8 @@
-module examples/audit
+module examples/audit-log
 
-go 1.19
+go 1.20
 
-replace github.com/yubo/apiserver => ../..
-
-replace github.com/yubo/golib => ../../../golib
-
-replace github.com/yubo/client-go => ../../../client-go
-
-require github.com/yubo/apiserver v0.0.0-00010101000000-000000000000
+require github.com/yubo/apiserver v0.1.2-0.20230413160006-27301fd917e9
 
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
@@ -50,8 +44,8 @@ require (
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/spf13/cobra v1.4.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/yubo/client-go v0.0.0-00010101000000-000000000000 // indirect
-	github.com/yubo/golib v0.0.3-0.20220902030005-7f15ca001a44 // indirect
+	github.com/yubo/client-go v0.0.1 // indirect
+	github.com/yubo/golib v0.0.3-0.20230413153058-1831b5929edc // indirect
 	github.com/yubo/goswagger v0.0.0-20211115071236-bbeda335e7c1 // indirect
 	go.opentelemetry.io/otel v1.13.0 // indirect
 	go.opentelemetry.io/otel/trace v1.13.0 // indirect

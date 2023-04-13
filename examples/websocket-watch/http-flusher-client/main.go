@@ -4,7 +4,7 @@ import (
 	"context"
 	"os"
 
-	rest "github.com/yubo/apiserver/pkg/client"
+	"github.com/yubo/client-go/rest"
 	"github.com/yubo/golib/scheme"
 	"k8s.io/klog/v2"
 )

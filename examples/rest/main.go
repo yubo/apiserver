@@ -5,9 +5,10 @@ import (
 	"examples/rest/user"
 	"os"
 
-	server "github.com/yubo/apiserver/pkg/server/module"
 	"github.com/yubo/apiserver/components/cli"
 	"github.com/yubo/apiserver/pkg/proc"
+	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
+	server "github.com/yubo/apiserver/pkg/server/module"
 
 	_ "github.com/yubo/apiserver/pkg/models/register"
 	_ "github.com/yubo/apiserver/pkg/server/register"

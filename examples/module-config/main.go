@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/yubo/apiserver/pkg/proc"
+	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
 	"github.com/yubo/golib/util/yaml"
 )
 

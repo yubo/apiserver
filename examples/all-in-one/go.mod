@@ -1,19 +1,13 @@
 module examples/all-in-one
 
-go 1.19
-
-replace github.com/yubo/apiserver => ../..
-
-replace github.com/yubo/golib => ../../../golib
-
-replace github.com/yubo/client-go => ../../../client-go
+go 1.20
 
 require (
 	github.com/emicklei/go-restful/v3 v3.9.0
 	github.com/go-openapi/spec v0.20.7
 	github.com/spf13/cobra v1.4.0
-	github.com/yubo/apiserver v0.1.0
-	github.com/yubo/golib v0.0.3-0.20220902030005-7f15ca001a44
+	github.com/yubo/apiserver v0.1.2-0.20230413160006-27301fd917e9
+	github.com/yubo/golib v0.0.3-0.20230413153058-1831b5929edc
 	go.opentelemetry.io/otel v1.13.0
 	go.opentelemetry.io/otel/trace v1.13.0
 	k8s.io/klog/v2 v2.80.1
@@ -71,7 +65,7 @@ require (
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/spf13/cast v1.4.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/yubo/client-go v0.0.0-00010101000000-000000000000 // indirect
+	github.com/yubo/client-go v0.0.1 // indirect
 	github.com/yubo/goswagger v0.0.0-20211115071236-bbeda335e7c1 // indirect
 	go.opentelemetry.io/collector v0.47.0 // indirect
 	go.opentelemetry.io/collector/model v0.47.0 // indirect

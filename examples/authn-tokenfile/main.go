@@ -9,6 +9,7 @@ import (
 	"github.com/yubo/apiserver/components/cli"
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/proc"
+	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
 	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/rest"

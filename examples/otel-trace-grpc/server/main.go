@@ -10,13 +10,14 @@ import (
 
 	"examples/otel-trace-grpc/api"
 
+	"github.com/yubo/apiserver/components/cli"
 	"github.com/yubo/apiserver/pkg/config/configgrpc"
 	"github.com/yubo/apiserver/pkg/config/configtls"
 	"github.com/yubo/apiserver/pkg/grpcclient"
+	"github.com/yubo/apiserver/pkg/proc"
+	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
 	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/tracing"
-	"github.com/yubo/apiserver/components/cli"
-	"github.com/yubo/apiserver/pkg/proc"
 	"github.com/yubo/golib/util"
 	"go.opentelemetry.io/otel/attribute"
 	oteltrace "go.opentelemetry.io/otel/trace"
