@@ -9,7 +9,6 @@ import (
 	"github.com/yubo/apiserver/components/cli"
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/proc"
-	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
 	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/rest"
@@ -26,46 +25,31 @@ import (
 	"github.com/yubo/apiserver/plugin/authenticator/basic"
 )
 
-const (
-	moduleName = "custom.authn.examples"
-)
-
-var (
-	hookOps = []v1.HookOps{{
-		Hook:     start,
-		Owner:    moduleName,
-		HookNum:  v1.ACTION_START,
-		Priority: v1.PRI_MODULE,
-	}}
-)
-
 func main() {
 	basic.RegisterAuthn(&basicAuthenticator{})
 	rest.ScopeRegister("auth", "auth description")
 
-	command := proc.NewRootCmd(proc.WithHooks(hookOps...))
-	code := cli.Run(command)
+	cmd := proc.NewRootCmd(proc.WithRun(start))
+	code := cli.Run(cmd)
 	os.Exit(code)
 }
 
 func start(ctx context.Context) error {
-	http, ok := options.APIServerFrom(ctx)
+	srv, ok := options.APIServerFrom(ctx)
 	if !ok {
 		return fmt.Errorf("unable to get http server from the context")
 	}
-	installWs(http)
-	return nil
-}
 
-func installWs(http rest.GoRestfulContainer) {
 	rest.SwaggerTagRegister("demo", "demo Api - swagger api sample")
 	rest.WsRouteBuild(&rest.WsOption{
 		Path:               "/hello",
-		GoRestfulContainer: http,
+		GoRestfulContainer: srv,
 		Routes: []rest.WsRoute{
 			{Method: "GET", SubPath: "/", Handle: hw, Scope: "auth"},
 		},
 	})
+
+	return nil
 }
 
 func hw(w http.ResponseWriter, req *http.Request) (*user.DefaultInfo, error) {

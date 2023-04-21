@@ -8,7 +8,6 @@ import (
 
 	"github.com/yubo/apiserver/components/cli"
 	"github.com/yubo/apiserver/pkg/proc"
-	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
 	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/golib/api"
@@ -23,9 +22,11 @@ import (
 //
 // Open in browser http://localhost:8080/swagger
 
-const (
-	moduleName = "swagger.examples"
-)
+func main() {
+	cmd := proc.NewRootCmd(server.WithoutTLS(), proc.WithRun(start))
+	code := cli.Run(cmd)
+	os.Exit(code)
+}
 
 type User struct {
 	Name     string  `json:"name"`
@@ -88,20 +89,8 @@ type Module struct {
 }
 
 var (
-	hookOps = []v1.HookOps{{
-		Hook:     start,
-		Owner:    moduleName,
-		HookNum:  v1.ACTION_START,
-		Priority: v1.PRI_MODULE,
-	}}
 	module Module
 )
-
-func main() {
-	command := proc.NewRootCmd(server.WithoutTLS(), proc.WithHooks(hookOps...))
-	code := cli.Run(command)
-	os.Exit(code)
-}
 
 func start(ctx context.Context) error {
 	http, ok := options.APIServerFrom(ctx)

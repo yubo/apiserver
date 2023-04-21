@@ -16,7 +16,6 @@ import (
 
 	"github.com/yubo/apiserver/components/cli"
 	"github.com/yubo/apiserver/pkg/proc"
-	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
 	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/rest"
 	jose "gopkg.in/square/go-jose.v2"
@@ -27,13 +26,23 @@ import (
 	_ "github.com/yubo/apiserver/pkg/server/register"
 )
 
-var (
-	issuerURL string
-)
-
 const (
 	moduleName = "oidc-provider"
 )
+
+var (
+	_module   = &module{name: moduleName}
+	issuerURL string
+)
+
+func main() {
+	// register config{} to configer.Factory
+	proc.AddConfig(moduleName, newConfig(), proc.WithConfigGroup("oidc-provider"))
+
+	cmd := proc.NewRootCmd(server.WithoutTLS(), proc.WithRun(_module.start))
+	code := cli.Run(cmd)
+	os.Exit(code)
+}
 
 type config struct {
 	RSAKey       string `json:"rsakey"`
@@ -54,22 +63,6 @@ type module struct {
 	claim        string
 }
 
-var (
-	_module = &module{name: moduleName}
-	hookOps = []v1.HookOps{{
-		Hook:     _module.start,
-		Owner:    moduleName,
-		HookNum:  v1.ACTION_START,
-		Priority: v1.PRI_MODULE,
-	}}
-)
-
-func main() {
-	command := proc.NewRootCmd(server.WithoutTLS())
-	code := cli.Run(command)
-	os.Exit(code)
-}
-
 func (p *module) start(ctx context.Context) error {
 	cf := newConfig()
 	if err := proc.ReadConfig(p.name, cf); err != nil {
@@ -86,14 +79,6 @@ func (p *module) start(ctx context.Context) error {
 
 	klog.InfoS("test data", "token", p.token())
 	return nil
-}
-
-func toKeySet(keys []*jose.JSONWebKey) jose.JSONWebKeySet {
-	ret := jose.JSONWebKeySet{}
-	for _, k := range keys {
-		ret.Keys = append(ret.Keys, *k)
-	}
-	return ret
 }
 
 func (p *module) installWs(c rest.GoRestfulContainer) {
@@ -135,6 +120,14 @@ func (p *module) token() string {
 	return token
 }
 
+func toKeySet(keys []*jose.JSONWebKey) jose.JSONWebKeySet {
+	ret := jose.JSONWebKeySet{}
+	for _, k := range keys {
+		ret.Keys = append(ret.Keys, *k)
+	}
+	return ret
+}
+
 func loadRSAKey(filepath string, alg jose.SignatureAlgorithm) *jose.JSONWebKey {
 	return loadKey(filepath, alg, func(b []byte) (interface{}, error) {
 		key, err := x509.ParsePKCS1PrivateKey(b)
@@ -171,12 +164,4 @@ func loadKey(filepath string, alg jose.SignatureAlgorithm, unmarshal func([]byte
 	}
 	key.KeyID = hex.EncodeToString(thumbprint)
 	return key
-}
-
-func init() {
-	// register hookOps as a module
-	proc.RegisterHooks(hookOps)
-
-	// register config{} to configer.Factory
-	proc.AddConfig(moduleName, newConfig(), proc.WithConfigGroup("oidc-provider"))
 }

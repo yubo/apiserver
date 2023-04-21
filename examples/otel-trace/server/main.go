@@ -1,6 +1,6 @@
-//    /api/v1/users --> getUser1
-//    /api/v2/users --> getUser2 --> getUser1
-//    /api/v3/users --> getUser3 --> /api/v1/users
+// /api/v1/users --> getUser1
+// /api/v2/users --> getUser2 --> getUser1
+// /api/v3/users --> getUser3 --> /api/v1/users
 package main
 
 import (
@@ -12,7 +12,6 @@ import (
 	"github.com/yubo/apiserver/components/cli"
 	"github.com/yubo/apiserver/pkg/client"
 	"github.com/yubo/apiserver/pkg/proc"
-	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
 	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/apiserver/pkg/tracing"
@@ -25,45 +24,29 @@ import (
 	_ "github.com/yubo/apiserver/pkg/tracing/register"
 )
 
-const (
-	moduleName = "trace.otel.examples"
-)
-
-var (
-	hookOps = []v1.HookOps{{
-		Hook:     start,
-		Owner:    moduleName,
-		HookNum:  v1.ACTION_START,
-		Priority: v1.PRI_MODULE,
-	}}
-)
-
 func main() {
-	command := proc.NewRootCmd(server.WithoutTLS(), proc.WithHooks(hookOps...))
-	code := cli.Run(command)
+	cmd := proc.NewRootCmd(server.WithoutTLS(), proc.WithRun(start))
+	code := cli.Run(cmd)
 	os.Exit(code)
 }
 
 func start(ctx context.Context) error {
-	http, ok := options.APIServerFrom(ctx)
+	srv, ok := options.APIServerFrom(ctx)
 	if !ok {
 		return fmt.Errorf("unable to get http server from the context")
 	}
 
-	installWs(http)
-	return nil
-}
-
-func installWs(http rest.GoRestfulContainer) {
 	rest.WsRouteBuild(&rest.WsOption{
 		Path:               "/api",
-		GoRestfulContainer: http,
+		GoRestfulContainer: srv,
 		Routes: []rest.WsRoute{
 			{Method: "GET", SubPath: "v1/users/{name}", Handle: getUser},
 			{Method: "GET", SubPath: "v2/users/{name}", Handle: getUser2},
 			{Method: "GET", SubPath: "v3/users/{name}", Handle: getUser3},
 		},
 	})
+
+	return nil
 }
 
 type User struct {

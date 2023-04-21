@@ -5,15 +5,12 @@ import (
 	"os"
 
 	"github.com/yubo/apiserver/pkg/client"
+	"github.com/yubo/apiserver/pkg/proc"
 	"github.com/yubo/client-go/rest"
-	"k8s.io/klog/v2"
 )
 
 func main() {
-	if err := run(); err != nil {
-		klog.Error(err)
-		os.Exit(1)
-	}
+	os.Exit(proc.PrintErrln(run()))
 }
 
 func run() error {

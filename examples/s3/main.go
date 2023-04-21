@@ -10,7 +10,6 @@ import (
 
 	"github.com/yubo/apiserver/components/cli"
 	"github.com/yubo/apiserver/pkg/proc"
-	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
 	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/responsewriters"
 	"github.com/yubo/apiserver/pkg/rest"
@@ -33,16 +32,10 @@ type module struct {
 
 var (
 	_module = &module{name: moduleName}
-	hookOps = []v1.HookOps{{
-		Hook:     _module.start,
-		Owner:    moduleName,
-		HookNum:  v1.ACTION_START,
-		Priority: v1.PRI_MODULE,
-	}}
 )
 
 func main() {
-	command := proc.NewRootCmd(server.WithoutTLS(), proc.WithHooks(hookOps...))
+	command := proc.NewRootCmd(server.WithoutTLS(), proc.WithRun(_module.start))
 	code := cli.Run(command)
 	os.Exit(code)
 }

@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/yubo/apiserver/pkg/proc"
 	"golang.org/x/net/websocket"
 	"k8s.io/klog/v2"
 )
@@ -15,25 +16,13 @@ const (
 	bearerProtocolPrefix = "base64url.bearer.authorization.k8s.io."
 )
 
-func wsRead(conn *websocket.Conn) ([]byte, error) {
-	for {
-		var data []byte
-		err := websocket.Message.Receive(conn, &data)
-		if err != nil {
-			return nil, err
-		}
-
-		if len(data) == 0 {
-			continue
-		}
-
-		return data, err
-	}
+func main() {
+	os.Exit(proc.PrintErrln(run()))
 }
 
 // Sec-WebSocket-Protocol: base64.RawURLEncoding.DecodeString(encodedToken)
 // websocket
-func ws() error {
+func run() error {
 	token := fakeToken
 	if len(os.Args) > 1 {
 		token = os.Args[1]
@@ -65,9 +54,18 @@ func ws() error {
 	}
 }
 
-func main() {
-	if err := ws(); err != nil {
-		klog.Error(err)
-		os.Exit(1)
+func wsRead(conn *websocket.Conn) ([]byte, error) {
+	for {
+		var data []byte
+		err := websocket.Message.Receive(conn, &data)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(data) == 0 {
+			continue
+		}
+
+		return data, err
 	}
 }

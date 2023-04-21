@@ -9,7 +9,6 @@ import (
 	"github.com/yubo/apiserver/components/cli"
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/proc"
-	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
 	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/rest"
@@ -27,52 +26,26 @@ import (
 	_ "github.com/yubo/apiserver/plugin/authenticator/token/oidc/register"
 )
 
-const (
-	moduleName = "authn-oidc"
-)
-
-type config struct {
-	Claim string `json:"claim"`
-}
-
-type module struct {
-	name  string
-	claim string
-}
-
-var (
-	_module = &module{name: moduleName}
-	hookOps = []v1.HookOps{{
-		Hook:     start,
-		Owner:    moduleName,
-		HookNum:  v1.ACTION_START,
-		Priority: v1.PRI_MODULE,
-	}}
-)
-
 func main() {
-	command := proc.NewRootCmd(server.WithoutTLS(), proc.WithHooks(hookOps...))
+	command := proc.NewRootCmd(server.WithoutTLS(), proc.WithRun(start))
 	code := cli.Run(command)
 	os.Exit(code)
 }
 
 func start(ctx context.Context) error {
-	http, ok := options.APIServerFrom(ctx)
+	srv, ok := options.APIServerFrom(ctx)
 	if !ok {
 		return fmt.Errorf("unable to get http server from the context")
 	}
-	installWs(http)
-	return nil
-}
-
-func installWs(http rest.GoRestfulContainer) {
 	rest.WsRouteBuild(&rest.WsOption{
 		Path:               "/hello",
-		GoRestfulContainer: http,
+		GoRestfulContainer: srv,
 		Routes: []rest.WsRoute{
 			{Method: "GET", SubPath: "/", Handle: hw, Scope: "auth"},
 		},
 	})
+
+	return nil
 }
 
 func hw(w http.ResponseWriter, req *http.Request) (*user.DefaultInfo, error) {

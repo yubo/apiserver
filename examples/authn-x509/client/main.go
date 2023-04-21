@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/yubo/apiserver/pkg/authentication/user"
+	"github.com/yubo/apiserver/pkg/proc"
 	"github.com/yubo/apiserver/pkg/util/webhook"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/scheme"
@@ -35,24 +36,24 @@ func main() {
 	configFile := flag.String("conf", "./client.conf", "webhook config path")
 	flag.Parse()
 
-	if err := func() error {
-		w, err := webhook.NewGenericWebhook(scheme.Codec, *configFile, retryBackoff, nil)
-		if err != nil {
-			return err
-		}
+	os.Exit(proc.PrintErrln(run(*configFile)))
+}
 
-		output := Output{}
-		input := Input{1}
-		err = w.RestClient.Post().Body(&input).Do(context.Background()).Into(&output)
-		if err != nil {
-			return err
-		}
-
-		klog.InfoS("webhook", "input", input, "output", output)
-
-		return nil
-	}(); err != nil {
-		klog.Error(err)
-		os.Exit(1)
+func run(config string) error {
+	w, err := webhook.NewGenericWebhook(scheme.Codec, config, retryBackoff, nil)
+	if err != nil {
+		return err
 	}
+
+	output := Output{}
+	input := Input{1}
+	err = w.RestClient.Post().Body(&input).Do(context.Background()).Into(&output)
+	if err != nil {
+		return err
+	}
+
+	klog.InfoS("webhook", "input", input, "output", output)
+
+	return nil
+
 }

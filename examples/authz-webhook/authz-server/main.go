@@ -19,7 +19,6 @@ type response struct {
 
 func main() {
 	port := flag.String("p", "8081", "listen port")
-
 	flag.Parse()
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

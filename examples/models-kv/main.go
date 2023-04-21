@@ -9,7 +9,6 @@ import (
 
 	"github.com/yubo/apiserver/components/cli"
 	"github.com/yubo/apiserver/pkg/proc"
-	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
 	server "github.com/yubo/apiserver/pkg/server/module"
 	"k8s.io/klog/v2"
 
@@ -21,21 +20,8 @@ import (
 	_ "github.com/yubo/golib/orm/sqlite"
 )
 
-const (
-	moduleName = "kv.models.examples"
-)
-
-var (
-	hookOps = []v1.HookOps{{
-		Hook:     start,
-		Owner:    moduleName,
-		HookNum:  v1.ACTION_START,
-		Priority: v1.PRI_MODULE,
-	}}
-)
-
 func main() {
-	cmd := proc.NewRootCmd(server.WithoutTLS(), proc.WithHooks(hookOps...))
+	cmd := proc.NewRootCmd(server.WithoutTLS(), proc.WithRun(start))
 	code := cli.Run(cmd)
 	os.Exit(code)
 }

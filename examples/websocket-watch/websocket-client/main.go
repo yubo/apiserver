@@ -3,28 +3,17 @@ package main
 import (
 	"os"
 
+	"github.com/yubo/apiserver/pkg/proc"
 	"golang.org/x/net/websocket"
 	"k8s.io/klog/v2"
 )
 
-func wsRead(conn *websocket.Conn) ([]byte, error) {
-	for {
-		var data []byte
-		err := websocket.Message.Receive(conn, &data)
-		if err != nil {
-			return nil, err
-		}
-
-		if len(data) == 0 {
-			continue
-		}
-
-		return data, err
-	}
+func main() {
+	os.Exit(proc.PrintErrln(run()))
 }
 
 // websocket
-func ws() error {
+func run() error {
 	ws, err := websocket.Dial("ws://127.0.0.1:8080/hello", "", "http://127.0.0.1/")
 	if err != nil {
 		return err
@@ -39,9 +28,18 @@ func ws() error {
 	}
 }
 
-func main() {
-	if err := ws(); err != nil {
-		klog.Error(err)
-		os.Exit(1)
+func wsRead(conn *websocket.Conn) ([]byte, error) {
+	for {
+		var data []byte
+		err := websocket.Message.Receive(conn, &data)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(data) == 0 {
+			continue
+		}
+
+		return data, err
 	}
 }

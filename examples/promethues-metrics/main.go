@@ -12,10 +12,6 @@ import (
 	_ "github.com/yubo/apiserver/pkg/server/register"
 )
 
-const (
-	moduleName = "prometheus-metrics.examples"
-)
-
 var (
 	opsProcessed = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "myapp_processed_ops_total",
@@ -35,6 +31,5 @@ func recordMetrics() {
 func main() {
 	recordMetrics()
 
-	code := cli.Run(proc.NewRootCmd())
-	os.Exit(code)
+	os.Exit(cli.Run(proc.NewRootCmd()))
 }

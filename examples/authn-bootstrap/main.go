@@ -11,7 +11,6 @@ import (
 	bootstrapapi "github.com/yubo/apiserver/pkg/cluster-bootstrap/token/api"
 	"github.com/yubo/apiserver/pkg/models"
 	"github.com/yubo/apiserver/pkg/proc"
-	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
 	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/rest"
@@ -44,27 +43,24 @@ const (
 	tokenSecret = "circumnavigation" // 16 letters
 )
 
-var (
-	hookOps = []v1.HookOps{{
-		Hook:     start,
-		Owner:    moduleName,
-		HookNum:  v1.ACTION_START,
-		Priority: v1.PRI_MODULE,
-	}}
-)
-
 func main() {
-	command := proc.NewRootCmd(proc.WithHooks(hookOps...))
-	code := cli.Run(command)
+	cmd := proc.NewRootCmd(proc.WithRun(start))
+	code := cli.Run(cmd)
 	os.Exit(code)
 }
 
 func start(ctx context.Context) error {
-	http, ok := options.APIServerFrom(ctx)
+	srv, ok := options.APIServerFrom(ctx)
 	if !ok {
 		return fmt.Errorf("unable to get http server from the context")
 	}
-	installWs(http)
+	rest.WsRouteBuild(&rest.WsOption{
+		Path:               "/hello",
+		GoRestfulContainer: srv,
+		Routes: []rest.WsRoute{
+			{Method: "GET", SubPath: "/", Handle: hw},
+		},
+	})
 
 	// create secret
 	secret := models.NewSecret()
@@ -81,16 +77,6 @@ func start(ctx context.Context) error {
 		Type: "bootstrap.kubernetes.io/token",
 	})
 	return nil
-}
-
-func installWs(http rest.GoRestfulContainer) {
-	rest.WsRouteBuild(&rest.WsOption{
-		Path:               "/hello",
-		GoRestfulContainer: http,
-		Routes: []rest.WsRoute{
-			{Method: "GET", SubPath: "/", Handle: hw},
-		},
-	})
 }
 
 func hw(w http.ResponseWriter, req *http.Request) (*user.DefaultInfo, error) {

@@ -8,7 +8,6 @@ import (
 
 	"github.com/yubo/apiserver/components/cli"
 	"github.com/yubo/apiserver/pkg/proc"
-	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
 	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/golib/api"
@@ -21,32 +20,25 @@ import (
 //
 // GET http://localhost:8080/hello
 
-const (
-	moduleName = "example.list.request"
-)
-
-var (
-	hookOps = []v1.HookOps{{
-		Hook:     start,
-		Owner:    moduleName,
-		HookNum:  v1.ACTION_START,
-		Priority: v1.PRI_MODULE,
-	}}
-)
-
 func main() {
-	command := proc.NewRootCmd(server.WithoutTLS(), proc.WithHooks(hookOps...))
+	command := proc.NewRootCmd(server.WithoutTLS(), proc.WithRun(start))
 	code := cli.Run(command)
 	os.Exit(code)
 }
 
 func start(ctx context.Context) error {
-	http, ok := options.APIServerFrom(ctx)
+	srv, ok := options.APIServerFrom(ctx)
 	if !ok {
 		return fmt.Errorf("unable to get http server from the context")
 	}
+	rest.WsRouteBuild(&rest.WsOption{
+		Path:               "/users",
+		GoRestfulContainer: srv,
+		Routes: []rest.WsRoute{
+			{Method: "GET", SubPath: "/", Handle: list, Desc: "list users"},
+		},
+	})
 
-	installWs(http)
 	return nil
 }
 
@@ -62,16 +54,6 @@ type ListInput struct {
 type ListOutput struct {
 	Total int     `json:"total"`
 	List  []*User `json:"list"`
-}
-
-func installWs(http rest.GoRestfulContainer) {
-	rest.WsRouteBuild(&rest.WsOption{
-		Path:               "/users",
-		GoRestfulContainer: http,
-		Routes: []rest.WsRoute{
-			{Method: "GET", SubPath: "/", Handle: list, Desc: "list users"},
-		},
-	})
 }
 
 func list(w http.ResponseWriter, req *http.Request, in *ListInput) (*ListOutput, error) {

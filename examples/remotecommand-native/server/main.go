@@ -8,7 +8,6 @@ import (
 
 	"github.com/yubo/apiserver/components/cli"
 	"github.com/yubo/apiserver/pkg/proc"
-	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
 	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/rest"
 	servermodule "github.com/yubo/apiserver/pkg/server/module"
@@ -28,27 +27,14 @@ import (
 //
 // go run ./apiserver-watch.go --request-timeout=10
 
-const (
-	moduleName = "example.native.remotecommand"
-)
-
-var (
-	hookOps = []v1.HookOps{{
-		Hook:     start,
-		Owner:    moduleName,
-		HookNum:  v1.ACTION_START,
-		Priority: v1.PRI_MODULE,
-	}}
-)
-
 type server struct {
 	config   streaming.Config
 	provider streaming.Provider
 }
 
 func main() {
-	command := proc.NewRootCmd(servermodule.WithoutTLS(), proc.WithHooks(hookOps...))
-	code := cli.Run(command)
+	cmd := proc.NewRootCmd(servermodule.WithoutTLS(), proc.WithRun(start))
+	code := cli.Run(cmd)
 	os.Exit(code)
 }
 

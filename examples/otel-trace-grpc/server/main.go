@@ -15,7 +15,6 @@ import (
 	"github.com/yubo/apiserver/pkg/config/configtls"
 	"github.com/yubo/apiserver/pkg/grpcclient"
 	"github.com/yubo/apiserver/pkg/proc"
-	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
 	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/tracing"
 	"github.com/yubo/golib/util"
@@ -26,22 +25,9 @@ import (
 	_ "github.com/yubo/apiserver/pkg/tracing/register"
 )
 
-const (
-	moduleName = "grpc.trace.otel.examples"
-)
-
-var (
-	hookOps = []v1.HookOps{{
-		Hook:     start,
-		Owner:    moduleName,
-		HookNum:  v1.ACTION_START,
-		Priority: v1.PRI_MODULE,
-	}}
-)
-
 func main() {
-	command := proc.NewRootCmd(proc.WithHooks(hookOps...))
-	code := cli.Run(command)
+	cmd := proc.NewRootCmd(proc.WithRun(start))
+	code := cli.Run(cmd)
 	os.Exit(code)
 }
 

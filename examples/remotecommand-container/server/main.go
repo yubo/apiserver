@@ -9,7 +9,6 @@ import (
 
 	"github.com/yubo/apiserver/components/cli"
 	"github.com/yubo/apiserver/pkg/proc"
-	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
 	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/rest"
 	servermodule "github.com/yubo/apiserver/pkg/server/module"
@@ -29,17 +28,7 @@ import (
 //
 // go run ./apiserver-watch.go --request-timeout=10
 
-const (
-	moduleName = "example.container.remotecommand"
-)
-
 var (
-	hookOps = []v1.HookOps{{
-		Hook:     start,
-		Owner:    moduleName,
-		HookNum:  v1.ACTION_START,
-		Priority: v1.PRI_MODULE,
-	}}
 	_server = &server{
 		config:   streaming.DefaultConfig,
 		provider: dockershim.NewProvider("unix:///var/run/docker.sock", 2*time.Minute, time.Minute),
@@ -52,7 +41,7 @@ type server struct {
 }
 
 func main() {
-	command := proc.NewRootCmd(servermodule.WithoutTLS(), proc.WithHooks(hookOps...))
+	command := proc.NewRootCmd(servermodule.WithoutTLS(), proc.WithRun(start))
 	code := cli.Run(command)
 	os.Exit(code)
 }

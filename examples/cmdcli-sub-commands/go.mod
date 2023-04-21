@@ -9,7 +9,6 @@ replace github.com/yubo/golib => ../../../golib
 require (
 	github.com/spf13/cobra v1.4.0
 	github.com/yubo/apiserver v0.0.0-00010101000000-000000000000
-	github.com/yubo/golib v0.0.3-0.20230413153058-1831b5929edc
 	k8s.io/klog/v2 v2.80.1
 )
 
@@ -33,6 +32,7 @@ require (
 	github.com/prometheus/common v0.37.0 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/yubo/golib v0.0.3-0.20230413153058-1831b5929edc // indirect
 	golang.org/x/sys v0.4.0 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect

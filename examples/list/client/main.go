@@ -5,8 +5,8 @@ import (
 	"os"
 
 	"github.com/yubo/apiserver/pkg/client"
+	"github.com/yubo/apiserver/pkg/proc"
 	"github.com/yubo/golib/api"
-	"k8s.io/klog/v2"
 )
 
 type User struct {
@@ -40,8 +40,5 @@ func run() error {
 }
 
 func main() {
-	if err := run(); err != nil {
-		klog.Error(err)
-		os.Exit(1)
-	}
+	os.Exit(proc.PrintErrln(run()))
 }

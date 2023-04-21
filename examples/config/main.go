@@ -11,13 +11,13 @@ import (
 	"github.com/yubo/golib/util/yaml"
 )
 
-const (
-	moduleName = "example"
-)
+func main() {
+	// register module config
+	proc.AddConfig("example", newConfig(), proc.WithConfigGroup("example"))
 
-var (
-	_module = &module{name: moduleName}
-)
+	code := cli.Run(proc.NewRootCmd(proc.WithRun(start), proc.WithName("logger"), proc.WithoutLoop()))
+	os.Exit(code)
+}
 
 type config struct {
 	UserName string `json:"userName" flag:"user-name" env:"USER_NAME" description:"user name"`
@@ -25,17 +25,13 @@ type config struct {
 	City     string `json:"city" flag:"city" env:"USER_CITY" default:"beijing" description:"city"`
 }
 
-type module struct {
-	name string
-}
-
 func newConfig() *config {
 	return &config{UserName: "Anonymous"}
 }
 
-func (p *module) start(ctx context.Context) error {
+func start(ctx context.Context) error {
 	cf := newConfig()
-	if err := proc.ReadConfig(p.name, cf); err != nil {
+	if err := proc.ReadConfig("example", cf); err != nil {
 		return err
 	}
 
@@ -43,16 +39,4 @@ func (p *module) start(ctx context.Context) error {
 	fmt.Printf("%s\n%s\n%s\n", strings.Repeat("=", 37), string(b), strings.Repeat("=", 37))
 
 	return nil
-}
-
-func main() {
-	// register module config
-	proc.AddConfig(moduleName, newConfig(), proc.WithConfigGroup("example"))
-
-	code := cli.Run(proc.NewRootCmd(
-		proc.WithRun(_module.start),
-		proc.WithName("logger"),
-		proc.WithoutLoop(),
-	))
-	os.Exit(code)
 }
