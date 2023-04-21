@@ -2,6 +2,8 @@ module examples/all-in-one
 
 go 1.20
 
+replace github.com/yubo/apiserver => ../../../apiserver
+
 require (
 	github.com/emicklei/go-restful/v3 v3.9.0
 	github.com/go-openapi/spec v0.20.7
@@ -101,3 +103,5 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 )
+
+replace github.com/yubo/golib => ../../../golib

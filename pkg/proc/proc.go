@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"sync"
 	"time"
 
 	"github.com/go-openapi/spec"
@@ -17,8 +18,10 @@ import (
 	"github.com/yubo/apiserver/components/cli/globalflag"
 	"github.com/yubo/apiserver/components/featuregate"
 	"github.com/yubo/apiserver/components/logs"
+	logsapi "github.com/yubo/apiserver/components/logs/api/v1"
 	"github.com/yubo/apiserver/components/version/verflag"
 	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
+	"github.com/yubo/apiserver/pkg/proc/logging"
 	"github.com/yubo/apiserver/pkg/proc/reporter"
 	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/util"
@@ -36,7 +39,8 @@ var (
 )
 
 func init() {
-	loggingRegister()
+	RegisterHooks(logging.HookOps)
+	AddConfig(logging.ModuleName, logging.NewConfig(), WithConfigGroup("logging"))
 }
 
 type Process struct {
@@ -57,6 +61,8 @@ type Process struct {
 	hookOps [v1.ACTION_SIZE]v1.Hooks // catalog of RegisterHooks
 	status  v1.ProcessStatus
 	err     error
+
+	addFlagsOnce sync.Once
 }
 
 func newProcess() *Process {
@@ -69,7 +75,7 @@ func newProcess() *Process {
 		hookOps:        hookOps,
 		sigsCh:         make(chan os.Signal, 2),
 		ProcessOptions: newProcessOptions(),
-		configer:       configer.NewConfiger(),
+		configer:       configer.New(),
 		featureGate:    featuregate.NewFeatureGate(),
 	}
 
@@ -191,6 +197,10 @@ func (p *Process) NewRootCmd(opts ...ProcessOption) *cobra.Command {
 	rand.Seed(time.Now().UnixNano())
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
+	for _, opt := range opts {
+		opt(p.ProcessOptions)
+	}
+
 	cmd := &cobra.Command{
 		Use:          p.name,
 		Short:        p.description,
@@ -209,7 +219,36 @@ func (p *Process) NewRootCmd(opts ...ProcessOption) *cobra.Command {
 		},
 	}
 
-	p.Init(cmd, opts...)
+	p.Init(cmd)
+
+	return cmd
+}
+
+// NewCmd without set runtime
+func (p *Process) NewCmd(opts ...ProcessOption) *cobra.Command {
+	for _, opt := range opts {
+		opt(p.ProcessOptions)
+	}
+
+	cmd := &cobra.Command{
+		Use:          p.name,
+		Short:        p.description,
+		SilenceUsage: true,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			verflag.PrintAndExitIfRequested()
+			return p.Start(cmd.Flags())
+		},
+		Args: func(cmd *cobra.Command, args []string) error {
+			for _, arg := range args {
+				if len(arg) > 0 {
+					return fmt.Errorf("%q does not take any arguments, got %q", cmd.CommandPath(), args)
+				}
+			}
+			return nil
+		},
+	}
+
+	p.Init(cmd)
 
 	return cmd
 }
@@ -228,11 +267,11 @@ func (p *Process) Start(fs *pflag.FlagSet) error {
 		os.Exit(0)
 	}
 
-	p.PrintFlags(fs)
-
 	if err := p.start(); err != nil {
 		return err
 	}
+
+	p.PrintFlags(fs)
 
 	return p.mainLoop()
 }
@@ -397,7 +436,9 @@ func (p *Process) stop() error {
 	closeTimeout := serverGracefulCloseTimeout
 	select {
 	case <-wgCh:
-		klog.Info("See ya!")
+		if !p.noloop {
+			klog.Info("See ya!")
+		}
 	case <-time.After(closeTimeout):
 		p.err = fmt.Errorf("%s closed after timeout %s", p.name, closeTimeout.String())
 
@@ -441,28 +482,35 @@ func (p *Process) PrintFlags(fs *pflag.FlagSet) {
 	flag.PrintFlags(fs)
 }
 
+func (p *Process) AddLoggingFlags() {
+	fs := p.namedFlagSets.FlagSet("logging")
+	o := logsapi.NewLoggingConfiguration()
+	logsapi.AddFlags(o, fs)
+	logs.AddFlags(fs, logs.SkipLoggingConfigurationFlags())
+}
+
 func (p *Process) AddFlags(name string) {
-	gfs := p.namedFlagSets.FlagSet("global")
+	p.addFlagsOnce.Do(func() {
+		gfs := p.namedFlagSets.FlagSet("global")
+		opts := []logs.Option{}
+		if p.skipLoggingFlags {
+			opts = append(opts, logs.SkipLoggingConfigurationFlags())
+		}
 
-	opts := []logs.Option{}
-	if p.skipLoggingFlags {
-		opts = append(opts, logs.SkipLoggingConfigurationFlags())
-	}
+		// add klog, logs, help flags
+		globalflag.AddGlobalFlags(
+			gfs,
+			name,
+			opts...,
+		)
 
-	// add klog, logs, help flags
-	globalflag.AddGlobalFlags(
-		gfs,
-		name,
-		opts...,
-	)
+		// add version flags
+		verflag.AddFlags(gfs)
 
-	// add version flags
-	verflag.AddFlags(gfs)
-
-	// add process flags to gfs
-	gfs.BoolVar(&p.debugConfig, "debug-config", p.debugConfig, "print config")
-
-	p.configer.AddFlags(gfs)
+		// add process flags to gfs
+		gfs.BoolVar(&p.debugConfig, "debug-config", p.debugConfig, "print config")
+		p.configer.AddFlags(gfs)
+	})
 }
 
 func (p *Process) Name() string {

@@ -36,7 +36,7 @@ func NewDB(ctx context.Context, config *Config) (DB, error) {
 
 	for _, cf := range config.Databases {
 		if cf.Dsn == "" || cf.Driver == "" {
-			klog.Warningf("database[%s].dsn is empty, skiped", cf.Name)
+			klog.Warningf("db.%s.dsn is empty, skiped", cf.Name)
 			continue
 		}
 		opts := []orm.DBOption{

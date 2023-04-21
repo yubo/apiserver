@@ -2,6 +2,8 @@ module github.com/yubo/apiserver
 
 go 1.20
 
+replace github.com/yubo/golib => ../golib
+
 require (
 	github.com/blang/semver/v4 v4.0.0
 	github.com/buger/goterm v1.0.1

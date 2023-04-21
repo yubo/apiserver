@@ -83,8 +83,8 @@ const (
 	_ uint16 = iota << 3
 
 	PRI_M_LOGGING // no dep
-	PRI_M_DB      // no  dep
-	PRI_M_AUDIT   // no  dep
+	PRI_M_DB      // no dep
+	PRI_M_AUDIT   // no dep
 	PRI_M_HTTP    // no dep
 	PRI_M_AUTHN   // dep authn_mode HTTP1
 	PRI_M_AUTHZ   // dep authn

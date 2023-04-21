@@ -4,7 +4,7 @@ allinone:
 logging:
   format: text
   flushFrequency: 10s
-  verbosity: 5
+  verbosity: 1
   vmodule:
   options:
     json:

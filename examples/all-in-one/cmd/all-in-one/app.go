@@ -99,7 +99,7 @@ func newServerCmd() *cobra.Command {
 		proc.WithContact(&contact),
 		proc.WithReport(),
 	)
-	cmd.AddCommand(proc.NewVersionCmd())
+	//cmd.AddCommand(proc.NewVersionCmd())
 
 	return cmd
 }

@@ -8,7 +8,7 @@ import (
 
 	"github.com/yubo/apiserver/components/cli"
 	"github.com/yubo/apiserver/pkg/proc"
-	"github.com/yubo/apiserver/pkg/proc/api/v1"
+	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
 	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/rest"
 
@@ -33,7 +33,6 @@ func main() {
 	command := proc.NewRootCmd(server.WithoutTLS(), proc.WithHooks(hookOps...))
 	code := cli.Run(command)
 	os.Exit(code)
-
 }
 
 func start(ctx context.Context) error {

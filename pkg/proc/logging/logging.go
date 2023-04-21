@@ -15,11 +15,6 @@ import (
 	"github.com/yubo/golib/util/validation/field"
 )
 
-//func Register() {
-//	RegisterHooks(hookOps)
-//	AddConfig(moduleName, newConfig(), WithConfigGroup("logging"))
-//}
-
 func init() {
 	runtime.Must(logsapi.AddFeatureGates(utilfeature.DefaultMutableFeatureGate))
 }

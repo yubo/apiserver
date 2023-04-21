@@ -39,20 +39,14 @@ devrun: $(APP_NAME)
 		-f ./etc/config.yaml \
 		--token-auth-file=./etc/tokens.cvs \
 		--anonymous-auth \
-		--authorization-mode=AlwaysAllow \
-		-v 10 \
-		--logtostderr"
+		--authorization-mode=AlwaysAllow"
 		#--tls-cert-file=./run/pki/apiserver.crt \
 		#--tls-private-key-file=./run/pki/apiserver.key \
 
 .PHONY: run
 run: $(APP_PATH)
 	$(APP_PATH) \
-		-f ./etc/config.yaml \
-		-v 10 \
-		--cert-dir /tmp/$(APP_NAME) \
-		--add-dir-header \
-		--logtostderr 2>&1
+		-f ./etc/config.yaml --cert-dir /tmp/$(APP_NAME) 2>&1
 
 		#--anonymous-auth \
 		#--debug-config --dry-run \

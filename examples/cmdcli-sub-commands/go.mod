@@ -1,10 +1,16 @@
-module examples/module-config
+module examples/multi-cmds
 
 go 1.20
 
+replace github.com/yubo/apiserver => ../../../apiserver
+
+replace github.com/yubo/golib => ../../../golib
+
 require (
-	github.com/yubo/apiserver v0.1.2-0.20230413160006-27301fd917e9
+	github.com/spf13/cobra v1.4.0
+	github.com/yubo/apiserver v0.0.0-00010101000000-000000000000
 	github.com/yubo/golib v0.0.3-0.20230413153058-1831b5929edc
+	k8s.io/klog/v2 v2.80.1
 )
 
 require (
@@ -26,12 +32,10 @@ require (
 	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/common v0.37.0 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect
-	github.com/spf13/cobra v1.4.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	golang.org/x/sys v0.4.0 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/klog/v2 v2.80.1 // indirect
 )

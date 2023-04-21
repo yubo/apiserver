@@ -1,0 +1,7 @@
+logging:
+  flushFrequency: 5s
+  format: text
+  options:
+    json:
+      infoBufferSize: "0"
+  verbosity: 0

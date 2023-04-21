@@ -60,7 +60,18 @@ func InitFlags() {
 
 // PrintFlags logs the flags in the flagset
 func PrintFlags(flags *pflag.FlagSet) {
-	flags.VisitAll(func(flag *pflag.Flag) {
-		klog.V(1).Infof("FLAG: --%s=%q", flag.Name, flag.Value)
-	})
+	if klog.V(2).Enabled() {
+		flags.VisitAll(func(flag *pflag.Flag) {
+			klog.Infof("FLAG: --%s=%q", flag.Name, flag.Value)
+		})
+		return
+	}
+
+	if klog.V(1).Enabled() {
+		flags.VisitAll(func(flag *pflag.Flag) {
+			if flag.Changed {
+				klog.Infof("FLAG: --%s=%q", flag.Name, flag.Value)
+			}
+		})
+	}
 }

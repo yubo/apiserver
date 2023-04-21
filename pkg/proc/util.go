@@ -8,7 +8,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/yubo/apiserver/components/cli/flag"
-	"github.com/yubo/apiserver/pkg/proc/logging"
 	"github.com/yubo/golib/term"
 )
 
@@ -108,9 +107,4 @@ func SdNotify(unsetEnvironment bool, state string) (bool, error) {
 		return false, err
 	}
 	return true, nil
-}
-
-func loggingRegister() {
-	RegisterHooks(logging.HookOps)
-	AddConfig(logging.ModuleName, logging.NewConfig())
 }

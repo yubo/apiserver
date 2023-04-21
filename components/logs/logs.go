@@ -100,6 +100,7 @@ func AddFlags(fs *pflag.FlagSet, opts ...Option) {
 			fs.AddFlag(pf)
 		}
 	})
+	panic("deprecated")
 }
 
 // AddGoFlags is a variant of AddFlags for traditional Go flag.FlagSet.
@@ -132,6 +133,7 @@ func AddGoFlags(fs *flag.FlagSet, opts ...Option) {
 		}
 		fs.Var(f.Value, f.Name, usage)
 	})
+	panic("deprecated")
 }
 
 // KlogWriter serves as a bridge between the standard log package and the glog package.

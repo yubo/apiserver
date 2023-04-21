@@ -229,12 +229,8 @@ github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXf
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
 github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81PSLYec5m4=
 github.com/stretchr/testify v1.8.1 h1:w7B6lhMri9wdJUVmEZPGGhZzrYTPvgJArz7wNPgYKsk=
-github.com/yubo/apiserver v0.1.2-0.20230413160006-27301fd917e9 h1:Yxoz26PS+6Jks5KjfQIXYDriKsMzxlRn+VLVmpx8uMg=
-github.com/yubo/apiserver v0.1.2-0.20230413160006-27301fd917e9/go.mod h1:FmGFGbQ8hVUIkct/U7vMcOrWgielsQw+qdZoyODByJg=
 github.com/yubo/client-go v0.0.1 h1:BdlH6a3x+pAFmCnJ3oSYUcOFXO/6Xw3R4u2q6VdYGrE=
 github.com/yubo/client-go v0.0.1/go.mod h1:9yVSg4KdaxgE4ZfoSIovJgIGOt7ajMMuYjXmBTMkukI=
-github.com/yubo/golib v0.0.3-0.20230413153058-1831b5929edc h1:YHtgQem0bt3ytYRS2gWAY1YhPF+EsiFLxag94N0wLnw=
-github.com/yubo/golib v0.0.3-0.20230413153058-1831b5929edc/go.mod h1:sybRjTi2HBqJyCFD94G1/OngQMRck6PoXqjqyj3Fg8k=
 github.com/yuin/goldmark v1.1.25/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.32/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=

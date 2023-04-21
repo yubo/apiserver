@@ -6,30 +6,23 @@ import (
 	"os"
 	"strings"
 
+	"github.com/yubo/apiserver/components/cli"
 	"github.com/yubo/apiserver/pkg/proc"
-	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
 	"github.com/yubo/golib/util/yaml"
 )
 
 const (
-	moduleName = "config.module.examples"
+	moduleName = "example"
 )
 
 var (
 	_module = &module{name: moduleName}
-	hookOps = []v1.HookOps{{
-		Hook:     _module.start,
-		Owner:    moduleName,
-		HookNum:  v1.ACTION_START,
-		Priority: v1.PRI_MODULE,
-	}}
 )
 
 type config struct {
 	UserName string `json:"userName" flag:"user-name" env:"USER_NAME" description:"user name"`
 	UserAge  int    `json:"userAge" flag:"user-age" env:"USER_AGE" description:"user age"`
 	City     string `json:"city" flag:"city" env:"USER_CITY" default:"beijing" description:"city"`
-	License  string `json:"license" flag:"license" description:"license"`
 }
 
 type module struct {
@@ -38,13 +31,6 @@ type module struct {
 
 func newConfig() *config {
 	return &config{UserName: "Anonymous"}
-}
-
-func main() {
-	if err := proc.NewRootCmd(proc.WithoutLoop()).Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
 }
 
 func (p *module) start(ctx context.Context) error {
@@ -59,10 +45,14 @@ func (p *module) start(ctx context.Context) error {
 	return nil
 }
 
-func init() {
-	// register hookOps as a module
-	proc.RegisterHooks(hookOps)
-
-	// register config{} to configer.Factory
+func main() {
+	// register module config
 	proc.AddConfig(moduleName, newConfig(), proc.WithConfigGroup("example"))
+
+	code := cli.Run(proc.NewRootCmd(
+		proc.WithRun(_module.start),
+		proc.WithName("logger"),
+		proc.WithoutLoop(),
+	))
+	os.Exit(code)
 }

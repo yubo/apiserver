@@ -56,6 +56,20 @@ func WithHooks(hooks ...v1.HookOps) ProcessOption {
 	}
 }
 
+func WithRun(fn ...func(ctx context.Context) error) ProcessOption {
+	hooks := make([]v1.HookOps, len(fn))
+	for i := range fn {
+		hooks[i] = v1.HookOps{
+			Hook:     fn[i],
+			Owner:    "__proc_with_run__",
+			HookNum:  v1.ACTION_START,
+			Priority: v1.PRI_MODULE,
+		}
+	}
+
+	return WithHooks(hooks...)
+}
+
 func WithName(name string) ProcessOption {
 	return func(p *ProcessOptions) {
 		p.name = name
