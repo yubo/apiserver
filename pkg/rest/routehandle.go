@@ -11,6 +11,7 @@ import (
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/runtime"
+	"github.com/yubo/golib/util"
 	"github.com/yubo/golib/util/errors"
 )
 
@@ -26,8 +27,9 @@ type routeHandle struct {
 	parameterCodec request.ParameterCodec
 	respWriter     RespWriter
 	handle         interface{}
-	ht             reflect.Type
-	hv             reflect.Value
+	name           string
+	rt             reflect.Type
+	rv             reflect.Value
 	in             []requestType
 	param          reflect.Type // request param - query, path, header
 	body           reflect.Type // request body
@@ -43,6 +45,7 @@ func NewRouteHandle(
 
 	ret := &routeHandle{
 		handle:         handle,
+		name:           util.Name(handle),
 		parameterCodec: parameterCodec,
 		serializer:     serializer,
 		respWriter:     respWriter,
@@ -56,13 +59,17 @@ func NewRouteHandle(
 }
 
 func (p *routeHandle) init() error {
-	p.hv = reflect.ValueOf(p.handle)
-	p.ht = p.hv.Type()
+	p.rv = reflect.ValueOf(p.handle)
+	p.rt = p.rv.Type()
+
+	if p.rt.Kind() != reflect.Func {
+		return errors.Errorf("%s expected func", p.name)
+	}
 
 	// validate
 	if err := p.validateHandle(); err != nil {
 		return errors.Wrapf(err, "validate handle function %s %s",
-			goruntime.FuncForPC(p.hv.Pointer()).Name(), p.ht.String())
+			goruntime.FuncForPC(p.rv.Pointer()).Name(), p.rt.String())
 	}
 
 	if err := p.initHandleIO(); err != nil {
@@ -73,24 +80,36 @@ func (p *routeHandle) init() error {
 }
 
 func (p *routeHandle) validateHandle() error {
-	rt := p.ht
+	rt := p.rt
 	numIn := rt.NumIn()
 	numOut := rt.NumOut()
 
 	if numIn < 2 || numIn > 4 {
-		return errors.Errorf("handle.NumIn() %d expected [2,4]", numIn)
-	}
-
-	if numOut > 2 {
-		return errors.Errorf("handle.NumOut() %d expected [0, 2]", numOut)
+		return errors.Errorf("%s.NumIn() %d expected [2,4]", p.name, numIn)
 	}
 
 	if arg := rt.In(0).String(); arg != "http.ResponseWriter" {
-		return errors.Errorf("expected func(*http.Request, http.ResponseWriter, ...)")
+		return errors.Errorf("expected func %s(*http.Request, http.ResponseWriter, ...)", p.name)
 	}
 
 	if arg := rt.In(1).String(); arg != "*http.Request" {
-		return errors.Errorf("expected func(*http.Request, http.ResponseWriter, ...)")
+		return errors.Errorf("expected func %s(*http.Request, http.ResponseWriter, ...)", p.name)
+	}
+
+	if numOut > 2 {
+		return errors.Errorf("%s.NumOut() %d expected [0, 2]", p.name, numOut)
+	}
+
+	if numOut == 2 {
+		if arg := rt.Out(1).String(); arg != "error" {
+			return errors.Errorf("func %s expected return (***, error), got (***, %s)", p.name, arg)
+		}
+	}
+
+	if numOut == 1 {
+		if arg := rt.Out(0).String(); arg != "error" {
+			return errors.Errorf("func %s expected return error, got %s", p.name, arg)
+		}
 	}
 
 	return nil
@@ -109,8 +128,8 @@ func (p *routeHandle) validateHandle() error {
 func (p *routeHandle) initHandleIO() error {
 
 	// in
-	for i := 2; i < p.ht.NumIn(); i++ {
-		rt := p.ht.In(i)
+	for i := 2; i < p.rt.NumIn(); i++ {
+		rt := p.rt.In(i)
 
 		if rt.Kind() != reflect.Ptr {
 			return errors.New("payload must be a ptr")
@@ -141,8 +160,8 @@ func (p *routeHandle) initHandleIO() error {
 	}
 
 	// out
-	if p.ht.NumOut() == 2 {
-		rt, err := getResponseType(p.ht.Out(0))
+	if p.rt.NumOut() == 2 {
+		rt, err := getResponseType(p.rt.Out(0))
 		if err != nil {
 			return errors.Wrap(err, "get response type")
 		}
@@ -156,7 +175,7 @@ func (p *routeHandle) isParam(rt reflect.Type) bool {
 	return p.parameterCodec.ValidateParamType(rt) == nil
 }
 
-func (p *routeHandle) Handler() func(req *restful.Request, resp *restful.Response) {
+func (p *routeHandle) Handler() func(*restful.Request, *restful.Response) {
 	return func(req *restful.Request, resp *restful.Response) {
 		param := newInterface(p.param)
 		body := newInterface(p.body)
@@ -183,7 +202,7 @@ func (p *routeHandle) Handler() func(req *restful.Request, resp *restful.Respons
 				in = append(in, reflect.ValueOf(body))
 			}
 		}
-		ret := p.hv.Call(in)
+		ret := p.rv.Call(in)
 
 		var err error
 		switch len(ret) {
@@ -222,7 +241,6 @@ func readEntity(req *restful.Request, param, body interface{}, codec request.Par
 				return err
 			}
 		}
-
 	}
 
 	if body != nil {
