@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/base64"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -15,9 +14,6 @@ import (
 )
 
 func RegisterAuthn(p basicProvider) error {
-	if p == nil {
-		return fmt.Errorf("invalid basic provider")
-	}
 	return authentication.RegisterAuthn(newFactory(p))
 }
 

@@ -56,6 +56,21 @@ func WithHooks(hooks ...v1.HookOps) ProcessOption {
 	}
 }
 
+func WithRegisterAuth(fn ...func(ctx context.Context) error) ProcessOption {
+	hooks := make([]v1.HookOps, len(fn))
+	for i := range fn {
+		hooks[i] = v1.HookOps{
+			Hook:        fn[i],
+			Owner:       "__proc_with_register_auth__",
+			HookNum:     v1.ACTION_START,
+			Priority:    v1.PRI_SYS_INIT,
+			SubPriority: v1.PRI_M_AUTHN - 1,
+		}
+	}
+
+	return WithHooks(hooks...)
+}
+
 func WithRun(fn ...func(ctx context.Context) error) ProcessOption {
 	hooks := make([]v1.HookOps, len(fn))
 	for i := range fn {

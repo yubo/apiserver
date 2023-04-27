@@ -26,12 +26,18 @@ import (
 )
 
 func main() {
-	basic.RegisterAuthn(&basicAuthenticator{})
-	rest.ScopeRegister("auth", "auth description")
-
-	cmd := proc.NewRootCmd(proc.WithRun(start))
+	cmd := proc.NewRootCmd(
+		proc.WithRun(start),
+		proc.WithRegisterAuth(registerAuthn),
+	)
 	code := cli.Run(cmd)
 	os.Exit(code)
+}
+
+func registerAuthn(ctx context.Context) error {
+	basic.RegisterAuthn(&basicAuthenticator{})
+	rest.ScopeRegister("auth", "auth description")
+	return nil
 }
 
 func start(ctx context.Context) error {
