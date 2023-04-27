@@ -16,10 +16,6 @@ import (
 	// http
 	_ "github.com/yubo/apiserver/pkg/server/register"
 
-	// authz
-	_ "github.com/yubo/apiserver/pkg/authorization/register"
-	_ "github.com/yubo/apiserver/plugin/authorizer/abac/register"
-
 	// authn
 	_ "github.com/yubo/apiserver/pkg/authentication/register"
 	"github.com/yubo/apiserver/plugin/authenticator/basic"
@@ -36,7 +32,6 @@ func main() {
 
 func registerAuthn(ctx context.Context) error {
 	basic.RegisterAuthn(&basicAuthenticator{})
-	rest.ScopeRegister("auth", "auth description")
 	return nil
 }
 
@@ -46,12 +41,11 @@ func start(ctx context.Context) error {
 		return fmt.Errorf("unable to get http server from the context")
 	}
 
-	rest.SwaggerTagRegister("demo", "demo Api - swagger api sample")
 	rest.WsRouteBuild(&rest.WsOption{
 		Path:               "/hello",
 		GoRestfulContainer: srv,
 		Routes: []rest.WsRoute{
-			{Method: "GET", SubPath: "/", Handle: hw, Scope: "auth"},
+			{Method: "GET", SubPath: "/", Handle: hw},
 		},
 	})
 

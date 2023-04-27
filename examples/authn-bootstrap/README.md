@@ -17,16 +17,7 @@ $ go run ./main.go -f ./config.yaml
 
 ```sh
 $ curl -Ss  -H 'Authorization: bearer foobar.circumnavigation' http://localhost:8080/hello
-{
- "Name": "system:bootstrap:foobar",
- "UID": "",
- "Groups": [
-  "system:bootstrappers",
-  "system:bootstrappers:foo",
-  "system:authenticated"
- ],
- "Extra": null
-}
+{"Name":"system:bootstrap:foobar","UID":"","Groups":["system:bootstrappers","system:bootstrappers:foo","system:authenticated"],"Extra":null}
 ```
 
 #### webhook

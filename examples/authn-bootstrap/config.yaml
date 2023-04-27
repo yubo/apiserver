@@ -7,15 +7,6 @@ apiserver:
   secureServing:
     enabled: false
 
-authentication:
-  anonymous: true
-
 db:
   driver: sqlite3
   dsn: file:test.db?cache=shared&mode=memory
-
-authorization:
-  modes:
-    - ABAC 
-  policyFile: ./abac.json
-

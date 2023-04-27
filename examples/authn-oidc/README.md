@@ -30,16 +30,7 @@ $ go run ./main.go -f ./config.yaml
 ```sh
 $ TOKEN=eyJhbGciOiJSUzI1NiIsImtpZCI6ImQ5NmNmNThmY2Q5YzZhMmRiYTY1ZjcxZGY4YjhhNjVjZDllM2JlODEyNzY5NTE4NGZlNjI2OWI4OWZjYzQzZDAifQ.ewogICJpc3MiOiAiaHR0cDovL2xvY2FsaG9zdDo4MDgxIiwKICAiYXVkIjogIm15LWNsaWVudCIsCiAgInVzZXJuYW1lIjogInN0ZXZlIiwKICAiZ3JvdXBzIjogWyJ0ZWFtMSIsICJ0ZWFtMiJdLAogICJleHAiOiAxNjU2NTAyNTcyCn0K.PJ3ZYlycyp3cBfphGxhfs1nKGoAOHCusK9KXFxVi8galRggm_3v7JJudYEL2nAjhp7SyHJiBm272FWOgt_bW-XGpRZXBw1uTuYLLlLS9oo2qff54MVdbzchS0zIEp6_fi7jEXZvUXW0VJ8tXQwvAud-hny80dwsYXq7ei1j3_Z9aoYMagLXuMka4dPDrpRCp6Ue-KDcjeBtPtNrW_jWcTvlBRSnCEUYfdW1rdwP5wvC9kQz6NmjqBkdJYjUUwnrqe4Sy2E9M7dIPJqSVD1dBh76tz9r7HkDPFc0BsCkYAhqFVuOyHAlq51vX5Fk9ojYTErRYRRWWzXsVNx9tZg4uzg
 $ curl -Ss  -H "Authorization: bearer ${TOKEN}" http://localhost:8080/hello
-{
- "Name": "http://localhost:8081#steve",
- "UID": "",
- "Groups": [
-  "team1",
-  "team2",
-  "system:authenticated"
- ],
- "Extra": null
-}
+{"Name":"http://localhost:8081#steve","UID":"","Groups":["team1","team2","system:authenticated"],"Extra":null}
 ```
 
 ## references

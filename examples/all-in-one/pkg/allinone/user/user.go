@@ -78,7 +78,7 @@ func (p *user) list(w http.ResponseWriter, req *http.Request, in *listParam) (re
 		return nil, err
 	}
 
-	ret.List, err = p.user.List(req.Context(), *opts)
+	ret.List, err = p.user.List(req.Context(), opts)
 	return ret, err
 }
 

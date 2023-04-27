@@ -9,14 +9,3 @@ apiserver:
   securitySchemes:
     - name: BearerToken
       type: bearer
-
-authentication:
-  anonymous: true
-
-authorization:
-  modes:
-    - ABAC 
-  policyFile: ./abac.json
-  alwaysAllowPaths:
-    - /apidocs.json
-    - /swagger/*

@@ -1,13 +1,6 @@
 ## Authentication - token file
 
 ### server
-
-[tokens.cvs](./tokens.cvs)
-
-```cvs
-token-777,user3,uid3,"group1,group2"
-```
-
 ```sh
 $ go run ./main.go -f ./config.yaml
 ```
@@ -19,16 +12,7 @@ $ go run ./main.go -f ./config.yaml
 
 ```sh
 $ curl -H 'Content-Type:application/json' -H 'Authorization: bearer 123' http://localhost:8080/hello
-{
- "Name": "user3",
- "UID": "uid3",
- "Groups": [
-  "group1",
-  "group2",
-  "system:authenticated"
- ],
- "Extra": null
-}
+{"Name":"user3","UID":"uid3","Groups":["group1","group2","system:authenticated"],"Extra":null}
 ```
 
 #### webhook

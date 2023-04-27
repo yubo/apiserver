@@ -14,20 +14,15 @@ import (
 	"github.com/yubo/apiserver/pkg/rest"
 
 	// api server
-	server "github.com/yubo/apiserver/pkg/server/module"
 	_ "github.com/yubo/apiserver/pkg/server/register"
 
 	// authn
 	_ "github.com/yubo/apiserver/pkg/authentication/register"
 	_ "github.com/yubo/apiserver/plugin/authenticator/token/tokenfile/register"
-
-	// authz
-	_ "github.com/yubo/apiserver/pkg/authorization/register"
-	_ "github.com/yubo/apiserver/plugin/authorizer/abac/register"
 )
 
 func main() {
-	cmd := proc.NewRootCmd(server.WithoutTLS(), proc.WithRun(start))
+	cmd := proc.NewRootCmd(proc.WithRun(start))
 	code := cli.Run(cmd)
 	os.Exit(code)
 }
@@ -41,7 +36,7 @@ func start(ctx context.Context) error {
 		Path:               "/hello",
 		GoRestfulContainer: srv,
 		Routes: []rest.WsRoute{
-			{Method: "GET", SubPath: "/", Handle: hw, Scope: "auth"},
+			{Method: "GET", SubPath: "/", Handle: hw},
 		},
 	})
 

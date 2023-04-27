@@ -12,15 +12,7 @@ $ go run ./main.go -f ./config.yaml
 
 ```sh
 $ curl -Ss  -H 'Authorization: bearer 123' http://localhost:8080/hello
-{
- "Name": "steve",
- "UID": "",
- "Groups": [
-  "dev",
-  "system:authenticated"
- ],
- "Extra": null
-}
+{"Name":"steve","UID":"","Groups":["dev","system:authenticated"],"Extra":null}
 ```
 
 #### webhook

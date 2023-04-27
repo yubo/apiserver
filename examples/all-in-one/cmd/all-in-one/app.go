@@ -8,7 +8,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/yubo/apiserver/components/version"
 	"github.com/yubo/apiserver/pkg/proc"
-	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
 
 	_ "github.com/yubo/apiserver/components/logs/json/register"
 
@@ -54,26 +53,7 @@ import (
 	_ "github.com/yubo/apiserver/pkg/tracing/register"
 )
 
-const (
-	moduleName = "all-in-one.example.apiserver"
-)
-
-type config struct {
-	TestA string `json:"testA" flag:"test-a" description:"this is a flag for demo"`
-	TestB string `json:"testB"`
-}
-
-func newConfig() *config {
-	return &config{}
-}
-
 var (
-	hookOps = []v1.HookOps{{
-		Hook:     start,
-		Owner:    moduleName,
-		HookNum:  v1.ACTION_START,
-		Priority: v1.PRI_MODULE,
-	}}
 	license = spec.License{
 		LicenseProps: spec.LicenseProps{
 			Name: "Apache-2.0",
@@ -90,8 +70,8 @@ var (
 )
 
 func newServerCmd() *cobra.Command {
-	cmd := proc.NewRootCmd(
-		proc.WithHooks(hookOps...),
+	return proc.NewRootCmd(
+		proc.WithRun(start),
 		proc.WithName("all-in-one"),
 		proc.WithDescription("apiserver examples all in one"),
 		proc.WithVersion(version.Get()),
@@ -99,9 +79,6 @@ func newServerCmd() *cobra.Command {
 		proc.WithContact(&contact),
 		proc.WithReport(),
 	)
-	//cmd.AddCommand(proc.NewVersionCmd())
-
-	return cmd
 }
 
 func start(ctx context.Context) error {
@@ -110,8 +87,4 @@ func start(ctx context.Context) error {
 	}
 
 	return nil
-}
-
-func init() {
-	proc.AddGlobalConfig(newConfig())
 }

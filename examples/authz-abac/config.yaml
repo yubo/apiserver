@@ -6,4 +6,10 @@ apiserver:
     enabled: false
 
 authentication:
+  anonymous: false
   tokenAuthFile: ./tokens.cvs
+
+authorization:
+  modes:
+  - ABAC
+  policyFile: ./abac.json

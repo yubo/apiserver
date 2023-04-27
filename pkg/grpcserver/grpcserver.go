@@ -8,6 +8,7 @@ import (
 	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
 	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/golib/util"
+	"github.com/yubo/golib/util/validation/field"
 	"go.opentelemetry.io/otel"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -59,7 +60,7 @@ func (p *grpcServer) init(ctx context.Context) error {
 
 	cf := &configgrpc.GRPCServerSettings{}
 	if err := proc.ReadConfig(p.name, cf); err != nil {
-		return err
+		return field.NotFound(field.NewPath(p.name), cf)
 	}
 	p.config = cf
 

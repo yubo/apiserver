@@ -17,10 +17,6 @@ import (
 	server "github.com/yubo/apiserver/pkg/server/module"
 	_ "github.com/yubo/apiserver/pkg/server/register"
 
-	// authz
-	_ "github.com/yubo/apiserver/pkg/authorization/register"
-	_ "github.com/yubo/apiserver/plugin/authorizer/abac/register"
-
 	// authn
 	_ "github.com/yubo/apiserver/pkg/authentication/register"
 	_ "github.com/yubo/apiserver/plugin/authenticator/token/oidc/register"
@@ -41,7 +37,7 @@ func start(ctx context.Context) error {
 		Path:               "/hello",
 		GoRestfulContainer: srv,
 		Routes: []rest.WsRoute{
-			{Method: "GET", SubPath: "/", Handle: hw, Scope: "auth"},
+			{Method: "GET", SubPath: "/", Handle: hw},
 		},
 	})
 

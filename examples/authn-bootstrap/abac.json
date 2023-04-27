@@ -1,1 +1,0 @@
-{"kind": "Policy", "spec": {"group":"system:authenticated",     "nonResourcePath": "/hello", "readonly": true}}

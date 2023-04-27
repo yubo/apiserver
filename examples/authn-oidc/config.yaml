@@ -11,18 +11,9 @@ apiserver:
       type: bearer
 
 authentication:
-  anonymous: true
   oidc:
     caFile:
     clientID: my-client
     issuerURL: http://localhost:8081
     usernameClaim: username
     groupsClaim: groups
-
-authorization:
-  modes:
-    - ABAC 
-  policyFile: ./abac.json
-  alwaysAllowPaths:
-    - /apidocs.json
-    - /swagger/*

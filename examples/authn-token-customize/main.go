@@ -16,23 +16,14 @@ import (
 	"github.com/yubo/apiserver/pkg/rest"
 
 	// http
-	server "github.com/yubo/apiserver/pkg/server/module"
 	_ "github.com/yubo/apiserver/pkg/server/register"
-
-	// authz
-	_ "github.com/yubo/apiserver/pkg/authorization/register"
-	_ "github.com/yubo/apiserver/plugin/authorizer/abac/register"
 
 	// authn
 	_ "github.com/yubo/apiserver/pkg/authentication/register"
 )
 
 func main() {
-	authentication.RegisterTokenAuthn(func(_ context.Context) (authenticator.Token, error) {
-		return &TokenAuthenticator{}, nil
-	})
-
-	command := proc.NewRootCmd(server.WithoutTLS(), proc.WithRun(start))
+	command := proc.NewRootCmd(proc.WithRun(start), proc.WithRegisterAuth(auth))
 	code := cli.Run(command)
 	os.Exit(code)
 }
@@ -46,11 +37,17 @@ func start(ctx context.Context) error {
 		Path:               "/hello",
 		GoRestfulContainer: srv,
 		Routes: []rest.WsRoute{
-			{Method: "GET", SubPath: "/", Handle: hw, Scope: "auth"},
+			{Method: "GET", SubPath: "/", Handle: hw},
 		},
 	})
 
 	return nil
+}
+
+func auth(ctx context.Context) error {
+	return authentication.RegisterTokenAuthn(func(_ context.Context) (authenticator.Token, error) {
+		return &TokenAuthenticator{}, nil
+	})
 }
 
 func hw(w http.ResponseWriter, req *http.Request) (*user.DefaultInfo, error) {

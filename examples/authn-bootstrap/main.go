@@ -20,10 +20,6 @@ import (
 	// api server
 	_ "github.com/yubo/apiserver/pkg/server/register"
 
-	// authz
-	_ "github.com/yubo/apiserver/pkg/authorization/register"
-	_ "github.com/yubo/apiserver/plugin/authorizer/abac/register"
-
 	// authn
 	_ "github.com/yubo/apiserver/pkg/authentication/register"
 	_ "github.com/yubo/apiserver/plugin/authenticator/token/bootstrap/register"
