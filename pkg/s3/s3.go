@@ -23,6 +23,12 @@ type Config struct {
 	TLS             configtls.TLSClientSetting `json:"tls"`
 }
 
+func NewConfig() *Config {
+	return &Config{
+		Endpoint: "127.0.0.1:9000",
+	}
+}
+
 /*
 tls:
   insecure: true
@@ -55,13 +61,13 @@ func New(cf *Config) (S3Client, error) {
 		externAddress: strings.TrimRight(cf.ExternAddress, "/") + "/",
 	}
 
-	if cf.TLS.Insecure {
-		opts.Secure = true
+	tlsCfg, err := cf.TLS.LoadTLSConfig()
+	if err != nil {
+		return nil, err
+	}
 
-		tlsCfg, err := cf.TLS.LoadTLSConfig()
-		if err != nil {
-			return nil, err
-		}
+	if tlsCfg != nil {
+		opts.Secure = true
 
 		transport := http.DefaultTransport.(*http.Transport).Clone()
 		transport.TLSClientConfig = tlsCfg

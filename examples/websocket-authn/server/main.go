@@ -33,9 +33,12 @@ const (
 )
 
 func main() {
-	registerAuthn()
 
-	cmd := proc.NewRootCmd(server.WithoutTLS(), proc.WithRun(start))
+	cmd := proc.NewRootCmd(
+		server.WithoutTLS(),
+		proc.WithRun(start),
+		proc.WithRegisterAuth(registerAuthn),
+	)
 	code := cli.Run(cmd)
 	os.Exit(code)
 }
@@ -87,7 +90,7 @@ func _wsHandle(ws *websocket.Conn) {
 		u.GetName(), u.GetGroups()))
 }
 
-func registerAuthn() {
+func registerAuthn(ctx context.Context) error {
 	authentication.RegisterTokenAuthn(func(context.Context) (authenticator.Token, error) {
 		return &tokentest.TokenAuthenticator{
 			Tokens: map[string]*user.DefaultInfo{
@@ -95,4 +98,6 @@ func registerAuthn() {
 			},
 		}, nil
 	})
+
+	return nil
 }

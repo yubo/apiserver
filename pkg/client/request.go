@@ -197,7 +197,7 @@ func WithOutput(output interface{}) RequestOption {
 		o.output = output
 	}
 }
-func WithCallback(cb ...func(interface{})) RequestOption {
+func WithCallback(cb ...func(output interface{})) RequestOption {
 	return func(o *RequestOptions) {
 		o.cb = cb
 	}

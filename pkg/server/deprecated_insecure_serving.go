@@ -17,6 +17,7 @@ limitations under the License.
 package server
 
 import (
+	"fmt"
 	"net"
 	"net/http"
 	"time"
@@ -24,6 +25,7 @@ import (
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/client-go/rest"
+	utilnet "github.com/yubo/golib/util/net"
 	"k8s.io/klog/v2"
 )
 
@@ -52,6 +54,22 @@ func (s *DeprecatedInsecureServingInfo) Serve(handler http.Handler, shutdownTime
 		klog.Infof("Serving insecurely on %s", s.Listener.Addr())
 	}
 	return RunServer(insecureServer, s.Listener, shutdownTimeout, stopCh)
+}
+
+func (s *DeprecatedInsecureServingInfo) HostPort() (string, int, error) {
+	if s == nil || s.Listener == nil {
+		return "", 0, fmt.Errorf("no listener found")
+	}
+	addr := s.Listener.Addr().String()
+	host, portStr, err := net.SplitHostPort(addr)
+	if err != nil {
+		return "", 0, fmt.Errorf("failed to get port from listener address %q: %v", addr, err)
+	}
+	port, err := utilnet.ParsePort(portStr, true)
+	if err != nil {
+		return "", 0, fmt.Errorf("invalid non-numeric port %q", portStr)
+	}
+	return host, port, nil
 }
 
 func (s *DeprecatedInsecureServingInfo) NewLoopbackClientConfig() (*rest.Config, error) {

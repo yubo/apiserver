@@ -99,6 +99,7 @@ func start(ctx context.Context) error {
 	}
 
 	module.installWs(http)
+
 	return nil
 }
 

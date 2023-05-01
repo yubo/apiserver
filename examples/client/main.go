@@ -46,7 +46,7 @@ func requestWithClient(server *httptest.Server) error {
 	req, err := client.NewRequest(server.URL,
 		client.WithOutput(&user),
 		client.WithMethod("GET"),
-		client.WithPrefix("/"),
+		client.WithPath("/"),
 	)
 	if err != nil {
 		return err

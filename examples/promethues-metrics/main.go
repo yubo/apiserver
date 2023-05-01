@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"os"
 	"time"
 
@@ -19,17 +20,17 @@ var (
 	})
 )
 
-func recordMetrics() {
+func main() {
+	os.Exit(cli.Run(proc.NewRootCmd(proc.WithRun(start))))
+}
+
+func start(ctx context.Context) error {
 	go func() {
 		for {
 			opsProcessed.Inc()
 			time.Sleep(2 * time.Second)
 		}
 	}()
-}
 
-func main() {
-	recordMetrics()
-
-	os.Exit(cli.Run(proc.NewRootCmd()))
+	return nil
 }

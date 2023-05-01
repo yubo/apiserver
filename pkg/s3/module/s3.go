@@ -7,6 +7,7 @@ import (
 	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
 	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/s3"
+	"github.com/yubo/golib/util/validation/field"
 )
 
 const (
@@ -31,27 +32,25 @@ var (
 
 // Because some configuration may be stored in the database,
 // set the db.connect into sys.db.prestart
-func (p *module) init(ctx context.Context) (err error) {
-	cf := newConfig()
+func (p *module) init(ctx context.Context) error {
+	cf := s3.NewConfig()
 	if err := proc.ReadConfig(p.name, cf); err != nil {
-		return err
+		return field.Invalid(field.NewPath(p.name), cf, err.Error())
 	}
 
+	var err error
 	if p.client, err = s3.New(cf); err != nil {
 		return err
 	}
 
+	// set s3 to ctx
 	options.WithS3Client(ctx, p.client)
 
 	return nil
 }
 
-func newConfig() *s3.Config {
-	return &s3.Config{}
-}
-
 func Register() {
 	proc.RegisterHooks(hookOps)
 
-	proc.AddConfig(moduleName, newConfig(), proc.WithConfigGroup(moduleName))
+	proc.AddConfig(moduleName, s3.NewConfig(), proc.WithConfigGroup(moduleName))
 }

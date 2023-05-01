@@ -14,7 +14,6 @@ import (
 	"github.com/yubo/apiserver/pkg/responsewriters"
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/apiserver/pkg/s3"
-	server "github.com/yubo/apiserver/pkg/server/module"
 	"github.com/yubo/golib/scheme"
 
 	_ "github.com/yubo/apiserver/pkg/s3/register"
@@ -35,7 +34,7 @@ var (
 )
 
 func main() {
-	command := proc.NewRootCmd(server.WithoutTLS(), proc.WithRun(_module.start))
+	command := proc.NewRootCmd(proc.WithRun(_module.start))
 	code := cli.Run(command)
 	os.Exit(code)
 }
