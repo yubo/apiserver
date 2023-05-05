@@ -18,7 +18,7 @@ func RegisterAuthn(p basicProvider) error {
 }
 
 type basicProvider interface {
-	Authenticate(user, pwd string) user.Info
+	Authenticate(ctx context.Context, user, pwd string) user.Info
 }
 
 func newFactory(p basicProvider) func(ctx context.Context) (authenticator.Request, error) {
@@ -66,7 +66,7 @@ func (a *Authenticator) AuthenticateRequest(r *http.Request) (*authenticator.Res
 		return nil, false, err
 	}
 
-	usr := a.provider.Authenticate(username, password)
+	usr := a.provider.Authenticate(r.Context(), username, password)
 	if usr == nil {
 		return nil, false, err
 	}

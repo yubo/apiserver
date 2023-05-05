@@ -33,9 +33,8 @@ type module struct {
 
 type Config struct {
 	Storage     string `json:"storage" description:"storage type, db"`
-	DBName      string `json:"dbName" flag:"models-db-name" description:"the database name of db.databases"`
-	AutoMigrate bool   `json:"autoMigrate" flag:"models-automigrate" description:"auto migrate"`
-	//TablePrefix string `json:"tablePrefix" flag:"models-table-prefix" description:"table name prefix of the database"`
+	DBName      string `json:"dbName" description:"the database name of db.databases"`
+	AutoMigrate bool   `json:"autoMigrate" description:"auto migrate"`
 }
 
 func newConfig() *Config {

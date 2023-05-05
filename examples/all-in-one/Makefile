@@ -35,31 +35,11 @@ goreleaser:
 
 .PHONY: devrun
 devrun: $(APP_NAME)
-	@echo "${APP_PATH} \
-		-f ./etc/config.yaml \
-		--token-auth-file=./etc/tokens.cvs \
-		--anonymous-auth \
-		--authorization-mode=AlwaysAllow"
-		#--tls-cert-file=./run/pki/apiserver.crt \
-		#--tls-private-key-file=./run/pki/apiserver.key \
+	@echo "${APP_PATH} -f ./etc/config.yaml"
 
 .PHONY: run
 run: $(APP_PATH)
-	$(APP_PATH) \
-		-f ./etc/config.yaml --cert-dir /tmp/$(APP_NAME) 2>&1
-
-		#--anonymous-auth \
-		#--debug-config --dry-run \
-		--authorization-mode=AlwaysAllow \
-		#--tls-cert-file=./run/pki/apiserver.crt \
-		#--tls-private-key-file=./run/pki/apiserver.key \
-
-.PHONY: docker
-docker: 
-	docker run --rm -it \
-		-v `pwd`/etc/config.yaml:/config.yaml \
-		ybbbbasdf/all-in-all:{VERSION} \
-		-f /config.yaml
+	$(APP_PATH) -f ./etc/config.yaml 2>&1
 		
 
 .PHONY: dev
@@ -77,3 +57,19 @@ tools:
 .PHONY: status
 status:
 	./scripts/print-workspace-status.sh
+
+.PHONY: config
+config: $(APP_PATH)
+	$(APP_PATH) --debug-config
+
+.PHONY: vet
+vet:
+	go vet ./...
+
+.PHONY: docker
+docker: 
+	docker run --rm -it \
+		-v `pwd`/etc/config.yaml:/config.yaml \
+		ybbbbasdf/all-in-all:{VERSION} \
+		-f /config.yaml
+

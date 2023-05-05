@@ -2,22 +2,15 @@ allinone:
   debug: true
 
 logging:
-  format: text
   flushFrequency: 10s
-  verbosity: 1
-  vmodule:
+  format: text
   options:
     json:
       #splitStream: false
       #infoBufferSize: 5M
+  verbosity: 1
+  vmodule:
 
-tracing:
-  debug: false
-  serviceName: all-in-one
-  contextHeadername: Trace-Id
-  otel:
-    endpoint: localhost:4317
-    insecure: true
 
 apiserver:
   generic:
@@ -40,7 +33,7 @@ apiserver:
     bindAddress: 0.0.0.0
     bindNework: tcp
     bindPort: 8443
-    enabled: true
+    enabled: false
     http2MaxStreamsPerConnection: 0
     permitPortSharing: false
     serverCert:
@@ -56,38 +49,55 @@ apiserver:
 
 
 authentication:
-  session: true                   # --enable-session-auth
-  bootstrapToken: true            # --enable-bootstrap-token-auth
-  anonymous: true                 # --anonymous-auth
-  tokenAuthFile: ./etc/tokens.cvs # --token-auth-file={file-path}
+  session: true                      # --enable-session-auth
+  bootstrapToken: true               # --enable-bootstrap-token-auth
+  anonymous: true                    # --anonymous-auth
+  tokenAuthFile: ./etc/tokens.cvs    # --token-auth-file={file-path}
+  passwordAuthFile: ./etc/tokens.cvs # --password-auth-file={file-path}
   oidc:
-    issuerURL:                    # --oidc-issuer-url
-    clientID:                     # --oidc-client-id
+    issuerURL:                       # --oidc-issuer-url
+    clientID:                        # --oidc-client-id
+  webhook:
 
 authorization:
-  modes:                          # --modes=RBAC,AlwaysAllow
+  modes:                             # --modes=RBAC,AlwaysAllow
     - RBAC
-  #policyFile: ./etc/abac.json     # --authorization-policy-file={file-path}
+  #policyFile: ./etc/abac.json       # --authorization-policy-file={file-path}
   rbac:
-    configPath: ./etc/rbac        # --rbac-config-path
+    configPath: ./etc/rbac           # --rbac-config-path
   alwaysAllowGroups:
     - system:masters
   alwaysAllowPaths:
     - /apidocs.json
     - /swagger/*
     - /healthz
+models:
+  autoMigrate: true
+  storage: db
 
 session:
-  cookieName: "golib-example-sid"
-  sidLength: 24
+  name: "golib-example-sid"
+  keyPairs: ["9d6cff86a33711684ee5220cb0083829"]
+  store: "orm"
   httpOnly: true
+  maxAge: 720h
+  path:
   domain:
-  gcInterval: 60s
-  cookieLifetime: 16h
-  maxIdleTime: 1h
+  sameSite:  # lax, strict, none
 
 db:
-  driver: "sqlite3"
-  dsn: "file:example-all.db?cache=shared&mode=memory"
-  #driver: "mysql"
-  #dsn: "root:1234@tcp(localhost:3306)/test?loc=Local&parseTime=true"
+  #driver: "sqlite3"
+  #dsn: "file:example-all.db?cache=shared&mode=memory"
+  driver: "mysql"
+  dsn: "root:1234@tcp(localhost:3306)/test?loc=Local&parseTime=true"
+
+#tracing:
+#  contextHeadername: Trace-Id
+#  debug: false
+#  otel:
+#    endpoint: localhost:4317
+#    insecure: true
+#  radioBased: 1
+#  serviceName: all-in-one
+
+

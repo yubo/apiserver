@@ -7,8 +7,9 @@ import (
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/pkg/authentication/request/x509"
 	"github.com/yubo/apiserver/pkg/dynamiccertificates"
-	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/proc"
+	"github.com/yubo/apiserver/pkg/proc/options"
+	"github.com/yubo/golib/util/errors"
 	"k8s.io/klog/v2"
 )
 
@@ -16,6 +17,8 @@ const (
 	moduleName = "authentication.x509"
 	configPath = "authentication"
 )
+
+func newConfig() *config { return &config{} }
 
 type config struct {
 	// ClientCA is the certificate bundle for all the signers that you'll recognize for incoming client certificates
@@ -44,8 +47,6 @@ func (s *config) GetClientCAContentProvider() (dynamiccertificates.CAContentProv
 	return dynamiccertificates.NewDynamicCAContentFromFile("client-ca-bundle", s.ClientCA)
 }
 
-func newConfig() *config { return &config{} }
-
 func factory(ctx context.Context) (authenticator.Request, error) {
 	cf := newConfig()
 	if err := proc.ReadConfig(configPath, cf); err != nil {
@@ -59,15 +60,14 @@ func factory(ctx context.Context) (authenticator.Request, error) {
 
 	servingInfo := options.APIServerMustFrom(ctx).Config().SecureServing
 	if servingInfo == nil {
-		klog.V(5).InfoS("authnModule x509 ignore", "reason", "servingInfo was not found")
-		return nil, nil
+		return nil, errors.Errorf("authnModule x509 invalidate, servingInfo was not found")
 	}
 
 	klog.V(5).InfoS("authnModule x509", "ca file", cf.ClientCA)
 
 	clientCA, err := dynamiccertificates.NewDynamicCAContentFromFile("client-ca-bundle", cf.ClientCA)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "NewDynamicCAContentFromFile")
 	}
 
 	if err := servingInfo.ApplyClientCert(clientCA); err != nil {

@@ -16,6 +16,7 @@ import (
 	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/server"
 	"github.com/yubo/golib/api"
+	"github.com/yubo/golib/util"
 )
 
 const (
@@ -71,7 +72,7 @@ func (p *authentication) initAuthentication() (err error) {
 		if err != nil {
 			return err
 		}
-		if auth != nil {
+		if !util.IsNil(auth) {
 			authenticators = append(authenticators, auth)
 		}
 	}
@@ -81,7 +82,7 @@ func (p *authentication) initAuthentication() (err error) {
 		if err != nil {
 			return err
 		}
-		if token != nil {
+		if !util.IsNil(token) {
 			tokenAuthenticators = append(tokenAuthenticators, token)
 		}
 	}

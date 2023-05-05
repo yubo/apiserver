@@ -1,19 +1,3 @@
-/*
-Copyright 2014 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 package request
 
 import (
@@ -23,10 +7,8 @@ import (
 	"github.com/emicklei/go-restful/v3"
 	"github.com/yubo/apiserver/pkg/apis/audit"
 	"github.com/yubo/apiserver/pkg/authentication/user"
-	"github.com/yubo/apiserver/pkg/session/types"
 	"github.com/yubo/golib/api"
 	"go.opentelemetry.io/otel/trace"
-	// "github.com/yubo/apiserver/pkg/apis/audit"
 )
 
 var (
@@ -50,7 +32,6 @@ const (
 	respKey
 	tracerKey
 	traceIDKey
-	sessionKey
 
 	// bodyKey is the context key for the request body
 	bodyKey
@@ -149,17 +130,6 @@ func WithTraceID(parent context.Context, traceID string) context.Context {
 func TraceIDFrom(ctx context.Context) (string, bool) {
 	traceID, ok := ctx.Value(traceIDKey).(string)
 	return traceID, ok
-}
-
-// WithrSession returns a copy of parent in which the session value is set
-func WithSession(parent context.Context, sess types.Session) context.Context {
-	return WithValue(parent, sessionKey, sess)
-}
-
-// SessionFrom returns the value of the session key on the ctx
-func SessionFrom(ctx context.Context) (types.Session, bool) {
-	s, ok := ctx.Value(sessionKey).(types.Session)
-	return s, ok
 }
 
 // WithBody returns a copy of parent in which the body value is set

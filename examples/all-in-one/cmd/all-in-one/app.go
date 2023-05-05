@@ -11,6 +11,7 @@ import (
 
 	_ "github.com/yubo/apiserver/components/logs/json/register"
 
+	"github.com/yubo/golib/orm"
 	_ "github.com/yubo/golib/orm/mysql"
 	_ "github.com/yubo/golib/orm/sqlite"
 
@@ -32,9 +33,11 @@ import (
 	// 2. x509
 	_ "github.com/yubo/apiserver/plugin/authenticator/x509/register"
 	// 3.session deprecated
-	//_ "github.com/yubo/apiserver/plugin/authenticator/session/register"
+	_ "github.com/yubo/apiserver/plugin/authenticator/session/register"
 	// 4. tokenfile
+	_ "github.com/yubo/apiserver/plugin/authenticator/passwordfile/register"
 	_ "github.com/yubo/apiserver/plugin/authenticator/token/tokenfile/register"
+
 	// 5. service account file <TODO>
 	// 6. service account issuer <TODO>
 	// 7. bootstrap
@@ -49,7 +52,9 @@ import (
 	_ "github.com/yubo/apiserver/pkg/grpcserver/register"
 	_ "github.com/yubo/apiserver/pkg/models/register"
 	_ "github.com/yubo/apiserver/pkg/server/register"
-	_ "github.com/yubo/apiserver/pkg/session/register"
+	_ "github.com/yubo/apiserver/pkg/sessions/cookie"
+	_ "github.com/yubo/apiserver/pkg/sessions/orm"
+	_ "github.com/yubo/apiserver/pkg/sessions/register"
 	_ "github.com/yubo/apiserver/pkg/tracing/register"
 )
 
@@ -68,6 +73,10 @@ var (
 		},
 	}
 )
+
+func init() {
+	orm.DEBUG = true
+}
 
 func newServerCmd() *cobra.Command {
 	return proc.NewRootCmd(

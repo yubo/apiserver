@@ -23,6 +23,7 @@ import (
 	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
 	"github.com/yubo/apiserver/pkg/proc/logging"
 	"github.com/yubo/apiserver/pkg/proc/reporter"
+	"github.com/yubo/golib/api/errors"
 	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/util"
 	"github.com/yubo/golib/version"
@@ -160,7 +161,25 @@ func Configer() configer.ParsedConfiger {
 }
 
 func ReadConfig(path string, into interface{}) error {
-	return DefaultProcess.parsedConfiger.Read(path, into)
+	err := DefaultProcess.parsedConfiger.Read(path, into)
+	if err == nil {
+		return nil
+	}
+	if _, ok := err.(configer.ErrNoValue); ok {
+		return nil
+	}
+	return err
+}
+
+func MustReadConfig(path string, into interface{}) error {
+	err := DefaultProcess.parsedConfiger.Read(path, into)
+	if err == nil {
+		return nil
+	}
+	if _, ok := err.(configer.ErrNoValue); ok {
+		return errors.NewNotFound(path)
+	}
+	return err
 }
 
 func AddConfig(path string, sample interface{}, opts ...ConfigOption) error {

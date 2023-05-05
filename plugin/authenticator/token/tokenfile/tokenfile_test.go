@@ -136,7 +136,7 @@ func TestEmptyTokenTokenFile(t *testing.T) {
 	}
 }
 
-func newWithContents(t *testing.T, contents string) (auth *TokenAuthenticator, err error) {
+func newWithContents(t *testing.T, contents string) (auth *TokenfileAuthenticator, err error) {
 	f, err := ioutil.TempFile("", "tokenfile_test")
 	if err != nil {
 		t.Fatalf("unexpected error creating tokenfile: %v", err)

@@ -16,8 +16,9 @@ import (
 
 const (
 	moduleName = "authentication.requestheader"
-	configPath = "authentication.requestheader"
 )
+
+func newConfig() *config { return &config{} }
 
 type config struct {
 	// ClientCAFile is the root certificate bundle to verify client certificates on incoming requests
@@ -58,11 +59,10 @@ func checkForWhiteSpaceOnly(flag string, headerNames ...string) error {
 
 	return nil
 }
-func newConfig() *config { return &config{} }
 
 func factory(ctx context.Context) (authenticator.Request, error) {
 	cf := newConfig()
-	if err := proc.ReadConfig(configPath, cf); err != nil {
+	if err := proc.ReadConfig(moduleName, cf); err != nil {
 		return nil, err
 	}
 
@@ -91,5 +91,5 @@ func factory(ctx context.Context) (authenticator.Request, error) {
 
 func init() {
 	authentication.RegisterAuthn(factory)
-	proc.AddConfig(configPath, newConfig(), proc.WithConfigGroup("authentication"))
+	proc.AddConfig(moduleName, newConfig(), proc.WithConfigGroup("authentication"))
 }

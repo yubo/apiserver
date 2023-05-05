@@ -5,8 +5,8 @@ import (
 
 	"github.com/yubo/apiserver/pkg/authentication"
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
-	"github.com/yubo/apiserver/plugin/authenticator/token/tokenfile"
 	"github.com/yubo/apiserver/pkg/proc"
+	"github.com/yubo/apiserver/plugin/authenticator/token/tokenfile"
 	"k8s.io/klog/v2"
 )
 
@@ -15,21 +15,14 @@ const (
 	configPath = "authentication"
 )
 
+func newConfig() *config { return &config{} }
+
 type config struct {
 	TokenAuthFile string `json:"tokenAuthFile" flag:"token-auth-file" description:"If set, the file that will be used to secure the secure port of the API server via token authentication."`
 }
 
 func (o *config) Validate() error {
 	return nil
-}
-
-type authModule struct {
-	name   string
-	config *config
-}
-
-func newConfig() *config {
-	return &config{}
 }
 
 func factory(ctx context.Context) (authenticator.Token, error) {

@@ -27,8 +27,11 @@ import (
 
 	"k8s.io/klog/v2"
 
+	"github.com/yubo/apiserver/pkg/authentication"
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/pkg/authentication/user"
+	"github.com/yubo/apiserver/pkg/models"
+	"github.com/yubo/apiserver/pkg/proc"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/api/errors"
 
@@ -38,6 +41,42 @@ import (
 	bootstraptokenutil "github.com/yubo/apiserver/pkg/cluster-bootstrap/util/tokens"
 	corev1listers "github.com/yubo/apiserver/pkg/listers"
 )
+
+const (
+	moduleName = "authentication.bootstrapToken"
+	configPath = "authentication"
+)
+
+func newConfig() *config { return &config{BootstrapToken: true} }
+
+type config struct {
+	BootstrapToken bool `json:"bootstrapToken" flag:"enable-bootstrap-token-auth" description:"Enable to allow secrets of type 'bootstrap.kubernetes.io/token' in the 'kube-system' namespace to be used for TLS bootstrapping authentication."`
+}
+
+func (o *config) Validate() error {
+	return nil
+}
+
+func factory(ctx context.Context) (authenticator.Token, error) {
+	cf := newConfig()
+	if err := proc.ReadConfig(configPath, cf); err != nil {
+		return nil, err
+	}
+
+	if !cf.BootstrapToken {
+		klog.V(5).InfoS("skip authModule", "name", moduleName, "reason", "disabled")
+		return nil, nil
+	}
+
+	klog.InfoS("authmodule init", "name", moduleName)
+
+	return NewTokenAuthenticator(models.NewSecret()), nil
+}
+
+func Register() {
+	proc.AddConfig(configPath, newConfig(), proc.WithConfigGroup("authentication"))
+	authentication.RegisterTokenAuthn(factory)
+}
 
 // TODO: A few methods in this package is copied from other sources. Either
 // because the existing functionality isn't exported or because it is in a
@@ -58,8 +97,7 @@ type TokenAuthenticator struct {
 // tokenErrorf prints a error message for a secret that has matched a bearer
 // token but fails to meet some other criteria.
 //
-//    tokenErrorf(secret, "has invalid value for key %s", key)
-//
+//	tokenErrorf(secret, "has invalid value for key %s", key)
 func tokenErrorf(s *api.Secret, format string, i ...interface{}) {
 	format = fmt.Sprintf("Bootstrap secret %s/%s matching bearer token ", s.Namespace, s.Name) + format
 	klog.V(3).Infof(format, i...)
@@ -71,26 +109,25 @@ func tokenErrorf(s *api.Secret, format string, i ...interface{}) {
 //
 // All secrets must be of type "bootstrap.kubernetes.io/token". An example secret:
 //
-//     apiVersion: v1
-//     kind: Secret
-//     metadata:
-//       # Name MUST be of form "bootstrap-token-( token id )".
-//       name: bootstrap-token-( token id )
-//       namespace: kube-system
-//     # Only secrets of this type will be evaluated.
-//     type: bootstrap.kubernetes.io/token
-//     data:
-//       token-secret: ( private part of token )
-//       token-id: ( token id )
-//       # Required key usage.
-//       usage-bootstrap-authentication: true
-//       auth-extra-groups: "system:bootstrappers:custom-group1,system:bootstrappers:custom-group2"
-//       # May also contain an expiry.
+//	apiVersion: v1
+//	kind: Secret
+//	metadata:
+//	  # Name MUST be of form "bootstrap-token-( token id )".
+//	  name: bootstrap-token-( token id )
+//	  namespace: kube-system
+//	# Only secrets of this type will be evaluated.
+//	type: bootstrap.kubernetes.io/token
+//	data:
+//	  token-secret: ( private part of token )
+//	  token-id: ( token id )
+//	  # Required key usage.
+//	  usage-bootstrap-authentication: true
+//	  auth-extra-groups: "system:bootstrappers:custom-group1,system:bootstrappers:custom-group2"
+//	  # May also contain an expiry.
 //
 // Tokens are expected to be of the form:
 //
-//     ( token-id ).( token-secret )
-//
+//	( token-id ).( token-secret )
 func (t *TokenAuthenticator) AuthenticateToken(ctx context.Context, token string) (*authenticator.Response, bool, error) {
 	tokenID, tokenSecret, err := bootstraptokenutil.ParseToken(token)
 	if err != nil {

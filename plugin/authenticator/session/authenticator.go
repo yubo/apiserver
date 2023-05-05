@@ -2,11 +2,10 @@ package session
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/pkg/authentication/user"
-	"github.com/yubo/apiserver/pkg/request"
+	"github.com/yubo/apiserver/pkg/sessions"
 )
 
 type Authenticator struct{}
@@ -16,20 +15,19 @@ func NewAuthenticator() authenticator.Request {
 }
 
 func (a *Authenticator) AuthenticateRequest(req *http.Request) (*authenticator.Response, bool, error) {
-	sess, ok := request.SessionFrom(req.Context())
+	sess, ok := sessions.SessionFrom(req.Context())
 	if !ok {
 		return nil, false, nil
 	}
-	userName := sess.Get("userName")
-	if userName == "" {
+
+	user := &user.DefaultInfo{}
+	if user.Name, _ = sess.Get("userName").(string); user.Name == "" {
 		return nil, false, nil
 	}
+	user.Groups, _ = sess.Get("groups").([]string)
+	user.Extra, _ = sess.Get("extra").(map[string][]string)
 
-	return &authenticator.Response{User: &user.DefaultInfo{
-		Name:   userName,
-		Groups: strings.Split(sess.Get("groups"), ","),
-		Extra:  sess.GetValues(),
-	}}, true, nil
+	return &authenticator.Response{User: user}, true, nil
 }
 
 func (a *Authenticator) Name() string {

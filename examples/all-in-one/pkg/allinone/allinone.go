@@ -11,6 +11,7 @@ import (
 	"examples/all-in-one/pkg/allinone/user"
 
 	"github.com/yubo/apiserver/pkg/proc"
+	"github.com/yubo/golib/orm"
 )
 
 type allinone struct {
@@ -25,6 +26,10 @@ func (p *allinone) Start(ctx context.Context) error {
 	cf := config.New()
 	if err := proc.ReadConfig("allinone", cf); err != nil {
 		return err
+	}
+
+	if cf.Debug {
+		orm.DEBUG = true
 	}
 
 	session.New(ctx, cf).Install()

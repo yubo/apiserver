@@ -6,64 +6,40 @@ import (
 	"github.com/yubo/apiserver/pkg/authentication"
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/pkg/proc"
-	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
+	"github.com/yubo/apiserver/plugin/authenticator/session"
 	"k8s.io/klog/v2"
 )
 
 const (
-	moduleName       = "authentication.session"
-	modulePath       = "authentication"
-	noUsernamePrefix = "-"
+	moduleName = "authentication"
 )
 
-var (
-	_auth   = &authModule{name: moduleName}
-	hookOps = []v1.HookOps{{
-		Hook:        _auth.init,
-		Owner:       moduleName,
-		HookNum:     v1.ACTION_START,
-		Priority:    v1.PRI_SYS_INIT,
-		SubPriority: v1.PRI_M_AUTHN,
-	}}
-)
+func newConfig() *config { return &config{} }
 
 type config struct {
-	Session bool `json:"session" default:"true" flag:"enable-session-auth" description:"Enable to allow session to be used for authentication."`
+	Session bool `json:"session" flag:"enable-session-auth" description:"Enable to allow session to be used for authentication."`
 }
 
 func (o *config) Validate() error {
 	return nil
 }
 
-type authModule struct {
-	name   string
-	config *config
-}
-
-func newConfig() *config { return &config{} }
-
 func factory(ctx context.Context) (authenticator.Request, error) {
-	return NewAuthenticator(), nil
-}
-
-func (p *authModule) init(ctx context.Context) error {
 	cf := newConfig()
-	if err := proc.ReadConfig(modulePath, cf); err != nil {
-		return err
+	if err := proc.ReadConfig(moduleName, cf); err != nil {
+		return nil, err
 	}
-	p.config = cf
 
 	if !cf.Session {
-		klog.InfoS("skip authModule", "name", p.name, "reason", "disabled")
-		return nil
+		klog.InfoS("skip authModule", "name", moduleName, "reason", "disabled")
+		return nil, nil
 	}
-	klog.V(5).InfoS("authmodule init", "name", p.name)
 
-	return authentication.RegisterAuthn(factory)
+	klog.V(5).InfoS("authmodule init", "name", moduleName)
+	return session.NewAuthenticator(), nil
 }
 
 func init() {
 	authentication.RegisterAuthn(factory)
-	proc.RegisterHooks(hookOps)
-	proc.AddConfig(modulePath, newConfig(), proc.WithConfigGroup("authentication"))
+	proc.AddConfig(moduleName, newConfig(), proc.WithConfigGroup("authentication"))
 }

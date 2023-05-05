@@ -64,7 +64,7 @@ func WithRegisterAuth(fn ...func(ctx context.Context) error) ProcessOption {
 			Owner:       "__proc_with_register_auth__",
 			HookNum:     v1.ACTION_START,
 			Priority:    v1.PRI_SYS_INIT,
-			SubPriority: v1.PRI_M_AUTHN - 1,
+			SubPriority: v1.PRI_M_AUTHN,
 		}
 	}
 

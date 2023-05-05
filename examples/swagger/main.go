@@ -74,7 +74,7 @@ type UpdateUserParam struct {
 }
 
 type UpdateUserBody struct {
-	Name     string  `json:"-" sql:",where"`
+	Name     string  `json:"-" sql:"where"`
 	NickName *string `json:"nickName"`
 	Phone    *string `json:"phone"`
 }

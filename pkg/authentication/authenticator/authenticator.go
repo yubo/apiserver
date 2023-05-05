@@ -3,6 +3,7 @@ package authenticator
 const (
 	_ = iota << 8
 	PRI_AUTH_SESSION
+	PRI_AUTH_PASSWORD
 	PRI_AUTH_TOKEN
 	PRI_AUTH_WEBSOCKET_TOKEN
 	PRI_AUTH_ANONYMOUS

@@ -6,13 +6,12 @@ import (
 	"examples/all-in-one/pkg/allinone/config"
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/yubo/apiserver/pkg/proc/options"
-	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/rest"
 
-	_ "github.com/yubo/apiserver/pkg/session/register"
+	"github.com/yubo/apiserver/pkg/sessions"
+	_ "github.com/yubo/apiserver/pkg/sessions/register"
 )
 
 func New(ctx context.Context, cf *config.Config) *session {
@@ -45,50 +44,44 @@ func (p *session) Install() {
 			Desc:   "set session info",
 			Handle: p.set,
 		}, {
-			Method: "GET", SubPath: "/reset",
-			Desc:   "reset session info",
-			Handle: p.reset,
+			Method: "GET", SubPath: "/clear",
+			Desc:   "clear session info",
+			Handle: p.clear,
 		}},
 	})
 }
 
 // show session information
 func (p *session) info(w http.ResponseWriter, req *http.Request) (string, error) {
-	sess, ok := request.SessionFrom(req.Context())
-	if !ok {
-		return "can't get session info", nil
-	}
+	sess := sessions.Default(req.Context())
 
-	userName := sess.Get("userName")
+	userName, _ := sess.Get("username").(string)
 	if userName == "" {
 		return "can't get username from session", nil
 	}
 
-	cnt, err := strconv.Atoi(sess.Get("info.cnt"))
-	if err != nil {
-		cnt = 0
-	}
-
+	cnt, _ := sess.Get("infocnt").(int)
 	cnt++
-	sess.Set("info.cnt", strconv.Itoa(cnt))
+	sess.Set("infocnt", cnt)
+	sess.Save()
+
 	return fmt.Sprintf("%d hi, %s", cnt, userName), nil
 }
 
 // set session
 func (p *session) set(w http.ResponseWriter, req *http.Request) (string, error) {
-	sess, ok := request.SessionFrom(req.Context())
-	if ok {
-		sess.Set("userName", "tom")
-		return "set username successfully", nil
-	}
-	return "can't get session", nil
+	sess := sessions.Default(req.Context())
+
+	sess.Set("username", "tom")
+	sess.Save()
+
+	return "set username successfully", nil
 }
 
-// reset session
-func (p *session) reset(w http.ResponseWriter, req *http.Request) (string, error) {
-	sess, ok := request.SessionFrom(req.Context())
-	if ok {
-		sess.Reset()
-	}
+// clear session
+func (p *session) clear(w http.ResponseWriter, req *http.Request) (string, error) {
+	sess := sessions.Default(req.Context())
+	sess.Clear()
+	sess.Save()
 	return "reset successfully", nil
 }

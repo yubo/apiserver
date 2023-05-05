@@ -108,6 +108,7 @@ func WithDB(ctx context.Context, db db.DB) {
 	proc.AttrMustFrom(ctx)[dbKey] = db
 }
 
+// DBFrom, return default db if name is empty
 func DBFrom(ctx context.Context, name string) (db.DB, bool) {
 	klog.V(5).Infof("attr with name %v attr %p", name, proc.AttrMustFrom(ctx))
 	d, ok := proc.AttrMustFrom(ctx)[dbKey].(db.DB)

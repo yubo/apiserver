@@ -29,20 +29,20 @@ import (
 	"k8s.io/klog/v2"
 )
 
-type TokenAuthenticator struct {
+type TokenfileAuthenticator struct {
 	tokens map[string]*user.DefaultInfo
 }
 
 // New returns a TokenAuthenticator for a single token
-func New(tokens map[string]*user.DefaultInfo) *TokenAuthenticator {
-	return &TokenAuthenticator{
+func New(tokens map[string]*user.DefaultInfo) *TokenfileAuthenticator {
+	return &TokenfileAuthenticator{
 		tokens: tokens,
 	}
 }
 
 // NewCSV returns a TokenAuthenticator, populated from a CSV file.
 // The CSV file must contain records in the format "token,username,useruid"
-func NewCSV(path string) (*TokenAuthenticator, error) {
+func NewCSV(path string) (*TokenfileAuthenticator, error) {
 	file, err := os.Open(path)
 	if err != nil {
 		return nil, err
@@ -85,12 +85,12 @@ func NewCSV(path string) (*TokenAuthenticator, error) {
 		}
 	}
 
-	return &TokenAuthenticator{
+	return &TokenfileAuthenticator{
 		tokens: tokens,
 	}, nil
 }
 
-func (a *TokenAuthenticator) AuthenticateToken(ctx context.Context, value string) (*authenticator.Response, bool, error) {
+func (a *TokenfileAuthenticator) AuthenticateToken(ctx context.Context, value string) (*authenticator.Response, bool, error) {
 	user, ok := a.tokens[value]
 	if !ok {
 		return nil, false, nil
@@ -98,14 +98,14 @@ func (a *TokenAuthenticator) AuthenticateToken(ctx context.Context, value string
 	return &authenticator.Response{User: user}, true, nil
 }
 
-func (a *TokenAuthenticator) Name() string {
+func (a *TokenfileAuthenticator) Name() string {
 	return "token file token authenticator"
 }
 
-func (a *TokenAuthenticator) Priority() int {
+func (a *TokenfileAuthenticator) Priority() int {
 	return authenticator.PRI_TOKEN_FILE
 }
 
-func (a *TokenAuthenticator) Available() bool {
+func (a *TokenfileAuthenticator) Available() bool {
 	return true
 }

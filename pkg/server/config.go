@@ -25,7 +25,7 @@ import (
 	"github.com/yubo/apiserver/pkg/scheme"
 	"github.com/yubo/apiserver/pkg/server/healthz"
 	"github.com/yubo/apiserver/pkg/server/routes"
-	sessionfilter "github.com/yubo/apiserver/pkg/session/filter"
+	"github.com/yubo/apiserver/pkg/sessions"
 	restclient "github.com/yubo/client-go/rest"
 	"github.com/yubo/golib/runtime"
 	utilnet "github.com/yubo/golib/util/net"
@@ -303,7 +303,7 @@ func DefaultBuildHandlerChain(apiHandler http.Handler, s *Config) http.Handler {
 	handler = filters.WithAuthentication(handler, s.Authentication.Authenticator, failedHandler, s.Authentication.APIAudiences, s.KeepAuthorizationHeader)
 	handler = filters.TrackStarted(handler, "authentication")
 
-	handler = sessionfilter.WithSession(handler)
+	handler = sessions.WithSessions(handler)
 
 	handler = filters.WithCORS(handler, s.CorsAllowedOriginList, nil, nil, nil, "true")
 
