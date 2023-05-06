@@ -7,7 +7,7 @@ import (
 )
 
 func init() {
-	gob.Register(&user.DefaultInfo{})
+	gob.Register(new(user.DefaultInfo))
 }
 
 func UserFrom(sess Session) *user.DefaultInfo {
@@ -16,6 +16,6 @@ func UserFrom(sess Session) *user.DefaultInfo {
 }
 
 func WithUser(sess Session, u *user.DefaultInfo) error {
-	sess.Set(sess, UserInfoKey)
+	sess.Set(UserInfoKey, u)
 	return sess.Save()
 }

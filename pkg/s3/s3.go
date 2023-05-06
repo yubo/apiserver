@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"path"
 	"strings"
 
 	"github.com/minio/minio-go/v7"
@@ -16,7 +15,7 @@ import (
 
 type Config struct {
 	Endpoint        string                     `json:"endpoint" description:"s3 endpoint, e.g. 127.0.0.1:9000"`
-	ExternAddress   string                     `json:"externAddress" description:"s3 extern address, e.g. http://127.0.0.1:9000"`
+	ExternAddress   string                     `json:"externAddress" description:"s3 extern address, e.g. http://127.0.0.1:9000/{bucketName}"`
 	AccessKeyID     string                     `json:"accessKeyID"`
 	SecretAccessKey string                     `json:"secretAccessKey"`
 	BucketName      string                     `json:"bucketName"`
@@ -77,7 +76,7 @@ func New(cf *Config) (S3Client, error) {
 	}
 
 	if client.externAddress == "" {
-		client.externAddress = client.endpoint
+		client.externAddress = client.endpoint + cf.BucketName + "/"
 	}
 
 	cli, err := minio.New(cf.Endpoint, opts)
@@ -107,5 +106,5 @@ func (p *minioClient) Remove(ctx context.Context, objectPath string) error {
 }
 
 func (p *minioClient) Location(objectPath string) string {
-	return p.externAddress + path.Join(p.bucketName, objectPath)
+	return p.externAddress + objectPath
 }
