@@ -3,6 +3,7 @@ package passwordfile
 import (
 	"context"
 
+	"github.com/yubo/apiserver/components/dbus"
 	"github.com/yubo/apiserver/pkg/authentication"
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/pkg/proc"
@@ -42,6 +43,8 @@ func factory(ctx context.Context) (authenticator.Request, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	dbus.RegisterPasswordfile(p)
 
 	return basic.NewAuthenticator(p), nil
 }

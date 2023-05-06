@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
-	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/sessions"
 )
 
@@ -20,12 +19,10 @@ func (a *Authenticator) AuthenticateRequest(req *http.Request) (*authenticator.R
 		return nil, false, nil
 	}
 
-	user := &user.DefaultInfo{}
-	if user.Name, _ = sess.Get("userName").(string); user.Name == "" {
+	user := sessions.UserFrom(sess)
+	if user == nil {
 		return nil, false, nil
 	}
-	user.Groups, _ = sess.Get("groups").([]string)
-	user.Extra, _ = sess.Get("extra").(map[string][]string)
 
 	return &authenticator.Response{User: user}, true, nil
 }

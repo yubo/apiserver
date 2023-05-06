@@ -8,7 +8,7 @@ logging:
     json:
       #splitStream: false
       #infoBufferSize: 5M
-  verbosity: 1
+  verbosity: 10
   vmodule:
 
 

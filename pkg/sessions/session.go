@@ -12,6 +12,7 @@ import (
 
 const (
 	errorFormat = "[sessions] ERROR! %s\n"
+	UserInfoKey = "userInfo"
 )
 
 type key int
@@ -38,6 +39,11 @@ func SessionMustFrom(ctx context.Context) Session {
 	return s
 }
 
+// shortcut to get session
+func Default(ctx context.Context) Session {
+	return SessionMustFrom(ctx)
+}
+
 func withManySession(parent context.Context, v map[string]Session) context.Context {
 	return context.WithValue(parent, ManySessionKey, v)
 }
@@ -53,6 +59,11 @@ func ManySessionMustFrom(ctx context.Context) map[string]Session {
 		panic("session does not exist")
 	}
 	return s
+}
+
+// shortcut to get session with given name
+func DefaultMany(ctx context.Context, name string) Session {
+	return ManySessionMustFrom(ctx)[name]
 }
 
 type Store interface {
@@ -87,6 +98,7 @@ type Session interface {
 	// Save saves all sessions used during the current request.
 	Save() error
 }
+
 type Options struct {
 	Clock clock.WithTicker
 
@@ -190,14 +202,4 @@ func (s *session) Session() *sessions.Session {
 
 func (s *session) Written() bool {
 	return s.written
-}
-
-// shortcut to get session
-func Default(ctx context.Context) Session {
-	return SessionMustFrom(ctx)
-}
-
-// shortcut to get session with given name
-func DefaultMany(ctx context.Context, name string) Session {
-	return ManySessionMustFrom(ctx)[name]
 }
