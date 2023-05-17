@@ -2,14 +2,12 @@ module examples/all-in-one
 
 go 1.20
 
-replace github.com/yubo/apiserver => ../../../apiserver
-
 require (
 	github.com/emicklei/go-restful/v3 v3.9.0
 	github.com/go-openapi/spec v0.20.7
 	github.com/spf13/cobra v1.4.0
-	github.com/yubo/apiserver v0.1.2-0.20230413160006-27301fd917e9
-	github.com/yubo/golib v0.0.3-0.20230413153058-1831b5929edc
+	github.com/yubo/apiserver v0.1.2-0.20230507071820-8bc946680170
+	github.com/yubo/golib v0.0.3-0.20230517190551-4305b2f46ee3
 	go.opentelemetry.io/otel v1.13.0
 	go.opentelemetry.io/otel/trace v1.13.0
 	k8s.io/klog/v2 v2.80.1
@@ -105,5 +103,3 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 )
-
-replace github.com/yubo/golib => ../../../golib

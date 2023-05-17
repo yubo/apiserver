@@ -3,8 +3,8 @@ module examples/rest
 go 1.20
 
 require (
-	github.com/yubo/apiserver v0.1.2-0.20230413160006-27301fd917e9
-	github.com/yubo/golib v0.0.3-0.20230413153058-1831b5929edc
+	github.com/yubo/apiserver v0.1.2-0.20230507071820-8bc946680170
+	github.com/yubo/golib v0.0.3-0.20230517190551-4305b2f46ee3
 )
 
 require (
@@ -26,13 +26,15 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/uuid v1.3.0 // indirect
+	github.com/gorilla/securecookie v1.1.1 // indirect
+	github.com/gorilla/sessions v1.2.1 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.15.1 // indirect
 	github.com/klauspost/cpuid v1.3.1 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
-	github.com/mattn/go-sqlite3 v1.14.15 // indirect
+	github.com/mattn/go-sqlite3 v1.14.16 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
 	github.com/minio/md5-simd v1.1.0 // indirect
 	github.com/minio/minio-go/v7 v7.0.30 // indirect
@@ -70,7 +72,3 @@ require (
 	k8s.io/klog/v2 v2.80.1 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 )
-
-replace github.com/yubo/golib => ../../../golib
-
-replace github.com/yubo/apiserver => ../../../apiserver

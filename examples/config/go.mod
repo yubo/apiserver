@@ -3,8 +3,8 @@ module examples/module-config
 go 1.20
 
 require (
-	github.com/yubo/apiserver v0.1.2-0.20230413160006-27301fd917e9
-	github.com/yubo/golib v0.0.3-0.20230413153058-1831b5929edc
+	github.com/yubo/apiserver v0.1.2-0.20230507071820-8bc946680170
+	github.com/yubo/golib v0.0.3-0.20230517190551-4305b2f46ee3
 )
 
 require (
@@ -35,7 +35,3 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/klog/v2 v2.80.1 // indirect
 )
-
-replace github.com/yubo/apiserver => ../../../apiserver
-
-replace github.com/yubo/golib => ../../../golib

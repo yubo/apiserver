@@ -2,7 +2,7 @@ module examples/audit-log
 
 go 1.20
 
-require github.com/yubo/apiserver v0.1.2-0.20230413160006-27301fd917e9
+require github.com/yubo/apiserver v0.1.2-0.20230507071820-8bc946680170
 
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
@@ -22,6 +22,8 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/uuid v1.3.0 // indirect
+	github.com/gorilla/securecookie v1.1.1 // indirect
+	github.com/gorilla/sessions v1.2.1 // indirect
 	github.com/imdario/mergo v0.3.6 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
@@ -45,7 +47,7 @@ require (
 	github.com/spf13/cobra v1.4.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/yubo/client-go v0.0.1 // indirect
-	github.com/yubo/golib v0.0.3-0.20230413153058-1831b5929edc // indirect
+	github.com/yubo/golib v0.0.3-0.20230517190551-4305b2f46ee3 // indirect
 	github.com/yubo/goswagger v0.0.0-20211115071236-bbeda335e7c1 // indirect
 	go.opentelemetry.io/otel v1.13.0 // indirect
 	go.opentelemetry.io/otel/trace v1.13.0 // indirect
@@ -68,7 +70,3 @@ require (
 	k8s.io/klog/v2 v2.80.1 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 )
-
-replace github.com/yubo/golib => ../../../golib
-
-replace github.com/yubo/apiserver => ../../../apiserver

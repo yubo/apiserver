@@ -76,7 +76,7 @@ var (
 	}
 )
 
-func (a *basicAuthenticator) Authenticate(user, pwd string) user.Info {
+func (a *basicAuthenticator) Authenticate(ctx context.Context, user, pwd string) user.Info {
 	if user == _username && pwd == _password {
 		return _user
 	}

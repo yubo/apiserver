@@ -2,12 +2,8 @@ module examples/logger
 
 go 1.20
 
-replace github.com/yubo/golib => ../../../golib
-
-replace github.com/yubo/apiserver => ../../../apiserver
-
 require (
-	github.com/yubo/apiserver v0.1.2-0.20230413160006-27301fd917e9
+	github.com/yubo/apiserver v0.1.2-0.20230507071820-8bc946680170
 	k8s.io/klog/v2 v2.80.1
 )
 
@@ -33,7 +29,7 @@ require (
 	github.com/prometheus/procfs v0.8.0 // indirect
 	github.com/spf13/cobra v1.4.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/yubo/golib v0.0.3-0.20230413153058-1831b5929edc // indirect
+	github.com/yubo/golib v0.0.3-0.20230517190551-4305b2f46ee3 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
 	go.uber.org/zap v1.21.0 // indirect

@@ -3,8 +3,8 @@ module examples/authn-token-customize
 go 1.20
 
 require (
-	github.com/yubo/apiserver v0.1.2-0.20230413160006-27301fd917e9
-	github.com/yubo/golib v0.0.3-0.20230413153058-1831b5929edc
+	github.com/yubo/apiserver v0.1.2-0.20230507071820-8bc946680170
+	github.com/yubo/golib v0.0.3-0.20230517190551-4305b2f46ee3
 	k8s.io/klog/v2 v2.80.1
 )
 
@@ -26,6 +26,8 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/uuid v1.3.0 // indirect
+	github.com/gorilla/securecookie v1.1.1 // indirect
+	github.com/gorilla/sessions v1.2.1 // indirect
 	github.com/imdario/mergo v0.3.6 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
@@ -70,7 +72,3 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 )
-
-replace github.com/yubo/golib => ../../../golib
-
-replace github.com/yubo/apiserver => ../../../apiserver

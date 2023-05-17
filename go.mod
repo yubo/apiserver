@@ -2,8 +2,6 @@ module github.com/yubo/apiserver
 
 go 1.20
 
-replace github.com/yubo/golib => ../golib
-
 require (
 	github.com/blang/semver/v4 v4.0.0
 	github.com/buger/goterm v1.0.1
@@ -34,7 +32,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.1
 	github.com/yubo/client-go v0.0.1
-	github.com/yubo/golib v0.0.3-0.20230413153058-1831b5929edc
+	github.com/yubo/golib v0.0.3-0.20230517190551-4305b2f46ee3
 	github.com/yubo/goswagger v0.0.0-20211115071236-bbeda335e7c1
 	go.opentelemetry.io/collector v0.47.0
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.38.0
