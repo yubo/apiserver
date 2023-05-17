@@ -128,3 +128,5 @@ require (
 	gotest.tools v2.2.0+incompatible // indirect
 	k8s.io/kube-openapi v0.0.0-20230202010329-39b3636cbaa3 // indirect
 )
+
+replace github.com/yubo/golib => ../golib
