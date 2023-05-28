@@ -14,6 +14,7 @@ import (
 	"github.com/yubo/apiserver/pkg/rest/urlencoded"
 	"github.com/yubo/apiserver/pkg/scheme"
 	"github.com/yubo/golib/runtime"
+	"github.com/yubo/golib/util"
 	"github.com/yubo/golib/util/errors"
 	"k8s.io/klog/v2"
 )
@@ -349,6 +350,8 @@ func (p *webserviceBuilder) newRouteBuilder(wr WsRoute) *restful.RouteBuilder {
 
 	if wr.Operation != "" {
 		rb.Operation(wr.Operation)
+	} else {
+		rb.Operation(util.Name(wr.Handle))
 	}
 
 	if wr.Notes != "" {
