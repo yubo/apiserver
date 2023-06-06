@@ -16,3 +16,9 @@ limitations under the License.
 
 // TODO: Delete this file if we generate a clientset.
 package audit
+
+import (
+	"github.com/yubo/golib/runtime/serializer"
+)
+
+var Codecs = serializer.NewCodecFactory()

@@ -21,23 +21,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	auditinternal "github.com/yubo/apiserver/pkg/apis/audit"
 )
-
-func TestLogAnnotation(t *testing.T) {
-	ev := &auditinternal.Event{
-		Level:   auditinternal.LevelMetadata,
-		AuditID: "fake id",
-	}
-	LogAnnotation(ev, "foo", "bar")
-	LogAnnotation(ev, "foo", "baz")
-	assert.Equal(t, "bar", ev.Annotations["foo"], "audit annotation should not be overwritten.")
-
-	LogAnnotation(ev, "qux", "")
-	LogAnnotation(ev, "qux", "baz")
-	assert.Equal(t, "", ev.Annotations["qux"], "audit annotation should not be overwritten.")
-}
 
 func TestMaybeTruncateUserAgent(t *testing.T) {
 	req := &http.Request{}

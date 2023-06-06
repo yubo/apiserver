@@ -25,7 +25,6 @@ import (
 
 	auditinternal "github.com/yubo/apiserver/pkg/apis/audit"
 	"github.com/yubo/apiserver/pkg/audit"
-	"github.com/yubo/apiserver/pkg/audit/policy"
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/responsewriters"
 	"github.com/yubo/golib/api"
@@ -46,15 +45,12 @@ const (
 // auditWrapper provides an http.Handler that audits a failed request.
 // longRunning returns true if he given request is a long running request.
 // requestTimeoutMaximum specifies the default request timeout value.
-func WithRequestDeadline(handler http.Handler, sink audit.Sink, policy policy.Checker,
-	longRunning request.LongRunningRequestCheck,
-	s runtime.NegotiatedSerializer,
-	requestTimeoutMaximum time.Duration,
-) http.Handler {
+func WithRequestDeadline(handler http.Handler, sink audit.Sink, policy audit.PolicyRuleEvaluator, longRunning request.LongRunningRequestCheck, s runtime.NegotiatedSerializer,
+	requestTimeoutMaximum time.Duration) http.Handler {
 	return withRequestDeadline(handler, sink, policy, longRunning, s, requestTimeoutMaximum, utilclock.RealClock{})
 }
 
-func withRequestDeadline(handler http.Handler, sink audit.Sink, policy policy.Checker, longRunning request.LongRunningRequestCheck,
+func withRequestDeadline(handler http.Handler, sink audit.Sink, policy audit.PolicyRuleEvaluator, longRunning request.LongRunningRequestCheck,
 	s runtime.NegotiatedSerializer, requestTimeoutMaximum time.Duration, clock utilclock.PassiveClock) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
@@ -71,7 +67,7 @@ func withRequestDeadline(handler http.Handler, sink audit.Sink, policy policy.Ch
 
 		userSpecifiedTimeout, ok, err := parseTimeout(req)
 		if err != nil {
-			statusErr := apierrors.NewBadRequest(fmt.Sprintf("%s", err.Error()))
+			statusErr := apierrors.NewBadRequest(err.Error())
 
 			klog.Errorf("Error - %s: %#v", err.Error(), req.RequestURI)
 
@@ -106,21 +102,23 @@ func withRequestDeadline(handler http.Handler, sink audit.Sink, policy policy.Ch
 
 // withFailedRequestAudit decorates a failed http.Handler and is used to audit a failed request.
 // statusErr is used to populate the Message property of ResponseStatus.
-func withFailedRequestAudit(failedHandler http.Handler, statusErr *apierrors.StatusError, sink audit.Sink, policy policy.Checker) http.Handler {
+func withFailedRequestAudit(failedHandler http.Handler, statusErr *apierrors.StatusError, sink audit.Sink, policy audit.PolicyRuleEvaluator) http.Handler {
 	if sink == nil || policy == nil {
 		return failedHandler
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		req, ev, omitStages, err := createAuditEventAndAttachToContext(req, policy)
+		ac, err := evaluatePolicyAndCreateAuditEvent(req, policy)
 		if err != nil {
 			utilruntime.HandleError(fmt.Errorf("failed to create audit event: %v", err))
 			responsewriters.InternalError(w, req, errors.New("failed to create audit event"))
 			return
 		}
-		if ev == nil {
+
+		if ac == nil || ac.Event == nil {
 			failedHandler.ServeHTTP(w, req)
 			return
 		}
+		ev := ac.Event
 
 		ev.ResponseStatus = &api.Status{}
 		ev.Stage = auditinternal.StageResponseStarted
@@ -128,7 +126,7 @@ func withFailedRequestAudit(failedHandler http.Handler, statusErr *apierrors.Sta
 			ev.ResponseStatus.Message = statusErr.Error()
 		}
 
-		rw := decorateResponseWriter(req.Context(), w, ev, sink, omitStages)
+		rw := decorateResponseWriter(req.Context(), w, ev, sink, ac.RequestAuditConfig.OmitStages)
 		failedHandler.ServeHTTP(rw, req)
 	})
 }
@@ -137,7 +135,6 @@ func withFailedRequestAudit(failedHandler http.Handler, statusErr *apierrors.Sta
 // to render an error response to the request.
 func failedErrorHandler(s runtime.NegotiatedSerializer, statusErr *apierrors.StatusError) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		responsewriters.ErrorNegotiated(statusErr, s, w, req)
 		//ctx := req.Context()
 		//requestInfo, found := request.RequestInfoFrom(ctx)
 		//if !found {
@@ -147,6 +144,7 @@ func failedErrorHandler(s runtime.NegotiatedSerializer, statusErr *apierrors.Sta
 
 		//gv := schema.GroupVersion{Group: requestInfo.APIGroup, Version: requestInfo.APIVersion}
 		//responsewriters.ErrorNegotiated(statusError, s, gv, w, req)
+		responsewriters.ErrorNegotiated(statusErr, s, w, req)
 	})
 }
 

@@ -22,8 +22,9 @@ import (
 
 	auditinternal "github.com/yubo/apiserver/pkg/apis/audit"
 	"github.com/yubo/apiserver/pkg/apis/audit/validation"
-	"github.com/yubo/golib/scheme"
-
+	"github.com/yubo/apiserver/pkg/audit"
+	"github.com/yubo/golib/runtime"
+	"github.com/yubo/golib/runtime/serializer"
 	"k8s.io/klog/v2"
 )
 
@@ -46,15 +47,28 @@ func LoadPolicyFromFile(filePath string) (*auditinternal.Policy, error) {
 
 func LoadPolicyFromBytes(policyDef []byte) (*auditinternal.Policy, error) {
 	policy := &auditinternal.Policy{}
-	decoder := scheme.Codecs.UniversalDecoder()
+	strictDecoder := serializer.NewCodecFactory(serializer.EnableStrict).UniversalDecoder()
 
-	_, err := decoder.Decode(policyDef, policy)
+	// Try strict decoding first.
+	_, err := strictDecoder.Decode(policyDef, policy)
 	if err != nil {
-		return nil, fmt.Errorf("failed decoding: %v", err)
+		if !runtime.IsStrictDecodingError(err) {
+			return nil, fmt.Errorf("failed decoding: %w", err)
+		}
+		var (
+			lenientDecoder = audit.Codecs.UniversalDecoder()
+			lenientErr     error
+		)
+		_, lenientErr = lenientDecoder.Decode(policyDef, policy)
+		if lenientErr != nil {
+			return nil, fmt.Errorf("failed lenient decoding: %w", lenientErr)
+		}
+		klog.Warningf("Audit policy contains errors, falling back to lenient decoding: %v", err)
 	}
 
 	// Ensure the policy file contained an apiVersion and kind.
-	//if !apiGroupVersionSet[schema.GroupVersion{Group: gvk.Group, Version: gvk.Version}] {
+	//gv := schema.GroupVersion{Group: gvk.Group, Version: gvk.Version}
+	//if !apiGroupVersionSet[gv] {
 	//	return nil, fmt.Errorf("unknown group version field %v in policy", gvk)
 	//}
 

@@ -11,7 +11,7 @@
 - Audit
   * [x] [Audit log](./examples/audit-log)
   * [x] [Audit webhook](./examples/audit-webhook)
-- Authenticate
+- Authentication
   * [x] [Authentication Basic](./examples/authn-basic)
   * [x] [Authentication Bootstrap](./examples/authn-bootstrap)
   * [x] [Authentication OIDC](./examples/authn-oidc)
@@ -19,11 +19,14 @@
   * [x] [Authentication Tokenfile](./examples/authn-tokenfile)
   * [x] [Authentication X509](./examples/authn-x509)
   * [x] [Authentication Webhook](./examples/authn-webhook)
+  * [x] [Authentication Impersonation](./examples/authn-impersonation)
+  * [ ] [Authentication Proxy](./examples/authn-proxy)
 - Authorization
   * [x] [Authorization ABAC](./examples/authz-abac)
   * [x] [Authorization RBAC](./examples/authz-rbac)
   * [x] [Authorization Path](./examples/authz-path)
   * [x] [Authorization Webhook](./examples/authz-webhook)
+  * [ ] [Authorization Impersonation](./examples/authz-impersonation)
 - Stream
   * [x] [Remotecommand Container](./examples/remotecommand-container)
   * [x] [Remotecommand Native](./examples/remotecommand-native)

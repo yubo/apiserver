@@ -3,6 +3,7 @@ package authentication
 import (
 	"context"
 
+	"github.com/yubo/apiserver/components/dbus"
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/pkg/authentication/group"
 	"github.com/yubo/apiserver/pkg/authentication/request/anonymous"
@@ -13,7 +14,6 @@ import (
 	tokenunion "github.com/yubo/apiserver/pkg/authentication/token/union"
 	"github.com/yubo/apiserver/pkg/proc"
 	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
-	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/server"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/util"
@@ -178,12 +178,13 @@ func (p *authentication) init(ctx context.Context) error {
 	}
 
 	authn := &server.AuthenticationInfo{
-		APIAudiences:  authenticator.Audiences(p.config.APIAudiences),
-		Authenticator: p.authenticator,
-		Anonymous:     p.config.Anonymous,
+		APIAudiences:        authenticator.Audiences(p.config.APIAudiences),
+		Authenticator:       p.authenticator,
+		Anonymous:           p.config.Anonymous,
+		RequestHeaderConfig: nil,
 	}
 
-	options.WithAuthn(ctx, authn)
+	dbus.RegisterAuthenticationInfo(authn)
 	return nil
 }
 

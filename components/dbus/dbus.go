@@ -59,3 +59,7 @@ func MustRegister(k, v interface{}) {
 func MustGet(k interface{}) interface{} {
 	return defaultcbus.MustGet(k)
 }
+
+func get(k interface{}) interface{} {
+	return defaultcbus.data[k]
+}

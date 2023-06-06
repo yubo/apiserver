@@ -19,12 +19,16 @@ package policy
 import (
 	"io/ioutil"
 	"os"
+	"reflect"
 	"strings"
 	"testing"
 
 	"github.com/yubo/apiserver/pkg/apis/audit"
-	"github.com/yubo/golib/api"
 
+	// import to call webhook's init() function to register audit.Policy to schema
+	_ "github.com/yubo/apiserver/plugin/audit/webhook"
+
+	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -67,6 +71,18 @@ rules:
   - level: Metadata
 `
 
+const policyWithUnknownField = `
+apiVersion: audit.k8s.io/v1
+kind: Policy
+rules:
+- level: None
+  resources:
+  - group: coordination.k8s.io
+    resources:
+    - "leases"
+    verbs: ["watch", "get", "list"] # invalid indentation on verbs
+`
+
 var expectedPolicy = &audit.Policy{
 	Rules: []audit.PolicyRule{{
 		Level:           audit.LevelNone,
@@ -87,31 +103,37 @@ var expectedPolicy = &audit.Policy{
 }
 
 func TestParser(t *testing.T) {
-	for _, version := range []string{"v1", "v1alpha1", "v1beta1"} {
-		policyDef := strings.Replace(policyDefPattern, "{version}", version, 1)
-		f, err := writePolicy(t, policyDef)
-		require.NoError(t, err)
-		defer os.Remove(f)
+	policyDef := strings.Replace(policyDefPattern, "{version}", "v1", 1)
+	f, err := writePolicy(t, policyDef)
+	require.NoError(t, err)
+	defer os.Remove(f)
 
-		policy, err := LoadPolicyFromFile(f)
-		require.NoError(t, err)
+	policy, err := LoadPolicyFromFile(f)
+	require.NoError(t, err)
 
-		// ugly hack
-		policy.TypeMeta = api.TypeMeta{}
-
-		assert.Len(t, policy.Rules, 3) // Sanity check.
-		assert.Equal(t, policy, expectedPolicy)
+	assert.Len(t, policy.Rules, 3) // Sanity check.
+	if !reflect.DeepEqual(policy, expectedPolicy) {
+		t.Errorf("Unexpected policy! Diff:\n%s", cmp.Diff(policy, expectedPolicy))
 	}
 }
 
-//func TestParsePolicyWithNoVersionOrKind(t *testing.T) {
-//	f, err := writePolicy(t, policyWithNoVersionOrKind)
-//	require.NoError(t, err)
-//	defer os.Remove(f)
-//
-//	_, err = LoadPolicyFromFile(f)
-//	assert.Contains(t, err.Error(), "unknown group version field")
-//}
+func TestParsePolicyWithNoVersionOrKind(t *testing.T) {
+	f, err := writePolicy(t, policyWithNoVersionOrKind)
+	require.NoError(t, err)
+	defer os.Remove(f)
+
+	_, err = LoadPolicyFromFile(f)
+	assert.Contains(t, err.Error(), "unknown group version field")
+}
+
+func TestParsePolicyWithUnknownField(t *testing.T) {
+	f, err := writePolicy(t, policyWithUnknownField)
+	require.NoError(t, err)
+	defer os.Remove(f)
+
+	_, err = LoadPolicyFromFile(f)
+	require.NoError(t, err)
+}
 
 func TestPolicyCntCheck(t *testing.T) {
 	var testCases = []struct {

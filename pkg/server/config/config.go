@@ -5,6 +5,7 @@ import (
 
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/apiserver/pkg/server"
+	"github.com/yubo/apiserver/pkg/tracing"
 	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/runtime"
 	"github.com/yubo/golib/scheme"
@@ -77,6 +78,7 @@ func (p *Config) NewServerConfig() *server.Config {
 		EnableOpenAPI:           p.EnableOpenAPI,
 		KeepAuthorizationHeader: p.EnableOpenAPI,
 		SecuritySchemes:         p.SecuritySchemes,
+		TracerProvider:          tracing.NewNoopTracerProvider(),
 	}
 }
 

@@ -22,13 +22,17 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
 	auditinternal "github.com/yubo/apiserver/pkg/apis/audit"
+	"github.com/yubo/apiserver/pkg/audit"
 	"github.com/yubo/apiserver/pkg/audit/policy"
 	"github.com/yubo/apiserver/pkg/request"
+	apierrors "github.com/yubo/golib/api/errors"
 	"github.com/yubo/golib/runtime"
 	"github.com/yubo/golib/scheme"
 	testingclock "github.com/yubo/golib/util/clock/testing"
@@ -173,11 +177,10 @@ func TestWithRequestDeadline(t *testing.T) {
 			})
 
 			fakeSink := &fakeAuditSink{}
-			fakeChecker := policy.FakeChecker(auditinternal.LevelRequestResponse, nil)
-			withDeadline := WithRequestDeadline(handler, fakeSink, fakeChecker,
+			fakeRuleEvaluator := policy.NewFakePolicyRuleEvaluator(auditinternal.LevelRequestResponse, nil)
+			withDeadline := WithRequestDeadline(handler, fakeSink, fakeRuleEvaluator,
 				func(_ *http.Request, _ *request.RequestInfo) bool { return test.longRunning },
-				newSerializer(),
-				requestTimeoutMaximum)
+				newSerializer(), requestTimeoutMaximum)
 			withDeadline = WithRequestInfo(withDeadline, &fakeRequestResolver{})
 
 			testRequest := newRequest(t, test.requestURL)
@@ -227,8 +230,8 @@ func TestWithRequestDeadlineWithClock(t *testing.T) {
 	fakeClock := testingclock.NewFakeClock(receivedTimestampExpected)
 
 	fakeSink := &fakeAuditSink{}
-	fakeChecker := policy.FakeChecker(auditinternal.LevelRequestResponse, nil)
-	withDeadline := withRequestDeadline(handler, fakeSink, fakeChecker,
+	fakeRuleEvaluator := policy.NewFakePolicyRuleEvaluator(auditinternal.LevelRequestResponse, nil)
+	withDeadline := withRequestDeadline(handler, fakeSink, fakeRuleEvaluator,
 		func(_ *http.Request, _ *request.RequestInfo) bool { return false }, newSerializer(), time.Minute, fakeClock)
 	withDeadline = WithRequestInfo(withDeadline, &fakeRequestResolver{})
 
@@ -249,6 +252,36 @@ func TestWithRequestDeadlineWithClock(t *testing.T) {
 	}
 }
 
+func TestWithRequestDeadlineWithInvalidTimeoutIsAudited(t *testing.T) {
+	var handlerInvoked bool
+	handler := http.HandlerFunc(func(_ http.ResponseWriter, req *http.Request) {
+		handlerInvoked = true
+	})
+
+	fakeSink := &fakeAuditSink{}
+	fakeRuleEvaluator := policy.NewFakePolicyRuleEvaluator(auditinternal.LevelRequestResponse, nil)
+	withDeadline := WithRequestDeadline(handler, fakeSink, fakeRuleEvaluator,
+		func(_ *http.Request, _ *request.RequestInfo) bool { return false }, newSerializer(), time.Minute)
+	withDeadline = WithRequestInfo(withDeadline, &fakeRequestResolver{})
+
+	testRequest := newRequest(t, "/api/v1/namespaces?timeout=foo")
+	w := httptest.NewRecorder()
+	withDeadline.ServeHTTP(w, testRequest)
+
+	if handlerInvoked {
+		t.Error("expected the request to fail and the handler to be skipped")
+	}
+
+	statusCodeGot := w.Result().StatusCode
+	if statusCodeGot != http.StatusBadRequest {
+		t.Errorf("expected status code %d, but got: %d", http.StatusBadRequest, statusCodeGot)
+	}
+	// verify that the audit event from the request context is written to the audit sink.
+	if len(fakeSink.events) != 1 {
+		t.Fatalf("expected audit sink to have 1 event, but got: %d", len(fakeSink.events))
+	}
+}
+
 func TestWithRequestDeadlineWithPanic(t *testing.T) {
 	var (
 		panicErrGot interface{}
@@ -262,8 +295,8 @@ func TestWithRequestDeadlineWithPanic(t *testing.T) {
 	})
 
 	fakeSink := &fakeAuditSink{}
-	fakeChecker := policy.FakeChecker(auditinternal.LevelRequestResponse, nil)
-	withDeadline := WithRequestDeadline(handler, fakeSink, fakeChecker,
+	fakeRuleEvaluator := policy.NewFakePolicyRuleEvaluator(auditinternal.LevelRequestResponse, nil)
+	withDeadline := WithRequestDeadline(handler, fakeSink, fakeRuleEvaluator,
 		func(_ *http.Request, _ *request.RequestInfo) bool { return false }, newSerializer(), 1*time.Minute)
 	withDeadline = WithRequestInfo(withDeadline, &fakeRequestResolver{})
 	withPanicRecovery := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
@@ -299,8 +332,8 @@ func TestWithRequestDeadlineWithRequestTimesOut(t *testing.T) {
 	})
 
 	fakeSink := &fakeAuditSink{}
-	fakeChecker := policy.FakeChecker(auditinternal.LevelRequestResponse, nil)
-	withDeadline := WithRequestDeadline(handler, fakeSink, fakeChecker,
+	fakeRuleEvaluator := policy.NewFakePolicyRuleEvaluator(auditinternal.LevelRequestResponse, nil)
+	withDeadline := WithRequestDeadline(handler, fakeSink, fakeRuleEvaluator,
 		func(_ *http.Request, _ *request.RequestInfo) bool { return false }, newSerializer(), 1*time.Minute)
 	withDeadline = WithRequestInfo(withDeadline, &fakeRequestResolver{})
 
@@ -313,13 +346,104 @@ func TestWithRequestDeadlineWithRequestTimesOut(t *testing.T) {
 	}
 }
 
+func TestWithFailedRequestAudit(t *testing.T) {
+	tests := []struct {
+		name                          string
+		statusErr                     *apierrors.StatusError
+		errorHandlerCallCountExpected int
+		statusCodeExpected            int
+		auditExpected                 bool
+	}{
+		{
+			name:                          "bad request, the error handler is invoked and the request is audited",
+			statusErr:                     apierrors.NewBadRequest("error serving request"),
+			errorHandlerCallCountExpected: 1,
+			statusCodeExpected:            http.StatusBadRequest,
+			auditExpected:                 true,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var (
+				errorHandlerCallCountGot int
+				rwGot                    http.ResponseWriter
+				requestGot               *http.Request
+			)
+
+			errorHandler := http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+				http.Error(rw, "error serving request", http.StatusBadRequest)
+
+				errorHandlerCallCountGot++
+				requestGot = req
+				rwGot = rw
+			})
+
+			fakeSink := &fakeAuditSink{}
+			fakeRuleEvaluator := policy.NewFakePolicyRuleEvaluator(auditinternal.LevelRequestResponse, nil)
+
+			withAudit := withFailedRequestAudit(errorHandler, test.statusErr, fakeSink, fakeRuleEvaluator)
+
+			w := httptest.NewRecorder()
+			testRequest := newRequest(t, "/apis/v1/namespaces/default/pods")
+			info := request.RequestInfo{}
+			testRequest = testRequest.WithContext(request.WithRequestInfo(testRequest.Context(), &info))
+
+			withAudit.ServeHTTP(w, testRequest)
+
+			if test.errorHandlerCallCountExpected != errorHandlerCallCountGot {
+				t.Errorf("expected the testRequest handler to be invoked %d times, but was actually invoked %d times", test.errorHandlerCallCountExpected, errorHandlerCallCountGot)
+			}
+
+			statusCodeGot := w.Result().StatusCode
+			if test.statusCodeExpected != statusCodeGot {
+				t.Errorf("expected status code %d, but got: %d", test.statusCodeExpected, statusCodeGot)
+			}
+
+			if test.auditExpected {
+				// verify that the right http.ResponseWriter is passed to the error handler
+				_, ok := rwGot.(*auditResponseWriter)
+				if !ok {
+					t.Errorf("expected an http.ResponseWriter of type: %T but got: %T", &auditResponseWriter{}, rwGot)
+				}
+
+				auditEventGot := audit.AuditEventFrom(requestGot.Context())
+				if auditEventGot == nil {
+					t.Fatal("expected an audit event object but got nil")
+				}
+				if auditEventGot.Stage != auditinternal.StageResponseStarted {
+					t.Errorf("expected audit event Stage: %s, but got: %s", auditinternal.StageResponseStarted, auditEventGot.Stage)
+				}
+				if auditEventGot.ResponseStatus == nil {
+					t.Fatal("expected a ResponseStatus field of the audit event object, but got nil")
+				}
+				if test.statusCodeExpected != int(auditEventGot.ResponseStatus.Code) {
+					t.Errorf("expected audit event ResponseStatus.Code: %d, but got: %d", test.statusCodeExpected, auditEventGot.ResponseStatus.Code)
+				}
+				if test.statusErr.Error() != auditEventGot.ResponseStatus.Message {
+					t.Errorf("expected audit event ResponseStatus.Message: %s, but got: %s", test.statusErr, auditEventGot.ResponseStatus.Message)
+				}
+
+				// verify that the audit event from the request context is written to the audit sink.
+				if len(fakeSink.events) != 1 {
+					t.Fatalf("expected audit sink to have 1 event, but got: %d", len(fakeSink.events))
+				}
+				auditEventFromSink := fakeSink.events[0]
+				if !reflect.DeepEqual(auditEventGot, auditEventFromSink) {
+					t.Errorf("expected the audit event from the request context to be written to the audit sink, but got diffs: %s", cmp.Diff(auditEventGot, auditEventFromSink))
+				}
+			}
+		})
+	}
+}
+
 func newRequest(t *testing.T, requestURL string) *http.Request {
 	req, err := http.NewRequest(http.MethodGet, requestURL, nil)
 	if err != nil {
 		t.Fatalf("failed to create new http request - %v", err)
 	}
-
-	return req
+	ctx := audit.WithAuditContext(req.Context())
+	return req.WithContext(ctx)
 }
 
 func message(err error) string {

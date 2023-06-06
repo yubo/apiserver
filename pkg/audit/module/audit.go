@@ -6,15 +6,16 @@ import (
 	"io"
 	"net"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/yubo/apiserver/components/dbus"
 	auditinternal "github.com/yubo/apiserver/pkg/apis/audit"
 	"github.com/yubo/apiserver/pkg/audit"
 	"github.com/yubo/apiserver/pkg/audit/policy"
 	"github.com/yubo/apiserver/pkg/proc"
 	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
-	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/util/webhook"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/configer"
@@ -73,7 +74,7 @@ var AllowedModes = []string{
 	ModeBlockingStrict,
 }
 
-//type AuditOptions struct {
+// type AuditOptions struct {
 type config struct {
 	// Policy configuration file for filtering audit events that are captured.
 	// If unspecified, a default is provided.
@@ -264,22 +265,38 @@ func (o *AuditLogOptions) enabled() bool {
 	return o != nil && o.Path != ""
 }
 
-func (o *AuditLogOptions) getWriter() io.Writer {
+func (o *AuditLogOptions) getWriter() (io.Writer, error) {
 	if !o.enabled() {
-		return nil
+		return nil, nil
 	}
 
-	var w io.Writer = os.Stdout
-	if o.Path != "-" {
-		w = &lumberjack.Logger{
-			Filename:   o.Path,
-			MaxAge:     o.MaxAge,
-			MaxBackups: o.MaxBackups,
-			MaxSize:    o.MaxSize,
-			Compress:   o.Compress,
-		}
+	if o.Path == "-" {
+		return os.Stdout, nil
 	}
-	return w
+
+	if err := o.ensureLogFile(); err != nil {
+		return nil, fmt.Errorf("ensureLogFile: %w", err)
+	}
+
+	return &lumberjack.Logger{
+		Filename:   o.Path,
+		MaxAge:     o.MaxAge,
+		MaxBackups: o.MaxBackups,
+		MaxSize:    o.MaxSize,
+		Compress:   o.Compress,
+	}, nil
+}
+
+func (o *AuditLogOptions) ensureLogFile() error {
+	if err := os.MkdirAll(filepath.Dir(o.Path), 0700); err != nil {
+		return err
+	}
+	mode := os.FileMode(0600)
+	f, err := os.OpenFile(o.Path, os.O_CREATE|os.O_APPEND|os.O_RDWR, mode)
+	if err != nil {
+		return err
+	}
+	return f.Close()
 }
 
 func (o *AuditLogOptions) newBackend(w io.Writer) audit.Backend {
@@ -471,20 +488,19 @@ var (
 )
 
 type module struct {
-	name    string
-	config  *config
-	ctx     context.Context
-	cancel  context.CancelFunc
-	checker policy.Checker
-	backend audit.Backend
-}
-
-func (p *module) Checker() audit.Checker {
-	return p.checker
+	name                     string
+	config                   *config
+	ctx                      context.Context
+	cancel                   context.CancelFunc
+	backend                  audit.Backend
+	auditPolicyRuleEvaluator audit.PolicyRuleEvaluator
 }
 
 func (p *module) Backend() audit.Backend {
 	return p.backend
+}
+func (p *module) AuditPolicyRuleEvaluator() audit.PolicyRuleEvaluator {
+	return p.auditPolicyRuleEvaluator
 }
 
 func (p *module) init(ctx context.Context) (err error) {
@@ -506,7 +522,7 @@ func (p *module) init(ctx context.Context) (err error) {
 		}
 	}
 
-	options.WithAudit(ctx, p)
+	dbus.RegisterAudit(p)
 	return
 }
 
@@ -523,7 +539,7 @@ func (p *module) stop(ctx context.Context) error {
 
 func (p *module) initAudit() error {
 	// 1. Build policy checker
-	checker, err := p.config.newPolicyChecker()
+	evaluator, err := p.config.newPolicyRuleEvaluator()
 	if err != nil {
 		return err
 	}
@@ -532,8 +548,12 @@ func (p *module) initAudit() error {
 
 	// 2. Build log backend
 	var logBackend audit.Backend
-	if w := c.LogOptions.getWriter(); w != nil {
-		if checker == nil {
+	w, err := c.LogOptions.getWriter()
+	if err != nil {
+		return err
+	}
+	if w != nil {
+		if evaluator == nil {
 			klog.V(2).Info("No audit policy file provided, no events will be recorded for log backend")
 		} else {
 			logBackend = c.LogOptions.newBackend(w)
@@ -543,7 +563,7 @@ func (p *module) initAudit() error {
 	// 3. Build webhook backend
 	var webhookBackend audit.Backend
 	if c.WebhookOptions.enabled() {
-		if checker == nil {
+		if evaluator == nil {
 			klog.V(2).Info("No audit policy file provided, no events will be recorded for webhook backend")
 		} else {
 			//if c.EgressSelector != nil {
@@ -571,7 +591,7 @@ func (p *module) initAudit() error {
 	}
 
 	// 5. Set the policy checker
-	p.checker = checker
+	p.auditPolicyRuleEvaluator = evaluator
 
 	// 6. Join the log backend with the webhooks
 	p.backend = appendBackend(logBackend, dynamicBackend)
@@ -583,16 +603,17 @@ func (p *module) initAudit() error {
 	return nil
 }
 
-func (c *config) newPolicyChecker() (policy.Checker, error) {
+func (c *config) newPolicyRuleEvaluator() (audit.PolicyRuleEvaluator, error) {
 	if c.PolicyFile == "" {
 		return nil, nil
 	}
 
-	if p, err := policy.LoadPolicyFromFile(c.PolicyFile); err != nil {
+	p, err := policy.LoadPolicyFromFile(c.PolicyFile)
+	if err != nil {
 		return nil, fmt.Errorf("loading audit policy file: %v", err)
-	} else {
-		return policy.NewChecker(p), nil
 	}
+	return policy.NewPolicyRuleEvaluator(p), nil
+
 }
 
 func RegisterHooks() {

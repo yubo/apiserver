@@ -17,11 +17,8 @@ limitations under the License.
 package routes
 
 import (
-	"io"
-	"net/http"
-
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/yubo/apiserver/pkg/metrics"
+	"github.com/yubo/apiserver/components/metrics/legacyregistry"
+	apimetrics "github.com/yubo/apiserver/pkg/metrics"
 	"github.com/yubo/apiserver/pkg/server/mux"
 )
 
@@ -30,8 +27,8 @@ type DefaultMetrics struct{}
 
 // Install adds the DefaultMetrics handler
 func (m DefaultMetrics) Install(c *mux.PathRecorderMux) {
-	metrics.RestRegister()
-	c.Handle("/metrics", promhttp.Handler())
+	register()
+	c.Handle("/metrics", legacyregistry.Handler())
 }
 
 // MetricsWithReset install the prometheus metrics handler extended with support for the DELETE method
@@ -40,17 +37,11 @@ type MetricsWithReset struct{}
 
 // Install adds the MetricsWithReset handler
 func (m MetricsWithReset) Install(c *mux.PathRecorderMux) {
-	metrics.RestRegister()
-	c.Handle("/metrics", metricsWithReset())
+	register()
+	c.Handle("/metrics", legacyregistry.HandlerWithReset())
 }
 
-func metricsWithReset() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodDelete {
-			metrics.Reset()
-			io.WriteString(w, "metrics reset\n")
-			return
-		}
-		promhttp.Handler().ServeHTTP(w, r)
-	})
+// register apiserver and etcd metrics
+func register() {
+	apimetrics.Register()
 }

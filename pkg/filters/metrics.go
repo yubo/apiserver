@@ -24,6 +24,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
+	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 )
 
 /*
@@ -38,6 +39,10 @@ const (
 	successLabel = "success"
 	failureLabel = "failure"
 	errorLabel   = "error"
+
+	allowedLabel   = "allowed"
+	deniedLabel    = "denied"
+	noOpinionLabel = "no-opinion"
 )
 
 var (
@@ -65,13 +70,48 @@ var (
 		},
 		[]string{"result"},
 	)
+
+	authorizationAttemptsCounter = promauto.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "authorization_attempts_total",
+			Help: "Counter of authorization attempts broken down by result. It can be either 'allowed', 'denied', 'no-opinion' or 'error'.",
+		},
+		[]string{"result"},
+	)
+
+	authorizationLatency = promauto.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "authorization_duration_seconds",
+			Help:    "Authorization duration in seconds broken out by result.",
+			Buckets: prometheus.ExponentialBuckets(0.001, 2, 15),
+		},
+		[]string{"result"},
+	)
 )
 
-func recordAuthMetrics(ctx context.Context, resp *authenticator.Response, ok bool, err error /*, apiAudiences authenticator.Audiences*/, authStart time.Time) {
+func recordAuthorizationMetrics(ctx context.Context, authorized authorizer.Decision, err error, authStart time.Time, authFinish time.Time) {
 	var resultLabel string
 
 	switch {
-	case err != nil || (resp != nil /*&& !audiencesAreAcceptable(apiAudiences, resp.Audiences)*/):
+	case authorized == authorizer.DecisionAllow:
+		resultLabel = allowedLabel
+	case err != nil:
+		resultLabel = errorLabel
+	case authorized == authorizer.DecisionDeny:
+		resultLabel = deniedLabel
+	case authorized == authorizer.DecisionNoOpinion:
+		resultLabel = noOpinionLabel
+	}
+
+	authorizationAttemptsCounter.WithLabelValues(resultLabel).Inc()
+	authorizationLatency.WithLabelValues(resultLabel).Observe(authFinish.Sub(authStart).Seconds())
+}
+
+func recordAuthenticationMetrics(ctx context.Context, resp *authenticator.Response, ok bool, err error, apiAudiences authenticator.Audiences, authStart time.Time, authFinish time.Time) {
+	var resultLabel string
+
+	switch {
+	case err != nil || (resp != nil && !audiencesAreAcceptable(apiAudiences, resp.Audiences)):
 		resultLabel = errorLabel
 	case !ok:
 		resultLabel = failureLabel
@@ -81,7 +121,7 @@ func recordAuthMetrics(ctx context.Context, resp *authenticator.Response, ok boo
 	}
 
 	authenticatedAttemptsCounter.WithLabelValues(resultLabel).Inc()
-	authenticationLatency.WithLabelValues(resultLabel).Observe(time.Since(authStart).Seconds())
+	authenticationLatency.WithLabelValues(resultLabel).Observe(authFinish.Sub(authStart).Seconds())
 }
 
 // compressUsername maps all possible usernames onto a small set of categories

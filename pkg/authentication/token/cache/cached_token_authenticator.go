@@ -35,7 +35,6 @@ import (
 	auditinternal "github.com/yubo/apiserver/pkg/apis/audit"
 	"github.com/yubo/apiserver/pkg/audit"
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
-	"github.com/yubo/apiserver/pkg/request"
 	apierrors "github.com/yubo/golib/api/errors"
 	utilclock "github.com/yubo/golib/util/clock"
 	"k8s.io/klog/v2"
@@ -202,7 +201,9 @@ func (a *cachedTokenAuthenticator) doAuthenticateToken(ctx context.Context, toke
 		// since this is shared work between multiple requests, we have no way of knowing if any
 		// particular request supports audit annotations.  thus we always attempt to record them.
 		ev := &auditinternal.Event{Level: auditinternal.LevelMetadata}
-		ctx = request.WithAuditEvent(ctx, ev)
+		ctx = audit.WithAuditContext(ctx)
+		ac := audit.AuditContextFrom(ctx)
+		ac.Event = ev
 
 		record.resp, record.ok, record.err = a.authenticator.AuthenticateToken(ctx, token)
 		record.annotations = ev.Annotations

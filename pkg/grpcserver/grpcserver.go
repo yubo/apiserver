@@ -3,10 +3,10 @@ package grpcserver
 import (
 	"context"
 
+	"github.com/yubo/apiserver/components/dbus"
 	"github.com/yubo/apiserver/pkg/config/configgrpc"
 	"github.com/yubo/apiserver/pkg/proc"
 	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
-	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/golib/util"
 	"github.com/yubo/golib/util/validation/field"
 	"go.opentelemetry.io/otel"
@@ -76,7 +76,7 @@ func (p *grpcServer) init(ctx context.Context) error {
 	// grpc api
 	p.grpc = grpc.NewServer(opts...)
 
-	options.WithGrpcServer(ctx, p.grpc)
+	dbus.RegisterGrpcServer(p.grpc)
 	return nil
 }
 

@@ -24,7 +24,6 @@ import (
 
 	auditinternal "github.com/yubo/apiserver/pkg/apis/audit"
 	"github.com/yubo/apiserver/pkg/audit"
-	"github.com/yubo/apiserver/pkg/audit/policy"
 	"github.com/yubo/apiserver/pkg/responsewriters"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/util/runtime"
@@ -32,27 +31,29 @@ import (
 
 // WithFailedAuthenticationAudit decorates a failed http.Handler used in WithAuthentication handler.
 // It is meant to log only failed authentication requests.
-func WithFailedAuthenticationAudit(failedHandler http.Handler, sink audit.Sink, policy policy.Checker) http.Handler {
+func WithFailedAuthenticationAudit(failedHandler http.Handler, sink audit.Sink, policy audit.PolicyRuleEvaluator) http.Handler {
 	if sink == nil || policy == nil {
 		return failedHandler
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		req, ev, omitStages, err := createAuditEventAndAttachToContext(req, policy)
+		ac, err := evaluatePolicyAndCreateAuditEvent(req, policy)
 		if err != nil {
 			runtime.HandleError(fmt.Errorf("failed to create audit event: %v", err))
 			responsewriters.InternalError(w, req, errors.New("failed to create audit event"))
 			return
 		}
-		if ev == nil {
+
+		if ac == nil || ac.Event == nil {
 			failedHandler.ServeHTTP(w, req)
 			return
 		}
+		ev := ac.Event
 
 		ev.ResponseStatus = &api.Status{}
 		ev.ResponseStatus.Message = getAuthMethods(req)
 		ev.Stage = auditinternal.StageResponseStarted
 
-		rw := decorateResponseWriter(req.Context(), w, ev, sink, omitStages)
+		rw := decorateResponseWriter(req.Context(), w, ev, sink, ac.RequestAuditConfig.OmitStages)
 		failedHandler.ServeHTTP(rw, req)
 	})
 }

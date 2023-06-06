@@ -65,19 +65,18 @@ func WithImpersonation(handler http.Handler, a authorizer.Authorizer, s runtime.
 		username := ""
 		groups := []string{}
 		userExtra := map[string][]string{}
+		uid := ""
 		for _, impersonationRequest := range impersonationRequests {
 			actingAsAttributes := &authorizer.AttributesRecord{
-				User: requestor,
-				Verb: "impersonate",
-				//APIGroup:        gvk.Group,
-				//APIVersion:      gvk.Version,
+				User:            requestor,
+				Verb:            "impersonate",
 				Namespace:       impersonationRequest.Namespace,
 				Name:            impersonationRequest.Name,
 				ResourceRequest: true,
 			}
 
 			switch impersonationRequest.Kind {
-			case ImpersonationServiceAccount:
+			case "ServiceAccount":
 				actingAsAttributes.Resource = "serviceaccounts"
 				username = serviceaccount.MakeUsername(impersonationRequest.Namespace, impersonationRequest.Name)
 				if !groupsSpecified {
@@ -85,21 +84,23 @@ func WithImpersonation(handler http.Handler, a authorizer.Authorizer, s runtime.
 					groups = serviceaccount.MakeGroupNames(impersonationRequest.Namespace)
 				}
 
-			case ImpersonationUser:
+			case "User":
 				actingAsAttributes.Resource = "users"
 				username = impersonationRequest.Name
 
-			case ImpersonationGroup:
+			case "Group":
 				actingAsAttributes.Resource = "groups"
 				groups = append(groups, impersonationRequest.Name)
 
-			case ImpersonationUserExtra:
+			case "UserExtra":
 				extraKey := impersonationRequest.FieldPath
 				extraValue := impersonationRequest.Name
 				actingAsAttributes.Resource = "userextras"
 				actingAsAttributes.Subresource = extraKey
 				userExtra[extraKey] = append(userExtra[extraKey], extraValue)
-
+			case "UID":
+				uid = string(impersonationRequest.Name)
+				actingAsAttributes.Resource = "uids"
 			default:
 				klog.V(4).InfoS("unknown impersonation request type", "Request", impersonationRequest)
 				responsewriters.Forbidden(ctx, actingAsAttributes, w, req, fmt.Sprintf("unknown impersonation request type: %v", impersonationRequest), s)
@@ -153,18 +154,20 @@ func WithImpersonation(handler http.Handler, a authorizer.Authorizer, s runtime.
 			Name:   username,
 			Groups: groups,
 			Extra:  userExtra,
+			UID:    uid,
 		}
 		req = req.WithContext(request.WithUser(ctx, newUser))
 
 		oldUser, _ := request.UserFrom(ctx)
 		httplog.LogOf(req, w).Addf("%v is acting as %v", oldUser, newUser)
 
-		ae := request.AuditEventFrom(ctx)
+		ae := audit.AuditEventFrom(ctx)
 		audit.LogImpersonatedUser(ae, newUser)
 
 		// clear all the impersonation headers from the request
 		req.Header.Del(api.ImpersonateUserHeader)
 		req.Header.Del(api.ImpersonateGroupHeader)
+		req.Header.Del(api.ImpersonateUIDHeader)
 		for headerName := range req.Header {
 			if strings.HasPrefix(headerName, api.ImpersonateUserExtraHeaderPrefix) {
 				req.Header.Del(headerName)
@@ -183,45 +186,26 @@ func unescapeExtraKey(encodedKey string) string {
 	return key
 }
 
-type ImpersonationRequestKind int
-
-const (
-	ImpersonationUser ImpersonationRequestKind = iota
-	ImpersonationServiceAccount
-	ImpersonationGroup
-	ImpersonationUserExtra
-)
-
-type ImpersonationRequest struct {
-	Kind      ImpersonationRequestKind
-	Namespace string
-	Name      string
-	FieldPath string
-}
-
 // buildImpersonationRequests returns a list of objectreferences that represent the different things we're requesting to impersonate.
 // Also includes a map[string][]string representing user.Info.Extra
 // Each request must be authorized against the current user before switching contexts.
-func buildImpersonationRequests(headers http.Header) ([]ImpersonationRequest, error) {
-	impersonationRequests := []ImpersonationRequest{}
+func buildImpersonationRequests(headers http.Header) ([]api.ObjectReference, error) {
+	impersonationRequests := []api.ObjectReference{}
 
 	requestedUser := headers.Get(api.ImpersonateUserHeader)
 	hasUser := len(requestedUser) > 0
 	if hasUser {
 		if namespace, name, err := serviceaccount.SplitUsername(requestedUser); err == nil {
-			impersonationRequests = append(impersonationRequests,
-				ImpersonationRequest{Kind: ImpersonationServiceAccount, Namespace: namespace, Name: name})
+			impersonationRequests = append(impersonationRequests, api.ObjectReference{Kind: "ServiceAccount", Namespace: namespace, Name: name})
 		} else {
-			impersonationRequests = append(impersonationRequests,
-				ImpersonationRequest{Kind: ImpersonationUser, Name: requestedUser})
+			impersonationRequests = append(impersonationRequests, api.ObjectReference{Kind: "User", Name: requestedUser})
 		}
 	}
 
 	hasGroups := false
 	for _, group := range headers[api.ImpersonateGroupHeader] {
 		hasGroups = true
-		impersonationRequests = append(impersonationRequests,
-			ImpersonationRequest{Kind: ImpersonationGroup, Name: group})
+		impersonationRequests = append(impersonationRequests, api.ObjectReference{Kind: "Group", Name: group})
 	}
 
 	hasUserExtra := false
@@ -236,25 +220,24 @@ func buildImpersonationRequests(headers http.Header) ([]ImpersonationRequest, er
 		// make a separate request for each extra value they're trying to set
 		for _, value := range values {
 			impersonationRequests = append(impersonationRequests,
-				ImpersonationRequest{
-					Kind:      ImpersonationUserExtra,
+				api.ObjectReference{
+					Kind:      "UserExtra",
 					Name:      value,
 					FieldPath: extraKey,
 				})
-			//ImpersonationRequest{
-			//	Kind: "UserExtra",
-			//	// we only parse out a group above, but the parsing will fail if there isn't SOME version
-			//	// using the internal version will help us fail if anyone starts using it
-			//	APIVersion: api.SchemeGroupVersion.String(),
-			//	Name:       value,
-			//	// ObjectReference doesn't have a subresource field.  FieldPath is close and available, so we'll use that
-			//	// TODO fight the good fight for ObjectReference to refer to resources and subresources
-			//	FieldPath: extraKey,
-			//})
 		}
 	}
 
-	if (hasGroups || hasUserExtra) && !hasUser {
+	requestedUID := headers.Get(api.ImpersonateUIDHeader)
+	hasUID := len(requestedUID) > 0
+	if hasUID {
+		impersonationRequests = append(impersonationRequests, api.ObjectReference{
+			Kind: "UID",
+			Name: requestedUID,
+		})
+	}
+
+	if (hasGroups || hasUserExtra || hasUID) && !hasUser {
 		return nil, fmt.Errorf("requested %v without impersonating a user", impersonationRequests)
 	}
 

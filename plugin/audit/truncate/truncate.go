@@ -22,7 +22,6 @@ import (
 	auditinternal "github.com/yubo/apiserver/pkg/apis/audit"
 	"github.com/yubo/apiserver/pkg/audit"
 	"github.com/yubo/golib/runtime"
-	"github.com/yubo/golib/scheme"
 	utilerrors "github.com/yubo/golib/util/errors"
 )
 
@@ -67,7 +66,7 @@ func NewBackend(delegateBackend audit.Backend, config Config) audit.Backend {
 	return &backend{
 		delegateBackend: delegateBackend,
 		c:               config,
-		e:               scheme.Codecs.LegacyCodec(),
+		e:               audit.Codecs.LegacyCodec(),
 	}
 }
 
@@ -126,7 +125,10 @@ func truncate(e *auditinternal.Event) *auditinternal.Event {
 
 	newEvent.RequestObject = nil
 	newEvent.ResponseObject = nil
-	audit.LogAnnotation(newEvent, annotationKey, annotationValue)
+	if newEvent.Annotations == nil {
+		newEvent.Annotations = make(map[string]string)
+	}
+	newEvent.Annotations[annotationKey] = annotationValue
 	return newEvent
 }
 

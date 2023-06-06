@@ -10,7 +10,6 @@ import (
 	"github.com/emicklei/go-restful/v3"
 	"github.com/google/uuid"
 	"github.com/yubo/apiserver/pkg/audit"
-	auditpolicy "github.com/yubo/apiserver/pkg/audit/policy"
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/pkg/authentication/authenticatorfactory"
 	authenticatorunion "github.com/yubo/apiserver/pkg/authentication/request/union"
@@ -26,8 +25,12 @@ import (
 	"github.com/yubo/apiserver/pkg/server/healthz"
 	"github.com/yubo/apiserver/pkg/server/routes"
 	"github.com/yubo/apiserver/pkg/sessions"
+	"github.com/yubo/apiserver/pkg/tracing"
 	restclient "github.com/yubo/client-go/rest"
 	"github.com/yubo/golib/runtime"
+	"go.opentelemetry.io/otel/trace"
+
+	//utilflowcontrol "github.com/yubo/apiserver/pkg/util/flowcontrol"
 	utilnet "github.com/yubo/golib/util/net"
 	"github.com/yubo/golib/util/sets"
 	utilwaitgroup "github.com/yubo/golib/util/waitgroup"
@@ -53,6 +56,8 @@ type Config struct {
 
 	// Authentication is the configuration for authentication
 	Authentication *AuthenticationInfo
+	// plugin authentication.requestheader
+	RequestHeaderConfig *authenticatorfactory.RequestHeaderConfig
 
 	// Authorization is the configuration for authorization
 	Authorization *AuthorizationInfo
@@ -69,11 +74,14 @@ type Config struct {
 	Version *version.Info
 	// AuditBackend is where audit events are sent to.(option)
 	AuditBackend audit.Backend
-	// AuditPolicyChecker makes the decision of whether and how to audit log a request.(option)
-	AuditPolicyChecker auditpolicy.Checker
+	// AuditPolicyRuleEvaluator makes the decision of whether and how to audit log a request.
+	AuditPolicyRuleEvaluator audit.PolicyRuleEvaluator
 	// ExternalAddress is the host name to use for external (public internet) facing URLs (e.g. Swagger)
 	// Will default to a value based on secure serving info and available ipv4 IPs.
 	ExternalAddress string
+
+	// TracerProvider can provide a tracer, which records spans for distributed tracing.
+	TracerProvider trace.TracerProvider
 
 	// BuildHandlerChainFunc allows you to build custom handler chains by decorating the apiHandler.
 	BuildHandlerChainFunc func(apiHandler http.Handler, s *Config) (secure http.Handler)
@@ -103,6 +111,8 @@ type Config struct {
 
 	CorsAllowedOriginList []string
 	HSTSDirectives        []string
+	// FlowControl, if not nil, gives priority and fairness to request handling
+	//FlowControl           utilflowcontrol.Interface
 	RequestTimeout        time.Duration
 	ShutdownTimeout       time.Duration
 	ShutdownDelayDuration time.Duration
@@ -270,15 +280,14 @@ func NewRequestInfoResolver(c *Config) *apirequest.RequestInfoFactory {
 	}
 }
 
-func DefaultBuildHandlerChain(apiHandler http.Handler, s *Config) http.Handler {
+func DefaultBuildHandlerChain(apiHandler http.Handler, c *Config) http.Handler {
 	handler := apiHandler
 
 	handler = filters.TrackCompleted(apiHandler)
-	handler = filters.WithAuthorization(handler, s.Authorization.Authorizer, s.Serializer)
-	handler = filters.TrackStarted(handler, "authorization")
+	handler = filters.WithAuthorization(handler, c.Authorization.Authorizer, c.Serializer)
+	handler = filters.TrackStarted(handler, c.TracerProvider, "authorization")
 
-	// TODO:
-	//if c.FlowControl != nil {
+	//if s.FlowControl != nil {
 	//	handler = filterlatency.TrackCompleted(handler)
 	//	handler = genericfilters.WithPriorityAndFairness(handler, c.LongRunningFunc, c.FlowControl)
 	//	handler = filterlatency.TrackStarted(handler, "priorityandfairness")
@@ -287,42 +296,46 @@ func DefaultBuildHandlerChain(apiHandler http.Handler, s *Config) http.Handler {
 	//}
 
 	handler = filters.TrackCompleted(handler)
-	handler = filters.WithImpersonation(handler, s.Authorization.Authorizer, s.Serializer)
-	handler = filters.TrackStarted(handler, "impersonation")
+	handler = filters.WithImpersonation(handler, c.Authorization.Authorizer, c.Serializer)
+	handler = filters.TrackStarted(handler, c.TracerProvider, "impersonation")
 
 	handler = filters.TrackCompleted(handler)
-	handler = filters.WithAudit(handler, s.AuditBackend, s.AuditPolicyChecker, s.LongRunningFunc)
-	handler = filters.TrackStarted(handler, "audit")
+	handler = filters.WithAudit(handler, c.AuditBackend, c.AuditPolicyRuleEvaluator, c.LongRunningFunc)
+	handler = filters.TrackStarted(handler, c.TracerProvider, "audit")
 
-	failedHandler := filters.Unauthorized(s.Serializer)
-	failedHandler = filters.WithFailedAuthenticationAudit(failedHandler, s.AuditBackend, s.AuditPolicyChecker)
+	failedHandler := filters.Unauthorized(c.Serializer)
+	failedHandler = filters.WithFailedAuthenticationAudit(failedHandler, c.AuditBackend, c.AuditPolicyRuleEvaluator)
 
 	failedHandler = filters.TrackCompleted(failedHandler)
 
 	handler = filters.TrackCompleted(handler)
-	handler = filters.WithAuthentication(handler, s.Authentication.Authenticator, failedHandler, s.Authentication.APIAudiences, s.KeepAuthorizationHeader)
-	handler = filters.TrackStarted(handler, "authentication")
+	handler = filters.WithAuthentication(handler, c.Authentication.Authenticator, failedHandler, c.Authentication.APIAudiences, c.RequestHeaderConfig)
+	handler = filters.TrackStarted(handler, c.TracerProvider, "authentication")
 
 	handler = sessions.WithSessions(handler)
 
-	handler = filters.WithCORS(handler, s.CorsAllowedOriginList, nil, nil, nil, "true")
+	handler = filters.WithCORS(handler, c.CorsAllowedOriginList, nil, nil, nil, "true")
 
 	// WithTimeoutForNonLongRunningRequests will call the rest of the request handling in a go-routine with the
 	// context with deadline. The go-routine can keep running, while the timeout logic will return a timeout to the client.
-	handler = filters.WithTimeoutForNonLongRunningRequests(handler, s.LongRunningFunc)
+	handler = filters.WithTimeoutForNonLongRunningRequests(handler, c.LongRunningFunc)
 
-	handler = filters.WithRequestDeadline(handler, s.AuditBackend, s.AuditPolicyChecker, s.LongRunningFunc, s.Serializer, s.RequestTimeout)
-	handler = filters.WithWaitGroup(handler, s.LongRunningFunc, s.HandlerChainWaitGroup)
-	handler = filters.WithRequestInfo(handler, s.RequestInfoResolver)
+	handler = filters.WithRequestDeadline(handler, c.AuditBackend, c.AuditPolicyRuleEvaluator, c.LongRunningFunc, c.Serializer, c.RequestTimeout)
+	handler = filters.WithWaitGroup(handler, c.LongRunningFunc, c.HandlerChainWaitGroup)
 	//if s.SecureServing != nil && s.GoawayChance > 0 {
 	//	handler = filters.WithProbabilisticGoaway(handler, s.GoawayChance)
 	//}
-	handler = filters.WithAuditAnnotations(handler, s.AuditBackend, s.AuditPolicyChecker)
 	handler = filters.WithWarningRecorder(handler)
 	handler = filters.WithCacheControl(handler)
-	handler = filters.WithHSTS(handler, s.HSTSDirectives)
+	handler = filters.WithHSTS(handler, c.HSTSDirectives)
+
+	handler = filters.WithHTTPLogging(handler)
+	handler = tracing.WithTracing(handler, tracing.WithTracerProvider(c.TracerProvider))
+	handler = filters.WithLatencyTrackers(handler)
+	handler = filters.WithRequestInfo(handler, c.RequestInfoResolver)
 	handler = filters.WithRequestReceivedTimestamp(handler)
 	handler = filters.WithHttpDump(handler)
-	handler = filters.WithPanicRecovery(handler, s.RequestInfoResolver)
+	handler = filters.WithPanicRecovery(handler, c.RequestInfoResolver)
+	handler = filters.WithAuditInit(handler)
 	return handler
 }

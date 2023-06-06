@@ -5,7 +5,6 @@ import (
 	"net"
 
 	"github.com/emicklei/go-restful/v3"
-	"github.com/yubo/apiserver/pkg/apis/audit"
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/golib/api"
 	"go.opentelemetry.io/otel/trace"
@@ -26,12 +25,14 @@ const (
 	userKey
 
 	// auditKey is the context key for the audit event.
-	auditKey
+	//auditKey
+
+	// coustome
 
 	// resp
 	respKey
-	tracerKey
-	traceIDKey
+	//tracerKey
+	//traceIDKey
 
 	// bodyKey is the context key for the request body
 	bodyKey
@@ -87,15 +88,15 @@ func UserFrom(ctx context.Context) (user.Info, bool) {
 }
 
 // WithAuditEvent returns set audit event struct.
-func WithAuditEvent(parent context.Context, ev *audit.Event) context.Context {
-	return WithValue(parent, auditKey, ev)
-}
-
-// AuditEventFrom returns the audit event struct on the ctx
-func AuditEventFrom(ctx context.Context) *audit.Event {
-	ev, _ := ctx.Value(auditKey).(*audit.Event)
-	return ev
-}
+//func WithAuditEvent(parent context.Context, ev *audit.Event) context.Context {
+//	return WithValue(parent, auditKey, ev)
+//}
+//
+//// AuditEventFrom returns the audit event struct on the ctx
+//func AuditEventFrom(ctx context.Context) *audit.Event {
+//	ev, _ := ctx.Value(auditKey).(*audit.Event)
+//	return ev
+//}
 
 // WithResp returns a copy of parent in which the response value is set
 func WithResp(parent context.Context, resp *restful.Response) context.Context {
@@ -109,28 +110,29 @@ func RespFrom(ctx context.Context) (*restful.Response, bool) {
 }
 
 // WithTracer returns a copy of parent in which the tracer value is set
-func WithTracer(parent context.Context, tracer trace.Tracer) context.Context {
-	return context.WithValue(parent, tracerKey, tracer)
-}
-
-// TracerFrom returns the value of the tracer key on the ctx
-func TracerFrom(ctx context.Context) trace.Tracer {
-	if tracer, ok := ctx.Value(tracerKey).(trace.Tracer); ok {
-		return tracer
-	}
-	return noopTracer
-}
-
+// use trace.SpanFromContext(ctx)
+//func WithTracer(parent context.Context, tracer trace.Tracer) context.Context {
+//	return context.WithValue(parent, tracerKey, tracer)
+//}
+//
+//// TracerFrom returns the value of the tracer key on the ctx
+//func TracerFrom(ctx context.Context) trace.Tracer {
+//	if tracer, ok := ctx.Value(tracerKey).(trace.Tracer); ok {
+//		return tracer
+//	}
+//	return noopTracer
+//}
+//
 // WithTraceID returns a copy of parent in which the traceID value is set
-func WithTraceID(parent context.Context, traceID string) context.Context {
-	return context.WithValue(parent, traceIDKey, traceID)
-}
-
-// TraceIDFrom returns the value of the traceID key on the ctx
-func TraceIDFrom(ctx context.Context) (string, bool) {
-	traceID, ok := ctx.Value(traceIDKey).(string)
-	return traceID, ok
-}
+//func WithTraceID(parent context.Context, traceID string) context.Context {
+//	return context.WithValue(parent, traceIDKey, traceID)
+//}
+//
+//// TraceIDFrom returns the value of the traceID key on the ctx
+//func TraceIDFrom(ctx context.Context) (string, bool) {
+//	traceID, ok := ctx.Value(traceIDKey).(string)
+//	return traceID, ok
+//}
 
 // WithBody returns a copy of parent in which the body value is set
 func WithBody(parent context.Context, body interface{}) context.Context {

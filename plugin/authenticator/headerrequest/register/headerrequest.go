@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/yubo/apiserver/components/dbus"
 	"github.com/yubo/apiserver/pkg/authentication"
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
+	"github.com/yubo/apiserver/pkg/authentication/authenticatorfactory"
 	"github.com/yubo/apiserver/pkg/authentication/request/headerrequest"
 	"github.com/yubo/apiserver/pkg/dynamiccertificates"
 	"github.com/yubo/apiserver/pkg/proc"
@@ -18,9 +20,16 @@ const (
 	moduleName = "authentication.requestheader"
 )
 
-func newConfig() *config { return &config{} }
+func newConfig() *config {
+	return &config{
+		UsernameHeaders:     []string{"x-remote-user"},
+		GroupHeaders:        []string{"x-remote-group"},
+		ExtraHeaderPrefixes: []string{"x-remote-extra-"},
+	}
+}
 
 type config struct {
+	//RemoteKubeConfigFile string `json:"remoteKubeConfigFile" flag:"authentication-kubeconfig" description:"kubeconfig file pointing at the 'core' kubernetes server with enough rights to create tokenreviews.authentication.k8s.io. This is optional. If empty, all token requests are considered to be anonymous and no client CA is looked up in the cluster."`
 	// ClientCAFile is the root certificate bundle to verify client certificates on incoming requests
 	// before trusting usernames in headers.
 	ClientCAFile string `json:"clientCAFile" flag:"requestheader-client-ca-file" description:"Root certificate bundle to use to verify client certificates on incoming requests before trusting usernames in headers specified by --requestheader-username-headers. WARNING: generally do not depend on authorization being already done for incoming requests."`
@@ -50,6 +59,27 @@ func (s *config) Validate() error {
 	return errors.NewAggregate(allErrors)
 }
 
+// ToAuthenticationRequestHeaderConfig returns a RequestHeaderConfig config object for these options
+// if necessary, nil otherwise.
+func (s *config) ToAuthenticationRequestHeaderConfig() (*authenticatorfactory.RequestHeaderConfig, error) {
+	if len(s.ClientCAFile) == 0 {
+		return nil, nil
+	}
+
+	caBundleProvider, err := dynamiccertificates.NewDynamicCAContentFromFile("request-header", s.ClientCAFile)
+	if err != nil {
+		return nil, err
+	}
+
+	return &authenticatorfactory.RequestHeaderConfig{
+		UsernameHeaders:     headerrequest.StaticStringSlice(s.UsernameHeaders),
+		GroupHeaders:        headerrequest.StaticStringSlice(s.GroupHeaders),
+		ExtraHeaderPrefixes: headerrequest.StaticStringSlice(s.ExtraHeaderPrefixes),
+		CAContentProvider:   caBundleProvider,
+		AllowedClientNames:  headerrequest.StaticStringSlice(s.AllowedNames),
+	}, nil
+}
+
 func checkForWhiteSpaceOnly(flag string, headerNames ...string) error {
 	for _, headerName := range headerNames {
 		if len(strings.TrimSpace(headerName)) == 0 {
@@ -76,6 +106,10 @@ func factory(ctx context.Context) (authenticator.Request, error) {
 	caBundleProvider, err := dynamiccertificates.NewDynamicCAContentFromFile("request-header", cf.ClientCAFile)
 	if err != nil {
 		return nil, err
+	}
+
+	if c, err := cf.ToAuthenticationRequestHeaderConfig(); err != nil {
+		dbus.RegisterRequestHeaderConfig(c)
 	}
 
 	return authenticator.WrapAudienceAgnosticRequest(

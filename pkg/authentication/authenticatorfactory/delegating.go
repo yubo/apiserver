@@ -23,7 +23,11 @@ import (
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/pkg/authentication/group"
 	"github.com/yubo/apiserver/pkg/authentication/request/anonymous"
+	"github.com/yubo/apiserver/pkg/authentication/request/headerrequest"
 	unionauth "github.com/yubo/apiserver/pkg/authentication/request/union"
+	"github.com/yubo/apiserver/pkg/authentication/request/x509"
+	"github.com/yubo/apiserver/pkg/dynamiccertificates"
+	"github.com/yubo/golib/util/wait"
 	// "github.com/yubo/apiserver/pkg/authentication/request/x509"
 )
 
@@ -33,12 +37,15 @@ type DelegatingAuthenticatorConfig struct {
 	Anonymous bool
 
 	// TokenAccessReviewClient is a client to do token review. It can be nil. Then every token is ignored.
-	//TokenAccessReviewClient authenticationclient.TokenReviewInterface
+	//TokenAccessReviewClient authenticationclient.AuthenticationV1Interface
+
+	// TokenAccessReviewTimeout specifies a time limit for requests made by the authorization webhook client.
+	TokenAccessReviewTimeout time.Duration
 
 	// WebhookRetryBackoff specifies the backoff parameters for the authentication webhook retry logic.
 	// This allows us to configure the sleep time at each iteration and the maximum number of retries allowed
 	// before we fail the webhook call in order to limit the fan out that ensues when the system is degraded.
-	//WebhookRetryBackoff *wait.Backoff
+	WebhookRetryBackoff *wait.Backoff
 
 	// CacheTTL is the length of time that a token authentication answer will be cached.
 	CacheTTL time.Duration
@@ -46,9 +53,11 @@ type DelegatingAuthenticatorConfig struct {
 	// CAContentProvider are the options for verifying incoming connections using mTLS and directly assigning to users.
 	// Generally this is the CA bundle file used to authenticate client certificates
 	// If this is nil, then mTLS will not be used.
-	//ClientCertificateCAContentProvider CAContentProvider
+	ClientCertificateCAContentProvider dynamiccertificates.CAContentProvider
 
 	APIAudiences authenticator.Audiences
+
+	RequestHeaderConfig *RequestHeaderConfig
 }
 
 func (c DelegatingAuthenticatorConfig) New() (authenticator.Request /*, *spec.SecurityDefinitions*/, error) {
@@ -57,11 +66,21 @@ func (c DelegatingAuthenticatorConfig) New() (authenticator.Request /*, *spec.Se
 
 	// front-proxy first, then remote
 	// Add the front proxy authenticator if requested
+	if c.RequestHeaderConfig != nil {
+		requestHeaderAuthenticator := headerrequest.NewDynamicVerifyOptionsSecure(
+			c.RequestHeaderConfig.CAContentProvider.VerifyOptions,
+			c.RequestHeaderConfig.AllowedClientNames,
+			c.RequestHeaderConfig.UsernameHeaders,
+			c.RequestHeaderConfig.GroupHeaders,
+			c.RequestHeaderConfig.ExtraHeaderPrefixes,
+		)
+		authenticators = append(authenticators, requestHeaderAuthenticator)
+	}
 
 	// x509 client cert auth
-	//if c.ClientCertificateCAContentProvider != nil {
-	//	authenticators = append(authenticators, x509.NewDynamic(c.ClientCertificateCAContentProvider.VerifyOptions, x509.CommonNameUserConversion))
-	//}
+	if c.ClientCertificateCAContentProvider != nil {
+		authenticators = append(authenticators, x509.NewDynamic(c.ClientCertificateCAContentProvider.VerifyOptions, x509.CommonNameUserConversion))
+	}
 
 	//if c.TokenAccessReviewClient != nil {
 	//	if c.WebhookRetryBackoff == nil {

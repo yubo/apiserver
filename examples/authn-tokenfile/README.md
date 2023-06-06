@@ -20,5 +20,5 @@ $ curl -H 'Content-Type:application/json' -H 'Authorization: bearer 123' http://
 ```sh
 $ cd ./client
 $ go run ./main.go --conf ./client.conf
-I0617 13:31:56.412910   98328 main.go:41] "webhook" resp={Name:user3 UID:uid3 Groups:[group1 group2 system:authenticated] Extra:map[]}
+I0522 00:39:16.062719   59275 main.go:41] "webhook" resp={Name:tom@example.com UID:tom@example.com Groups:[developers admins system:authenticated] Extra:map[acme.com/project:[some-project] scope:[openid profile]]}
 ```

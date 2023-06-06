@@ -18,18 +18,25 @@ package filters
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/yubo/apiserver/pkg/metrics"
-	utilclock "github.com/yubo/golib/util/clock"
 	apirequest "github.com/yubo/apiserver/pkg/request"
+	"github.com/yubo/apiserver/pkg/server/httplog"
+	"github.com/yubo/golib/util/clock"
+	utilclock "github.com/yubo/golib/util/clock"
+	"go.opentelemetry.io/otel/trace"
+	"k8s.io/klog/v2"
 )
 
 type requestFilterRecordKeyType int
 
 // requestFilterRecordKey is the context key for a request filter record struct.
 const requestFilterRecordKey requestFilterRecordKeyType = iota
+
+const minFilterLatencyToLog = 100 * time.Millisecond
 
 type requestFilterRecord struct {
 	name             string
@@ -49,19 +56,25 @@ func requestFilterRecordFrom(ctx context.Context) *requestFilterRecord {
 
 // TrackStarted measures the timestamp the given handler has started execution
 // by attaching a handler to the chain.
-func TrackStarted(handler http.Handler, name string) http.Handler {
-	return trackStarted(handler, name, utilclock.RealClock{})
+func TrackStarted(handler http.Handler, tp trace.TracerProvider, name string) http.Handler {
+	return trackStarted(handler, tp, name, clock.RealClock{})
 }
 
 // TrackCompleted measures the timestamp the given handler has completed execution and then
 // it updates the corresponding metric with the filter latency duration.
 func TrackCompleted(handler http.Handler) http.Handler {
-	return trackCompleted(handler, utilclock.RealClock{}, func(ctx context.Context, fr *requestFilterRecord, completedAt time.Time) {
-		metrics.RecordFilterLatency(ctx, fr.name, completedAt.Sub(fr.startedTimestamp))
+	return trackCompleted(handler, clock.RealClock{}, func(ctx context.Context, fr *requestFilterRecord, completedAt time.Time) {
+		latency := completedAt.Sub(fr.startedTimestamp)
+		metrics.RecordFilterLatency(ctx, fr.name, latency)
+		if klog.V(3).Enabled() && latency > minFilterLatencyToLog {
+			httplog.AddKeyValue(ctx, fmt.Sprintf("fl_%s", fr.name), latency.String())
+		}
 	})
 }
 
-func trackStarted(handler http.Handler, name string, clock utilclock.PassiveClock) http.Handler {
+func trackStarted(handler http.Handler, tp trace.TracerProvider, name string, clock clock.PassiveClock) http.Handler {
+	// This is a noop if the tracing is disabled, since tp will be a NoopTracerProvider
+	tracer := tp.Tracer("apiserver/pkg/filters")
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		if fr := requestFilterRecordFrom(ctx); fr != nil {
@@ -76,6 +89,7 @@ func trackStarted(handler http.Handler, name string, clock utilclock.PassiveCloc
 			name:             name,
 			startedTimestamp: clock.Now(),
 		}
+		ctx, _ = tracer.Start(ctx, name)
 		r = r.WithContext(withRequestFilterRecord(ctx, fr))
 		handler.ServeHTTP(w, r)
 	})
@@ -92,5 +106,6 @@ func trackCompleted(handler http.Handler, clock utilclock.PassiveClock, action f
 		if fr := requestFilterRecordFrom(ctx); fr != nil {
 			action(ctx, fr, completedAt)
 		}
+		trace.SpanFromContext(ctx).End()
 	})
 }

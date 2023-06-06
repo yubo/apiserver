@@ -186,8 +186,7 @@ func (p *routeHandle) Handler() func(*restful.Request, *restful.Response) {
 		}
 
 		// audit
-		ae := request.AuditEventFrom(req.Request.Context())
-		audit.LogRequestObject(ae, body, "")
+		audit.LogRequestObject(req.Request.Context(), body, "", p.serializer)
 
 		// call handle
 		in := []reflect.Value{

@@ -29,19 +29,17 @@ import (
 	"sync"
 	"time"
 
-	//"k8s.io/apiserver/pkg/features"
+	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/yubo/apiserver/pkg/audit"
 	"github.com/yubo/apiserver/pkg/handlers/negotiation"
 	"github.com/yubo/apiserver/pkg/metrics"
 	"github.com/yubo/apiserver/pkg/request"
+	"github.com/yubo/apiserver/pkg/tracing"
 	"github.com/yubo/golib/runtime"
 	"github.com/yubo/golib/stream/wsstream"
 	"github.com/yubo/golib/util/flushwriter"
 	utilruntime "github.com/yubo/golib/util/runtime"
-
-	//utilfeature "github.com/yubo/golib/util/feature"
-	utiltrace "github.com/yubo/golib/util/trace"
 )
 
 // StreamObject performs input stream negotiation from a ResourceStreamer and writes that to the response.
@@ -88,20 +86,22 @@ func StreamObject(statusCode int, s runtime.NegotiatedSerializer, stream Resourc
 // The context is optional and can be nil. This method will perform optional content compression if requested by
 // a client and the feature gate for APIResponseCompression is enabled.
 func SerializeObject(mediaType string, encoder runtime.Encoder, hw http.ResponseWriter, req *http.Request, statusCode int, object runtime.Object) {
-	trace := utiltrace.New("SerializeObject",
-		utiltrace.Field{Key: "method", Value: req.Method},
-		utiltrace.Field{Key: "url", Value: req.URL.Path},
-		utiltrace.Field{Key: "protocol", Value: req.Proto},
-		utiltrace.Field{Key: "mediaType", Value: mediaType},
-	)
-	defer trace.LogIfLong(5 * time.Second)
+	ctx := req.Context()
+	ctx, span := tracing.Start(ctx, "SerializeObject",
+		attribute.String("audit-id", audit.GetAuditIDTruncated(ctx)),
+		attribute.String("method", req.Method),
+		attribute.String("url", req.URL.Path),
+		attribute.String("protocol", req.Proto),
+		attribute.String("mediaType", mediaType),
+		attribute.String("encoder", string(encoder.Identifier())))
+	defer span.End(5 * time.Second)
 
 	w := &deferredResponseWriter{
 		mediaType:       mediaType,
 		statusCode:      statusCode,
 		contentEncoding: negotiateContentEncoding(req),
 		hw:              hw,
-		trace:           trace,
+		ctx:             ctx,
 	}
 
 	err := encoder.Encode(object, w)
@@ -189,22 +189,30 @@ type deferredResponseWriter struct {
 	hw         http.ResponseWriter
 	w          io.Writer
 
-	trace *utiltrace.Trace
+	ctx context.Context
 }
 
 func (w *deferredResponseWriter) Write(p []byte) (n int, err error) {
-	if w.trace != nil {
-		// This Step usually wraps in-memory object serialization.
-		w.trace.Step("About to start writing response", utiltrace.Field{Key: "size", Value: len(p)})
+	ctx := w.ctx
+	span := tracing.SpanFromContext(ctx)
+	// This Step usually wraps in-memory object serialization.
+	span.AddEvent("About to start writing response", attribute.Int("size", len(p)))
 
-		firstWrite := !w.hasWritten
-		defer func() {
-			w.trace.Step("Write call finished",
-				utiltrace.Field{Key: "writer", Value: fmt.Sprintf("%T", w.w)},
-				utiltrace.Field{Key: "size", Value: len(p)},
-				utiltrace.Field{Key: "firstWrite", Value: firstWrite})
-		}()
-	}
+	firstWrite := !w.hasWritten
+	defer func() {
+		if err != nil {
+			span.AddEvent("Write call failed",
+				attribute.String("writer", fmt.Sprintf("%T", w.w)),
+				attribute.Int("size", len(p)),
+				attribute.Bool("firstWrite", firstWrite),
+				attribute.String("err", err.Error()))
+		} else {
+			span.AddEvent("Write call succeeded",
+				attribute.String("writer", fmt.Sprintf("%T", w.w)),
+				attribute.Int("size", len(p)),
+				attribute.Bool("firstWrite", firstWrite))
+		}
+	}()
 	if w.hasWritten {
 		return w.w.Write(p)
 	}
@@ -288,12 +296,12 @@ func WriteObjectNegotiated(s runtime.NegotiatedSerializer, w http.ResponseWriter
 		return
 	}
 
-	if ae := request.AuditEventFrom(req.Context()); ae != nil {
-		audit.LogResponseObject(ae, object)
-	}
+	audit.LogResponseObject(req.Context(), object, s)
 
 	encoder := s.EncoderForVersion(serializer.Serializer)
-	SerializeObject(serializer.MediaType, encoder, w, req, statusCode, object)
+	request.TrackSerializeResponseObjectLatency(req.Context(), func() {
+		SerializeObject(serializer.MediaType, encoder, w, req, statusCode, object)
+	})
 }
 
 // ErrorNegotiated renders an error to the response. Returns the HTTP status code of the error.

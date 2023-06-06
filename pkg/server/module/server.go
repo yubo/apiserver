@@ -12,13 +12,13 @@ import (
 	"github.com/emicklei/go-restful/v3"
 	"github.com/go-openapi/spec"
 	"github.com/google/uuid"
+	"github.com/yubo/apiserver/components/dbus"
 	"github.com/yubo/apiserver/components/logs"
 	"github.com/yubo/apiserver/components/version"
 	"github.com/yubo/apiserver/pkg/authorization/authorizerfactory"
 	"github.com/yubo/apiserver/pkg/filters"
 	"github.com/yubo/apiserver/pkg/proc"
 	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
-	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/server"
 	"github.com/yubo/apiserver/pkg/server/config"
 	"github.com/yubo/apiserver/pkg/server/healthz"
@@ -29,6 +29,7 @@ import (
 	"github.com/yubo/golib/scheme"
 	"github.com/yubo/golib/util/sets"
 	utilwaitgroup "github.com/yubo/golib/util/waitgroup"
+	"go.opentelemetry.io/otel"
 	"k8s.io/klog/v2"
 )
 
@@ -93,7 +94,7 @@ func (p *serverModule) init(ctx context.Context) (err error) {
 		return err
 	}
 
-	options.WithAPIServer(ctx, p)
+	dbus.RegisterAPIServer(p)
 
 	return nil
 }
@@ -208,6 +209,7 @@ func (p *serverModule) serverInit() error {
 	return nil
 }
 
+// serverInit2 call before start
 func (p *serverModule) serverInit2() error {
 	if p == nil || p.server == nil || p.config == nil {
 		return nil
@@ -302,39 +304,45 @@ func (p *serverModule) servingInit() error {
 }
 
 func (p *serverModule) authInit() error {
-	s := p.server
+	c := p.server
 
-	if audit, ok := options.AuditFrom(p.ctx); ok {
-		s.AuditBackend = audit.Backend()
-		s.AuditPolicyChecker = audit.Checker()
+	c.TracerProvider = otel.GetTracerProvider()
+
+	if audit, _ := dbus.GetAuditor(); audit != nil {
+		c.AuditBackend = audit.Backend()
+		c.AuditPolicyRuleEvaluator = audit.AuditPolicyRuleEvaluator()
 	}
 
-	if authz, ok := options.AuthzFrom(p.ctx); ok {
-		s.Authorization = authz
+	if rhc, _ := dbus.GetRequestHeaderConfig(); rhc != nil {
+		c.RequestHeaderConfig = rhc
+	}
+
+	if authz, _ := dbus.GetAuthorizationInfo(); authz != nil {
+		c.Authorization = authz
 	} else {
-		s.Authorization = &server.AuthorizationInfo{
+		c.Authorization = &server.AuthorizationInfo{
 			Authorizer: authorizerfactory.NewAlwaysAllowAuthorizer(),
 			Modes:      sets.NewString("AlwaysAllow"),
 		}
 	}
-	klog.V(3).InfoS("Authorizer", "modes", s.Authorization.Modes)
+	klog.V(3).InfoS("Authorizer", "modes", c.Authorization.Modes)
 
-	if authn, ok := options.AuthnFrom(p.ctx); ok {
-		s.Authentication = authn
+	if authn, _ := dbus.GetAuthenticationInfo(); authn != nil {
+		c.Authentication = authn
 	} else {
-		s.Authentication = &server.AuthenticationInfo{}
+		c.Authentication = &server.AuthenticationInfo{}
 	}
 
 	// ApplyAuthorization will conditionally modify the authentication options based on the authorization options
 	// authorization ModeAlwaysAllow cannot be combined with AnonymousAuth.
 	// in such a case the AnonymousAuth is stomped to false and you get a message
-	if s.Authorization != nil && s.Authentication != nil &&
-		s.Authentication.Anonymous &&
-		s.Authorization.Modes.Has("AlwaysAllow") {
+	if c.Authorization != nil && c.Authentication != nil &&
+		c.Authentication.Anonymous &&
+		c.Authorization.Modes.Has("AlwaysAllow") {
 		return fmt.Errorf("AnonymousAuth is not allowed with the AlwaysAllow authorizer. Resetting AnonymousAuth to false. You should use a different authorizer")
 	}
 
-	server.AuthorizeClientBearerToken(s.LoopbackClientConfig, s.Authentication, s.Authorization)
+	server.AuthorizeClientBearerToken(c.LoopbackClientConfig, c.Authentication, c.Authorization)
 
 	return nil
 }
