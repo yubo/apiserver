@@ -325,6 +325,9 @@ func VerbMatches(rule *PolicyRule, requestedVerb string) bool {
 }
 
 func APIGroupMatches(rule *PolicyRule, requestedGroup string) bool {
+	if len(rule.APIGroups) == 0 {
+		return true
+	}
 	for _, ruleGroup := range rule.APIGroups {
 		if ruleGroup == APIGroupAll {
 			return true
