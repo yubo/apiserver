@@ -10,7 +10,6 @@ import (
 	"github.com/emicklei/go-restful/v3"
 	"github.com/go-openapi/spec"
 	"github.com/yubo/apiserver/pkg/metrics"
-	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/rest/urlencoded"
 	"github.com/yubo/apiserver/pkg/scheme"
 	"github.com/yubo/golib/runtime"
@@ -111,9 +110,9 @@ func (p *WebServiceBuilder) newBuilder(opts *WsOption) *webserviceBuilder {
 		WebServiceBuilder: p,
 		WsOption:          opts,
 		ws:                opts.Ws,
-		parameterCodec:    opts.ParameterCodec,
-		container:         opts.GoRestfulContainer,
-		serializer:        scheme.NegotiatedSerializer,
+		//parameterCodec:    opts.ParameterCodec,
+		container:  opts.GoRestfulContainer,
+		serializer: scheme.NegotiatedSerializer,
 	}
 	if wb.container != nil {
 		wb.serializer = opts.GoRestfulContainer.Serializer()
@@ -249,10 +248,10 @@ func (p *WebServiceBuilder) swaggerWithSecurityScheme(wss []*restful.WebService,
 type webserviceBuilder struct {
 	*WebServiceBuilder
 	*WsOption
-	ws             *restful.WebService
-	container      GoRestfulContainer
-	parameterCodec request.ParameterCodec
-	serializer     runtime.NegotiatedSerializer
+	ws        *restful.WebService
+	container GoRestfulContainer
+	//parameterCodec api.ParameterCodec
+	serializer runtime.NegotiatedSerializer
 }
 
 func (p *webserviceBuilder) build() {
@@ -382,7 +381,7 @@ func (p *webserviceBuilder) registerHandle(rb *restful.RouteBuilder, wr *WsRoute
 		return nil
 	}
 
-	rh, err := NewRouteHandle(wr.Handle, p.parameterCodec, p.serializer, p.RespWriter)
+	rh, err := NewRouteHandle(wr.Handle, p.serializer, p.RespWriter)
 	if err != nil {
 		return errors.Wrapf(err, "new route handle")
 	}
@@ -393,7 +392,7 @@ func (p *webserviceBuilder) registerHandle(rb *restful.RouteBuilder, wr *WsRoute
 		inputParam = newInterface(rh.param)
 	}
 	if inputParam != nil {
-		p.parameterCodec.RouteBuilderParameters(rb, inputParam)
+		scheme.ParameterCodec.RouteBuilderParameters(rb, inputParam)
 	}
 
 	// build intput body
@@ -486,7 +485,7 @@ type WsOption struct {
 	Routes             []WsRoute
 	RespWriter         RespWriter
 	GoRestfulContainer GoRestfulContainer
-	ParameterCodec     request.ParameterCodec
+	//ParameterCodec     api.ParameterCodec
 }
 
 func (p *WsOption) Validate() error {
@@ -512,9 +511,9 @@ func (p *WsOption) Validate() error {
 	} else {
 		p.Ws.Consumes(defaultContentTypes...)
 	}
-	if p.ParameterCodec == nil {
-		p.ParameterCodec = scheme.ParameterCodec
-	}
+	//if p.ParameterCodec == nil {
+	//	p.ParameterCodec = scheme.ParameterCodec
+	//}
 	if p.RespWriter == nil {
 		p.RespWriter = DefaultRespWriter
 	}

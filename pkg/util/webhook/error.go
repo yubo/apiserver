@@ -19,7 +19,7 @@ package webhook
 import (
 	"fmt"
 
-	"github.com/yubo/golib/api/errors"
+	apierrors "github.com/yubo/golib/api/errors"
 )
 
 // ErrCallingWebhook is returned for transport-layer errors calling webhooks. It
@@ -28,6 +28,7 @@ import (
 type ErrCallingWebhook struct {
 	WebhookName string
 	Reason      error
+	Status      *apierrors.StatusError
 }
 
 func (e *ErrCallingWebhook) Error() string {
@@ -39,7 +40,7 @@ func (e *ErrCallingWebhook) Error() string {
 
 // ErrWebhookRejection represents a webhook properly rejecting a request.
 type ErrWebhookRejection struct {
-	Status *errors.StatusError
+	Status *apierrors.StatusError
 }
 
 func (e *ErrWebhookRejection) Error() string {

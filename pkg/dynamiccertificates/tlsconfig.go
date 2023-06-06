@@ -25,8 +25,10 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/yubo/client-go/tools/events"
+	corev1 "github.com/yubo/golib/api"
 	"github.com/yubo/golib/util/cert"
-	"github.com/yubo/golib/util/runtime"
+	utilruntime "github.com/yubo/golib/util/runtime"
 	"github.com/yubo/golib/util/wait"
 	"github.com/yubo/golib/util/workqueue"
 	"k8s.io/klog/v2"
@@ -54,8 +56,8 @@ type DynamicServingCertificateController struct {
 	currentServingTLSConfig atomic.Value
 
 	// queue only ever has one item, but it has nice error handling backoff/retry semantics
-	queue workqueue.RateLimitingInterface
-	//eventRecorder events.EventRecorder
+	queue         workqueue.RateLimitingInterface
+	eventRecorder events.EventRecorder
 }
 
 var _ Listener = &DynamicServingCertificateController{}
@@ -66,7 +68,7 @@ func NewDynamicServingCertificateController(
 	clientCA CAContentProvider,
 	servingCert CertKeyContentProvider,
 	sniCerts []SNICertKeyContentProvider,
-	//eventRecorder events.EventRecorder,
+	eventRecorder events.EventRecorder,
 ) *DynamicServingCertificateController {
 	c := &DynamicServingCertificateController{
 		baseTLSConfig: baseTLSConfig,
@@ -74,8 +76,8 @@ func NewDynamicServingCertificateController(
 		servingCert:   servingCert,
 		sniCerts:      sniCerts,
 
-		queue: workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "DynamicServingCertificateController"),
-		//eventRecorder: eventRecorder,
+		queue:         workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "DynamicServingCertificateController"),
+		eventRecorder: eventRecorder,
 	}
 
 	return c
@@ -173,10 +175,10 @@ func (c *DynamicServingCertificateController) syncCerts() error {
 			return fmt.Errorf("unable to load client CA file %q: %v", string(newContent.clientCA.caBundle), err)
 		}
 		for i, cert := range newClientCAs {
-			klog.V(2).Infof("loaded client CA [%d/%q]: %s", i, c.clientCA.Name(), GetHumanCertDetail(cert))
-			//if c.eventRecorder != nil {
-			//	c.eventRecorder.Eventf(&api.ObjectReference{Name: c.clientCA.Name()}, nil, api.EventTypeWarning, "TLSConfigChanged", "CACertificateReload", "loaded client CA [%d/%q]: %s", i, c.clientCA.Name(), GetHumanCertDetail(cert))
-			//}
+			klog.V(2).InfoS("Loaded client CA", "index", i, "certName", c.clientCA.Name(), "certDetail", GetHumanCertDetail(cert))
+			if c.eventRecorder != nil {
+				c.eventRecorder.Eventf(&corev1.ObjectReference{Name: c.clientCA.Name()}, nil, corev1.EventTypeWarning, "TLSConfigChanged", "CACertificateReload", "loaded client CA [%d/%q]: %s", i, c.clientCA.Name(), GetHumanCertDetail(cert))
+			}
 
 			newClientCAPool.AddCert(cert)
 		}
@@ -195,10 +197,10 @@ func (c *DynamicServingCertificateController) syncCerts() error {
 			return fmt.Errorf("invalid serving cert: %v", err)
 		}
 
-		klog.V(2).Infof("loaded serving cert [%q]: %s", c.servingCert.Name(), GetHumanCertDetail(x509Cert))
-		//if c.eventRecorder != nil {
-		//	c.eventRecorder.Eventf(&api.ObjectReference{Name: c.servingCert.Name()}, nil, api.EventTypeWarning, "TLSConfigChanged", "ServingCertificateReload", "loaded serving cert [%q]: %s", c.servingCert.Name(), GetHumanCertDetail(x509Cert))
-		//}
+		klog.V(2).InfoS("Loaded serving cert", "certName", c.servingCert.Name(), "certDetail", GetHumanCertDetail(x509Cert))
+		if c.eventRecorder != nil {
+			c.eventRecorder.Eventf(&corev1.ObjectReference{Name: c.servingCert.Name()}, nil, corev1.EventTypeWarning, "TLSConfigChanged", "ServingCertificateReload", "loaded serving cert [%q]: %s", c.servingCert.Name(), GetHumanCertDetail(x509Cert))
+		}
 
 		newTLSConfigCopy.Certificates = []tls.Certificate{cert}
 	}
@@ -232,11 +234,11 @@ func (c *DynamicServingCertificateController) RunOnce() error {
 
 // Run starts the kube-apiserver and blocks until stopCh is closed.
 func (c *DynamicServingCertificateController) Run(workers int, stopCh <-chan struct{}) {
-	defer runtime.HandleCrash()
+	defer utilruntime.HandleCrash()
 	defer c.queue.ShutDown()
 
-	klog.Infof("Starting DynamicServingCertificateController")
-	defer klog.Infof("Shutting down DynamicServingCertificateController")
+	klog.InfoS("Starting DynamicServingCertificateController")
+	defer klog.InfoS("Shutting down DynamicServingCertificateController")
 
 	// synchronously load once.  We will trigger again, so ignoring any error is fine
 	_ = c.RunOnce()
@@ -270,7 +272,7 @@ func (c *DynamicServingCertificateController) processNextWorkItem() bool {
 		return true
 	}
 
-	runtime.HandleError(fmt.Errorf("%v failed with : %v", dsKey, err))
+	utilruntime.HandleError(fmt.Errorf("%v failed with : %v", dsKey, err))
 	c.queue.AddRateLimited(dsKey)
 
 	return true

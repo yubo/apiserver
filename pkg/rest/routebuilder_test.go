@@ -243,5 +243,10 @@ func dumpRequest(t *testing.T) func(*restful.Request, *restful.Response, *restfu
 }
 
 func restClient(testServer *httptest.Server) (*rest.RESTClient, error) {
-	return rest.RESTClientFor(&rest.Config{Host: testServer.URL})
+	return rest.RESTClientFor(&rest.Config{
+		Host: testServer.URL,
+		ContentConfig: rest.ContentConfig{
+			NegotiatedSerializer: scheme.NegotiatedSerializer,
+		},
+	})
 }

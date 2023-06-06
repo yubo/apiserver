@@ -151,7 +151,7 @@ func TestCompatibility(t *testing.T) {
 			// and must be updated for the test case to pass.
 			fixture: `{
 	"format": "json",
-	"flushFrequency": 1,
+	"flushFrequency": "1s",
 	"verbosity": 5,
 	"vmodule": [
 		{"filePattern": "someFile", "verbosity": 10},
@@ -169,7 +169,7 @@ func TestCompatibility(t *testing.T) {
 			expectAllFields: true,
 			expectConfig: LoggingConfiguration{
 				Format:         JSONLogFormat,
-				FlushFrequency: api.Duration{Duration: time.Nanosecond},
+				FlushFrequency: api.Duration{Duration: time.Second},
 				Verbosity:      VerbosityLevel(5),
 				VModule: VModuleConfiguration{
 					{

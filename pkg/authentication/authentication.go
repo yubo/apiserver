@@ -178,10 +178,9 @@ func (p *authentication) init(ctx context.Context) error {
 	}
 
 	authn := &server.AuthenticationInfo{
-		APIAudiences:        authenticator.Audiences(p.config.APIAudiences),
-		Authenticator:       p.authenticator,
-		Anonymous:           p.config.Anonymous,
-		RequestHeaderConfig: nil,
+		APIAudiences:  authenticator.Audiences(p.config.APIAudiences),
+		Authenticator: p.authenticator,
+		Anonymous:     p.config.Anonymous,
 	}
 
 	dbus.RegisterAuthenticationInfo(authn)

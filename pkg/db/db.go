@@ -97,6 +97,10 @@ func (p *serverDB) GetDB(name string) DB {
 		return nil
 	}
 
+	if name == "" {
+		name = DefaultName
+	}
+
 	if db, ok := p.dbs[name]; !ok {
 		klog.Infof("dbs %+v %s", p.dbs, name)
 		return nil

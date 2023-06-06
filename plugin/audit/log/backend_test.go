@@ -24,11 +24,11 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/yubo/apiserver/pkg/audit"
 
 	auditinternal "github.com/yubo/apiserver/pkg/apis/audit"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/runtime"
-	"github.com/yubo/golib/scheme"
 	"github.com/yubo/golib/types"
 )
 
@@ -36,48 +36,53 @@ func TestLogEventsLegacy(t *testing.T) {
 	for _, test := range []struct {
 		event    *auditinternal.Event
 		expected string
-	}{{
-		&auditinternal.Event{
-			AuditID: types.UID(uuid.New().String()),
+	}{
+		{
+			&auditinternal.Event{
+				AuditID: types.UID(uuid.New().String()),
+			},
+			`[\d\:\-\.\+TZ]+ AUDIT: id="[\w-]+" stage="" ip="<unknown>" method="" user="<none>" groups="<none>" as="<self>" asgroups="<lookup>" user-agent="" namespace="<none>" uri="" response="<deferred>"`,
 		},
-		`[\d\:\-\.\+TZ]+ AUDIT: id="[\w-]+" stage="" ip="<unknown>" method="" user="<none>" groups="<none>" as="<self>" asgroups="<lookup>" namespace="<none>" uri="" response="<deferred>"`,
-	}, {
-		&auditinternal.Event{
-			ResponseStatus: &api.Status{
-				Code: 200,
-			},
-			RequestURI: "/apis/rbac.authorization.k8s.io/v1/roles",
-			SourceIPs: []string{
-				"127.0.0.1",
-			},
-			RequestReceivedTimestamp: api.NewMicroTime(time.Now()),
-			AuditID:                  types.UID(uuid.New().String()),
-			Stage:                    auditinternal.StageRequestReceived,
-			Verb:                     "get",
-			User: api.UserInfo{
-				Username: "admin",
-				Groups: []string{
-					"system:masters",
-					"system:authenticated",
+		{
+			&auditinternal.Event{
+				ResponseStatus: &api.Status{
+					Code: 200,
+				},
+				RequestURI: "/apis/rbac.authorization.k8s.io/v1/roles",
+				SourceIPs: []string{
+					"127.0.0.1",
+				},
+				RequestReceivedTimestamp: api.NewMicroTime(time.Now()),
+				AuditID:                  types.UID(uuid.New().String()),
+				Stage:                    auditinternal.StageRequestReceived,
+				Verb:                     "get",
+				User: api.UserInfo{
+					Username: "admin",
+					Groups: []string{
+						"system:masters",
+						"system:authenticated",
+					},
+				},
+				UserAgent: "kube-admin",
+				ObjectRef: &auditinternal.ObjectReference{
+					Namespace: "default",
 				},
 			},
-			ObjectRef: &auditinternal.ObjectReference{
-				Namespace: "default",
-			},
+			`[\d\:\-\.\+TZ]+ AUDIT: id="[\w-]+" stage="RequestReceived" ip="127.0.0.1" method="get" user="admin" groups="\\"system:masters\\",\\"system:authenticated\\"" as="<self>" asgroups="<lookup>" user-agent="kube-admin" namespace="default" uri="/apis/rbac.authorization.k8s.io/v1/roles" response="200"`,
 		},
-		`[\d\:\-\.\+TZ]+ AUDIT: id="[\w-]+" stage="RequestReceived" ip="127.0.0.1" method="get" user="admin" groups="\\"system:masters\\",\\"system:authenticated\\"" as="<self>" asgroups="<lookup>" namespace="default" uri="/apis/rbac.authorization.k8s.io/v1/roles" response="200"`,
-	}, {
-		&auditinternal.Event{
-			AuditID: types.UID(uuid.New().String()),
-			Level:   auditinternal.LevelMetadata,
-			ObjectRef: &auditinternal.ObjectReference{
-				Resource:    "foo",
-				APIVersion:  "v1",
-				Subresource: "bar",
+		{
+			&auditinternal.Event{
+				AuditID: types.UID(uuid.New().String()),
+				Level:   auditinternal.LevelMetadata,
+				ObjectRef: &auditinternal.ObjectReference{
+					Resource:    "foo",
+					APIVersion:  "v1",
+					Subresource: "bar",
+				},
 			},
+			`[\d\:\-\.\+TZ]+ AUDIT: id="[\w-]+" stage="" ip="<unknown>" method="" user="<none>" groups="<none>" as="<self>" asgroups="<lookup>" user-agent="" namespace="<none>" uri="" response="<deferred>"`,
 		},
-		`[\d\:\-\.\+TZ]+ AUDIT: id="[\w-]+" stage="" ip="<unknown>" method="" user="<none>" groups="<none>" as="<self>" asgroups="<lookup>" namespace="<none>" uri="" response="<deferred>"`,
-	}} {
+	} {
 		var buf bytes.Buffer
 		backend := NewBackend(&buf, FormatLegacy)
 		backend.ProcessEvents(test.event)
@@ -136,9 +141,9 @@ func TestLogEventsJson(t *testing.T) {
 		backend.ProcessEvents(event)
 		// decode events back and compare with the original one.
 		result := &auditinternal.Event{}
-		decoder := scheme.Codecs.UniversalDecoder()
+		decoder := audit.Codecs.UniversalDecoder()
 		if err := runtime.DecodeInto(decoder, buf.Bytes(), result); err != nil {
-			t.Errorf("failed decoding buf: %s ", buf.String())
+			t.Errorf("failed decoding buf: %s", buf.String())
 			continue
 		}
 		if !reflect.DeepEqual(event, result) {

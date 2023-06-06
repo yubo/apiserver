@@ -23,7 +23,6 @@ import (
 
 	auditinternal "github.com/yubo/apiserver/pkg/apis/audit"
 	"github.com/yubo/apiserver/pkg/audit"
-	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/util/flowcontrol"
 	"github.com/yubo/golib/util/runtime"
 	"github.com/yubo/golib/util/wait"
@@ -35,22 +34,22 @@ const PluginName = "buffered"
 // BatchConfig represents batching delegate audit backend configuration.
 type BatchConfig struct {
 	// BufferSize defines a size of the buffering queue.
-	BufferSize int `json:"bufferSize" description:"The size of the buffer to store events before batching and writing. Only used in batch mode."`
+	BufferSize int
 	// MaxBatchSize defines maximum size of a batch.
-	MaxBatchSize int `json:"maxBatchSize" description:"The maximum size of a batch. Only used in batch mode."`
+	MaxBatchSize int
 	// MaxBatchWait indicates the maximum interval between two batches.
-	MaxBatchWait api.Duration `json:"maxBatchWait" description:"The amount of time to wait before force writing the batch that hadn't reached the max size. Only used in batch mode."`
+	MaxBatchWait time.Duration
 
 	// ThrottleEnable defines whether throttling will be applied to the batching process.
-	ThrottleEnable bool `json:"throttleEnable" description:"Whether batching throttling is enabled. Only used in batch mode."`
+	ThrottleEnable bool
 	// ThrottleQPS defines the allowed rate of batches per second sent to the delegate backend.
-	ThrottleQPS float32 `json:"throttleQPS" description:"Maximum average number of batches per second. "`
+	ThrottleQPS float32
 	// ThrottleBurst defines the maximum number of requests sent to the delegate backend at the same moment in case
 	// the capacity defined by ThrottleQPS was not utilized.
-	ThrottleBurst int `json:"throttleBurst" description:"Maximum number of requests sent at the same moment if ThrottleQPS was not utilized before. Only used in batch mode."`
+	ThrottleBurst int
 
 	// Whether the delegate backend should be called asynchronously.
-	AsyncDelegate bool `json:"asyncDelegate"`
+	AsyncDelegate bool
 }
 
 type bufferedBackend struct {
@@ -96,7 +95,7 @@ func NewBackend(delegate audit.Backend, config BatchConfig) audit.Backend {
 		delegateBackend: delegate,
 		buffer:          make(chan *auditinternal.Event, config.BufferSize),
 		maxBatchSize:    config.MaxBatchSize,
-		maxBatchWait:    config.MaxBatchWait.Duration,
+		maxBatchWait:    config.MaxBatchWait,
 		asyncDelegate:   config.AsyncDelegate,
 		shutdownCh:      make(chan struct{}),
 		wg:              sync.WaitGroup{},
@@ -191,10 +190,10 @@ func (b *bufferedBackend) processIncomingEvents(stopCh <-chan struct{}) {
 // The following things can cause collectEvents to stop and return the list
 // of events:
 //
-//   * Maximum number of events for a batch.
-//   * Timer has passed.
-//   * Buffer channel is closed and empty.
-//   * stopCh is closed.
+//   - Maximum number of events for a batch.
+//   - Timer has passed.
+//   - Buffer channel is closed and empty.
+//   - stopCh is closed.
 func (b *bufferedBackend) collectEvents(timer <-chan time.Time, stopCh <-chan struct{}) []*auditinternal.Event {
 	var events []*auditinternal.Event
 

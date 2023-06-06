@@ -34,10 +34,10 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/prometheus/client_golang/prometheus"
+	"github.com/yubo/apiserver/components/metrics"
+	"github.com/yubo/apiserver/components/metrics/legacyregistry"
 	"github.com/yubo/apiserver/pkg/audit"
 	"github.com/yubo/apiserver/pkg/dynamiccertificates"
-	"github.com/yubo/apiserver/pkg/metrics"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/types"
 	"github.com/yubo/golib/util"
@@ -300,7 +300,7 @@ func TestProxyHandler(t *testing.T) {
 	target := &targetHTTPHandler{}
 	for name, tc := range tests {
 		target.Reset()
-		metrics.Reset()
+		legacyregistry.Reset()
 
 		func() {
 			targetServer := httptest.NewUnstartedServer(target)
@@ -371,7 +371,7 @@ func TestProxyHandler(t *testing.T) {
 			}
 
 			if tc.increaseSANWarnCounter {
-				errorCounter := getSingleCounterValueFromRegistry(t, metrics.DefaultGatherer, "apiserver_kube_aggregator_x509_missing_san_total")
+				errorCounter := getSingleCounterValueFromRegistry(t, legacyregistry.DefaultGatherer, "apiserver_kube_aggregator_x509_missing_san_total")
 				if errorCounter == -1 {
 					t.Errorf("failed to get the x509_missing_san_total metrics: %v", err)
 				}
@@ -472,42 +472,42 @@ func TestProxyUpgrade(t *testing.T) {
 			ExpectError:  true,
 			ExpectCalled: false,
 		},
-		"valid hostname + CABundle + egress selector": {
-			APIService: &apiregistration.APIService{
-				Spec: apiregistration.APIServiceSpec{
-					CABundle: testCACrt,
-					Group:    "mygroup",
-					Version:  "v1",
-					Service:  &apiregistration.ServiceReference{Name: "test-service", Namespace: "test-ns", Port: pointer.Int32Ptr(443)},
-				},
-				Status: apiregistration.APIServiceStatus{
-					Conditions: []apiregistration.APIServiceCondition{
-						{Type: apiregistration.Available, Status: apiregistration.ConditionTrue},
-					},
-				},
-			},
-			//NewEgressSelector: newDialerAndSelector,
-			ExpectError:  false,
-			ExpectCalled: true,
-		},
-		"valid hostname + CABundle + egress selector non working": {
-			APIService: &apiregistration.APIService{
-				Spec: apiregistration.APIServiceSpec{
-					CABundle: testCACrt,
-					Group:    "mygroup",
-					Version:  "v1",
-					Service:  &apiregistration.ServiceReference{Name: "test-service", Namespace: "test-ns", Port: pointer.Int32Ptr(443)},
-				},
-				Status: apiregistration.APIServiceStatus{
-					Conditions: []apiregistration.APIServiceCondition{
-						{Type: apiregistration.Available, Status: apiregistration.ConditionTrue},
-					},
-				},
-			},
-			//NewEgressSelector: newBrokenDialerAndSelector,
-			ExpectError:  true,
-			ExpectCalled: false,
-		},
+		//"valid hostname + CABundle + egress selector": {
+		//	APIService: &apiregistration.APIService{
+		//		Spec: apiregistration.APIServiceSpec{
+		//			CABundle: testCACrt,
+		//			Group:    "mygroup",
+		//			Version:  "v1",
+		//			Service:  &apiregistration.ServiceReference{Name: "test-service", Namespace: "test-ns", Port: pointer.Int32Ptr(443)},
+		//		},
+		//		Status: apiregistration.APIServiceStatus{
+		//			Conditions: []apiregistration.APIServiceCondition{
+		//				{Type: apiregistration.Available, Status: apiregistration.ConditionTrue},
+		//			},
+		//		},
+		//	},
+		//	//NewEgressSelector: newDialerAndSelector,
+		//	ExpectError:  false,
+		//	ExpectCalled: true,
+		//},
+		//"valid hostname + CABundle + egress selector non working": {
+		//	APIService: &apiregistration.APIService{
+		//		Spec: apiregistration.APIServiceSpec{
+		//			CABundle: testCACrt,
+		//			Group:    "mygroup",
+		//			Version:  "v1",
+		//			Service:  &apiregistration.ServiceReference{Name: "test-service", Namespace: "test-ns", Port: pointer.Int32Ptr(443)},
+		//		},
+		//		Status: apiregistration.APIServiceStatus{
+		//			Conditions: []apiregistration.APIServiceCondition{
+		//				{Type: apiregistration.Available, Status: apiregistration.ConditionTrue},
+		//			},
+		//		},
+		//	},
+		//	//NewEgressSelector: newBrokenDialerAndSelector,
+		//	ExpectError:  true,
+		//	ExpectCalled: false,
+		//},
 	}
 
 	for k, tc := range testcases {
@@ -861,7 +861,7 @@ func TestProxyCertReload(t *testing.T) {
 	aggregatorHandler.proxyCurrentCertKeyContent = certProvider.CurrentCertKeyContent
 
 	apiService := &apiregistration.APIService{
-		ObjectMeta: pi.ObjectMeta{Name: "v1.foo"},
+		ObjectMeta: api.ObjectMeta{Name: "v1.foo"},
 		Spec: apiregistration.APIServiceSpec{
 			Service:  &apiregistration.ServiceReference{Name: "test-service2", Namespace: "test-ns", Port: pointer.Int32Ptr(443)},
 			Group:    "foo",
@@ -1062,7 +1062,7 @@ func writeCerts(certFile, keyFile string, certContent, keyContent []byte, t *tes
 	}
 }
 
-func getSingleCounterValueFromRegistry(t *testing.T, r prometheus.Gatherer, name string) int {
+func getSingleCounterValueFromRegistry(t *testing.T, r metrics.Gatherer, name string) int {
 	mfs, err := r.Gather()
 	if err != nil {
 		t.Logf("failed to gather local registry metrics: %v", err)

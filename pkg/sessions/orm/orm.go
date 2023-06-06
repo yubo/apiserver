@@ -10,9 +10,9 @@ import (
 
 	"github.com/gorilla/securecookie"
 	gsessions "github.com/gorilla/sessions"
+	"github.com/yubo/apiserver/components/dbus"
 	"github.com/yubo/apiserver/pkg/db"
 	"github.com/yubo/apiserver/pkg/proc"
-	procoptions "github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/sessions"
 	sessionsr "github.com/yubo/apiserver/pkg/sessions/register"
 	"github.com/yubo/golib/api"
@@ -220,7 +220,7 @@ func factory(ctx context.Context, options *sessions.Options) (sessions.Store, er
 	}
 
 	if cf.Orm == nil {
-		cf.Orm, _ = procoptions.DBFrom(ctx, "")
+		cf.Orm = dbus.DB().GetDB("")
 	}
 
 	if cf.Orm == nil {

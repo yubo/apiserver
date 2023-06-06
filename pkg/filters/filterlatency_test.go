@@ -24,6 +24,7 @@ import (
 	"time"
 
 	testingclock "github.com/yubo/golib/util/clock/testing"
+	"go.opentelemetry.io/otel/trace"
 )
 
 func TestTrackStartedWithContextAlreadyHasFilterRecord(t *testing.T) {
@@ -41,7 +42,7 @@ func TestTrackStartedWithContextAlreadyHasFilterRecord(t *testing.T) {
 	})
 
 	requestFilterStarted := time.Now()
-	wrapped := trackStarted(handler, filterName, testingclock.NewFakeClock(requestFilterStarted))
+	wrapped := trackStarted(handler, trace.NewNoopTracerProvider(), filterName, testingclock.NewFakeClock(requestFilterStarted))
 
 	testRequest, err := http.NewRequest(http.MethodGet, "/api/v1/namespaces", nil)
 	if err != nil {
@@ -84,7 +85,7 @@ func TestTrackStartedWithContextDoesNotHaveFilterRecord(t *testing.T) {
 	})
 
 	requestFilterStarted := time.Now()
-	wrapped := trackStarted(handler, filterName, testingclock.NewFakeClock(requestFilterStarted))
+	wrapped := trackStarted(handler, trace.NewNoopTracerProvider(), filterName, testingclock.NewFakeClock(requestFilterStarted))
 
 	testRequest, err := http.NewRequest(http.MethodGet, "/api/v1/namespaces", nil)
 	if err != nil {

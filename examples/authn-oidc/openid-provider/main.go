@@ -15,8 +15,8 @@ import (
 	"time"
 
 	"github.com/yubo/apiserver/components/cli"
+	"github.com/yubo/apiserver/components/dbus"
 	"github.com/yubo/apiserver/pkg/proc"
-	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/rest"
 	jose "gopkg.in/square/go-jose.v2"
 	"k8s.io/klog/v2"
@@ -75,7 +75,7 @@ func (p *module) start(ctx context.Context) error {
 	p.openIDConfig = cf.OpenIDConfig
 	p.claim = cf.Claim
 
-	p.installWs(options.APIServerMustFrom(ctx))
+	p.installWs(dbus.APIServer())
 
 	klog.InfoS("test data", "token", p.token())
 	return nil

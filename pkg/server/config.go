@@ -21,7 +21,6 @@ import (
 	"github.com/yubo/apiserver/pkg/filters"
 	apirequest "github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/rest"
-	"github.com/yubo/apiserver/pkg/scheme"
 	"github.com/yubo/apiserver/pkg/server/healthz"
 	"github.com/yubo/apiserver/pkg/server/routes"
 	"github.com/yubo/apiserver/pkg/sessions"
@@ -276,7 +275,6 @@ func NewRequestInfoResolver(c *Config) *apirequest.RequestInfoFactory {
 	return &apirequest.RequestInfoFactory{
 		APIPrefixes:          apiPrefixes,
 		GrouplessAPIPrefixes: legacyAPIPrefixes,
-		ParameterCodec:       scheme.ParameterCodec,
 	}
 }
 

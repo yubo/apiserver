@@ -10,12 +10,12 @@ import (
 
 	"github.com/emicklei/go-restful/v3"
 	"github.com/go-openapi/spec"
-	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/responsewriters"
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/golib/runtime"
 	"github.com/yubo/golib/util"
 	"github.com/yubo/golib/util/errors"
+	"go.opentelemetry.io/otel/trace"
 	"k8s.io/klog/v2"
 )
 
@@ -94,7 +94,7 @@ func (p *respWriter) RespWrite(resp *restful.Response, req *http.Request, data i
 		"host":    _hostname,
 	}
 
-	if traceID, _ := request.TraceIDFrom(req.Context()); traceID != "" {
+	if traceID := trace.SpanFromContext(req.Context()).SpanContext().TraceID().String(); traceID != "" {
 		v["traceId"] = traceID
 	}
 

@@ -21,8 +21,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/yubo/apiserver/components/metrics"
+	"github.com/yubo/apiserver/components/metrics/legacyregistry"
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 )
@@ -46,48 +46,61 @@ const (
 )
 
 var (
-	authenticatedUserCounter = promauto.NewCounterVec(
-		prometheus.CounterOpts{
-			Name: "authenticated_user_requests",
-			Help: "Counter of authenticated requests broken out by username.",
+	authenticatedUserCounter = metrics.NewCounterVec(
+		&metrics.CounterOpts{
+			Name:           "authenticated_user_requests",
+			Help:           "Counter of authenticated requests broken out by username.",
+			StabilityLevel: metrics.ALPHA,
 		},
 		[]string{"username"},
 	)
 
-	authenticatedAttemptsCounter = promauto.NewCounterVec(
-		prometheus.CounterOpts{
-			Name: "authentication_attempts",
-			Help: "Counter of authenticated attempts.",
+	authenticatedAttemptsCounter = metrics.NewCounterVec(
+		&metrics.CounterOpts{
+			Name:           "authentication_attempts",
+			Help:           "Counter of authenticated attempts.",
+			StabilityLevel: metrics.ALPHA,
 		},
 		[]string{"result"},
 	)
 
-	authenticationLatency = promauto.NewHistogramVec(
-		prometheus.HistogramOpts{
-			Name:    "authentication_duration_seconds",
-			Help:    "Authentication duration in seconds broken out by result.",
-			Buckets: prometheus.ExponentialBuckets(0.001, 2, 15),
+	authenticationLatency = metrics.NewHistogramVec(
+		&metrics.HistogramOpts{
+			Name:           "authentication_duration_seconds",
+			Help:           "Authentication duration in seconds broken out by result.",
+			Buckets:        metrics.ExponentialBuckets(0.001, 2, 15),
+			StabilityLevel: metrics.ALPHA,
 		},
 		[]string{"result"},
 	)
 
-	authorizationAttemptsCounter = promauto.NewCounterVec(
-		prometheus.CounterOpts{
-			Name: "authorization_attempts_total",
-			Help: "Counter of authorization attempts broken down by result. It can be either 'allowed', 'denied', 'no-opinion' or 'error'.",
+	authorizationAttemptsCounter = metrics.NewCounterVec(
+		&metrics.CounterOpts{
+			Name:           "authorization_attempts_total",
+			Help:           "Counter of authorization attempts broken down by result. It can be either 'allowed', 'denied', 'no-opinion' or 'error'.",
+			StabilityLevel: metrics.ALPHA,
 		},
 		[]string{"result"},
 	)
 
-	authorizationLatency = promauto.NewHistogramVec(
-		prometheus.HistogramOpts{
-			Name:    "authorization_duration_seconds",
-			Help:    "Authorization duration in seconds broken out by result.",
-			Buckets: prometheus.ExponentialBuckets(0.001, 2, 15),
+	authorizationLatency = metrics.NewHistogramVec(
+		&metrics.HistogramOpts{
+			Name:           "authorization_duration_seconds",
+			Help:           "Authorization duration in seconds broken out by result.",
+			Buckets:        metrics.ExponentialBuckets(0.001, 2, 15),
+			StabilityLevel: metrics.ALPHA,
 		},
 		[]string{"result"},
 	)
 )
+
+func init() {
+	legacyregistry.MustRegister(authenticatedUserCounter)
+	legacyregistry.MustRegister(authenticatedAttemptsCounter)
+	legacyregistry.MustRegister(authenticationLatency)
+	legacyregistry.MustRegister(authorizationAttemptsCounter)
+	legacyregistry.MustRegister(authorizationLatency)
+}
 
 func recordAuthorizationMetrics(ctx context.Context, authorized authorizer.Decision, err error, authStart time.Time, authFinish time.Time) {
 	var resultLabel string
@@ -103,8 +116,8 @@ func recordAuthorizationMetrics(ctx context.Context, authorized authorizer.Decis
 		resultLabel = noOpinionLabel
 	}
 
-	authorizationAttemptsCounter.WithLabelValues(resultLabel).Inc()
-	authorizationLatency.WithLabelValues(resultLabel).Observe(authFinish.Sub(authStart).Seconds())
+	authorizationAttemptsCounter.WithContext(ctx).WithLabelValues(resultLabel).Inc()
+	authorizationLatency.WithContext(ctx).WithLabelValues(resultLabel).Observe(authFinish.Sub(authStart).Seconds())
 }
 
 func recordAuthenticationMetrics(ctx context.Context, resp *authenticator.Response, ok bool, err error, apiAudiences authenticator.Audiences, authStart time.Time, authFinish time.Time) {
@@ -117,11 +130,11 @@ func recordAuthenticationMetrics(ctx context.Context, resp *authenticator.Respon
 		resultLabel = failureLabel
 	default:
 		resultLabel = successLabel
-		authenticatedUserCounter.WithLabelValues(compressUsername(resp.User.GetName())).Inc()
+		authenticatedUserCounter.WithContext(ctx).WithLabelValues(compressUsername(resp.User.GetName())).Inc()
 	}
 
-	authenticatedAttemptsCounter.WithLabelValues(resultLabel).Inc()
-	authenticationLatency.WithLabelValues(resultLabel).Observe(authFinish.Sub(authStart).Seconds())
+	authenticatedAttemptsCounter.WithContext(ctx).WithLabelValues(resultLabel).Inc()
+	authenticationLatency.WithContext(ctx).WithLabelValues(resultLabel).Observe(authFinish.Sub(authStart).Seconds())
 }
 
 // compressUsername maps all possible usernames onto a small set of categories

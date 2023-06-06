@@ -24,7 +24,6 @@ import (
 	auditinternal "github.com/yubo/apiserver/pkg/apis/audit"
 	"github.com/yubo/apiserver/pkg/audit"
 	"github.com/yubo/golib/runtime"
-	"github.com/yubo/golib/scheme"
 )
 
 const (
@@ -55,7 +54,7 @@ func NewBackend(out io.Writer, format string) audit.Backend {
 	return &backend{
 		out:     out,
 		format:  format,
-		encoder: scheme.Codecs.LegacyCodec(),
+		encoder: audit.Codecs.LegacyCodec(),
 	}
 }
 

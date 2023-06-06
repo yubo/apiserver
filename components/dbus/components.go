@@ -20,7 +20,7 @@ const (
 	_ key = iota
 	passwordfileKey
 	dbKey
-	s3Key
+	s3ClientKey
 	apiServerKey
 	grpcserverKey
 	authnKey              // Authentication
@@ -73,25 +73,25 @@ func DB() db.DB {
 }
 
 // s3
-type S3Client interface {
+type S3ClientT interface {
 	Put(ctx context.Context, objectPath, contentType string, reader io.Reader, objectSize int64) error
 	Remove(ctx context.Context, objectPath string) error
 	Location(objectPath string) string
 }
 
-func RegisterS3(v S3Client) {
-	MustRegister(s3Key, v)
+func RegisterS3Client(v S3ClientT) {
+	MustRegister(s3ClientKey, v)
 }
-func GetS3() (S3Client, error) {
-	ret, ok := get(s3Key).(S3Client)
+func GetS3Client() (S3ClientT, error) {
+	ret, ok := get(s3ClientKey).(S3ClientT)
 	if !ok {
 		return nil, errors.New("s3 client not registered")
 	}
 
 	return ret, nil
 }
-func S3() S3Client {
-	ret, err := GetS3()
+func S3Client() S3ClientT {
+	ret, err := GetS3Client()
 	if err != nil {
 		panic(err)
 	}

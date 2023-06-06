@@ -123,14 +123,9 @@ func (p *serverModule) start(ctx context.Context) error {
 }
 
 func (p *serverModule) stop(ctx context.Context) error {
-	if p.cancel == nil {
-		return nil
-	}
-
 	p.cancel()
 
 	<-p.stoppedCh
-
 	return nil
 }
 
@@ -427,7 +422,7 @@ func (p *serverModule) Start(stopCh <-chan struct{}, done chan struct{}) error {
 
 	// close socket after delayed stopCh
 	if s.SecureServing != nil {
-		stoppedCh, err := s.SecureServing.Serve(s.Handler, s.RequestTimeout, delayedStopCh)
+		_, stoppedCh, err := s.SecureServing.Serve(s.Handler, s.RequestTimeout, delayedStopCh)
 		if err != nil {
 			return err
 		}
@@ -438,7 +433,7 @@ func (p *serverModule) Start(stopCh <-chan struct{}, done chan struct{}) error {
 		}()
 	}
 	if s.InsecureServing != nil {
-		stoppedCh, err := s.InsecureServing.Serve(s.Handler, s.RequestTimeout, delayedStopCh)
+		_, stoppedCh, err := s.InsecureServing.Serve(s.Handler, s.RequestTimeout, delayedStopCh)
 		if err != nil {
 			return err
 		}
@@ -466,6 +461,7 @@ func (p *serverModule) Start(stopCh <-chan struct{}, done chan struct{}) error {
 
 		close(done)
 	}()
+
 	return nil
 }
 

@@ -62,7 +62,7 @@ func WithAudit(handler http.Handler, sink audit.Sink, policy audit.PolicyRuleEva
 
 		ev.Stage = auditinternal.StageRequestReceived
 		if processed := processAuditEvent(ctx, sink, ev, omitStages); !processed {
-			audit.ApiserverAuditDroppedCounter.Inc()
+			audit.ApiserverAuditDroppedCounter.WithContext(ctx).Inc()
 			responsewriters.InternalError(w, req, errors.New("failed to store audit event"))
 			return
 		}

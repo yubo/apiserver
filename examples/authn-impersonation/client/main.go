@@ -4,22 +4,11 @@ import (
 	"context"
 	"flag"
 	"os"
+	"time"
 
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/util/webhook"
-	"github.com/yubo/golib/api"
-	"github.com/yubo/golib/scheme"
-	"github.com/yubo/golib/util/wait"
 	"k8s.io/klog/v2"
-)
-
-var (
-	retryBackoff = wait.Backoff{
-		Duration: api.NewDuration("5ms"),
-		Factor:   1.5,
-		Jitter:   0.2,
-		Steps:    5,
-	}
 )
 
 func main() {
@@ -27,7 +16,7 @@ func main() {
 	flag.Parse()
 
 	if err := func() error {
-		w, err := webhook.NewGenericWebhook(scheme.Codec, *configFile, retryBackoff, nil)
+		w, err := webhook.NewWebhook(*configFile, 5*time.Millisecond)
 		if err != nil {
 			return err
 		}

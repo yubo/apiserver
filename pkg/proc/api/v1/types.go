@@ -113,12 +113,16 @@ const (
 	STATUS_INIT ProcessStatus = iota
 	STATUS_PENDING
 	STATUS_RUNNING
-	STATUS_RELOADING
+	//STATUS_RELOADING
 	STATUS_EXIT
 )
 
 func (p *ProcessStatus) Set(v ProcessStatus) {
-	atomic.StoreUint32((*uint32)(p), uint32(STATUS_RUNNING))
+	atomic.StoreUint32((*uint32)(p), uint32(v))
+}
+
+func (p *ProcessStatus) Get() ProcessStatus {
+	return ProcessStatus(atomic.LoadUint32((*uint32)(p)))
 }
 
 func (p ProcessAction) String() string {

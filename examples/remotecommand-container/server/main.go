@@ -2,14 +2,13 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"os"
 	"time"
 
 	"github.com/yubo/apiserver/components/cli"
+	"github.com/yubo/apiserver/components/dbus"
 	"github.com/yubo/apiserver/pkg/proc"
-	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/rest"
 	servermodule "github.com/yubo/apiserver/pkg/server/module"
 	"github.com/yubo/apiserver/pkg/streaming"
@@ -47,12 +46,11 @@ func main() {
 }
 
 func start(ctx context.Context) error {
-	http, ok := options.APIServerFrom(ctx)
-	if !ok {
-		return fmt.Errorf("unable to get http server from the context")
+	srv, err := dbus.GetAPIServer()
+	if err != nil {
+		return err
 	}
-
-	_server.installWs(http)
+	_server.installWs(srv)
 	return nil
 }
 

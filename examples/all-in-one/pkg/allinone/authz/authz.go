@@ -7,14 +7,14 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/yubo/apiserver/pkg/proc/options"
+	"github.com/yubo/apiserver/components/dbus"
 	"github.com/yubo/apiserver/pkg/rest"
 	"k8s.io/klog/v2"
 )
 
 func New(ctx context.Context, cf *config.Config) *authz {
 	return &authz{
-		container: options.APIServerMustFrom(ctx),
+		container: dbus.APIServer(),
 	}
 }
 

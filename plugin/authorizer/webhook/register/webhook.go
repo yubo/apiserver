@@ -7,9 +7,9 @@ import (
 
 	"github.com/yubo/apiserver/pkg/authorization"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
+	"github.com/yubo/apiserver/pkg/proc"
 	"github.com/yubo/apiserver/plugin/authorizer/webhook"
 	"github.com/yubo/golib/api"
-	"github.com/yubo/apiserver/pkg/proc"
 	utilerrors "github.com/yubo/golib/util/errors"
 	"github.com/yubo/golib/util/wait"
 )
@@ -35,7 +35,7 @@ type config struct {
 	// WebhookRetryBackoff specifies the backoff parameters for the authorization webhook retry logic.
 	// This allows us to configure the sleep time at each iteration and the maximum number of retries allowed
 	// before we fail the webhook call in order to limit the fan out that ensues when the system is degraded.
-	WebhookRetryBackoff *wait.Backoff `json:"webhookRetryBackoff"`
+	WebhookRetryBackoff *wait.BackoffConfig `json:"webhookRetryBackoff"`
 }
 
 func (o *config) Validate() error {
@@ -62,8 +62,8 @@ func newConfig() *config {
 
 // DefaultAuthWebhookRetryBackoff is the default backoff parameters for
 // both authentication and authorization webhook used by the apiserver.
-func DefaultAuthWebhookRetryBackoff() *wait.Backoff {
-	return &wait.Backoff{
+func DefaultAuthWebhookRetryBackoff() *wait.BackoffConfig {
+	return &wait.BackoffConfig{
 		Duration: api.NewDuration("500ms"),
 		Factor:   1.5,
 		Jitter:   0.2,
@@ -84,7 +84,7 @@ func factory(ctx context.Context) (authorizer.Authorizer, error) {
 	return webhook.New(cf.WebhookConfigFile,
 		cf.WebhookCacheAuthorizedTTL.Duration,
 		cf.WebhookCacheUnauthorizedTTL.Duration,
-		*cf.WebhookRetryBackoff,
+		cf.WebhookRetryBackoff.Backoff(),
 		nil)
 }
 

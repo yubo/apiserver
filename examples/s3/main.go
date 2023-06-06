@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"github.com/yubo/apiserver/components/cli"
+	"github.com/yubo/apiserver/components/dbus"
 	"github.com/yubo/apiserver/pkg/proc"
-	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/responsewriters"
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/apiserver/pkg/s3"
@@ -40,14 +40,14 @@ func main() {
 }
 
 func (p *module) start(ctx context.Context) error {
-	http, ok := options.APIServerFrom(ctx)
-	if !ok {
-		return fmt.Errorf("unable to get http server from the context")
+	http, err := dbus.GetAPIServer()
+	if err != nil {
+		return err
 	}
 
-	s3, ok := options.S3ClientFrom(ctx)
-	if !ok {
-		return fmt.Errorf("unable to get s3 client from the context")
+	s3, err := dbus.GetS3Client()
+	if err != nil {
+		return err
 	}
 	p.s3 = s3
 

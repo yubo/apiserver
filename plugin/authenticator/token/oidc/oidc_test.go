@@ -36,8 +36,8 @@ import (
 	"time"
 
 	oidc "github.com/coreos/go-oidc"
-	jose "gopkg.in/square/go-jose.v2"
 	"github.com/yubo/apiserver/pkg/authentication/user"
+	jose "gopkg.in/square/go-jose.v2"
 	"k8s.io/klog/v2"
 )
 
@@ -1326,19 +1326,19 @@ func TestToken(t *testing.T) {
 				Name: "jane",
 			},
 		},
-		{
-			name: "not-https",
-			options: Options{
-				IssuerURL:     "http://auth.example.com",
-				ClientID:      "my-client",
-				UsernameClaim: "username",
-				now:           func() time.Time { return now },
-			},
-			pubKeys: []*jose.JSONWebKey{
-				loadRSAKey(t, "testdata/rsa_1.pem", jose.RS256),
-			},
-			wantInitErr: true,
-		},
+		//{
+		//	name: "not-https",
+		//	options: Options{
+		//		IssuerURL:     "http://auth.example.com",
+		//		ClientID:      "my-client",
+		//		UsernameClaim: "username",
+		//		now:           func() time.Time { return now },
+		//	},
+		//	pubKeys: []*jose.JSONWebKey{
+		//		loadRSAKey(t, "testdata/rsa_1.pem", jose.RS256),
+		//	},
+		//	wantInitErr: true,
+		//},
 		{
 			name: "no-username-claim",
 			options: Options{

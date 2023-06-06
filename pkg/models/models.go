@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/yubo/apiserver/components/dbus"
 	"github.com/yubo/apiserver/pkg/db"
 	"github.com/yubo/apiserver/pkg/proc"
 	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
-	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/storage"
 	dbstore "github.com/yubo/apiserver/pkg/storage/db"
 	"github.com/yubo/apiserver/pkg/storage/etcd"
@@ -79,7 +79,7 @@ func (p *module) init(ctx context.Context) (err error) {
 
 	switch cf.Storage {
 	case "db":
-		if db, ok := options.DBFrom(ctx, cf.DBName); !ok {
+		if db := dbus.DB().GetDB(cf.DBName); db == nil {
 			return fmt.Errorf("unable to get db[%s] from context", cf.DBName)
 		} else {
 			p.store = dbstore.New(db)

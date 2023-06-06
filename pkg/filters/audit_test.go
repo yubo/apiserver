@@ -776,16 +776,20 @@ func TestAuditIDHttpHeader(t *testing.T) {
 		expectedHeader bool
 	}{
 		{
-			"no http header when there is no audit",
+			// we always want an audit ID since it can appear in logging/tracing and it is propagated
+			// to the aggregated apiserver(s) to improve correlation.
+			"http header when there is no audit",
 			"",
 			auditinternal.LevelNone,
-			false,
+			true,
 		},
 		{
-			"no http header when there is no audit even the request header specified",
+			// we always want an audit ID since it can appear in logging/tracing and it is propagated
+			// to the aggregated apiserver(s) to improve correlation.
+			"http header when there is no audit even the request header specified",
 			uuid.New().String(),
 			auditinternal.LevelNone,
-			false,
+			true,
 		},
 		{
 			"server generated header",

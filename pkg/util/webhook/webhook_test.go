@@ -24,8 +24,10 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -33,9 +35,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/yubo/apiserver/components/metrics"
+	"github.com/yubo/apiserver/components/metrics/legacyregistry"
 	"github.com/yubo/client-go/rest"
 	v1 "github.com/yubo/client-go/tools/clientcmd/api/v1"
-	"github.com/yubo/golib/api"
 	apierrors "github.com/yubo/golib/api/errors"
 	"github.com/yubo/golib/scheme"
 	"github.com/yubo/golib/util/wait"
@@ -45,7 +48,7 @@ const (
 	errBadCertificate    = "Get .*: remote error: tls: bad certificate"
 	errNoConfiguration   = "invalid configuration: no configuration has been provided"
 	errMissingCertPath   = "invalid configuration: unable to read %s %s for %s due to open %s: .*"
-	errSignedByUnknownCA = "Get .*: x509: certificate signed by unknown authority"
+	errSignedByUnknownCA = "Get .*: x509: .*(unknown authority|not standards compliant|not trusted)"
 )
 
 var (
@@ -158,15 +161,41 @@ func TestKubeConfigFile(t *testing.T) {
 			errRegex: fmt.Sprintf(errMissingCertPath, "certificate-authority", badCAPath, "", badCAPath),
 		},
 		{
-			test: "cluster with invalid CA certificate ",
+			test: "cluster with invalid CA certificate",
 			cluster: &v1.NamedCluster{
 				Cluster: v1.Cluster{
 					Server:                   namedCluster.Cluster.Server,
-					CertificateAuthorityData: caKey,
+					CertificateAuthorityData: caKey, // pretend user put caKey here instead of caCert
 				},
 			},
 			user:     &defaultUser,
-			errRegex: "", // Not an error at parse time, only when using the webhook
+			errRegex: "unable to load root certificates: no valid certificate authority data seen",
+		},
+		{
+			test: "cluster with invalid CA certificate - no PEM",
+			cluster: &v1.NamedCluster{
+				Cluster: v1.Cluster{
+					Server:                   namedCluster.Cluster.Server,
+					CertificateAuthorityData: []byte(`not a cert`),
+				},
+			},
+			user:     &defaultUser,
+			errRegex: "unable to load root certificates: unable to parse bytes as PEM block",
+		},
+		{
+			test: "cluster with invalid CA certificate - parse error",
+			cluster: &v1.NamedCluster{
+				Cluster: v1.Cluster{
+					Server: namedCluster.Cluster.Server,
+					CertificateAuthorityData: []byte(`
+-----BEGIN CERTIFICATE-----
+MIIDGTCCAgGgAwIBAgIUOS2M
+-----END CERTIFICATE-----
+`),
+				},
+			},
+			user:     &defaultUser,
+			errRegex: "unable to load root certificates: failed to parse certificate: (asn1: syntax error: data truncated|x509: malformed certificate)",
 		},
 		{
 			test:    "user with invalid client certificate path",
@@ -237,53 +266,60 @@ func TestKubeConfigFile(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		// Use a closure so defer statements trigger between loop iterations.
-		err := func() error {
-			kubeConfig := v1.Config{}
+		t.Run(tt.test, func(t *testing.T) {
+			// Use a closure so defer statements trigger between loop iterations.
+			err := func() error {
+				kubeConfig := v1.Config{}
 
-			if tt.cluster != nil {
-				kubeConfig.Clusters = []v1.NamedCluster{*tt.cluster}
-			}
+				if tt.cluster != nil {
+					kubeConfig.Clusters = []v1.NamedCluster{*tt.cluster}
+				}
 
-			if tt.context != nil {
-				kubeConfig.Contexts = []v1.NamedContext{*tt.context}
-			}
+				if tt.context != nil {
+					kubeConfig.Contexts = []v1.NamedContext{*tt.context}
+				}
 
-			if tt.user != nil {
-				kubeConfig.AuthInfos = []v1.NamedAuthInfo{*tt.user}
-			}
+				if tt.user != nil {
+					kubeConfig.AuthInfos = []v1.NamedAuthInfo{*tt.user}
+				}
 
-			kubeConfig.CurrentContext = tt.currentContext
+				kubeConfig.CurrentContext = tt.currentContext
 
-			kubeConfigFile, err := newKubeConfigFile(kubeConfig)
+				kubeConfigFile, err := newKubeConfigFile(kubeConfig)
+				if err != nil {
+					return err
+				}
 
-			if err == nil {
 				defer os.Remove(kubeConfigFile)
 
-				_, err = NewGenericWebhook(scheme.Codec, kubeConfigFile, retryBackoff, nil)
-			}
+				config, err := LoadKubeconfig(kubeConfigFile, nil)
+				if err != nil {
+					return err
+				}
 
-			return err
-		}()
+				_, err = NewGenericWebhook(scheme.Codecs, config, retryBackoff)
+				return err
+			}()
 
-		if err == nil {
-			if tt.errRegex != "" {
-				t.Errorf("%s: expected an error", tt.test)
+			if err == nil {
+				if tt.errRegex != "" {
+					t.Errorf("%s: expected an error", tt.test)
+				}
+			} else {
+				if tt.errRegex == "" {
+					t.Errorf("%s: unexpected error: %v", tt.test, err)
+				} else if !regexp.MustCompile(tt.errRegex).MatchString(err.Error()) {
+					t.Errorf("%s: unexpected error message to match:\n  Expected: %s\n  Actual:   %s", tt.test, tt.errRegex, err.Error())
+				}
 			}
-		} else {
-			if tt.errRegex == "" {
-				t.Errorf("%s: unexpected error: %v", tt.test, err)
-			} else if !regexp.MustCompile(tt.errRegex).MatchString(err.Error()) {
-				t.Errorf("%s: unexpected error message to match:\n  Expected: %s\n  Actual:   %s", tt.test, tt.errRegex, err.Error())
-			}
-		}
+		})
 	}
 }
 
 // TestMissingKubeConfigFile ensures that a kube config path to a missing file is handled properly
 func TestMissingKubeConfigFile(t *testing.T) {
 	kubeConfigPath := "/some/missing/path"
-	_, err := NewGenericWebhook(scheme.Codec, kubeConfigPath, retryBackoff, nil)
+	_, err := LoadKubeconfig(kubeConfigPath, nil)
 
 	if err == nil {
 		t.Errorf("creating the webhook should had failed")
@@ -296,10 +332,12 @@ func TestMissingKubeConfigFile(t *testing.T) {
 func TestTLSConfig(t *testing.T) {
 	invalidCert := []byte("invalid")
 	tests := []struct {
-		test                            string
-		clientCert, clientKey, clientCA []byte
-		serverCert, serverKey, serverCA []byte
-		errRegex                        string
+		test                             string
+		clientCert, clientKey, clientCA  []byte
+		serverCert, serverKey, serverCA  []byte
+		errRegex                         string
+		increaseSANWarnCounter           bool
+		increaseSHA1SignatureWarnCounter bool
 	}{
 		{
 			test:       "invalid server CA",
@@ -350,21 +388,52 @@ func TestTLSConfig(t *testing.T) {
 			errRegex: "",
 		},
 		{
-			test:     "webhook does not support insecure servers",
+			test:       "webhook does not support insecure servers",
+			serverCert: serverCert, serverKey: serverKey,
 			errRegex: errSignedByUnknownCA,
+		},
+		{
+			// this will fail when GODEBUG is set to x509ignoreCN=0 with
+			// expected err, but the SAN counter gets increased
+			test:       "server cert does not have SAN extension",
+			clientCA:   caCert,
+			serverCert: serverCertNoSAN, serverKey: serverKey,
+			errRegex:               "x509: certificate relies on legacy Common Name field",
+			increaseSANWarnCounter: true,
+		},
+		{
+			test:       "server cert with SHA1 signature",
+			clientCA:   caCert,
+			serverCert: append(append(sha1ServerCertInter, byte('\n')), caCertInter...), serverKey: serverKey,
+			errRegex:                         "x509: cannot verify signature: insecure algorithm SHA1-RSA \\(temporarily override with GODEBUG=x509sha1=1\\)",
+			increaseSHA1SignatureWarnCounter: true,
+		},
+		{
+			test:       "server cert signed by an intermediate CA with SHA1 signature",
+			clientCA:   caCert,
+			serverCert: append(append(serverCertInterSHA1, byte('\n')), caCertInterSHA1...), serverKey: serverKey,
+			errRegex:                         "x509: cannot verify signature: insecure algorithm SHA1-RSA \\(temporarily override with GODEBUG=x509sha1=1\\)",
+			increaseSHA1SignatureWarnCounter: true,
 		},
 	}
 
+	lastSHA1SigCounter := 0
 	for _, tt := range tests {
 		// Use a closure so defer statements trigger between loop iterations.
 		func() {
 			// Create and start a simple HTTPS server
 			server, err := newTestServer(tt.serverCert, tt.serverKey, tt.serverCA, nil)
-
 			if err != nil {
 				t.Errorf("%s: failed to create server: %v", tt.test, err)
 				return
 			}
+
+			serverURL, err := url.Parse(server.URL)
+			if err != nil {
+				t.Errorf("%s: failed to parse the testserver URL: %v", tt.test, err)
+				return
+			}
+			serverURL.Host = net.JoinHostPort("localhost", serverURL.Port())
 
 			defer server.Close()
 
@@ -373,7 +442,7 @@ func TestTLSConfig(t *testing.T) {
 				Clusters: []v1.NamedCluster{
 					{
 						Cluster: v1.Cluster{
-							Server:                   server.URL,
+							Server:                   serverURL.String(),
 							CertificateAuthorityData: tt.clientCA,
 						},
 					},
@@ -395,7 +464,12 @@ func TestTLSConfig(t *testing.T) {
 
 			defer os.Remove(configFile)
 
-			wh, err := NewGenericWebhook(scheme.Codec, configFile, retryBackoff, nil)
+			config, err := LoadKubeconfig(configFile, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			wh, err := NewGenericWebhook(scheme.Codecs, config, retryBackoff)
 
 			if err == nil {
 				err = wh.RestClient.Get().Do(context.TODO()).Error()
@@ -411,6 +485,31 @@ func TestTLSConfig(t *testing.T) {
 				} else if !regexp.MustCompile(tt.errRegex).MatchString(err.Error()) {
 					t.Errorf("%s: unexpected error message mismatch:\n  Expected: %s\n  Actual:   %s", tt.test, tt.errRegex, err.Error())
 				}
+			}
+
+			if tt.increaseSANWarnCounter {
+				errorCounter := getSingleCounterValueFromRegistry(t, legacyregistry.DefaultGatherer, "apiserver_webhooks_x509_missing_san_total")
+
+				if errorCounter == -1 {
+					t.Errorf("failed to get the x509_common_name_error_count metrics: %v", err)
+				}
+				if int(errorCounter) != 1 {
+					t.Errorf("expected the x509_common_name_error_count to be 1, but it's %d", errorCounter)
+				}
+			}
+
+			if tt.increaseSHA1SignatureWarnCounter {
+				errorCounter := getSingleCounterValueFromRegistry(t, legacyregistry.DefaultGatherer, "apiserver_webhooks_x509_insecure_sha1_total")
+
+				if errorCounter == -1 {
+					t.Errorf("failed to get the apiserver_webhooks_x509_insecure_sha1_total metrics: %v", err)
+				}
+
+				if int(errorCounter) != lastSHA1SigCounter+1 {
+					t.Errorf("expected the apiserver_webhooks_x509_insecure_sha1_total counter to be 1, but it's %d", errorCounter)
+				}
+
+				lastSHA1SigCounter++
 			}
 		}()
 	}
@@ -459,7 +558,14 @@ func TestRequestTimeout(t *testing.T) {
 
 	var requestTimeout = 10 * time.Millisecond
 
-	wh, err := newGenericWebhook(scheme.Codec, configFile, retryBackoff, requestTimeout, nil)
+	config, err := LoadKubeconfig(configFile, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	config.Timeout = requestTimeout
+
+	wh, err := NewGenericWebhook(scheme.Codecs, config, retryBackoff)
 	if err != nil {
 		t.Fatalf("failed to create the webhook: %v", err)
 	}
@@ -498,7 +604,7 @@ func TestWithExponentialBackoff(t *testing.T) {
 		case 3:
 			// HTTP error that is not retryable
 			w.WriteHeader(http.StatusNotAcceptable)
-			json.NewEncoder(w).Encode(apierrors.NewGenericServerResponse(http.StatusNotAcceptable, "GET", "testing", "nope", 0, false))
+			json.NewEncoder(w).Encode(apierrors.NewGenericServerResponse(http.StatusNotAcceptable, "get", "testing", "nope", 0, false))
 		case 4:
 			// Successful request
 			w.WriteHeader(http.StatusOK)
@@ -545,7 +651,12 @@ func TestWithExponentialBackoff(t *testing.T) {
 
 	defer os.Remove(configFile)
 
-	wh, err := NewGenericWebhook(scheme.Codec, configFile, retryBackoff, nil)
+	config, err := LoadKubeconfig(configFile, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	wh, err := NewGenericWebhook(scheme.Codecs, config, retryBackoff)
 
 	if err != nil {
 		t.Fatalf("failed to create the webhook: %v", err)
@@ -763,7 +874,7 @@ func TestGenericWebhookWithExponentialBackoff(t *testing.T) {
 	attemptsPerCallExpected := 5
 	webhook := &GenericWebhook{
 		RetryBackoff: wait.Backoff{
-			Duration: api.NewDuration("1ms"),
+			Duration: time.Millisecond,
 			Factor:   1.5,
 			Jitter:   0.2,
 			Steps:    attemptsPerCallExpected,
@@ -788,4 +899,25 @@ func TestGenericWebhookWithExponentialBackoff(t *testing.T) {
 	if totalAttemptsExpected != attemptsGot {
 		t.Errorf("expected a total of %d webhook attempts but got: %d", totalAttemptsExpected, attemptsGot)
 	}
+}
+
+func getSingleCounterValueFromRegistry(t *testing.T, r metrics.Gatherer, name string) int {
+	mfs, err := r.Gather()
+	if err != nil {
+		t.Logf("failed to gather local registry metrics: %v", err)
+		return -1
+	}
+
+	for _, mf := range mfs {
+		if mf.Name != nil && *mf.Name == name {
+			mfMetric := mf.GetMetric()
+			for _, m := range mfMetric {
+				if m.GetCounter() != nil {
+					return int(m.GetCounter().GetValue())
+				}
+			}
+		}
+	}
+
+	return -1
 }

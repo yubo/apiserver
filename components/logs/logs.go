@@ -100,7 +100,6 @@ func AddFlags(fs *pflag.FlagSet, opts ...Option) {
 			fs.AddFlag(pf)
 		}
 	})
-	panic("deprecated")
 }
 
 // AddGoFlags is a variant of AddFlags for traditional Go flag.FlagSet.

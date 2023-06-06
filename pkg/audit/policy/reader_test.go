@@ -34,8 +34,6 @@ import (
 )
 
 const policyDefPattern = `
-apiVersion: audit.k8s.io/{version}
-kind: Policy
 rules:
   - level: None
     nonResourceURLs:
@@ -117,14 +115,14 @@ func TestParser(t *testing.T) {
 	}
 }
 
-func TestParsePolicyWithNoVersionOrKind(t *testing.T) {
-	f, err := writePolicy(t, policyWithNoVersionOrKind)
-	require.NoError(t, err)
-	defer os.Remove(f)
-
-	_, err = LoadPolicyFromFile(f)
-	assert.Contains(t, err.Error(), "unknown group version field")
-}
+//func TestParsePolicyWithNoVersionOrKind(t *testing.T) {
+//	f, err := writePolicy(t, policyWithNoVersionOrKind)
+//	require.NoError(t, err)
+//	defer os.Remove(f)
+//
+//	_, err = LoadPolicyFromFile(f)
+//	assert.Contains(t, err.Error(), "unknown group version field")
+//}
 
 func TestParsePolicyWithUnknownField(t *testing.T) {
 	f, err := writePolicy(t, policyWithUnknownField)

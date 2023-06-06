@@ -17,7 +17,6 @@ limitations under the License.
 package server
 
 import (
-	"fmt"
 	"net"
 	"net/http"
 	"time"
@@ -25,7 +24,6 @@ import (
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/client-go/rest"
-	utilnet "github.com/yubo/golib/util/net"
 	"k8s.io/klog/v2"
 )
 
@@ -41,11 +39,14 @@ type DeprecatedInsecureServingInfo struct {
 
 // Serve starts an insecure http server with the given handler. It fails only if
 // the initial listen call fails. It does not block.
-func (s *DeprecatedInsecureServingInfo) Serve(handler http.Handler, shutdownTimeout time.Duration, stopCh <-chan struct{}) (<-chan struct{}, error) {
+func (s *DeprecatedInsecureServingInfo) Serve(handler http.Handler, shutdownTimeout time.Duration, stopCh <-chan struct{}) (<-chan struct{}, <-chan struct{}, error) {
 	insecureServer := &http.Server{
 		Addr:           s.Listener.Addr().String(),
 		Handler:        handler,
 		MaxHeaderBytes: 1 << 20,
+
+		IdleTimeout:       90 * time.Second, // matches http.DefaultTransport keep-alive timeout
+		ReadHeaderTimeout: 32 * time.Second, // just shy of requestTimeoutUpperBound
 	}
 
 	if len(s.Name) > 0 {
@@ -54,22 +55,6 @@ func (s *DeprecatedInsecureServingInfo) Serve(handler http.Handler, shutdownTime
 		klog.Infof("Serving insecurely on %s", s.Listener.Addr())
 	}
 	return RunServer(insecureServer, s.Listener, shutdownTimeout, stopCh)
-}
-
-func (s *DeprecatedInsecureServingInfo) HostPort() (string, int, error) {
-	if s == nil || s.Listener == nil {
-		return "", 0, fmt.Errorf("no listener found")
-	}
-	addr := s.Listener.Addr().String()
-	host, portStr, err := net.SplitHostPort(addr)
-	if err != nil {
-		return "", 0, fmt.Errorf("failed to get port from listener address %q: %v", addr, err)
-	}
-	port, err := utilnet.ParsePort(portStr, true)
-	if err != nil {
-		return "", 0, fmt.Errorf("invalid non-numeric port %q", portStr)
-	}
-	return host, port, nil
 }
 
 func (s *DeprecatedInsecureServingInfo) NewLoopbackClientConfig() (*rest.Config, error) {

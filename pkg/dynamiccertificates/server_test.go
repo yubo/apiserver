@@ -83,7 +83,7 @@ func TestServingCert(t *testing.T) {
 		&nullCAContent{name: "client-ca"},
 		defaultCertProvider,
 		sniCerts,
-		//nil, // TODO see how to plumb an event recorder down in here. For now this results in simply klog messages.
+		nil, // TODO see how to plumb an event recorder down in here. For now this results in simply klog messages.
 	)
 	if err := dynamicCertificateController.RunOnce(); err != nil {
 		t.Fatal(err)
@@ -207,6 +207,8 @@ var _ CAContentProvider = &nullCAContent{}
 func (c *nullCAContent) Name() string {
 	return c.name
 }
+
+func (c *nullCAContent) AddListener(Listener) {}
 
 // CurrentCABundleContent provides ca bundle byte content
 func (c *nullCAContent) CurrentCABundleContent() (cabundle []byte) {

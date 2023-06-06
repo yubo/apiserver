@@ -4,23 +4,12 @@ import (
 	"context"
 	"flag"
 	"os"
+	"time"
 
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/proc"
 	"github.com/yubo/apiserver/pkg/util/webhook"
-	"github.com/yubo/golib/api"
-	"github.com/yubo/golib/scheme"
-	"github.com/yubo/golib/util/wait"
 	"k8s.io/klog/v2"
-)
-
-var (
-	retryBackoff = wait.Backoff{
-		Duration: api.NewDuration("5ms"),
-		Factor:   1.5,
-		Jitter:   0.2,
-		Steps:    5,
-	}
 )
 
 func main() {
@@ -31,7 +20,7 @@ func main() {
 }
 
 func run(config string) error {
-	w, err := webhook.NewGenericWebhook(scheme.Codec, config, retryBackoff, nil)
+	w, err := webhook.NewWebhook(config, 5*time.Millisecond)
 	if err != nil {
 		return err
 	}

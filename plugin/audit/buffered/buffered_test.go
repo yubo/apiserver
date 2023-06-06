@@ -27,7 +27,6 @@ import (
 
 	auditinternal "github.com/yubo/apiserver/pkg/apis/audit"
 	"github.com/yubo/apiserver/plugin/audit/fake"
-	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/util/wait"
 )
 
@@ -48,7 +47,7 @@ func testBatchConfig() BatchConfig {
 	return BatchConfig{
 		BufferSize:     100,
 		MaxBatchSize:   10,
-		MaxBatchWait:   api.Duration{Duration: wait.ForeverTestTimeout},
+		MaxBatchWait:   wait.ForeverTestTimeout,
 		ThrottleEnable: false,
 		AsyncDelegate:  true,
 	}

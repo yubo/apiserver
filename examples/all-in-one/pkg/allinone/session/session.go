@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/yubo/apiserver/pkg/proc/options"
+	"github.com/yubo/apiserver/components/dbus"
 	"github.com/yubo/apiserver/pkg/rest"
 
 	"github.com/yubo/apiserver/pkg/sessions"
@@ -16,7 +16,7 @@ import (
 
 func New(ctx context.Context, cf *config.Config) *session {
 	return &session{
-		container: options.APIServerMustFrom(ctx),
+		container: dbus.APIServer(),
 	}
 
 }

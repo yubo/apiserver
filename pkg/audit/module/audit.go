@@ -125,7 +125,7 @@ type AuditBatchOptions struct {
 	// Defaults to asynchronous batch events.
 	Mode string `json:"mode"`
 	// Configuration for batching backend. Only used in batch mode.
-	pluginbuffered.BatchConfig
+	pluginbuffered.Config
 }
 
 func flagf(format string, a ...interface{}) []string {
@@ -151,7 +151,7 @@ func (o *AuditBatchOptions) wrapBackend(delegate audit.Backend) audit.Backend {
 	if o.Mode == ModeBlocking {
 		return &ignoreErrorsBackend{Backend: delegate}
 	}
-	return pluginbuffered.NewBackend(delegate, o.BatchConfig)
+	return pluginbuffered.NewBackend(delegate, o.Config.BatchConfig())
 }
 
 type AuditTruncateOptions struct {
@@ -323,7 +323,7 @@ func validateBackendBatchOptions(pluginName string, options AuditBatchOptions) e
 		// Don't validate the unused options.
 		return nil
 	}
-	config := options.BatchConfig
+	config := options.Config
 	if config.BufferSize <= 0 {
 		return fmt.Errorf("invalid audit batch %s buffer size %v, must be a positive number", pluginName, config.BufferSize)
 	}
@@ -414,8 +414,8 @@ func newConfig() *config {
 		WebhookOptions: AuditWebhookOptions{
 			InitialBackoff: api.Duration{Duration: pluginwebhook.DefaultInitialBackoffDelay},
 			BatchOptions: AuditBatchOptions{
-				Mode:        ModeBatch,
-				BatchConfig: defaultWebhookBatchConfig(),
+				Mode:   ModeBatch,
+				Config: defaultWebhookBatchConfig(),
 			},
 			TruncateOptions: NewAuditTruncateOptions(),
 			//GroupVersionString: "audit.k8s.io/v1",
@@ -423,8 +423,8 @@ func newConfig() *config {
 		LogOptions: AuditLogOptions{
 			Format: pluginlog.FormatJson,
 			BatchOptions: AuditBatchOptions{
-				Mode:        ModeBlocking,
-				BatchConfig: defaultLogBatchConfig(),
+				Mode:   ModeBlocking,
+				Config: defaultLogBatchConfig(),
 			},
 			TruncateOptions: NewAuditTruncateOptions(),
 			//GroupVersionString: "audit.k8s.io/v1",
@@ -443,8 +443,8 @@ func NewAuditTruncateOptions() AuditTruncateOptions {
 }
 
 // defaultWebhookBatchConfig returns the default BatchConfig used by the Webhook backend.
-func defaultWebhookBatchConfig() pluginbuffered.BatchConfig {
-	return pluginbuffered.BatchConfig{
+func defaultWebhookBatchConfig() pluginbuffered.Config {
+	return pluginbuffered.Config{
 		BufferSize:   defaultBatchBufferSize,
 		MaxBatchSize: defaultBatchMaxSize,
 		MaxBatchWait: api.Duration{Duration: defaultBatchMaxWait},
@@ -458,8 +458,8 @@ func defaultWebhookBatchConfig() pluginbuffered.BatchConfig {
 }
 
 // defaultLogBatchConfig returns the default BatchConfig used by the Log backend.
-func defaultLogBatchConfig() pluginbuffered.BatchConfig {
-	return pluginbuffered.BatchConfig{
+func defaultLogBatchConfig() pluginbuffered.Config {
+	return pluginbuffered.Config{
 		BufferSize: defaultBatchBufferSize,
 		// Batching is not useful for the log-file backend.
 		// MaxBatchWait ignored.

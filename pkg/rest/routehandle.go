@@ -8,7 +8,7 @@ import (
 	"github.com/emicklei/go-restful/v3"
 	"github.com/yubo/apiserver/pkg/audit"
 	"github.com/yubo/apiserver/pkg/handlers/negotiation"
-	"github.com/yubo/apiserver/pkg/request"
+	"github.com/yubo/apiserver/pkg/scheme"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/runtime"
 	"github.com/yubo/golib/util"
@@ -23,32 +23,32 @@ const (
 )
 
 type routeHandle struct {
-	serializer     runtime.NegotiatedSerializer
-	parameterCodec request.ParameterCodec
-	respWriter     RespWriter
-	handle         interface{}
-	name           string
-	rt             reflect.Type
-	rv             reflect.Value
-	in             []requestType
-	param          reflect.Type // request param - query, path, header
-	body           reflect.Type // request body
-	out            reflect.Type
+	serializer runtime.NegotiatedSerializer
+	//parameterCodec request.ParameterCodec
+	respWriter RespWriter
+	handle     interface{}
+	name       string
+	rt         reflect.Type
+	rv         reflect.Value
+	in         []requestType
+	param      reflect.Type // request param - query, path, header
+	body       reflect.Type // request body
+	out        reflect.Type
 }
 
 func NewRouteHandle(
 	handle interface{},
-	parameterCodec request.ParameterCodec,
+	//parameterCodec request.ParameterCodec,
 	serializer runtime.NegotiatedSerializer,
 	respWriter RespWriter,
 ) (*routeHandle, error) {
 
 	ret := &routeHandle{
-		handle:         handle,
-		name:           util.Name(handle),
-		parameterCodec: parameterCodec,
-		serializer:     serializer,
-		respWriter:     respWriter,
+		handle: handle,
+		name:   util.Name(handle),
+		//parameterCodec: parameterCodec,
+		serializer: serializer,
+		respWriter: respWriter,
 	}
 
 	if err := ret.init(); err != nil {
@@ -172,7 +172,7 @@ func (p *routeHandle) initHandleIO() error {
 }
 
 func (p *routeHandle) isParam(rt reflect.Type) bool {
-	return p.parameterCodec.ValidateParamType(rt) == nil
+	return scheme.ParameterCodec.ValidateParamType(rt) == nil
 }
 
 func (p *routeHandle) Handler() func(*restful.Request, *restful.Response) {
@@ -220,15 +220,15 @@ func (p *routeHandle) Handler() func(*restful.Request, *restful.Response) {
 
 // dst: must be ptr
 func (p *routeHandle) readEntity(req *restful.Request, param, body interface{}) error {
-	return readEntity(req, param, body, p.parameterCodec, p.serializer)
+	return readEntity(req, param, body, p.serializer)
 }
 
-func readEntity(req *restful.Request, param, body interface{}, codec request.ParameterCodec, serializer runtime.NegotiatedSerializer) error {
+func readEntity(req *restful.Request, param, body interface{}, serializer runtime.NegotiatedSerializer) error {
 	if param != nil {
 		//ctx := request.WithParam(req.Request.Context(), param)
 		//req.Request = req.Request.WithContext(ctx)
 
-		if err := codec.DecodeParameters(&api.Parameters{
+		if err := scheme.ParameterCodec.DecodeParameters(&api.Parameters{
 			Header: req.Request.Header,
 			Path:   req.PathParameters(),
 			Query:  req.Request.URL.Query(),

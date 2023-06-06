@@ -29,7 +29,6 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/require"
 	"github.com/yubo/apiserver/components/metrics"
 	"github.com/yubo/apiserver/components/metrics/testutil"
@@ -230,7 +229,7 @@ func TestCheckForHostnameError(t *testing.T) {
 	}
 
 	// register the test metrics
-	x509MissingSANCounter := prometheus.NewCounter(prometheus.CounterOpts{Name: "Test_checkForHostnameError"})
+	x509MissingSANCounter := metrics.NewCounter(&metrics.CounterOpts{Name: "Test_checkForHostnameError"})
 	registry := testutil.NewFakeKubeRegistry("0.0.0")
 	registry.MustRegister(x509MissingSANCounter)
 	sanChecker := NewSANDeprecatedChecker(x509MissingSANCounter)

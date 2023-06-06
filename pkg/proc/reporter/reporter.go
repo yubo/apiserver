@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/yubo/apiserver/components/metrics"
+	"github.com/yubo/apiserver/components/metrics/legacyregistry"
 	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
 	"github.com/yubo/golib/version"
 	"k8s.io/klog/v2"
@@ -46,15 +46,17 @@ func (p *BuildReporter) report() {
 		"go_version":     ver.GoVersion,
 	}
 
-	buildInfoGauge := promauto.NewGauge(prometheus.GaugeOpts{
+	buildInfoGauge := metrics.NewGauge(&metrics.GaugeOpts{
 		Name:        "build_information",
 		ConstLabels: tags,
 	})
 
-	buildAgeGauge := promauto.NewGauge(prometheus.GaugeOpts{
+	buildAgeGauge := metrics.NewGauge(&metrics.GaugeOpts{
 		Name:        "build_age",
 		ConstLabels: tags,
 	})
+	legacyregistry.MustRegister(buildInfoGauge)
+	legacyregistry.MustRegister(buildAgeGauge)
 
 	buildInfoGauge.Set(1.0)
 	buildAgeGauge.Set(float64(time.Since(p.buildTime)))

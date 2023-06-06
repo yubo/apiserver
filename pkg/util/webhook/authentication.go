@@ -25,11 +25,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/yubo/apiserver/pkg/tracing"
 	"github.com/yubo/client-go/rest"
 	"github.com/yubo/client-go/tools/clientcmd"
 	clientcmdapi "github.com/yubo/client-go/tools/clientcmd/api"
 	"github.com/yubo/golib/api"
-	"k8s.io/klog/v2"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // AuthenticationInfoResolverWrapper can be used to inject Dial function to the
@@ -40,18 +41,22 @@ type AuthenticationInfoResolverWrapper func(AuthenticationInfoResolver) Authenti
 func NewDefaultAuthenticationInfoResolverWrapper(
 	proxyTransport *http.Transport,
 	//egressSelector *egressselector.EgressSelector,
-	kubeapiserverClientConfig *rest.Config) AuthenticationInfoResolverWrapper {
+	kubeapiserverClientConfig *rest.Config,
+	tp trace.TracerProvider) AuthenticationInfoResolverWrapper {
 
 	webhookAuthResolverWrapper := func(delegate AuthenticationInfoResolver) AuthenticationInfoResolver {
 		return &AuthenticationInfoResolverDelegator{
 			ClientConfigForFunc: func(hostPort string) (*rest.Config, error) {
-				if hostPort == "kubernetes.default.svc:443" {
-					return kubeapiserverClientConfig, nil
-				}
+				//if hostPort == "kubernetes.default.svc:443" {
+				//	return kubeapiserverClientConfig, nil
+				//}
 				ret, err := delegate.ClientConfigFor(hostPort)
 				if err != nil {
 					return nil, err
 				}
+				//if feature.DefaultFeatureGate.Enabled(features.APIServerTracing) {
+				ret.Wrap(tracing.WrapperFor(tp))
+				//}
 
 				//if egressSelector != nil {
 				//	networkContext := egressselector.ControlPlane.AsNetworkContext()
@@ -74,6 +79,9 @@ func NewDefaultAuthenticationInfoResolverWrapper(
 				if err != nil {
 					return nil, err
 				}
+				//if feature.DefaultFeatureGate.Enabled(features.APIServerTracing) {
+				ret.Wrap(tracing.WrapperFor(tp))
+				//}
 
 				//if egressSelector != nil {
 				//	networkContext := egressselector.Cluster.AsNetworkContext()
@@ -213,7 +221,6 @@ func (c *defaultAuthenticationInfoResolver) clientConfig(target string) (*rest.C
 }
 
 func restConfigFromKubeconfig(configAuthInfo *clientcmdapi.AuthInfo) (*rest.Config, error) {
-	klog.InfoS("debug", "config", configAuthInfo)
 	config := &rest.Config{}
 
 	// blindly overwrite existing values based on precedence
@@ -231,6 +238,7 @@ func restConfigFromKubeconfig(configAuthInfo *clientcmdapi.AuthInfo) (*rest.Conf
 	if len(configAuthInfo.Impersonate) > 0 {
 		config.Impersonate = rest.ImpersonationConfig{
 			UserName: configAuthInfo.Impersonate,
+			UID:      configAuthInfo.ImpersonateUID,
 			Groups:   configAuthInfo.ImpersonateGroups,
 			Extra:    configAuthInfo.ImpersonateUserExtra,
 		}

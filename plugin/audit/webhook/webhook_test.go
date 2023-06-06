@@ -26,6 +26,7 @@ import (
 	"os"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -105,7 +106,7 @@ func newWebhook(t *testing.T, endpoint string) *backend {
 	require.NoError(t, stdjson.NewEncoder(f).Encode(config), "writing kubeconfig")
 
 	retryBackoff := wait.Backoff{
-		Duration: api.NewDuration("500ms"),
+		Duration: 500 * time.Millisecond,
 		Factor:   1.5,
 		Jitter:   0.2,
 		Steps:    5,

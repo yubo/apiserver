@@ -97,15 +97,12 @@ func (p *grpcServer) start(ctx context.Context) error {
 
 	reflection.Register(server)
 
-	go func() {
-		wg, _ := proc.WgFrom(p.ctx)
-		wg.Add(1)
-		defer wg.Add(-1)
-
+	proc.WaitGroupAdd(p.ctx, func() {
 		if err := server.Serve(ln); err != nil {
+			klog.Fatal(err)
 			return
 		}
-	}()
+	})
 
 	go func() {
 		<-p.ctx.Done()

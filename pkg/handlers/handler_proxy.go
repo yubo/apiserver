@@ -28,7 +28,6 @@ import (
 	apiregistrationv1apihelper "github.com/yubo/apiserver/pkg/apis/apiregistration/v1/helper"
 	auditinternal "github.com/yubo/apiserver/pkg/apis/audit"
 	"github.com/yubo/apiserver/pkg/audit"
-	"github.com/yubo/apiserver/pkg/metrics"
 	endpointmetrics "github.com/yubo/apiserver/pkg/metrics"
 	genericapirequest "github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/responsewriters"
@@ -48,6 +47,11 @@ const (
 	aggregatedDiscoveryTimeout = 5 * time.Second
 )
 
+// A ServiceResolver knows how to get a URL given a service.
+type ServiceResolver interface {
+	ResolveEndpoint(namespace, name string, port int32) (*url.URL, error)
+}
+
 type certKeyFunc func() ([]byte, []byte)
 
 // proxyHandler provides a http.Handler which will proxy traffic to locations
@@ -61,8 +65,8 @@ type proxyHandler struct {
 	proxyTransportDial         *transport.DialHolder
 
 	// Endpoints based routing to map from cluster IP to routable IP
-	//serviceResolver ServiceResolver
-	host string
+	serviceResolver ServiceResolver
+	host            string
 
 	handlingInfo atomic.Value
 
@@ -141,13 +145,13 @@ func (r *proxyHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	// write a new location based on the existing request pointed at the target service
 	location := &url.URL{}
 	location.Scheme = "https"
-	//rloc, err := r.serviceResolver.ResolveEndpoint(handlingInfo.serviceNamespace, handlingInfo.serviceName, handlingInfo.servicePort)
-	//if err != nil {
-	//	klog.Errorf("error resolving %s/%s: %v", handlingInfo.serviceNamespace, handlingInfo.serviceName, err)
-	//	proxyError(w, req, "service unavailable", http.StatusServiceUnavailable)
-	//	return
-	//}
-	location.Host = r.host
+	rloc, err := r.serviceResolver.ResolveEndpoint(handlingInfo.serviceNamespace, handlingInfo.serviceName, handlingInfo.servicePort)
+	if err != nil {
+		klog.Errorf("error resolving %s/%s: %v", handlingInfo.serviceNamespace, handlingInfo.serviceName, err)
+		proxyError(w, req, "service unavailable", http.StatusServiceUnavailable)
+		return
+	}
+	location.Host = rloc.Host
 	location.Path = req.URL.Path
 	location.RawQuery = req.URL.Query().Encode()
 
@@ -254,8 +258,8 @@ func (r *proxyHandler) updateAPIService(apiService *apiregistrationv1api.APIServ
 		DialHolder: r.proxyTransportDial,
 	}
 	transportConfig.Wrap(x509metrics.NewDeprecatedCertificateRoundTripperWrapperConstructor(
-		metrics.X509MissingSANCounter,
-		metrics.X509InsecureSHA1Counter,
+		x509MissingSANCounter,
+		x509InsecureSHA1Counter,
 	))
 
 	newInfo := proxyHandlingInfo{

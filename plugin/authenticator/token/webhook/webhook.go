@@ -163,7 +163,12 @@ func (w *WebhookTokenAuthenticator) AuthenticateToken(ctx context.Context, token
 // and returns a TokenReviewInterface that uses that client. Note that the client submits TokenReview
 // requests to the exact path specified in the kubeconfig file, so arbitrary non-API servers can be targeted.
 func tokenReviewInterfaceFromKubeconfig(kubeConfigFile string, retryBackoff wait.Backoff, customDial utilnet.DialFunc) (tokenReviewer, error) {
-	gw, err := webhook.NewGenericWebhook(scheme.Codec, kubeConfigFile, retryBackoff, customDial)
+	cf, err := webhook.LoadKubeconfig(kubeConfigFile, customDial)
+	if err != nil {
+		return nil, err
+	}
+
+	gw, err := webhook.NewGenericWebhook(scheme.Codecs, cf, retryBackoff)
 	if err != nil {
 		return nil, err
 	}

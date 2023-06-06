@@ -5,7 +5,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/yubo/apiserver/pkg/proc/options"
+	"github.com/yubo/apiserver/components/dbus"
 	"github.com/yubo/apiserver/pkg/rest"
 	libapi "github.com/yubo/golib/api"
 
@@ -17,7 +17,7 @@ import (
 
 func New(ctx context.Context, cf *config.Config) *user {
 	return &user{
-		container: options.APIServerMustFrom(ctx),
+		container: dbus.APIServer(),
 		user:      models.NewUser(),
 	}
 }

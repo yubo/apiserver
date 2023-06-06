@@ -2,15 +2,14 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"os"
 	"time"
 
 	"github.com/yubo/apiserver/components/cli"
+	"github.com/yubo/apiserver/components/dbus"
 	"github.com/yubo/apiserver/pkg/handlers"
 	"github.com/yubo/apiserver/pkg/proc"
-	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/golib/watch"
 	"k8s.io/klog/v2"
@@ -35,9 +34,9 @@ func main() {
 }
 
 func start(ctx context.Context) error {
-	http, ok := options.APIServerFrom(ctx)
-	if !ok {
-		return fmt.Errorf("unable to get http server from the context")
+	http, err := dbus.GetAPIServer()
+	if err != nil {
+		return err
 	}
 
 	installWs(http)

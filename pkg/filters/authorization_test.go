@@ -65,8 +65,8 @@ func TestGetAuthorizerAttributes(t *testing.T) {
 				Path:            "/api/v1/nodes/mynode",
 				ResourceRequest: true,
 				Resource:        "nodes",
-				//APIVersion:      "v1",
-				Name: "mynode",
+				APIVersion:      "v1",
+				Name:            "mynode",
 			},
 		},
 		"namespaced resource": {
@@ -78,8 +78,8 @@ func TestGetAuthorizerAttributes(t *testing.T) {
 				ResourceRequest: true,
 				Namespace:       "myns",
 				Resource:        "pods",
-				//APIVersion:      "v1",
-				Name: "mypod",
+				APIVersion:      "v1",
+				Name:            "mypod",
 			},
 		},
 	}

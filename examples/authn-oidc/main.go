@@ -7,9 +7,9 @@ import (
 	"os"
 
 	"github.com/yubo/apiserver/components/cli"
+	"github.com/yubo/apiserver/components/dbus"
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/proc"
-	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/rest"
 
@@ -29,9 +29,9 @@ func main() {
 }
 
 func start(ctx context.Context) error {
-	srv, ok := options.APIServerFrom(ctx)
-	if !ok {
-		return fmt.Errorf("unable to get http server from the context")
+	srv, err := dbus.GetAPIServer()
+	if err != nil {
+		return err
 	}
 	rest.WsRouteBuild(&rest.WsOption{
 		Path:               "/hello",

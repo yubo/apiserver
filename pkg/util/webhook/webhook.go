@@ -22,10 +22,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/yubo/apiserver/pkg/util/x509metrics"
 	"github.com/yubo/client-go/rest"
 	"github.com/yubo/client-go/tools/clientcmd"
-	"github.com/yubo/golib/api"
-	"github.com/yubo/golib/api/errors"
+	apierrors "github.com/yubo/golib/api/errors"
 	"github.com/yubo/golib/runtime"
 	"github.com/yubo/golib/runtime/serializer"
 	utilnet "github.com/yubo/golib/util/net"
@@ -40,7 +40,7 @@ const defaultRequestTimeout = 30 * time.Second
 // Handy for the client that provides a custom initial delay only.
 func DefaultRetryBackoffWithInitialDelay(initialBackoffDelay time.Duration) wait.Backoff {
 	return wait.Backoff{
-		Duration: api.Duration{Duration: initialBackoffDelay},
+		Duration: initialBackoffDelay,
 		Factor:   1.5,
 		Jitter:   0.2,
 		Steps:    5,
@@ -61,47 +61,27 @@ type GenericWebhook struct {
 // Otherwise it returns false for an immediate fail.
 func DefaultShouldRetry(err error) bool {
 	// these errors indicate a transient error that should be retried.
-	if utilnet.IsConnectionReset(err) || errors.IsInternalError(err) || errors.IsTimeout(err) || errors.IsTooManyRequests(err) {
+	if utilnet.IsConnectionReset(err) || apierrors.IsInternalError(err) || apierrors.IsTimeout(err) || apierrors.IsTooManyRequests(err) {
 		return true
 	}
 	// if the error sends the Retry-After header, we respect it as an explicit confirmation we should retry.
-	if _, shouldRetry := errors.SuggestsClientDelay(err); shouldRetry {
+	if _, shouldRetry := apierrors.SuggestsClientDelay(err); shouldRetry {
 		return true
 	}
 	return false
 }
 
-// NewGenericWebhook creates a new GenericWebhook from the provided kubeconfig file.
-func NewGenericWebhook(codec runtime.Codec, configFile string, retryBackoff wait.Backoff, customDial utilnet.DialFunc) (*GenericWebhook, error) {
-	return newGenericWebhook(codec, configFile, retryBackoff, defaultRequestTimeout, customDial)
-}
+// NewGenericWebhook creates a new GenericWebhook from the provided rest.Config.
+func NewGenericWebhook(codecFactory serializer.CodecFactory, config *rest.Config, retryBackoff wait.Backoff) (*GenericWebhook, error) {
+	clientConfig := rest.CopyConfig(config)
 
-func newGenericWebhook(codec runtime.Codec, kubeConfigFile string, retryBackoff wait.Backoff, requestTimeout time.Duration, customDial utilnet.DialFunc) (*GenericWebhook, error) {
-	loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
-	loadingRules.ExplicitPath = kubeConfigFile
-	loader := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, &clientcmd.ConfigOverrides{})
+	codec := codecFactory.LegacyCodec()
+	clientConfig.ContentConfig.NegotiatedSerializer = serializer.NegotiatedSerializerWrapper(runtime.SerializerInfo{Serializer: codec})
 
-	clientConfig, err := loader.ClientConfig()
-	if err != nil {
-		return nil, err
-	}
-
-	// Kubeconfigs can't set a timeout, this can only be set through a command line flag.
-	//
-	// https://github.com/kubernetes/client-go/blob/master/tools/clientcmd/overrides.go
-	//
-	// Set this to something reasonable so request to webhooks don't hang forever.
-	clientConfig.Timeout = requestTimeout
-
-	// Avoid client-side rate limiting talking to the webhook backend.
-	// Rate limiting should happen when deciding how many requests to serve.
-	clientConfig.QPS = -1
-
-	clientConfig.ContentConfig.NegotiatedSerializer = serializer.NegotiatedSerializerWrapper(
-		runtime.SerializerInfo{Serializer: codec},
-	)
-
-	clientConfig.Dial = customDial
+	clientConfig.Wrap(x509metrics.NewDeprecatedCertificateRoundTripperWrapperConstructor(
+		x509MissingSANCounter,
+		x509InsecureSHA1Counter,
+	))
 
 	restClient, err := rest.UnversionedRESTClientFor(clientConfig)
 	if err != nil {
@@ -134,7 +114,7 @@ func WithExponentialBackoff(ctx context.Context, retryBackoff wait.Backoff, webh
 	// having a webhook error allows us to track the last actual webhook error for requests that
 	// are later cancelled or time out.
 	var webhookErr error
-	err := wait.ExponentialBackoffWithContext(ctx, retryBackoff, func() (bool, error) {
+	err := wait.ExponentialBackoffWithContext(ctx, retryBackoff, func(_ context.Context) (bool, error) {
 		webhookErr = webhookFn()
 		if shouldRetry(webhookErr) {
 			return false, nil
@@ -154,4 +134,30 @@ func WithExponentialBackoff(ctx context.Context, retryBackoff wait.Backoff, webh
 	default:
 		return nil
 	}
+}
+
+func LoadKubeconfig(kubeConfigFile string, customDial utilnet.DialFunc) (*rest.Config, error) {
+	loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
+	loadingRules.ExplicitPath = kubeConfigFile
+	loader := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, &clientcmd.ConfigOverrides{})
+
+	clientConfig, err := loader.ClientConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	clientConfig.Dial = customDial
+
+	// Kubeconfigs can't set a timeout, this can only be set through a command line flag.
+	//
+	// https://github.com/kubernetes/client-go/blob/master/tools/clientcmd/overrides.go
+	//
+	// Set this to something reasonable so request to webhooks don't hang forever.
+	clientConfig.Timeout = defaultRequestTimeout
+
+	// Avoid client-side rate limiting talking to the webhook backend.
+	// Rate limiting should happen when deciding how many requests to serve.
+	clientConfig.QPS = -1
+
+	return clientConfig, nil
 }

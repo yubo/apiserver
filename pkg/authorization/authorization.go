@@ -6,12 +6,12 @@ import (
 	"runtime/debug"
 	"strings"
 
+	"github.com/yubo/apiserver/components/dbus"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	"github.com/yubo/apiserver/pkg/authorization/authorizerfactory"
 	"github.com/yubo/apiserver/pkg/authorization/union"
 	"github.com/yubo/apiserver/pkg/proc"
 	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
-	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/server"
 	"github.com/yubo/apiserver/plugin/authorizer/path"
 	"github.com/yubo/golib/configer"
@@ -161,7 +161,7 @@ func (p *authorization) init(ctx context.Context) error {
 	}
 
 	klog.InfoS("withAuthz", "modes", cf.Modes)
-	options.WithAuthz(ctx, authz)
+	dbus.RegisterAuthorizationInfo(authz)
 
 	return nil
 }

@@ -3,10 +3,10 @@ package register
 import (
 	"context"
 
+	"github.com/yubo/apiserver/components/dbus"
 	"github.com/yubo/apiserver/pkg/db"
 	"github.com/yubo/apiserver/pkg/proc"
 	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
-	"github.com/yubo/apiserver/pkg/proc/options"
 )
 
 const (
@@ -46,7 +46,7 @@ func (p *module) init(ctx context.Context) (err error) {
 	if p.db, err = db.NewDB(ctx, cf); err != nil {
 		return err
 	}
-	options.WithDB(ctx, p.db)
+	dbus.RegisterDB(p.db)
 
 	return nil
 }

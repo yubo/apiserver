@@ -2,6 +2,7 @@ package proc
 
 import (
 	"context"
+	"errors"
 	"sync"
 
 	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
@@ -25,22 +26,36 @@ func WithValue(parent context.Context, key interface{}, val interface{}) context
 	return context.WithValue(parent, key, val)
 }
 
-// WithWg returns a copy of parent in which the user value is set
-func WithWg(ctx context.Context, wg *sync.WaitGroup) {
+// withWg returns a copy of parent in which the user value is set
+func withWg(ctx context.Context, wg *sync.WaitGroup) {
 	AttrMustFrom(ctx)[wgKey] = wg
 }
 
-func WgFrom(ctx context.Context) (*sync.WaitGroup, bool) {
+func WgFrom(ctx context.Context) (*sync.WaitGroup, error) {
 	wg, ok := AttrMustFrom(ctx)[wgKey].(*sync.WaitGroup)
-	return wg, ok
+	if !ok {
+		return nil, errors.New("unable to get waitGroup from context")
+	}
+	return wg, nil
 }
-
 func WgMustFrom(ctx context.Context) *sync.WaitGroup {
 	wg, ok := AttrMustFrom(ctx)[wgKey].(*sync.WaitGroup)
 	if !ok {
 		panic("unable to get waitGroup from context")
 	}
 	return wg
+}
+func WaitGroupAdd(ctx context.Context, do func()) error {
+	wg, err := WgFrom(ctx)
+	if err != nil {
+		return err
+	}
+	go func() {
+		wg.Add(1)
+		defer wg.Add(-1)
+		do()
+	}()
+	return nil
 }
 
 func WithHookOps(parent context.Context, ops *v1.HookOps) context.Context {

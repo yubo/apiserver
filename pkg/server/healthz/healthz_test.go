@@ -26,8 +26,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/testutil"
+	"github.com/yubo/apiserver/components/metrics/legacyregistry"
+	"github.com/yubo/apiserver/components/metrics/testutil"
 	"github.com/yubo/apiserver/pkg/metrics"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/util/sets"
@@ -252,13 +252,13 @@ func TestMetrics(t *testing.T) {
 	}
 
 	expected := strings.NewReader(`
-        # HELP apiserver_request_total Counter of apiserver requests broken out for each verb, dry run value, path, component, and HTTP response contentType and code.
+        # HELP apiserver_request_total [STABLE] Counter of apiserver requests broken out for each verb, dry run value, path, component, and HTTP response code.
         # TYPE apiserver_request_total counter
-        apiserver_request_total{code="200",component="",contentType="text/plain;charset=utf-8",dry_run="",path="/healthz",verb="GET"} 1
-        apiserver_request_total{code="200",component="",contentType="text/plain;charset=utf-8",dry_run="",path="/livez",verb="GET"} 1
-        apiserver_request_total{code="200",component="",contentType="text/plain;charset=utf-8",dry_run="",path="/readyz",verb="GET"} 1
+        apiserver_request_total{code="200",component="",dry_run="",path="/healthz",verb="GET"} 1
+        apiserver_request_total{code="200",component="",dry_run="",path="/livez",verb="GET"} 1
+        apiserver_request_total{code="200",component="",dry_run="",path="/readyz",verb="GET"} 1
 `)
-	if err := testutil.GatherAndCompare(prometheus.DefaultGatherer, expected, "apiserver_request_total"); err != nil {
+	if err := testutil.GatherAndCompare(legacyregistry.DefaultGatherer, expected, "apiserver_request_total"); err != nil {
 		t.Error(err)
 	}
 }

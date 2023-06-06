@@ -58,7 +58,7 @@ var (
 		&compbasemetrics.CounterOpts{
 			Subsystem:      APIServerComponent,
 			Name:           "request_total",
-			Help:           "Counter of apiserver requests broken out for each verb, dry run value, group, version, resource, scope, component, and HTTP response code.",
+			Help:           "Counter of apiserver requests broken out for each verb, dry run value, path, component, and HTTP response code.",
 			StabilityLevel: compbasemetrics.STABLE,
 		},
 		[]string{"verb", "dry_run", "path", "component", "code"},

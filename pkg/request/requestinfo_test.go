@@ -23,6 +23,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/emicklei/go-restful/v3"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/util/sets"
 )
@@ -182,6 +183,17 @@ func TestGetNonAPIRequestInfo(t *testing.T) {
 		}
 	}
 }
+
+type mockParametercodec struct{}
+
+func (p *mockParametercodec) DecodeParameters(parameter *api.Parameters, into interface{}) error {
+	return nil
+}
+func (p *mockParametercodec) EncodeParameters(obj interface{}) (*api.Parameters, error) {
+	return nil, nil
+}
+func (p *mockParametercodec) RouteBuilderParameters(rb *restful.RouteBuilder, obj interface{}) {}
+func (p *mockParametercodec) ValidateParamType(rt reflect.Type) error                          { return nil }
 
 func newTestRequestInfoResolver() *RequestInfoFactory {
 	return &RequestInfoFactory{

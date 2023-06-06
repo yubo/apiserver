@@ -5,7 +5,6 @@ import (
 	"reflect"
 
 	"github.com/emicklei/go-restful/v3"
-	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/api/errors"
 	"github.com/yubo/golib/util"
@@ -19,13 +18,13 @@ const (
 )
 
 // New creates a ParameterCodec capable of transforming url values into versioned objects and back.
-func New() request.ParameterCodec {
+func New() api.ParameterCodec {
 	return &parameterCodec{}
 }
 
 // parameterCodec {{{
 
-var _ request.ParameterCodec = &parameterCodec{}
+var _ api.ParameterCodec = &parameterCodec{}
 
 // parameterCodec implements conversion to and from query parameters and objects.
 type parameterCodec struct{}
@@ -159,7 +158,7 @@ func encodeParameters(obj interface{}) (*api.Parameters, error) {
 		return nil, fmt.Errorf("rest-encode: input must be a struct, got %v/%v", rv.Kind(), rt)
 	}
 
-	params := request.NewParameters()
+	params := api.NewParameters()
 	fields := cachedTypeFields(rt)
 
 	for i, f := range fields.list {

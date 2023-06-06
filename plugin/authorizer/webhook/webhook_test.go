@@ -43,7 +43,7 @@ import (
 )
 
 var testRetryBackoff = wait.Backoff{
-	Duration: api.NewDuration("5ms"),
+	Duration: 5 * time.Millisecond,
 	Factor:   1.5,
 	Jitter:   0.2,
 	Steps:    5,

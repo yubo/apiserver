@@ -3,9 +3,9 @@ package db
 import (
 	"context"
 
+	"github.com/yubo/apiserver/components/dbus"
 	"github.com/yubo/apiserver/pkg/proc"
 	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
-	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/s3"
 	"github.com/yubo/golib/util/validation/field"
 )
@@ -44,7 +44,7 @@ func (p *module) init(ctx context.Context) error {
 	}
 
 	// set s3 to ctx
-	options.WithS3Client(ctx, p.client)
+	dbus.RegisterS3Client(p.client)
 
 	return nil
 }

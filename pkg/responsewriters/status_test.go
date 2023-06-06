@@ -22,6 +22,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/api/errors"
 )
@@ -64,8 +65,9 @@ func TestAPIStatus(t *testing.T) {
 	}
 	for k, v := range cases {
 		actual := ErrorToAPIStatus(k)
-		if !reflect.DeepEqual(actual, &v) {
-			t.Errorf("%s: Expected %#v, Got %#v", k, v, actual)
-		}
+		require.Equal(t, &v, actual)
+		//if !reflect.DeepEqual(actual, &v) {
+		//	t.Errorf("%s: Expected %#v, Got %#v", k, v, actual)
+		//}
 	}
 }

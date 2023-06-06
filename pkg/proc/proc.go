@@ -6,7 +6,6 @@ import (
 	"io"
 	"math/rand"
 	"os"
-	"os/signal"
 	"runtime"
 	"sync"
 	"time"
@@ -58,7 +57,6 @@ type Process struct {
 
 	debugConfig bool // print config after proc.init()
 
-	sigsCh  chan os.Signal
 	hookOps [v1.ACTION_SIZE]v1.Hooks // catalog of RegisterHooks
 	status  v1.ProcessStatus
 	err     error
@@ -74,7 +72,6 @@ func newProcess() *Process {
 
 	return &Process{
 		hookOps:        hookOps,
-		sigsCh:         make(chan os.Signal, 2),
 		ProcessOptions: newProcessOptions(),
 		configer:       configer.New(),
 		featureGate:    featuregate.NewFeatureGate(),
@@ -110,8 +107,7 @@ func Init(cmd *cobra.Command, opts ...ProcessOption) error {
 }
 
 func Shutdown() error {
-	DefaultProcess.sigsCh <- shutdownSignal
-	return nil
+	return DefaultProcess.shutdown()
 }
 
 func PrintConfig(w io.Writer) {
@@ -189,10 +185,6 @@ func AddConfig(path string, sample interface{}, opts ...ConfigOption) error {
 func AddGlobalConfig(sample interface{}) error {
 	return DefaultProcess.AddConfig("", sample, WithConfigGroup("global"))
 }
-
-//func ConfigVar(fs *pflag.FlagSet, path string, sample interface{}, opts ...configer.ConfigFieldsOption) error {
-//	return DefaultProcess.ConfigVar(fs, path, sample, opts...)
-//}
 
 func Parse(fs *pflag.FlagSet, opts ...configer.ConfigerOption) (configer.ParsedConfiger, error) {
 	return DefaultProcess.Parse(fs, opts...)
@@ -277,6 +269,11 @@ func (p *Process) Context() context.Context {
 }
 
 func (p *Process) Start(fs *pflag.FlagSet) error {
+	// To help debugging, immediately log version
+	klog.Infof("Version: %+v", p.version)
+
+	klog.InfoS("Golang settings", "GOGC", os.Getenv("GOGC"), "GOMAXPROCS", os.Getenv("GOMAXPROCS"), "GOTRACEBACK", os.Getenv("GOTRACEBACK"))
+
 	if _, err := p.Parse(fs); err != nil {
 		return err
 	}
@@ -292,7 +289,31 @@ func (p *Process) Start(fs *pflag.FlagSet) error {
 
 	p.PrintFlags(fs)
 
-	return p.mainLoop()
+	if p.noloop {
+		p.stop()
+		return p.err
+	}
+
+	if p.report {
+		if err := reporter.NewBuildReporter(p.ctx, p.version).Start(); err != nil {
+			return err
+		}
+	}
+
+	if _, err := SdNotify(true, "READY=1\n"); err != nil {
+		klog.Errorf("Unable to send systemd daemon successful start message: %v\n", err)
+	}
+
+	<-SetupSignalHandler()
+
+	p.stop()
+
+	if err := p.err; err != nil {
+		return err
+	}
+
+	klog.V(1).Info("[graceful-termination] apiserver is exiting")
+	return nil
 }
 
 func (p *Process) Parse(fs *pflag.FlagSet, opts ...configer.ConfigerOption) (configer.ParsedConfiger, error) {
@@ -331,9 +352,7 @@ func (p *Process) Init(cmd *cobra.Command, opts ...ProcessOption) error {
 	if _, ok := AttrFrom(p.ctx); !ok {
 		p.ctx = WithAttr(p.ctx, make(map[interface{}]interface{}))
 	}
-	if _, ok := WgFrom(p.ctx); !ok {
-		WithWg(p.ctx, p.wg)
-	}
+	withWg(p.ctx, p.wg)
 
 	// globalflags
 	p.AddFlags(cmd.Name())
@@ -361,6 +380,7 @@ func (p *Process) start() error {
 		p.hookOps[i].Sort()
 	}
 
+	// start
 	ctx := configer.WithConfiger(p.ctx, p.parsedConfiger)
 	for _, ops := range p.hookOps[v1.ACTION_START] {
 		ops.Dlog()
@@ -370,48 +390,6 @@ func (p *Process) start() error {
 	}
 	p.status.Set(v1.STATUS_RUNNING)
 	return nil
-}
-
-func (p *Process) mainLoop() error {
-	if p.noloop {
-		return p.stop()
-	}
-
-	if p.report {
-		if err := reporter.NewBuildReporter(p.ctx, p.version).Start(); err != nil {
-			return err
-		}
-	}
-
-	signal.Notify(p.sigsCh, append(shutdownSignals, reloadSignals...)...)
-
-	if _, err := SdNotify(true, "READY=1\n"); err != nil {
-		klog.Errorf("Unable to send systemd daemon successful start message: %v\n", err)
-	}
-
-	shutdown := false
-	for {
-		select {
-		case <-p.ctx.Done():
-			return p.err
-		case s := <-p.sigsCh:
-			if sigContains(s, shutdownSignals) {
-				klog.Infof("recv shutdown signal, exiting")
-				if shutdown {
-					klog.Infof("recv shutdown signal, force exiting")
-					os.Exit(1)
-				}
-				shutdown = true
-				go func() {
-					p.stop()
-				}()
-			} else if sigContains(s, reloadSignals) {
-				if err := p.reload(); err != nil {
-					return err
-				}
-			}
-		}
-	}
 }
 
 func (p *Process) shutdown() error {
@@ -430,26 +408,33 @@ func (p *Process) stop() error {
 	default:
 	}
 
+	// cancel ctx first
+	p.cancel()
+	p.status.Set(v1.STATUS_EXIT)
+
+	wg := p.wg
 	wgCh := make(chan struct{})
 
+	wg.Add(1)
 	go func() {
-		p.wg.Wait()
-		wgCh <- struct{}{}
+		defer wg.Done()
+
+		ops := p.hookOps[v1.ACTION_STOP]
+		ctx := configer.WithConfiger(p.ctx, p.parsedConfiger)
+		for i := len(ops) - 1; i >= 0; i-- {
+			op := ops[i]
+			op.Dlog()
+			if err := op.Hook(WithHookOps(ctx, op)); err != nil {
+				p.err = fmt.Errorf("%s.%s() err: %s", op.Owner, util.Name(op.Hook), err)
+				return
+			}
+		}
 	}()
 
-	stopHooks := p.hookOps[v1.ACTION_STOP]
-	ctx := configer.WithConfiger(p.ctx, p.parsedConfiger)
-	for i := len(stopHooks) - 1; i >= 0; i-- {
-		stop := stopHooks[i]
-
-		stop.Dlog()
-		if err := stop.Hook(WithHookOps(ctx, stop)); err != nil {
-			p.err = fmt.Errorf("%s.%s() err: %s", stop.Owner, util.Name(stop.Hook), err)
-
-			return p.err
-		}
-	}
-	p.status.Set(v1.STATUS_EXIT)
+	go func() {
+		wg.Wait()
+		wgCh <- struct{}{}
+	}()
 
 	// Wait then close or hard close.
 	closeTimeout := serverGracefulCloseTimeout
@@ -460,37 +445,9 @@ func (p *Process) stop() error {
 		}
 	case <-time.After(closeTimeout):
 		p.err = fmt.Errorf("%s closed after timeout %s", p.name, closeTimeout.String())
-
 	}
-
-	p.cancel()
 
 	return p.err
-}
-
-func (p *Process) reload() (err error) {
-	p.status.Set(v1.STATUS_RELOADING)
-
-	cf, err := p.configer.Parse(p.configerOptions...)
-	if err != nil {
-		p.err = err
-		return err
-	}
-
-	p.parsedConfiger = cf
-
-	ctx := configer.WithConfiger(p.ctx, p.parsedConfiger)
-	for _, ops := range p.hookOps[v1.ACTION_RELOAD] {
-		ops.Dlog()
-		if err := ops.Hook(WithHookOps(ctx, ops)); err != nil {
-			p.err = err
-			return err
-		}
-	}
-	p.status.Set(v1.STATUS_RUNNING)
-
-	p.err = nil
-	return nil
 }
 
 func (p *Process) PrintConfig(out io.Writer) {

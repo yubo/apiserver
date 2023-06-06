@@ -1,18 +1,19 @@
 // this is a sample echo rest api module
-//    /api/v1/users --> getUser1
-//    /api/v2/users --> getUser2 --> getUser1
+//
+//	/api/v1/users --> getUser1
+//	/api/v2/users --> getUser2 --> getUser1
 package trace
 
 import (
 	"context"
 	"examples/all-in-one/pkg/allinone/config"
 	"net/http"
+	"time"
 
-	"github.com/yubo/apiserver/pkg/proc/options"
+	"github.com/yubo/apiserver/components/dbus"
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/apiserver/pkg/tracing"
 	"go.opentelemetry.io/otel/attribute"
-	oteltrace "go.opentelemetry.io/otel/trace"
 )
 
 type trace struct {
@@ -21,7 +22,7 @@ type trace struct {
 
 func New(ctx context.Context, cf *config.Config) *trace {
 	return &trace{
-		container: options.APIServerMustFrom(ctx),
+		container: dbus.APIServer(),
 	}
 }
 
@@ -48,15 +49,15 @@ func getUser(w http.ResponseWriter, req *http.Request, in *User) (*User, error) 
 }
 
 func getUser1(ctx context.Context, in *User) (*User, error) {
-	_, span := tracing.Start(ctx, "getUser1", oteltrace.WithAttributes(attribute.String("name", in.Name)))
-	defer span.End()
+	_, span := tracing.Start(ctx, "getUser1", attribute.String("name", in.Name))
+	defer span.End(100 * time.Millisecond)
 
 	return in, nil
 }
 
 func getUser2(w http.ResponseWriter, req *http.Request, in *User) (*User, error) {
-	ctx, span := tracing.Start(req.Context(), "getUser2", oteltrace.WithAttributes(attribute.String("name", in.Name)))
-	defer span.End()
+	ctx, span := tracing.Start(req.Context(), "getUser2", attribute.String("name", in.Name))
+	defer span.End(100 * time.Millisecond)
 
 	return getUser1(ctx, in)
 }

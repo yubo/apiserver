@@ -92,7 +92,7 @@ type config struct {
 
 	Name     string   `json:"name"`
 	Store    string   `json:"store"`
-	KeyPairs [][]byte `json:"keyPairs`
+	KeyPairs [][]byte `json:"keyPairs"`
 }
 
 func (p *config) Options(c clock.WithTicker) *sessions.Options {

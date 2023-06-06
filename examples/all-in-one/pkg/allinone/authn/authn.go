@@ -8,7 +8,6 @@ import (
 
 	"github.com/yubo/apiserver/components/dbus"
 	"github.com/yubo/apiserver/pkg/authentication/user"
-	"github.com/yubo/apiserver/pkg/proc/options"
 	"github.com/yubo/apiserver/pkg/request"
 	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/apiserver/pkg/sessions"
@@ -17,22 +16,17 @@ import (
 
 func New(ctx context.Context, cf *config.Config) *authn {
 	return &authn{
-		container: options.APIServerMustFrom(ctx),
+		container: dbus.APIServer(),
 	}
 }
 
 type authn struct {
 	container    rest.GoRestfulContainer
-	passwordfile dbus.Passwordfile
+	passwordfile dbus.PasswordfileT
 }
 
 func (p *authn) Install() {
-	passwordfile, ok := dbus.GetPasswordfile()
-	if !ok {
-		panic("not found passwordfile")
-	}
-
-	p.passwordfile = passwordfile
+	p.passwordfile = dbus.Passwordfile()
 
 	rest.SwaggerTagRegister("authentication", "authentication sample")
 
