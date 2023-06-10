@@ -3,9 +3,9 @@ module examples/client
 go 1.20
 
 require (
-	github.com/yubo/apiserver v0.1.2-0.20230507071820-8bc946680170
-	github.com/yubo/client-go v0.0.1
-	github.com/yubo/golib v0.0.3-0.20230517190551-4305b2f46ee3
+	github.com/yubo/apiserver v0.1.2-0.20230610144149-75aee6ab6e2f
+	github.com/yubo/client-go v0.0.2-0.20230610143343-1d2f115e6765
+	github.com/yubo/golib v0.0.3-0.20230610143102-4246ac8662ee
 )
 
 require (
@@ -17,9 +17,9 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/emicklei/go-restful/v3 v3.10.2 // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect
-	github.com/go-logr/logr v1.2.3 // indirect
+	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
-	github.com/golang/protobuf v1.5.2 // indirect
+	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
@@ -36,11 +36,11 @@ require (
 	go.opentelemetry.io/otel v1.13.0 // indirect
 	go.opentelemetry.io/otel/metric v0.36.0 // indirect
 	go.opentelemetry.io/otel/trace v1.13.0 // indirect
-	golang.org/x/net v0.5.0 // indirect
+	golang.org/x/net v0.10.0 // indirect
 	golang.org/x/oauth2 v0.4.0 // indirect
-	golang.org/x/sys v0.4.0 // indirect
-	golang.org/x/term v0.4.0 // indirect
-	golang.org/x/text v0.6.0 // indirect
+	golang.org/x/sys v0.8.0 // indirect
+	golang.org/x/term v0.8.0 // indirect
+	golang.org/x/text v0.9.0 // indirect
 	golang.org/x/time v0.0.0-20220210224613-90d013bbcef8 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
@@ -49,8 +49,4 @@ require (
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 )
 
-replace github.com/yubo/golib => ../../../golib
-
 replace github.com/yubo/apiserver => ../../
-
-replace github.com/yubo/client-go => ../../../client-go

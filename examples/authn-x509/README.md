@@ -24,7 +24,7 @@ $ go run ./main.go -f ./config.yaml
 #### curl
 
 ```sh
-$ curl -X POST -H 'Content-Type:application/json' --cacert ./testdata/ca.crt --cert ./testdata/client.crt --key ./testdata/client.key  https://127.0.0.1:8443/inc -d '{"X": 1}'
+$ curl -X POST -H 'Content-Type: application/json' --cacert ./testdata/ca.crt --cert ./testdata/client.crt --key ./testdata/client.key  https://127.0.0.1:8443/inc -d '{"X": 1}'
 {
  "X": 2,
  "User": {

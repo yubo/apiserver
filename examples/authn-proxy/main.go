@@ -18,21 +18,13 @@ import (
 
 	// authn
 	_ "github.com/yubo/apiserver/pkg/authentication/register"
-	"github.com/yubo/apiserver/plugin/authenticator/basic"
+	_ "github.com/yubo/apiserver/plugin/authenticator/headerrequest/register"
 )
 
 func main() {
-	cmd := proc.NewRootCmd(
-		proc.WithRun(start),
-		proc.WithRegisterAuth(registerAuthn),
-	)
+	cmd := proc.NewRootCmd(proc.WithRun(start))
 	code := cli.Run(cmd)
 	os.Exit(code)
-}
-
-func registerAuthn(ctx context.Context) error {
-	basic.RegisterAuthn(&basicAuthenticator{})
-	return nil
 }
 
 func start(ctx context.Context) error {
@@ -63,23 +55,4 @@ func hw(w http.ResponseWriter, req *http.Request) (*user.DefaultInfo, error) {
 		Groups: u.GetGroups(),
 		Extra:  u.GetExtra(),
 	}, nil
-}
-
-type basicAuthenticator struct{}
-
-var (
-	_username = "steve"
-	_password = "123"
-	_user     = &user.DefaultInfo{
-		Name:   "steve",
-		Groups: []string{"dev"},
-	}
-)
-
-func (a *basicAuthenticator) Authenticate(ctx context.Context, user, pwd string) user.Info {
-	if user == _username && pwd == _password {
-		return _user
-	}
-
-	return nil
 }

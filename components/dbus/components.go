@@ -214,6 +214,7 @@ func ClientCA() dynamiccertificates.CAContentProvider {
 func RegisterRequestHeaderConfig(o *authenticatorfactory.RequestHeaderConfig) {
 	MustRegister(authnRequestHeaderkey, o)
 }
+
 func GetRequestHeaderConfig() (*authenticatorfactory.RequestHeaderConfig, error) {
 	ret, ok := get(authnRequestHeaderkey).(*authenticatorfactory.RequestHeaderConfig)
 	if !ok {

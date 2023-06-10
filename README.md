@@ -20,7 +20,7 @@
   * [x] [Authentication X509](./examples/authn-x509)
   * [x] [Authentication Webhook](./examples/authn-webhook)
   * [x] [Authentication Impersonation](./examples/authn-impersonation)
-  * [ ] [Authentication Proxy](./examples/authn-proxy)
+  * [x] [Authentication Proxy](./examples/authn-proxy)
 - Authorization
   * [x] [Authorization ABAC](./examples/authz-abac)
   * [x] [Authorization RBAC](./examples/authz-rbac)

@@ -32,7 +32,7 @@ require (
 	github.com/spf13/cobra v1.4.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.1
-	github.com/yubo/client-go v0.0.1
+	github.com/yubo/client-go v0.0.2-0.20230610143343-1d2f115e6765
 	github.com/yubo/golib v0.0.3-0.20230610143102-4246ac8662ee
 	github.com/yubo/goswagger v0.0.0-20211115071236-bbeda335e7c1
 	go.opentelemetry.io/collector v0.47.0
@@ -128,7 +128,3 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gotest.tools v2.2.0+incompatible // indirect
 )
-
-replace github.com/yubo/golib => ../golib
-
-replace github.com/yubo/client-go => ../client-go
