@@ -221,8 +221,10 @@ func buildImpersonationRequests(headers http.Header) ([]api.ObjectReference, err
 		for _, value := range values {
 			impersonationRequests = append(impersonationRequests,
 				api.ObjectReference{
-					Kind:      "UserExtra",
-					Name:      value,
+					Kind: "UserExtra",
+					Name: value,
+					// ObjectReference doesn't have a subresource field.  FieldPath is close and available, so we'll use that
+					// TODO fight the good fight for ObjectReference to refer to resources and subresources
 					FieldPath: extraKey,
 				})
 		}

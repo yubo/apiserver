@@ -1,3 +1,6 @@
+logging:
+  verbosity: 10
+
 apiserver:
   insecureServing:
     bindAddress: 0.0.0.0
@@ -10,3 +13,13 @@ apiserver:
   securitySchemes:
     - name: BaseAuth
       type: base
+
+authentication:
+  anonymous: false
+  tokenAuthFile: ./tokens.cvs
+
+authorization:
+  modes:
+  - RBAC
+  rbac:
+    configPath: ./testdata

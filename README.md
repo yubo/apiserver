@@ -24,9 +24,9 @@
 - Authorization
   * [x] [Authorization ABAC](./examples/authz-abac)
   * [x] [Authorization RBAC](./examples/authz-rbac)
+  * [x] [Authorization RBAC with Impersonation](./examples/authz-impersonation)
   * [x] [Authorization Path](./examples/authz-path)
   * [x] [Authorization Webhook](./examples/authz-webhook)
-  * [ ] [Authorization Impersonation](./examples/authz-impersonation)
 - Stream
   * [x] [Remotecommand Container](./examples/remotecommand-container)
   * [x] [Remotecommand Native](./examples/remotecommand-native)

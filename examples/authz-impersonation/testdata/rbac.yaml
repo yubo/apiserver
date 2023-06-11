@@ -1,0 +1,40 @@
+kind: ClusterRoleBinding
+metadata:
+  name: apiserver-admin
+roleRef:
+  kind: Role
+  name: role-admin
+subjects:
+  - kind: Group
+    name: group-admin
+---
+kind: ClusterRoleBinding
+metadata:
+  name: role-reporter
+roleRef:
+  kind: Role
+  name: role-reporter
+subjects:
+  - kind: Group
+    name: group-reporter
+  - kind: Group
+    name: group-admin
+---
+kind: Role
+metadata:
+  name: role-reporter
+rules:
+  - nonResourceURLs: ["/hello"]
+    verbs: ["get"]
+---
+kind: Role
+metadata:
+  name: role-admin
+rules:
+  - resources:
+      - users
+      - groups
+      - uids
+      - userextras/dn
+      - userextras/scopes
+    verbs: ["get", "list", "watch", "impersonate"]
