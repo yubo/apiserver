@@ -18,7 +18,7 @@ import (
 
 	// authn
 	_ "github.com/yubo/apiserver/pkg/authentication/register"
-	_ "github.com/yubo/apiserver/plugin/authenticator/token/tokenfile/register"
+	_ "github.com/yubo/apiserver/pkg/authentication/token/tokenfile/register"
 )
 
 func main() {

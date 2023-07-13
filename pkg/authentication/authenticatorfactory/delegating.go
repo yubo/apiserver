@@ -26,7 +26,7 @@ import (
 	"github.com/yubo/apiserver/pkg/authentication/request/headerrequest"
 	unionauth "github.com/yubo/apiserver/pkg/authentication/request/union"
 	"github.com/yubo/apiserver/pkg/authentication/request/x509"
-	"github.com/yubo/apiserver/pkg/dynamiccertificates"
+	"github.com/yubo/apiserver/pkg/server/dynamiccertificates"
 	"github.com/yubo/golib/util/wait"
 	// "github.com/yubo/apiserver/pkg/authentication/request/x509"
 )

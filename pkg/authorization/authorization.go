@@ -9,21 +9,16 @@ import (
 	"github.com/yubo/apiserver/components/dbus"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	"github.com/yubo/apiserver/pkg/authorization/authorizerfactory"
+	"github.com/yubo/apiserver/pkg/authorization/path"
 	"github.com/yubo/apiserver/pkg/authorization/union"
 	"github.com/yubo/apiserver/pkg/proc"
 	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
 	"github.com/yubo/apiserver/pkg/server"
-	"github.com/yubo/apiserver/plugin/authorizer/path"
 	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/util"
 	utilerrors "github.com/yubo/golib/util/errors"
 	"github.com/yubo/golib/util/sets"
 	"k8s.io/klog/v2"
-)
-
-const (
-	// ModeAlwaysAllow is the mode to set all requests as authorized
-	ModeAlwaysAllow string = "AlwaysAllow"
 )
 
 const (

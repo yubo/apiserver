@@ -17,7 +17,7 @@ import (
 	_ "github.com/yubo/apiserver/pkg/server/register"
 
 	// authn
-	_ "github.com/yubo/apiserver/pkg/authentication/register"
+	//_ "github.com/yubo/apiserver/pkg/authentication/register"
 	"github.com/yubo/apiserver/plugin/authenticator/basic"
 )
 
@@ -43,7 +43,7 @@ func start(ctx context.Context) error {
 
 	rest.WsRouteBuild(&rest.WsOption{
 		Path:               "/hello",
-		GoRestfulContainer: srv,
+		GoRestfulContainer: srv.Handler,
 		Routes: []rest.WsRoute{
 			{Method: "GET", SubPath: "/", Handle: hw},
 		},

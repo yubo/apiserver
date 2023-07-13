@@ -9,8 +9,9 @@ import (
 	"github.com/yubo/apiserver/pkg/authentication/authenticatorfactory"
 	authUser "github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/db"
-	"github.com/yubo/apiserver/pkg/dynamiccertificates"
+	corev1listers "github.com/yubo/apiserver/pkg/listers"
 	"github.com/yubo/apiserver/pkg/server"
+	"github.com/yubo/apiserver/pkg/server/dynamiccertificates"
 	"google.golang.org/grpc"
 )
 
@@ -28,6 +29,7 @@ const (
 	auditKey              // audit
 	clientCAKey           // clientCA
 	authnRequestHeaderkey // Authentication.RequestHeader
+	listSecretKey         //
 )
 
 // password file
@@ -99,22 +101,23 @@ func S3Client() S3ClientT {
 }
 
 // api/http server
-func RegisterAPIServer(i server.APIServer) {
-	MustRegister(apiServerKey, i)
+func RegisterAPIServer(a *server.GenericAPIServer) {
+	MustRegister(apiServerKey, a)
 }
-func GetAPIServer() (server.APIServer, error) {
-	ret, ok := get(apiServerKey).(server.APIServer)
+
+func GetAPIServer() (*server.GenericAPIServer, error) {
+	a, ok := get(apiServerKey).(*server.GenericAPIServer)
 	if !ok {
 		return nil, errors.New("api server client not registered")
 	}
-	return ret, nil
+	return a, nil
 }
-func APIServer() server.APIServer {
-	ret, err := GetAPIServer()
+func APIServer() *server.GenericAPIServer {
+	a, err := GetAPIServer()
 	if err != nil {
 		panic(err)
 	}
-	return ret
+	return a
 }
 
 // grpc server
@@ -219,6 +222,18 @@ func GetRequestHeaderConfig() (*authenticatorfactory.RequestHeaderConfig, error)
 	ret, ok := get(authnRequestHeaderkey).(*authenticatorfactory.RequestHeaderConfig)
 	if !ok {
 		return nil, errors.New("RequestHeaderConfig not registered")
+	}
+	return ret, nil
+}
+
+func RegisterSecretLister(lister corev1listers.SecretLister) {
+	MustRegister(listSecretKey, lister)
+}
+
+func GetSecretLister() (corev1listers.SecretLister, error) {
+	ret, ok := get(listSecretKey).(corev1listers.SecretLister)
+	if !ok {
+		return nil, errors.New("secretLister not registered")
 	}
 	return ret, nil
 }

@@ -36,7 +36,7 @@ import (
 	_ "github.com/yubo/apiserver/plugin/authenticator/session/register"
 	// 4. tokenfile
 	_ "github.com/yubo/apiserver/plugin/authenticator/passwordfile/register"
-	_ "github.com/yubo/apiserver/plugin/authenticator/token/tokenfile/register"
+	_ "github.com/yubo/apiserver/pkg/authentication/token/tokenfile/register"
 
 	// 5. service account file <TODO>
 	// 6. service account issuer <TODO>

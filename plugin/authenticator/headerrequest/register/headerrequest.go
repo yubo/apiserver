@@ -10,7 +10,7 @@ import (
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/pkg/authentication/authenticatorfactory"
 	"github.com/yubo/apiserver/pkg/authentication/request/headerrequest"
-	"github.com/yubo/apiserver/pkg/dynamiccertificates"
+	"github.com/yubo/apiserver/pkg/server/dynamiccertificates"
 	"github.com/yubo/apiserver/pkg/proc"
 	"github.com/yubo/golib/util/errors"
 	"k8s.io/klog/v2"
@@ -103,7 +103,7 @@ func factory(ctx context.Context) (authenticator.Request, error) {
 		return nil, nil
 	}
 
-	servingInfo := dbus.APIServer().Config().SecureServing
+	servingInfo := dbus.APIServer().SecureServingInfo
 	if servingInfo == nil {
 		return nil, errors.Errorf("authnModule x509 invalidate, servingInfo was not found")
 	}

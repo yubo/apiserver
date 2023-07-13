@@ -32,7 +32,7 @@ import (
 	"k8s.io/klog/v2"
 
 	"github.com/yubo/apiserver/components/cli/flag"
-	"github.com/yubo/apiserver/pkg/dynamiccertificates"
+	"github.com/yubo/apiserver/pkg/server/dynamiccertificates"
 	"github.com/yubo/apiserver/pkg/metrics"
 	utilruntime "github.com/yubo/golib/util/runtime"
 )

@@ -18,7 +18,7 @@ package authenticatorfactory
 
 import (
 	"github.com/yubo/apiserver/pkg/authentication/request/headerrequest"
-	"github.com/yubo/apiserver/pkg/dynamiccertificates"
+	"github.com/yubo/apiserver/pkg/server/dynamiccertificates"
 )
 
 type RequestHeaderConfig struct {

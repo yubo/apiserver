@@ -71,12 +71,10 @@ type Authorizer interface {
 	Authorize(ctx context.Context, a Attributes) (authorized Decision, reason string, err error)
 }
 
-type AuthorizerFactory func(context.Context) (Authorizer, error)
-
-type AuthorizerFunc func(a Attributes) (Decision, string, error)
+type AuthorizerFunc func(ctx context.Context, a Attributes) (Decision, string, error)
 
 func (f AuthorizerFunc) Authorize(ctx context.Context, a Attributes) (Decision, string, error) {
-	return f(a)
+	return f(ctx, a)
 }
 
 // RuleResolver provides a mechanism for resolving the list of rules that apply to a given user within a namespace.
@@ -159,3 +157,5 @@ const (
 	// to allow or deny an action.
 	DecisionNoOpinion
 )
+
+type AuthorizerFactory func(context.Context) (Authorizer, error)

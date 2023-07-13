@@ -17,6 +17,7 @@ limitations under the License.
 package healthz
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -26,10 +27,11 @@ import (
 	"strings"
 	"testing"
 
+	corev1 "github.com/yubo/golib/api"
+
 	"github.com/yubo/apiserver/components/metrics/legacyregistry"
 	"github.com/yubo/apiserver/components/metrics/testutil"
 	"github.com/yubo/apiserver/pkg/metrics"
-	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/util/sets"
 )
 
@@ -276,7 +278,7 @@ func TestInformerSyncHealthChecker(t *testing.T) {
 	t.Run("test that check returns nil when all informers are started", func(t *testing.T) {
 		healthChecker := NewInformerSyncHealthz(cacheSyncWaiterStub{
 			startedByInformerType: map[reflect.Type]bool{
-				reflect.TypeOf(api.Event{}): true,
+				reflect.TypeOf(corev1.Event{}): true,
 			},
 		})
 
@@ -289,9 +291,9 @@ func TestInformerSyncHealthChecker(t *testing.T) {
 	t.Run("test that check returns err when there is not started informer", func(t *testing.T) {
 		healthChecker := NewInformerSyncHealthz(cacheSyncWaiterStub{
 			startedByInformerType: map[reflect.Type]bool{
-				reflect.TypeOf(api.Event{}):    true,
-				reflect.TypeOf(api.UserInfo{}): false,
-				reflect.TypeOf(api.Secret{}):   true,
+				reflect.TypeOf(corev1.Event{}):    true,
+				reflect.TypeOf(corev1.UserInfo{}): false,
+				reflect.TypeOf(corev1.Secret{}):   true,
 			},
 		})
 
@@ -310,4 +312,67 @@ type cacheSyncWaiterStub struct {
 // that simply returns the value passed during stub initialization.
 func (s cacheSyncWaiterStub) WaitForCacheSync(_ <-chan struct{}) map[reflect.Type]bool {
 	return s.startedByInformerType
+}
+
+func TestInstallReadyzHandlerWithHealthyFunc(t *testing.T) {
+	mux := http.NewServeMux()
+	readyzCh := make(chan struct{})
+
+	hasBeenReadyCounter := 0
+	hasBeenReadyFn := func() {
+		hasBeenReadyCounter++
+	}
+	InstallReadyzHandlerWithHealthyFunc(mux, hasBeenReadyFn, readyOnChanClose{readyzCh})
+
+	// scenario 1: expect the check to fail since the channel hasn't been closed
+	req, err := http.NewRequest("GET", fmt.Sprintf("http://example.com%s", "/readyz"), nil)
+	if err != nil {
+		t.Errorf("%v", err)
+	}
+	rr := httptest.NewRecorder()
+	mux.ServeHTTP(rr, req)
+	if rr.Code != http.StatusInternalServerError {
+		t.Errorf("scenario 1: unexpected status code returned, expected %d, got %d", http.StatusInternalServerError, rr.Code)
+	}
+
+	// scenario 2: close the channel that will cause the readyz checker to report success,
+	//             verify that hasBeenReadyFn was called
+	close(readyzCh)
+	rr = httptest.NewRecorder()
+	req = req.Clone(context.TODO())
+	mux.ServeHTTP(rr, req)
+	if rr.Code != http.StatusOK {
+		t.Errorf("scenario 2: unexpected status code returned, expected %d, got %d", http.StatusOK, rr.Code)
+	}
+	if hasBeenReadyCounter != 1 {
+		t.Errorf("scenario 2: unexpected value of hasBeenReadyCounter, expected 1, got %d", hasBeenReadyCounter)
+	}
+
+	// scenario 3: checks if hasBeenReadyFn hasn't been called again.
+	rr = httptest.NewRecorder()
+	req = req.Clone(context.TODO())
+	mux.ServeHTTP(rr, req)
+	if rr.Code != http.StatusOK {
+		t.Errorf("scenario 3: unexpected status code returned, expected %d, got %d", http.StatusOK, rr.Code)
+	}
+	if hasBeenReadyCounter != 1 {
+		t.Errorf("scenario 3: unexpected value of hasBeenReadyCounter, expected 1, got %d", hasBeenReadyCounter)
+	}
+}
+
+type readyOnChanClose struct {
+	ch <-chan struct{}
+}
+
+func (readyOnChanClose) Name() string {
+	return "readyOnChanClose"
+}
+
+func (c readyOnChanClose) Check(_ *http.Request) error {
+	select {
+	case <-c.ch:
+		return nil
+	default:
+	}
+	return fmt.Errorf("the provided channel hasn't been closed")
 }

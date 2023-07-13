@@ -37,7 +37,7 @@ import (
 	"github.com/yubo/apiserver/components/metrics"
 	"github.com/yubo/apiserver/components/metrics/legacyregistry"
 	"github.com/yubo/apiserver/pkg/audit"
-	"github.com/yubo/apiserver/pkg/dynamiccertificates"
+	"github.com/yubo/apiserver/pkg/server/dynamiccertificates"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/types"
 	"github.com/yubo/golib/util"
@@ -49,7 +49,7 @@ import (
 	apiregistration "github.com/yubo/apiserver/pkg/apis/apiregistration/v1"
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	genericapirequest "github.com/yubo/apiserver/pkg/request"
-	utilflowcontrol "github.com/yubo/golib/util/flowcontrol"
+	utilflowcontrol "github.com/yubo/apiserver/pkg/util/flowcontrol"
 )
 
 type targetHTTPHandler struct {

@@ -17,20 +17,20 @@ import (
 	"k8s.io/klog/v2"
 )
 
-type Config struct {
-	ConfigPath string `json:"configPath" flag:"rbac-config-path" description:"RBAC config path as file provider"`
-}
+//type Config struct {
+//	ConfigPath string `json:"configPath" flag:"rbac-config-path" description:"RBAC config path as file provider"`
+//}
 
 type FileStorage struct {
-	config              *Config
+	configDir           string
 	roles               []*apirbac.Role
 	roleBindings        []*apirbac.RoleBinding
 	clusterRoles        []*apirbac.ClusterRole
 	clusterRoleBindings []*apirbac.ClusterRoleBinding
 }
 
-func NewRBAC(config *Config) (*rbac.RBACAuthorizer, error) {
-	f, err := NewFileStorage(config)
+func NewRBAC(configDir string) (*rbac.RBACAuthorizer, error) {
+	f, err := NewFileStorage(configDir)
 	if err != nil {
 		return nil, err
 	}
@@ -42,11 +42,11 @@ func NewRBAC(config *Config) (*rbac.RBACAuthorizer, error) {
 	), nil
 }
 
-func NewFileStorage(config *Config) (*FileStorage, error) {
+func NewFileStorage(configDir string) (*FileStorage, error) {
 	klog.V(10).Infof("rbac.file entering")
-	f := &FileStorage{config: config}
+	f := &FileStorage{configDir: configDir}
 
-	err := f.loadDir(config.ConfigPath, 1)
+	err := f.loadDir(configDir, 1)
 	if err != nil {
 		return nil, err
 	}

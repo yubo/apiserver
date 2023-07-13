@@ -7,7 +7,7 @@ import (
 	"github.com/yubo/apiserver/pkg/authentication"
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/pkg/authentication/request/x509"
-	"github.com/yubo/apiserver/pkg/dynamiccertificates"
+	"github.com/yubo/apiserver/pkg/server/dynamiccertificates"
 	"github.com/yubo/apiserver/pkg/proc"
 	"github.com/yubo/golib/util/errors"
 	"k8s.io/klog/v2"
@@ -58,11 +58,6 @@ func factory(ctx context.Context) (authenticator.Request, error) {
 		return nil, nil
 	}
 
-	servingInfo := dbus.APIServer().Config().SecureServing
-	if servingInfo == nil {
-		return nil, errors.Errorf("authnModule x509 invalidate, servingInfo was not found")
-	}
-
 	klog.V(5).InfoS("authnModule x509", "ca file", cf.ClientCA)
 
 	clientCA, err := dynamiccertificates.NewDynamicCAContentFromFile("client-ca-bundle", cf.ClientCA)
@@ -70,7 +65,7 @@ func factory(ctx context.Context) (authenticator.Request, error) {
 		return nil, errors.Wrapf(err, "NewDynamicCAContentFromFile")
 	}
 
-	if err := servingInfo.ApplyClientCert(clientCA); err != nil {
+	if err := dbus.APIServer().ApplyClientCert(clientCA); err != nil {
 		return nil, err
 	}
 

@@ -11,8 +11,7 @@ logging:
   verbosity: 10
   vmodule:
 
-
-apiserver:
+#apiserver:
   generic:
     enablePriorityAndFairness: true
     goawayChance: 0
@@ -39,13 +38,17 @@ apiserver:
     serverCert:
       certDir: ./etc/cert
       pairName: apiserver
-  enableContentionProfiling: true
-  enableIndex: false
-  enableMetrics: false
-  enablePriorityAndFairness: true
-  enableProfiling: true
-  enableOpenAPI: true
-  enableHealthz: true
+  securitySchemes:
+    - name: bearerToken
+      type: bearer
+  feature:
+    enableContentionProfiling: true
+    enableIndex: false
+    enableMetrics: false
+    enablePriorityAndFairness: true
+    enableProfiling: true
+    enableOpenAPI: true
+    enableHealthz: true
 
 
 authentication:

@@ -149,6 +149,14 @@ func RegisterTokenAuthn(factory AuthenticatorTokenFactory) error {
 	return nil
 }
 
+func TokenAuthenticatorFactories() []AuthenticatorTokenFactory {
+	return _authn.tokenAuthenticatorFactories
+}
+
+func AuthenticatorFactories() []AuthenticatorFactory {
+	return _authn.authenticatorFactories
+}
+
 func APIAudiences() authenticator.Audiences {
 	return authenticator.Audiences(_authn.config.APIAudiences)
 }

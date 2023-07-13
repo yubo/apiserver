@@ -8,8 +8,8 @@ import (
 	"github.com/yubo/apiserver/components/cli"
 	"github.com/yubo/apiserver/components/dbus"
 	"github.com/yubo/apiserver/pkg/proc"
-	"github.com/yubo/apiserver/pkg/rest"
 
+	genericserver "github.com/yubo/apiserver/pkg/server"
 	server "github.com/yubo/apiserver/pkg/server/module"
 	_ "github.com/yubo/apiserver/pkg/server/register"
 )
@@ -25,10 +25,10 @@ func start(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	rest.WsRouteBuild(&rest.WsOption{
-		Path:               "/hello",
-		GoRestfulContainer: srv,
-		Routes: []rest.WsRoute{
+	genericserver.WsRouteBuild(&genericserver.WsOption{
+		Path:   "/hello",
+		Server: srv,
+		Routes: []genericserver.WsRoute{
 			{Method: "GET", SubPath: "/", Handle: hello},
 		},
 	})

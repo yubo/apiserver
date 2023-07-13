@@ -1,7 +1,7 @@
 package scheme
 
 import (
-	"github.com/yubo/apiserver/pkg/rest/parametercodec"
+	"github.com/yubo/apiserver/pkg/server/parametercodec"
 	"github.com/yubo/golib/runtime"
 	"github.com/yubo/golib/runtime/serializer"
 )

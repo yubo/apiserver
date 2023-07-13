@@ -23,7 +23,7 @@ import (
 
 	auditinternal "github.com/yubo/apiserver/pkg/apis/audit"
 	"github.com/yubo/apiserver/pkg/audit"
-	"github.com/yubo/golib/util/flowcontrol"
+	"github.com/yubo/client-go/util/flowcontrol"
 	"github.com/yubo/golib/util/runtime"
 	"github.com/yubo/golib/util/wait"
 )

@@ -18,6 +18,7 @@ package healthz
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"net/http"
 	"reflect"
@@ -26,6 +27,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/yubo/apiserver/components/metrics/prometheus/slis"
 	"github.com/yubo/apiserver/pkg/metrics"
 	"github.com/yubo/apiserver/pkg/server/httplog"
 	"github.com/yubo/golib/util/sets"
@@ -140,6 +142,12 @@ func InstallReadyzHandler(mux mux, checks ...HealthChecker) {
 	InstallPathHandler(mux, "/readyz", checks...)
 }
 
+// InstallReadyzHandlerWithHealthyFunc is like InstallReadyzHandler, but in addition call firstTimeReady
+// the first time /readyz succeeds.
+func InstallReadyzHandlerWithHealthyFunc(mux mux, firstTimeReady func(), checks ...HealthChecker) {
+	InstallPathHandlerWithHealthyFunc(mux, "/readyz", firstTimeReady, checks...)
+}
+
 // InstallLivezHandler registers handlers for liveness checking on the path
 // "/livez" to mux. *All handlers* for mux must be specified in
 // exactly one call to InstallHandler. Calling InstallHandler more
@@ -154,6 +162,12 @@ func InstallLivezHandler(mux mux, checks ...HealthChecker) {
 // InstallPathHandler more than once for the same path and mux will
 // result in a panic.
 func InstallPathHandler(mux mux, path string, checks ...HealthChecker) {
+	InstallPathHandlerWithHealthyFunc(mux, path, nil, checks...)
+}
+
+// InstallPathHandlerWithHealthyFunc is like InstallPathHandler, but calls firstTimeHealthy exactly once
+// when the handler succeeds for the first time.
+func InstallPathHandlerWithHealthyFunc(mux mux, path string, firstTimeHealthy func(), checks ...HealthChecker) {
 	if len(checks) == 0 {
 		klog.V(5).Info("No default health checks specified. Installing the ping handler.")
 		checks = []HealthChecker{PingHealthz}
@@ -167,7 +181,7 @@ func InstallPathHandler(mux mux, path string, checks ...HealthChecker) {
 			/* subresource = */ path,
 			/* component = */ "",
 			/* deprecated */ false,
-			handleRootHealth(name, checks...)))
+			handleRootHealth(name, firstTimeHealthy, checks...)))
 	for _, check := range checks {
 		mux.Handle(fmt.Sprintf("%s/%v", path, check.Name()), adaptCheckToHandler(check.Check))
 	}
@@ -204,8 +218,9 @@ func getExcludedChecks(r *http.Request) sets.String {
 }
 
 // handleRootHealth returns an http.HandlerFunc that serves the provided checks.
-func handleRootHealth(name string, checks ...HealthChecker) http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func handleRootHealth(name string, firstTimeHealthy func(), checks ...HealthChecker) http.HandlerFunc {
+	var notifyOnce sync.Once
+	return func(w http.ResponseWriter, r *http.Request) {
 		excluded := getExcludedChecks(r)
 		// failedVerboseLogOutput is for output to the log.  It indicates detailed failed output information for the log.
 		var failedVerboseLogOutput bytes.Buffer
@@ -219,6 +234,7 @@ func handleRootHealth(name string, checks ...HealthChecker) http.HandlerFunc {
 				continue
 			}
 			if err := check.Check(r); err != nil {
+				slis.ObserveHealthcheck(context.Background(), check.Name(), name, slis.Error)
 				// don't include the error since this endpoint is public.  If someone wants more detail
 				// they should have explicit permission to the detailed checks.
 				fmt.Fprintf(&individualCheckOutput, "[-]%s failed: reason withheld\n", check.Name())
@@ -226,19 +242,26 @@ func handleRootHealth(name string, checks ...HealthChecker) http.HandlerFunc {
 				fmt.Fprintf(&failedVerboseLogOutput, "[-]%s failed: %v\n", check.Name(), err)
 				failedChecks = append(failedChecks, check.Name())
 			} else {
+				slis.ObserveHealthcheck(context.Background(), check.Name(), name, slis.Success)
 				fmt.Fprintf(&individualCheckOutput, "[+]%s ok\n", check.Name())
 			}
 		}
 		if excluded.Len() > 0 {
 			fmt.Fprintf(&individualCheckOutput, "warn: some health checks cannot be excluded: no matches for %s\n", formatQuoted(excluded.List()...))
-			klog.Warningf("cannot exclude some health checks, no health checks are installed matching %s",
+			klog.V(6).Infof("cannot exclude some health checks, no health checks are installed matching %s",
 				formatQuoted(excluded.List()...))
 		}
 		// always be verbose on failure
 		if len(failedChecks) > 0 {
 			klog.V(2).Infof("%s check failed: %s\n%v", strings.Join(failedChecks, ","), name, failedVerboseLogOutput.String())
-			http.Error(httplog.Unlogged(r, w), fmt.Sprintf("%s%s check failed", individualCheckOutput.String(), name), http.StatusInternalServerError)
+			httplog.SetStacktracePredicate(r.Context(), func(int) bool { return false })
+			http.Error(w, fmt.Sprintf("%s%s check failed", individualCheckOutput.String(), name), http.StatusInternalServerError)
 			return
+		}
+
+		// signal first time this is healthy
+		if firstTimeHealthy != nil {
+			notifyOnce.Do(firstTimeHealthy)
 		}
 
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
@@ -250,7 +273,7 @@ func handleRootHealth(name string, checks ...HealthChecker) http.HandlerFunc {
 
 		individualCheckOutput.WriteTo(w)
 		fmt.Fprintf(w, "%s check passed\n", name)
-	})
+	}
 }
 
 // adaptCheckToHandler returns an http.HandlerFunc that serves the provided checks.

@@ -37,6 +37,7 @@ import (
 	authorization "github.com/yubo/apiserver/pkg/apis/authorization"
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
+	webhookutil "github.com/yubo/apiserver/pkg/util/webhook"
 	v1 "github.com/yubo/client-go/tools/clientcmd/api/v1"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/util/wait"
@@ -193,11 +194,15 @@ current-context: default
 				return fmt.Errorf("failed to execute test template: %v", err)
 			}
 			// Create a new authorizer
-			sarClient, err := subjectAccessReviewInterfaceFromKubeconfig(p, testRetryBackoff, nil)
+			clientConfig, err := webhookutil.LoadKubeconfig(p, nil)
+			if err != nil {
+				return err
+			}
+			sarClient, err := subjectAccessReviewInterfaceFromConfig(clientConfig, "v1", testRetryBackoff)
 			if err != nil {
 				return fmt.Errorf("error building sar client: %v", err)
 			}
-			_, err = newWithBackoff(sarClient, 0, 0, testRetryBackoff)
+			_, err = newWithBackoff(sarClient, 0, 0, testRetryBackoff, noopAuthorizerMetrics())
 			return err
 		}()
 		if err != nil && !tt.wantErr {
@@ -310,7 +315,7 @@ func (m *mockV1Service) HTTPStatusCode() int { return m.statusCode }
 
 // newV1Authorizer creates a temporary kubeconfig file from the provided arguments and attempts to load
 // a new WebhookAuthorizer from it.
-func newV1Authorizer(callbackURL string, clientCert, clientKey, ca []byte, cacheTime time.Duration) (*WebhookAuthorizer, error) {
+func newV1Authorizer(callbackURL string, clientCert, clientKey, ca []byte, cacheTime time.Duration, metrics AuthorizerMetrics) (*WebhookAuthorizer, error) {
 	tempfile, err := ioutil.TempFile("", "")
 	if err != nil {
 		return nil, err
@@ -332,11 +337,15 @@ func newV1Authorizer(callbackURL string, clientCert, clientKey, ca []byte, cache
 	if err := json.NewEncoder(tempfile).Encode(config); err != nil {
 		return nil, err
 	}
-	sarClient, err := subjectAccessReviewInterfaceFromKubeconfig(p, testRetryBackoff, nil)
+	clientConfig, err := webhookutil.LoadKubeconfig(p, nil)
+	if err != nil {
+		return nil, err
+	}
+	sarClient, err := subjectAccessReviewInterfaceFromConfig(clientConfig, "v1", testRetryBackoff)
 	if err != nil {
 		return nil, fmt.Errorf("error building sar client: %v", err)
 	}
-	return newWithBackoff(sarClient, cacheTime, cacheTime, testRetryBackoff)
+	return newWithBackoff(sarClient, cacheTime, cacheTime, testRetryBackoff, noopAuthorizerMetrics())
 }
 
 func TestV1TLSConfig(t *testing.T) {
@@ -395,7 +404,7 @@ func TestV1TLSConfig(t *testing.T) {
 			}
 			defer server.Close()
 
-			wh, err := newV1Authorizer(server.URL, tt.clientCert, tt.clientKey, tt.clientCA, 0)
+			wh, err := newV1Authorizer(server.URL, tt.clientCert, tt.clientKey, tt.clientCA, 0, noopAuthorizerMetrics())
 			if err != nil {
 				t.Errorf("%s: failed to create client: %v", tt.test, err)
 				return
@@ -460,7 +469,7 @@ func TestV1Webhook(t *testing.T) {
 	}
 	defer s.Close()
 
-	wh, err := newV1Authorizer(s.URL, clientCert, clientKey, caCert, 0)
+	wh, err := newV1Authorizer(s.URL, clientCert, clientKey, caCert, 0, noopAuthorizerMetrics())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -560,7 +569,7 @@ func TestV1WebhookCache(t *testing.T) {
 	defer s.Close()
 
 	// Create an authorizer that caches successful responses "forever" (100 days).
-	wh, err := newV1Authorizer(s.URL, clientCert, clientKey, caCert, 2400*time.Hour)
+	wh, err := newV1Authorizer(s.URL, clientCert, clientKey, caCert, 2400*time.Hour, noopAuthorizerMetrics())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -648,5 +657,12 @@ func TestV1WebhookCache(t *testing.T) {
 				t.Errorf("%d: expected %d calls, got %d", i, test.expectedCalls, serv.called)
 			}
 		})
+	}
+}
+
+func noopAuthorizerMetrics() AuthorizerMetrics {
+	return AuthorizerMetrics{
+		RecordRequestTotal:   noopMetrics{}.RecordRequestTotal,
+		RecordRequestLatency: noopMetrics{}.RecordRequestLatency,
 	}
 }
