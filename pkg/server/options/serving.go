@@ -12,8 +12,8 @@ import (
 	"syscall"
 
 	cliflag "github.com/yubo/apiserver/components/cli/flag"
-	"github.com/yubo/apiserver/pkg/server/dynamiccertificates"
 	"github.com/yubo/apiserver/pkg/server"
+	"github.com/yubo/apiserver/pkg/server/dynamiccertificates"
 	"github.com/yubo/golib/configer"
 	utilcert "github.com/yubo/golib/util/cert"
 	"github.com/yubo/golib/util/keyutil"
@@ -160,7 +160,7 @@ func (p *SecureServingOptions) Validate() []error {
 
 // ApplyTo fills up serving information in the server configuration.
 func (p *SecureServingOptions) ApplyTo(config **server.SecureServingInfo) error {
-	if p == nil {
+	if p == nil || !p.Enabled {
 		return nil
 	}
 	if p.BindPort <= 0 && p.Listener == nil {
@@ -244,7 +244,7 @@ func (p *SecureServingOptions) ApplyTo(config **server.SecureServingInfo) error 
 }
 
 func (p *SecureServingOptions) MaybeDefaultWithSelfSignedCerts(publicAddress string, alternateDNS []string, alternateIPs []net.IP) error {
-	if p == nil || (p.BindPort == 0 && p.Listener == nil) {
+	if p == nil || (p.BindPort == 0 && p.Listener == nil) || !p.Enabled {
 		return nil
 	}
 

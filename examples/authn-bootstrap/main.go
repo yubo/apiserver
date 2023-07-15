@@ -13,16 +13,12 @@ import (
 	"github.com/yubo/apiserver/pkg/models"
 	"github.com/yubo/apiserver/pkg/proc"
 	"github.com/yubo/apiserver/pkg/request"
-	"github.com/yubo/apiserver/pkg/rest"
+	"github.com/yubo/apiserver/pkg/server"
 	"github.com/yubo/golib/api"
 	"k8s.io/klog/v2"
 
 	// api server
 	_ "github.com/yubo/apiserver/pkg/server/register"
-
-	// authn
-	_ "github.com/yubo/apiserver/pkg/authentication/register"
-	_ "github.com/yubo/apiserver/plugin/authenticator/token/bootstrap/register"
 
 	// for models
 	_ "github.com/yubo/apiserver/pkg/db/register"
@@ -50,10 +46,10 @@ func start(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	rest.WsRouteBuild(&rest.WsOption{
-		Path:               "/hello",
-		GoRestfulContainer: srv,
-		Routes: []rest.WsRoute{
+	server.WsRouteBuild(&server.WsOption{
+		Path:   "/hello",
+		Server: srv,
+		Routes: []server.WsRoute{
 			{Method: "GET", SubPath: "/", Handle: hw},
 		},
 	})

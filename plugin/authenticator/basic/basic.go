@@ -8,13 +8,13 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/yubo/apiserver/pkg/authentication"
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/pkg/authentication/user"
+	genericauthenticator "github.com/yubo/apiserver/pkg/server/authenticator"
 )
 
 func RegisterAuthn(p basicProvider) error {
-	return authentication.RegisterAuthn(newFactory(p))
+	return genericauthenticator.RegisterAuthn(newFactory(p))
 }
 
 type basicProvider interface {

@@ -13,11 +13,11 @@ import (
 	"github.com/go-openapi/spec"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"github.com/yubo/apiserver/components/cli/flag"
+	cliflag "github.com/yubo/apiserver/components/cli/flag"
+
 	"github.com/yubo/apiserver/components/cli/globalflag"
 	"github.com/yubo/apiserver/components/featuregate"
 	"github.com/yubo/apiserver/components/logs"
-	logsapi "github.com/yubo/apiserver/components/logs/api/v1"
 	"github.com/yubo/apiserver/components/version/verflag"
 	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
 	"github.com/yubo/apiserver/pkg/proc/logging"
@@ -38,11 +38,6 @@ var (
 	DefaultProcess = NewProcess()
 )
 
-func init() {
-	RegisterHooks(logging.HookOps)
-	AddConfig(logging.ModuleName, logging.NewConfig(), WithConfigGroup("logging"))
-}
-
 type Process struct {
 	*ProcessOptions
 	featureGate featuregate.MutableFeatureGate
@@ -53,7 +48,7 @@ type Process struct {
 
 	// config
 	configs       []*configOptions // catalog of RegisterConfig
-	namedFlagSets flag.NamedFlagSets
+	namedFlagSets cliflag.NamedFlagSets
 
 	debugConfig bool // print config after proc.init()
 
@@ -140,7 +135,7 @@ func Version() *version.Info {
 	return DefaultProcess.Version()
 }
 
-func NamedFlagSets() *flag.NamedFlagSets {
+func NamedFlagSets() *cliflag.NamedFlagSets {
 	return &DefaultProcess.namedFlagSets
 }
 
@@ -357,8 +352,14 @@ func (p *Process) Init(cmd *cobra.Command, opts ...ProcessOption) error {
 	// globalflags
 	p.AddFlags(cmd.Name())
 
-	// bind flags
 	fs := cmd.PersistentFlags()
+
+	// bind logging flags
+	//if err := logsapi.Init(fs); err != nil {
+	//	return fmt.Errorf("proc.log.init %s", err)
+	//}
+
+	// bind flags
 	fs.ParseErrorsWhitelist.UnknownFlags = true
 	if err := p.BindRegisteredFlags(fs); err != nil {
 		return fmt.Errorf("proc.BindRegisteredFlags %s", err)
@@ -455,15 +456,15 @@ func (p *Process) PrintConfig(out io.Writer) {
 }
 
 func (p *Process) PrintFlags(fs *pflag.FlagSet) {
-	flag.PrintFlags(fs)
+	cliflag.PrintFlags(fs)
 }
 
-func (p *Process) AddLoggingFlags() {
-	fs := p.namedFlagSets.FlagSet("logging")
-	o := logsapi.NewLoggingConfiguration()
-	logsapi.AddFlags(o, fs)
-	logs.AddFlags(fs, logs.SkipLoggingConfigurationFlags())
-}
+//func (p *Process) AddLoggingFlags() {
+//	fs := p.namedFlagSets.FlagSet("logging")
+//	o := logsapi.NewLoggingConfiguration()
+//	logsapi.AddFlags(o, fs)
+//	logs.AddFlags(fs, logs.SkipLoggingConfigurationFlags())
+//}
 
 func (p *Process) AddFlags(name string) {
 	p.addFlagsOnce.Do(func() {
@@ -526,4 +527,9 @@ func (p *Process) NewVersionCmd() *cobra.Command {
 			return nil
 		},
 	}
+}
+
+func init() {
+	RegisterHooks(logging.HookOps)
+	AddConfig(logging.ModuleName, logging.NewConfig(), WithConfigGroup("logging"))
 }

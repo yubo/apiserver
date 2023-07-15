@@ -20,31 +20,27 @@ limitations under the License.
 package logs
 
 import (
-	"flag"
 	"fmt"
 	"log"
-	"time"
 
-	"github.com/spf13/pflag"
 	logsapi "github.com/yubo/apiserver/components/logs/api/v1"
-	"github.com/yubo/apiserver/components/logs/klogflags"
 	"k8s.io/klog/v2"
 )
 
 const vmoduleUsage = " (only works for the default text log format)"
 
 var (
-	packageFlags = flag.NewFlagSet("logging", flag.ContinueOnError)
+//packageFlags = flag.NewFlagSet("logging", flag.ContinueOnError)
 
-	// Periodic flushing gets configured either via the global flag
-	// in this file or via LoggingConfiguration.
-	logFlushFreq time.Duration
+// Periodic flushing gets configured either via the global flag
+// in this file or via LoggingConfiguration.
+// logFlushFreq time.Duration
 )
 
-func init() {
-	klogflags.Init(packageFlags)
-	packageFlags.DurationVar(&logFlushFreq, logsapi.LogFlushFreqFlagName, logsapi.LogFlushFreqDefault, "Maximum number of seconds between log flushes")
-}
+//func init() {
+//	//klogflags.Init(packageFlags)
+//	//packageFlags.DurationVar(&logFlushFreq, logsapi.LogFlushFreqFlagName, logsapi.LogFlushFreqDefault, "Maximum number of seconds between log flushes")
+//}
 
 type addFlagsOptions struct {
 	skipLoggingConfigurationFlags bool
@@ -75,32 +71,32 @@ var NewOptions = logsapi.NewLoggingConfiguration
 // function on the flag set before calling AddFlags.
 //
 // May be called more than once.
-func AddFlags(fs *pflag.FlagSet, opts ...Option) {
-	o := addFlagsOptions{}
-	for _, opt := range opts {
-		opt(&o)
-	}
-
-	// Add all supported flags.
-	packageFlags.VisitAll(func(f *flag.Flag) {
-		pf := pflag.PFlagFromGoFlag(f)
-		switch f.Name {
-		case "v", logsapi.LogFlushFreqFlagName:
-			// unchanged, potentially skip it
-			if o.skipLoggingConfigurationFlags {
-				return
-			}
-		case "vmodule":
-			if o.skipLoggingConfigurationFlags {
-				return
-			}
-			pf.Usage += vmoduleUsage
-		}
-		if fs.Lookup(pf.Name) == nil {
-			fs.AddFlag(pf)
-		}
-	})
-}
+//func AddFlags(fs *pflag.FlagSet, opts ...Option) {
+//	o := addFlagsOptions{}
+//	for _, opt := range opts {
+//		opt(&o)
+//	}
+//
+//	// Add all supported flags.
+//	packageFlags.VisitAll(func(f *flag.Flag) {
+//		pf := pflag.PFlagFromGoFlag(f)
+//		switch f.Name {
+//		case "v", logsapi.LogFlushFreqFlagName:
+//			// unchanged, potentially skip it
+//			if o.skipLoggingConfigurationFlags {
+//				return
+//			}
+//		case "vmodule":
+//			if o.skipLoggingConfigurationFlags {
+//				return
+//			}
+//			pf.Usage += vmoduleUsage
+//		}
+//		if fs.Lookup(pf.Name) == nil {
+//			fs.AddFlag(pf)
+//		}
+//	})
+//}
 
 // AddGoFlags is a variant of AddFlags for traditional Go flag.FlagSet.
 // Commands should use pflag whenever possible for the sake of consistency.
@@ -108,32 +104,32 @@ func AddFlags(fs *pflag.FlagSet, opts ...Option) {
 // in flag.CommandLine) and commands that for historic reasons use Go
 // flag.Parse and cannot change to pflag because it would break their command
 // line interface.
-func AddGoFlags(fs *flag.FlagSet, opts ...Option) {
-	o := addFlagsOptions{}
-	for _, opt := range opts {
-		opt(&o)
-	}
-
-	// Add flags with deprecation remark added to the usage text of
-	// some klog flags.
-	packageFlags.VisitAll(func(f *flag.Flag) {
-		usage := f.Usage
-		switch f.Name {
-		case "v", logsapi.LogFlushFreqFlagName:
-			// unchanged
-			if o.skipLoggingConfigurationFlags {
-				return
-			}
-		case "vmodule":
-			if o.skipLoggingConfigurationFlags {
-				return
-			}
-			usage += vmoduleUsage
-		}
-		fs.Var(f.Value, f.Name, usage)
-	})
-	panic("deprecated")
-}
+//func AddGoFlags(fs *flag.FlagSet, opts ...Option) {
+//	o := addFlagsOptions{}
+//	for _, opt := range opts {
+//		opt(&o)
+//	}
+//
+//	// Add flags with deprecation remark added to the usage text of
+//	// some klog flags.
+//	packageFlags.VisitAll(func(f *flag.Flag) {
+//		usage := f.Usage
+//		switch f.Name {
+//		case "v", logsapi.LogFlushFreqFlagName:
+//			// unchanged
+//			if o.skipLoggingConfigurationFlags {
+//				return
+//			}
+//		case "vmodule":
+//			if o.skipLoggingConfigurationFlags {
+//				return
+//			}
+//			usage += vmoduleUsage
+//		}
+//		fs.Var(f.Value, f.Name, usage)
+//	})
+//	panic("deprecated")
+//}
 
 // KlogWriter serves as a bridge between the standard log package and the glog package.
 type KlogWriter struct{}
@@ -164,7 +160,7 @@ func InitLogs() {
 	// Start flushing now. If LoggingConfiguration.ApplyAndValidate is
 	// used, it will restart the daemon with the log flush interval defined
 	// there.
-	klog.StartFlushDaemon(logFlushFreq)
+	klog.StartFlushDaemon(logsapi.LogFlushFreqDefault)
 
 	// This is the default in Kubernetes. Options.ValidateAndApply
 	// will override this with the result of a feature gate check.

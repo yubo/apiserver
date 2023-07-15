@@ -9,7 +9,6 @@ import (
 	"github.com/yubo/apiserver/pkg/proc"
 	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
 	genericapiserver "github.com/yubo/apiserver/pkg/server"
-	genericoptions "github.com/yubo/apiserver/pkg/server/options"
 	"github.com/yubo/apiserver/pkg/util/notfoundhandler"
 	utilerrors "github.com/yubo/golib/util/errors"
 )
@@ -227,11 +226,13 @@ func (p *serverModule) Start(stopCh <-chan struct{}, done chan struct{}) error {
 
 func Register() {
 	proc.RegisterHooks(hookOps)
-	proc.AddConfig("generic", genericoptions.NewServerRunOptions(), proc.WithConfigGroup("generic"))
-	proc.AddConfig("secureServing", genericoptions.NewServerRunOptions(), proc.WithConfigGroup("secureServing"))
-	proc.AddConfig("insecureServing", genericoptions.NewServerRunOptions(), proc.WithConfigGroup("insecureServing"))
-	proc.AddConfig("audit", genericoptions.NewServerRunOptions(), proc.WithConfigGroup("audit"))
-	proc.AddConfig("feature", genericoptions.NewServerRunOptions(), proc.WithConfigGroup("feature"))
-	proc.AddConfig("authentication", genericoptions.NewServerRunOptions(), proc.WithConfigGroup("authentication"))
-	proc.AddConfig("authorization", genericoptions.NewServerRunOptions(), proc.WithConfigGroup("authorization"))
+
+	cf := newConfig()
+	proc.AddConfig("generic", cf.GenericServerRunOptions, proc.WithConfigGroup("generic"))
+	proc.AddConfig("secureServing", cf.SecureServing, proc.WithConfigGroup("secureServing"))
+	proc.AddConfig("insecureServing", cf.InsecureServing, proc.WithConfigGroup("insecureServing"))
+	proc.AddConfig("audit", cf.Audit, proc.WithConfigGroup("audit"))
+	proc.AddConfig("feature", cf.Features, proc.WithConfigGroup("feature"))
+	proc.AddConfig("authentication", cf.Authentication, proc.WithConfigGroup("authentication"))
+	proc.AddConfig("authorization", cf.Authorization, proc.WithConfigGroup("authorization"))
 }

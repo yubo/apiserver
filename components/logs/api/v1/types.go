@@ -51,7 +51,7 @@ type LoggingConfiguration struct {
 	// logged. Default is zero which logs only the most important
 	// messages. Higher values enable additional messages. Error messages
 	// are always logged.
-	Verbosity VerbosityLevel `json:"verbosity" flag:"v,v" description:"number for the log level verbosity"`
+	Verbosity VerbosityLevel `json:"verbosity" flag:"v,v" description:"1 number for the log level verbosity"`
 	// VModule overrides the verbosity threshold for individual files.
 	// Only supported for "text" log format.
 	VModule VModuleConfiguration `json:"vmodule,omitempty" flag:"vmodule" description:"comma-separated list of pattern=N settings for file-filtered logging (only works for text log format)"`

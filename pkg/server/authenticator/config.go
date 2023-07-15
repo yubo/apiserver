@@ -22,7 +22,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/yubo/apiserver/pkg/authentication"
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/pkg/authentication/authenticatorfactory"
 	"github.com/yubo/apiserver/pkg/authentication/group"
@@ -85,7 +84,7 @@ type Config struct {
 	//ServiceAccountTokenGetter   serviceaccount.ServiceAccountTokenGetter
 	//SecretsWriter               typedv1core.SecretsGetter
 	// move to custom plugin
-	//BootstrapTokenAuthenticator authenticator.Token
+	BootstrapTokenAuthenticator authenticator.Token
 
 	// ClientCAContentProvider are the options for verifying incoming connections using mTLS and directly assigning to users.
 	// Generally this is the CA bundle file used to authenticate client certificates
@@ -145,9 +144,9 @@ func (config Config) New(ctx context.Context) (authenticator.Request /* *spec.Se
 	//	tokenAuthenticators = append(tokenAuthenticators, serviceAccountAuth)
 	//}
 
-	//if config.BootstrapToken && config.BootstrapTokenAuthenticator != nil {
-	//	tokenAuthenticators = append(tokenAuthenticators, authenticator.WrapAudienceAgnosticToken(config.APIAudiences, config.BootstrapTokenAuthenticator))
-	//}
+	if config.BootstrapToken && config.BootstrapTokenAuthenticator != nil {
+		tokenAuthenticators = append(tokenAuthenticators, authenticator.WrapAudienceAgnosticToken(config.APIAudiences, config.BootstrapTokenAuthenticator))
+	}
 
 	// NOTE(ericchiang): Keep the OpenID Connect after Service Accounts.
 	//
@@ -192,7 +191,7 @@ func (config Config) New(ctx context.Context) (authenticator.Request /* *spec.Se
 	}
 
 	// custom authn
-	for _, factory := range authentication.AuthenticatorFactories() {
+	for _, factory := range authenticatorFactories {
 		auth, err := factory(ctx)
 		if err != nil {
 			return nil, err
@@ -202,7 +201,7 @@ func (config Config) New(ctx context.Context) (authenticator.Request /* *spec.Se
 		}
 	}
 
-	for _, factory := range authentication.TokenAuthenticatorFactories() {
+	for _, factory := range tokenAuthenticatorFactories {
 		token, err := factory(ctx)
 		if err != nil {
 			return nil, err

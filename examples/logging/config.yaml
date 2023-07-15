@@ -4,4 +4,4 @@ logging:
   options:
     json:
       infoBufferSize: "0"
-  verbosity: 0
+  verbosity: 5

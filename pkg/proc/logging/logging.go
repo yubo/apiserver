@@ -70,6 +70,8 @@ func (p *logging) start(ctx context.Context) error {
 		return err
 	}
 
+	fmt.Printf(">>%s\n", util.JsonStr(config))
+
 	if err := logsapi.ValidateAndApplyAsField(config.LoggingConfiguration, utilfeature.DefaultFeatureGate, field.NewPath("logging")); err != nil {
 		return fmt.Errorf("initialize logging: %v", err)
 	}

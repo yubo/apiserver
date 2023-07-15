@@ -10,3 +10,7 @@ apiserver:
 db:
   driver: sqlite3
   dsn: file:test.db?cache=shared&mode=memory
+
+authentication:
+  BootstrapToken:
+    Enable: true

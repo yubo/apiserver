@@ -27,9 +27,11 @@ import (
 	"github.com/yubo/apiserver/pkg/authentication/authenticatorfactory"
 	"github.com/yubo/apiserver/pkg/authentication/request/headerrequest"
 	authzmodes "github.com/yubo/apiserver/pkg/authorization/authorizer/modes"
+	"github.com/yubo/apiserver/pkg/models"
 	genericapiserver "github.com/yubo/apiserver/pkg/server"
 	serverauthenticator "github.com/yubo/apiserver/pkg/server/authenticator"
 	"github.com/yubo/apiserver/pkg/server/dynamiccertificates"
+	"github.com/yubo/apiserver/plugin/authenticator/token/bootstrap"
 	"github.com/yubo/golib/util/sets"
 	"github.com/yubo/golib/util/wait"
 	"k8s.io/klog/v2"
@@ -350,13 +352,9 @@ func (o *BuiltInAuthenticationOptions) ApplyTo(ctx context.Context, authInfo *ge
 	//)
 	//authenticatorConfig.SecretsWriter = extclient.CoreV1()
 
-	//if authenticatorConfig.BootstrapToken {
-	//	lister, err := dbus.GetSecretLister()
-	//	if err != nil {
-	//		return err
-	//	}
-	//	authenticatorConfig.BootstrapTokenAuthenticator = bootstrap.NewTokenAuthenticator(lister)
-	//}
+	if authenticatorConfig.BootstrapToken {
+		authenticatorConfig.BootstrapTokenAuthenticator = bootstrap.NewTokenAuthenticator(models.NewSecret())
+	}
 
 	//if egressSelector != nil {
 	//	egressDialer, err := egressSelector.Lookup(egressselector.ControlPlane.AsNetworkContext())

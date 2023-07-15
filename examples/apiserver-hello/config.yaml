@@ -1,47 +1,8 @@
-generic:
-  goawayChance: 0
-  livezGracePeriod: 0
-  maxMutatingRequestsInFlight: 200
-  maxRequestBodyBytes: 3145728
-  maxRequestsInFlight: 400
-  minRequestTimeout: 30m0s
-  requestTimeout: 1m0s
-  shutdownDelayDuration: 0
-
 insecureServing:
   bindAddress: 0.0.0.0
   bindNework: tcp
   bindPort: 8080
   enabled: true
 
-# keepAuthorizationHeader: false
-
 secureServing:
-  bindAddress: 0.0.0.0
-  bindNework: tcp
-  bindPort: 8443
   enabled: false
-  http2MaxStreamsPerConnection: 0
-  permitAddressSharing: false
-  permitPortSharing: false
-  serverCert:
-    certDir: /tmp/main
-    pairName: apiserver
-
-feature:
-  enableContentionProfiling: true
-  enableExpvar: false
-  enableHealthz: false
-  enableIndex: true
-  enableMetrics: true
-  enableOpenAPI: true
-  enableProfiling: false
-
-
-logging:
-  flushFrequency: 5s
-  format: text
-  options:
-    json:
-      infoBufferSize: "0"
-  verbosity: 0

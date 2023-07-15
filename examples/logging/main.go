@@ -29,7 +29,9 @@ func runLogger(ctx context.Context) error {
 	klog.ErrorS(err, "Log using ErrorS")
 	data := SensitiveData{Key: "secret"}
 	klog.Infof("Log with sensitive key, data: %q", data)
-	klog.V(1).Info("Log less important message")
+	for i := 0; i < 10; i++ {
+		klog.V(klog.Level(i)).Infof("level %d info", i)
+	}
 
 	return nil
 }

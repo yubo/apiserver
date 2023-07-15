@@ -1,11 +1,13 @@
-apiserver:
-  insecureServing:
-    bindAddress: 0.0.0.0
-    bindNework: tcp
-    bindPort: 8080
-    enabled: true
-  secureServing:
-    enabled: false
+insecureServing:
+  bindAddress: 0.0.0.0
+  bindNework: tcp
+  bindPort: 8080
+  enabled: true
+
+secureServing:
+  enabled: false
+
+generic:
   # for swagger
   securitySchemes:
     - name: BaseAuth

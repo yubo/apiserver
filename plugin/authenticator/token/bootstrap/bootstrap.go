@@ -27,11 +27,8 @@ import (
 
 	"k8s.io/klog/v2"
 
-	"github.com/yubo/apiserver/pkg/authentication"
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/pkg/authentication/user"
-	"github.com/yubo/apiserver/pkg/models"
-	"github.com/yubo/apiserver/pkg/proc"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/api/errors"
 
@@ -47,36 +44,36 @@ const (
 	configPath = "authentication"
 )
 
-func newConfig() *config { return &config{BootstrapToken: true} }
+//func newConfig() *config { return &config{BootstrapToken: true} }
 
-type config struct {
-	BootstrapToken bool `json:"bootstrapToken" flag:"enable-bootstrap-token-auth" description:"Enable to allow secrets of type 'bootstrap.kubernetes.io/token' in the 'kube-system' namespace to be used for TLS bootstrapping authentication."`
-}
+//type config struct {
+//	BootstrapToken bool `json:"bootstrapToken" flag:"enable-bootstrap-token-auth" description:"Enable to allow secrets of type 'bootstrap.kubernetes.io/token' in the 'kube-system' namespace to be used for TLS bootstrapping authentication."`
+//}
 
-func (o *config) Validate() error {
-	return nil
-}
+//func (o *config) Validate() error {
+//	return nil
+//}
+//
+//func factory(ctx context.Context) (authenticator.Token, error) {
+//	cf := newConfig()
+//	if err := proc.ReadConfig(configPath, cf); err != nil {
+//		return nil, err
+//	}
+//
+//	if !cf.BootstrapToken {
+//		klog.V(5).InfoS("skip authModule", "name", moduleName, "reason", "disabled")
+//		return nil, nil
+//	}
+//
+//	klog.InfoS("authmodule init", "name", moduleName)
+//
+//	return NewTokenAuthenticator(models.NewSecret()), nil
+//}
 
-func factory(ctx context.Context) (authenticator.Token, error) {
-	cf := newConfig()
-	if err := proc.ReadConfig(configPath, cf); err != nil {
-		return nil, err
-	}
-
-	if !cf.BootstrapToken {
-		klog.V(5).InfoS("skip authModule", "name", moduleName, "reason", "disabled")
-		return nil, nil
-	}
-
-	klog.InfoS("authmodule init", "name", moduleName)
-
-	return NewTokenAuthenticator(models.NewSecret()), nil
-}
-
-func Register() {
-	proc.AddConfig(configPath, newConfig(), proc.WithConfigGroup("authentication"))
-	authentication.RegisterTokenAuthn(factory)
-}
+//func Register() {
+//	proc.AddConfig(configPath, newConfig(), proc.WithConfigGroup("authentication"))
+//	authentication.RegisterTokenAuthn(factory)
+//}
 
 // TODO: A few methods in this package is copied from other sources. Either
 // because the existing functionality isn't exported or because it is in a
