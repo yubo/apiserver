@@ -11,19 +11,14 @@ import (
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/proc"
 	"github.com/yubo/apiserver/pkg/request"
-	"github.com/yubo/apiserver/pkg/rest"
+	"github.com/yubo/apiserver/pkg/server"
 
 	// http
-	server "github.com/yubo/apiserver/pkg/server/module"
 	_ "github.com/yubo/apiserver/pkg/server/register"
-
-	// authn
-	_ "github.com/yubo/apiserver/pkg/authentication/register"
-	_ "github.com/yubo/apiserver/plugin/authenticator/token/oidc/register"
 )
 
 func main() {
-	command := proc.NewRootCmd(server.WithoutTLS(), proc.WithRun(start))
+	command := proc.NewRootCmd(proc.WithoutHTTPS(), proc.WithRun(start))
 	code := cli.Run(command)
 	os.Exit(code)
 }
@@ -33,10 +28,10 @@ func start(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	rest.WsRouteBuild(&rest.WsOption{
-		Path:               "/hello",
-		GoRestfulContainer: srv,
-		Routes: []rest.WsRoute{
+	server.WsRouteBuild(&server.WsOption{
+		Path:   "/hello",
+		Server: srv,
+		Routes: []server.WsRoute{
 			{Method: "GET", SubPath: "/", Handle: hw},
 		},
 	})

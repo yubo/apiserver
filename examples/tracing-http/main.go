@@ -14,18 +14,17 @@ import (
 	"github.com/yubo/apiserver/components/dbus"
 	"github.com/yubo/apiserver/pkg/client"
 	"github.com/yubo/apiserver/pkg/proc"
-	"github.com/yubo/apiserver/pkg/rest"
+	"github.com/yubo/apiserver/pkg/server"
 	"github.com/yubo/apiserver/pkg/tracing"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/attribute"
 
-	server "github.com/yubo/apiserver/pkg/server/module"
 	_ "github.com/yubo/apiserver/pkg/server/register"
 	_ "github.com/yubo/apiserver/pkg/tracing/register"
 )
 
 func main() {
-	cmd := proc.NewRootCmd(server.WithoutTLS(), proc.WithRun(start))
+	cmd := proc.NewRootCmd(proc.WithoutHTTPS(), proc.WithRun(start))
 	code := cli.Run(cmd)
 	os.Exit(code)
 }
@@ -36,10 +35,10 @@ func start(ctx context.Context) error {
 		return fmt.Errorf("unable to get http server from the context")
 	}
 
-	rest.WsRouteBuild(&rest.WsOption{
-		Path:               "/api",
-		GoRestfulContainer: srv,
-		Routes: []rest.WsRoute{
+	server.WsRouteBuild(&server.WsOption{
+		Path:   "/api",
+		Server: srv,
+		Routes: []server.WsRoute{
 			{Method: "GET", SubPath: "v1/users/{name}", Handle: getUser},
 			{Method: "GET", SubPath: "v2/users/{name}", Handle: getUser2},
 			{Method: "GET", SubPath: "v3/users/{name}", Handle: getUser3},

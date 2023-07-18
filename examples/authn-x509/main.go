@@ -12,11 +12,9 @@ import (
 	"github.com/yubo/apiserver/pkg/proc"
 	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
 	"github.com/yubo/apiserver/pkg/request"
-	"github.com/yubo/apiserver/pkg/rest"
+	"github.com/yubo/apiserver/pkg/server"
 
-	_ "github.com/yubo/apiserver/pkg/authentication/register"
 	_ "github.com/yubo/apiserver/pkg/server/register"
-	_ "github.com/yubo/apiserver/plugin/authenticator/x509/register"
 )
 
 // This example shows the minimal code needed to get a restful.WebService working.
@@ -45,10 +43,10 @@ func start(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	rest.WsRouteBuild(&rest.WsOption{
-		Path:               "/inc",
-		GoRestfulContainer: srv,
-		Routes: []rest.WsRoute{
+	server.WsRouteBuild(&server.WsOption{
+		Path:   "/inc",
+		Server: srv,
+		Routes: []server.WsRoute{
 			{Method: "POST", SubPath: "/", Handle: inc},
 		},
 	})

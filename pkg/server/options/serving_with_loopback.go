@@ -24,6 +24,7 @@ import (
 	"github.com/yubo/apiserver/pkg/server"
 	"github.com/yubo/apiserver/pkg/server/dynamiccertificates"
 	"github.com/yubo/client-go/rest"
+	"github.com/yubo/golib/util"
 	certutil "github.com/yubo/golib/util/cert"
 )
 
@@ -45,7 +46,7 @@ func (o *SecureServingOptions) WithLoopback() *SecureServingOptionsWithLoopback 
 
 // ApplyTo fills up serving information in the server configuration.
 func (s *SecureServingOptionsWithLoopback) ApplyTo(secureServingInfo **server.SecureServingInfo, loopbackClientConfig **rest.Config) error {
-	if s == nil || s.SecureServingOptions == nil || secureServingInfo == nil {
+	if s == nil || s.SecureServingOptions == nil || !util.BoolValue(s.SecureServingOptions.Enabled) || secureServingInfo == nil {
 		return nil
 	}
 

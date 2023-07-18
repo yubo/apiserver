@@ -1,13 +1,13 @@
 tracing:
-  debug: true
+  debug: false
   radioBased: 1.0
   serviceName: otel-trace.server
-  contextHeadername: Trace-Id
+  injectName: Trace-Id
   attributes:
     key1: value1
-  otel:
-    endpoint: localhost:4317
-    insecure: true
+  #otel:
+  #  endpoint: localhost:4317
+  #  insecure: true
   #jaeger:
   #  endpoint: http://localhost:14268/api/traces
   #  insecure: true

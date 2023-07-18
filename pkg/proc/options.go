@@ -85,6 +85,16 @@ func WithRun(fn ...func(ctx context.Context) error) ProcessOption {
 	return WithHooks(hooks...)
 }
 
+func WithoutHTTPS() ProcessOption {
+	return WithConfigOptions(
+		configer.WithDefaultYaml("", `
+secureServing:
+  enabled: false
+insecureServing:
+  enabled: true`),
+	)
+}
+
 func WithName(name string) ProcessOption {
 	return func(p *ProcessOptions) {
 		p.name = name

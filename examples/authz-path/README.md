@@ -4,7 +4,7 @@ This example shows the minimal code needed to get a restful.WebService working.
 
 ## server
 ```sh
-$ go run ./main.go --authorization-always-allow-paths /hello/ro --authorization-mode AlwaysDeny
+$ go run ./main.go -f ./config.yaml
 ```
 
 

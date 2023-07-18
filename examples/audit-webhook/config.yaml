@@ -1,17 +1,20 @@
-apiserver:
-  insecureServing:
-    bindPort: 8080
-    enabled: true
-  secureServing:
-    enabled: false
+insecureServing:
+  bindPort: 8080
+  enabled: true
+
+secureServing:
+  enabled: false
+
 audit:
   policyFile: ./audit-policy.yaml
+  log:
+    path: '-'  # stdout
   webhook:
     configFile: ./client.conf
     batch:
+      mode: batch
       asyncDelegate: true
       maxBatchWait: 3s
-      mode: batch
       throttleBurst: 15
       throttleEnable: true
       throttleQPS: 10

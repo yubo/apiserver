@@ -23,8 +23,11 @@ type Config struct {
 	AsyncDelegate bool `json:"asyncDelegate"`
 }
 
-func (c Config) BatchConfig() BatchConfig {
-	return BatchConfig{
+func (c *Config) BatchConfig() *BatchConfig {
+	if c == nil {
+		return nil
+	}
+	return &BatchConfig{
 		BufferSize:     c.BufferSize,
 		MaxBatchSize:   c.MaxBatchSize,
 		MaxBatchWait:   c.MaxBatchWait.Duration,

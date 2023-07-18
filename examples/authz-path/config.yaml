@@ -1,0 +1,12 @@
+insecureServing:
+  bindPort: 8080
+  enabled: true
+
+secureServing:
+  enabled: false
+
+authorization:
+  modes:
+  - AlwaysDeny
+  alwaysAllowPaths:
+  - /hello/ro

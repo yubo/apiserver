@@ -28,7 +28,7 @@ import (
 // No one should be using these anymore.
 // DEPRECATED: all insecure serving options are removed in a future version
 type DeprecatedInsecureServingOptions struct {
-	Enabled     *bool  `json:"enabled" flag:"insecure-serving" default:"false" description:"enable the insecure serving"`
+	Enabled     bool   `json:"enabled" flag:"insecure-serving" default:"false" description:"enable the insecure serving"`
 	BindAddress net.IP `json:"bindAddress" flag:"address" description:"The IP address on which to serve the --port (set to 0.0.0.0 or :: for listening in all interfaces and IP families)." deprecated:"This flag will be removed in a future version."`
 	BindPort    int    `json:"bindPort" flag:"port" description:"The port on which to serve unsecured, unauthenticated access." deprecated:"This flag will be removed in a future version."`
 	// BindNetwork is the type of network to bind to - defaults to "tcp", accepts "tcp",
@@ -47,6 +47,7 @@ type DeprecatedInsecureServingOptions struct {
 
 func NewDeprecatedInsecureServingOptions() *DeprecatedInsecureServingOptions {
 	return &DeprecatedInsecureServingOptions{
+		Enabled:     false,
 		BindAddress: net.ParseIP("0.0.0.0"),
 		BindPort:    8080,
 		BindNetwork: "tcp",
@@ -71,7 +72,7 @@ func (p *DeprecatedInsecureServingOptions) Validate() []error {
 // ApplyTo adds DeprecatedInsecureServingOptions to the insecureserverinfo and kube-controller manager configuration.
 // Note: the double pointer allows to set the *DeprecatedInsecureServingInfo to nil without referencing the struct hosting this pointer.
 func (p *DeprecatedInsecureServingOptions) ApplyTo(c **server.DeprecatedInsecureServingInfo) error {
-	if p == nil {
+	if p == nil || !p.Enabled {
 		return nil
 	}
 	if p.BindPort <= 0 {

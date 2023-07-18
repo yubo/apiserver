@@ -49,10 +49,10 @@ func start(ctx context.Context) error {
 		return err
 	}
 
-	rest.WsRouteBuild(&rest.WsOption{
+	server.WsRouteBuild(&server.WsOption{
 		Path:               "/hello",
 		GoRestfulContainer: srv,
-		Routes: []rest.WsRoute{
+		Routes: []server.WsRoute{
 			{Method: "GET", SubPath: "/", Handle: wsHandle},
 		},
 	})

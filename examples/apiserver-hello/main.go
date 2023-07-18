@@ -10,12 +10,11 @@ import (
 	"github.com/yubo/apiserver/pkg/proc"
 
 	genericserver "github.com/yubo/apiserver/pkg/server"
-	server "github.com/yubo/apiserver/pkg/server/module"
 	_ "github.com/yubo/apiserver/pkg/server/register"
 )
 
 func main() {
-	cmd := proc.NewRootCmd(server.WithoutTLS(), proc.WithRun(start))
+	cmd := proc.NewRootCmd(proc.WithoutHTTPS(), proc.WithRun(start))
 	code := cli.Run(cmd)
 	os.Exit(code)
 }

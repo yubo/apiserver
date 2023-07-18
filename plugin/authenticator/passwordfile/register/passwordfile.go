@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"github.com/yubo/apiserver/components/dbus"
-	"github.com/yubo/apiserver/pkg/authentication"
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/pkg/proc"
+	authn "github.com/yubo/apiserver/pkg/server/authenticator"
 	"github.com/yubo/apiserver/plugin/authenticator/basic"
 	"github.com/yubo/apiserver/plugin/authenticator/passwordfile"
 	"k8s.io/klog/v2"
@@ -50,6 +50,6 @@ func factory(ctx context.Context) (authenticator.Request, error) {
 }
 
 func init() {
-	authentication.RegisterAuthn(factory)
+	authn.RegisterAuthn(factory)
 	proc.AddConfig(configPath, newConfig(), proc.WithConfigGroup("authentication"))
 }

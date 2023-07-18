@@ -4,8 +4,8 @@
 
 ```sh
 # server
-$ go run ./server/apiserver-list-server.go
+$ go run ./server/main.go
 
 # client
-$ go run ./client/apiserver-list-client.go
+$ go run ./client/main.go
 ```

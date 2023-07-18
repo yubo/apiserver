@@ -17,12 +17,10 @@ import (
 	"github.com/yubo/apiserver/components/cli"
 	"github.com/yubo/apiserver/components/dbus"
 	"github.com/yubo/apiserver/pkg/proc"
-	"github.com/yubo/apiserver/pkg/rest"
+	"github.com/yubo/apiserver/pkg/server"
 	jose "gopkg.in/square/go-jose.v2"
 	"k8s.io/klog/v2"
 
-	// http
-	server "github.com/yubo/apiserver/pkg/server/module"
 	_ "github.com/yubo/apiserver/pkg/server/register"
 )
 
@@ -39,7 +37,7 @@ func main() {
 	// register config{} to configer.Factory
 	proc.AddConfig(moduleName, newConfig(), proc.WithConfigGroup("oidc-provider"))
 
-	cmd := proc.NewRootCmd(server.WithoutTLS(), proc.WithRun(_module.start))
+	cmd := proc.NewRootCmd(proc.WithRun(_module.start))
 	code := cli.Run(cmd)
 	os.Exit(code)
 }
@@ -81,9 +79,9 @@ func (p *module) start(ctx context.Context) error {
 	return nil
 }
 
-func (p *module) installWs(c rest.GoRestfulContainer) {
-	c.UnlistedHandle("/.testing/keys", http.HandlerFunc(p.keys))
-	c.UnlistedHandle("/.well-known/openid-configuration", http.HandlerFunc(p.openidConfiguration))
+func (p *module) installWs(s *server.GenericAPIServer) {
+	s.Handler.NonGoRestfulMux.UnlistedHandle("/.testing/keys", http.HandlerFunc(p.keys))
+	s.Handler.NonGoRestfulMux.UnlistedHandle("/.well-known/openid-configuration", http.HandlerFunc(p.openidConfiguration))
 }
 
 func (p *module) keys(w http.ResponseWriter, r *http.Request) {

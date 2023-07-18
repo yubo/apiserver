@@ -61,11 +61,11 @@ func start(ctx context.Context) error {
 }
 
 func (p *server) installWs(http rest.GoRestfulContainer) {
-	rest.WsRouteBuild(&rest.WsOption{
+	server.WsRouteBuild(&server.WsOption{
 		Path:               "/remotecommand",
 		GoRestfulContainer: http,
 		Consumes:           []string{rest.MIME_ALL},
-		Routes: []rest.WsRoute{
+		Routes: []server.WsRoute{
 			{Method: "POST", SubPath: "/exec", Handle: p.exec},
 			{Method: "POST", SubPath: "/attach", Handle: p.attach},
 			{Method: "POST", SubPath: "/portforward", Handle: p.portForward},

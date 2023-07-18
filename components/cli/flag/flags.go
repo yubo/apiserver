@@ -60,7 +60,7 @@ func InitFlags() {
 
 // PrintFlags logs the flags in the flagset
 func PrintFlags(flags *pflag.FlagSet) {
-	if klog.V(2).Enabled() {
+	if klog.V(10).Enabled() {
 		flags.VisitAll(func(flag *pflag.Flag) {
 			klog.Infof("FLAG: --%s=%q", flag.Name, flag.Value)
 		})

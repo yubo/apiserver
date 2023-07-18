@@ -19,6 +19,7 @@ package options
 import (
 	"fmt"
 	"io"
+	"net"
 	"os"
 	"path/filepath"
 	"strings"
@@ -101,7 +102,7 @@ type AuditBatchOptions struct {
 	// Defaults to asynchronous batch events.
 	Mode string `json:"mode"`
 	// Configuration for batching backend. Only used in batch mode.
-	BatchConfig pluginbuffered.BatchConfig `json:",inline"`
+	*pluginbuffered.Config
 }
 
 func flagf(format string, a ...interface{}) []string {
@@ -125,7 +126,7 @@ type AuditTruncateOptions struct {
 	Enabled bool `json:"enabled" description:"Whether event and batch truncating is enabled."`
 
 	// Truncating configuration.
-	TruncateConfig plugintruncate.Config `json:",inline"`
+	plugintruncate.Config
 }
 
 func (o *AuditTruncateOptions) GetTags(pluginName string) map[string]*configer.FieldTag {
@@ -137,7 +138,7 @@ func (o *AuditTruncateOptions) GetTags(pluginName string) map[string]*configer.F
 }
 
 func (o *AuditTruncateOptions) Validate(pluginName string) error {
-	config := o.TruncateConfig
+	config := o.Config
 	if config.MaxEventSize <= 0 {
 		return fmt.Errorf("invalid audit truncate %s max event size %v, must be a positive number", pluginName, config.MaxEventSize)
 	}
@@ -217,8 +218,8 @@ func NewAuditOptions() *AuditOptions {
 		WebhookOptions: AuditWebhookOptions{
 			InitialBackoff: api.Duration{Duration: pluginwebhook.DefaultInitialBackoffDelay},
 			BatchOptions: AuditBatchOptions{
-				Mode:        ModeBatch,
-				BatchConfig: defaultWebhookBatchConfig(),
+				Mode:   ModeBatch,
+				Config: defaultWebhookBatchOptions(),
 			},
 			TruncateOptions: NewAuditTruncateOptions(),
 			//GroupVersionString: "audit.k8s.io/v1",
@@ -226,8 +227,8 @@ func NewAuditOptions() *AuditOptions {
 		LogOptions: AuditLogOptions{
 			Format: pluginlog.FormatJson,
 			BatchOptions: AuditBatchOptions{
-				Mode:        ModeBlocking,
-				BatchConfig: defaultLogBatchConfig(),
+				Mode:   ModeBlocking,
+				Config: defaultLogBatchOptions(),
 			},
 			TruncateOptions: NewAuditTruncateOptions(),
 			//GroupVersionString: "audit.k8s.io/v1",
@@ -238,7 +239,7 @@ func NewAuditOptions() *AuditOptions {
 func NewAuditTruncateOptions() AuditTruncateOptions {
 	return AuditTruncateOptions{
 		Enabled: false,
-		TruncateConfig: plugintruncate.Config{
+		Config: plugintruncate.Config{
 			MaxBatchSize: 10 * 1024 * 1024, // 10MB
 			MaxEventSize: 100 * 1024,       // 100KB
 		},
@@ -287,19 +288,18 @@ func validateBackendBatchOptions(pluginName string, options AuditBatchOptions) e
 		// Don't validate the unused options.
 		return nil
 	}
-	config := options.BatchConfig
-	if config.BufferSize <= 0 {
-		return fmt.Errorf("invalid audit batch %s buffer size %v, must be a positive number", pluginName, config.BufferSize)
+	if options.BufferSize <= 0 {
+		return fmt.Errorf("invalid audit batch %s buffer size %v, must be a positive number", pluginName, options.BufferSize)
 	}
-	if config.MaxBatchSize <= 0 {
-		return fmt.Errorf("invalid audit batch %s max batch size %v, must be a positive number", pluginName, config.MaxBatchSize)
+	if options.MaxBatchSize <= 0 {
+		return fmt.Errorf("invalid audit batch %s max batch size %v, must be a positive number", pluginName, options.MaxBatchSize)
 	}
-	if config.ThrottleEnable {
-		if config.ThrottleQPS <= 0 {
-			return fmt.Errorf("invalid audit batch %s throttle QPS %v, must be a positive number", pluginName, config.ThrottleQPS)
+	if options.ThrottleEnable {
+		if options.ThrottleQPS <= 0 {
+			return fmt.Errorf("invalid audit batch %s throttle QPS %v, must be a positive number", pluginName, options.ThrottleQPS)
 		}
-		if config.ThrottleBurst <= 0 {
-			return fmt.Errorf("invalid audit batch %s throttle burst %v, must be a positive number", pluginName, config.ThrottleBurst)
+		if options.ThrottleBurst <= 0 {
+			return fmt.Errorf("invalid audit batch %s throttle burst %v, must be a positive number", pluginName, options.ThrottleBurst)
 		}
 	}
 	return nil
@@ -390,7 +390,8 @@ func (o *AuditOptions) ApplyTo(c *server.Config) error {
 			//	}
 			//	webhookBackend, err = o.WebhookOptions.newUntruncatedBackend(egressDialer)
 			//} else {
-			webhookBackend, err = o.WebhookOptions.newUntruncatedBackend(nil)
+			var d net.Dialer
+			webhookBackend, err = o.WebhookOptions.newUntruncatedBackend(d.DialContext)
 			//}
 			if err != nil {
 				return err
@@ -477,7 +478,8 @@ func (o *AuditBatchOptions) wrapBackend(delegate audit.Backend) audit.Backend {
 	if o.Mode == ModeBlocking {
 		return &ignoreErrorsBackend{Backend: delegate}
 	}
-	return pluginbuffered.NewBackend(delegate, o.BatchConfig)
+	klog.InfoS("wrapBackend", "config", o.BatchConfig())
+	return pluginbuffered.NewBackend(delegate, o.BatchConfig())
 }
 
 //func (o *AuditTruncateOptions) AddFlags(pluginName string, fs *pflag.FlagSet) {
@@ -497,7 +499,7 @@ func (o *AuditTruncateOptions) wrapBackend(delegate audit.Backend) audit.Backend
 	if !o.Enabled {
 		return delegate
 	}
-	return plugintruncate.NewBackend(delegate, o.TruncateConfig)
+	return plugintruncate.NewBackend(delegate, o.Config)
 }
 
 //func (o *AuditLogOptions) AddFlags(fs *pflag.FlagSet) {
@@ -652,11 +654,15 @@ func (o *AuditWebhookOptions) newUntruncatedBackend(customDial utilnet.DialFunc)
 }
 
 // defaultWebhookBatchConfig returns the default BatchConfig used by the Webhook backend.
-func defaultWebhookBatchConfig() pluginbuffered.BatchConfig {
-	return pluginbuffered.BatchConfig{
+func defaultWebhookBatchConfig() *pluginbuffered.BatchConfig {
+	return defaultWebhookBatchOptions().BatchConfig()
+}
+
+func defaultWebhookBatchOptions() *pluginbuffered.Config {
+	return &pluginbuffered.Config{
 		BufferSize:   defaultBatchBufferSize,
 		MaxBatchSize: defaultBatchMaxSize,
-		MaxBatchWait: defaultBatchMaxWait,
+		MaxBatchWait: api.Duration{Duration: defaultBatchMaxWait},
 
 		ThrottleEnable: true,
 		ThrottleQPS:    defaultBatchThrottleQPS,
@@ -667,8 +673,12 @@ func defaultWebhookBatchConfig() pluginbuffered.BatchConfig {
 }
 
 // defaultLogBatchConfig returns the default BatchConfig used by the Log backend.
-func defaultLogBatchConfig() pluginbuffered.BatchConfig {
-	return pluginbuffered.BatchConfig{
+func defaultLogBatchConfig() *pluginbuffered.BatchConfig {
+	return defaultLogBatchOptions().BatchConfig()
+}
+
+func defaultLogBatchOptions() *pluginbuffered.Config {
+	return &pluginbuffered.Config{
 		BufferSize: defaultBatchBufferSize,
 		// Batching is not useful for the log-file backend.
 		// MaxBatchWait ignored.

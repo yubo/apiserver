@@ -8,12 +8,12 @@ import (
 	"github.com/yubo/apiserver/components/version"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	"github.com/yubo/apiserver/pkg/filters"
-	"github.com/yubo/apiserver/pkg/proc"
 	genericapiserver "github.com/yubo/apiserver/pkg/server"
 	"github.com/yubo/apiserver/pkg/server/options"
-	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/scheme"
+	"github.com/yubo/golib/util"
 	"github.com/yubo/golib/util/sets"
+	"go.opentelemetry.io/otel"
 	"k8s.io/klog/v2"
 )
 
@@ -51,7 +51,7 @@ func complete(ctx context.Context, s *Config) (completedServerRunOptions, error)
 		klog.Infof("external host was not specified, using %v", s.GenericServerRunOptions.ExternalHost)
 	}
 
-	if s.SecureServing != nil && !s.SecureServing.Enabled {
+	if s.SecureServing != nil && !util.BoolValue(s.SecureServing.Enabled) {
 		s.SecureServing = nil
 	}
 
@@ -119,6 +119,8 @@ func buildGenericConfig(ctx context.Context, s *Config) (genericConfig *generica
 		return
 	}
 
+	genericConfig.TracerProvider = otel.GetTracerProvider()
+
 	return
 }
 
@@ -170,14 +172,4 @@ func authInit(c *genericapiserver.Config) error {
 	//genericapiserver.AuthorizeClientBearerToken(c.LoopbackClientConfig, c.Authentication, c.Authorization)
 
 	return nil
-}
-
-func WithoutTLS() proc.ProcessOption {
-	return proc.WithConfigOptions(
-		configer.WithDefaultYaml("", `
-secureServing:
-  enabled: false
-insecureServing:
-  enabled: true`),
-	)
 }

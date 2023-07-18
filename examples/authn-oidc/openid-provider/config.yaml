@@ -1,20 +1,23 @@
-apiserver:
-  insecureServing:
-    enabled: true
-    bindPort: 8081
-  secureServing:
-    enabled: false
+insecureServing:
+  enabled: false
+
+secureServing:
+  enabled: true
+  bindPort: 8443
+  serverCert:
+    certDir: ../testdata/
+    pairName: openid
 
 oidc-provider:
   rsakey: "../testdata/rsa.pem"
   openIDConfig: |
     {
-      "issuer": "http://localhost:8081",
-      "jwks_uri": "http://localhost:8081/.testing/keys"
+      "issuer": "https://localhost:8443",
+      "jwks_uri": "https://localhost:8443/.testing/keys"
     }
   claim: |
     {
-      "iss": "http://localhost:8081",
+      "iss": "https://localhost:8443",
       "aud": "my-client",
       "username": "steve",
       "groups": ["team1", "team2"],

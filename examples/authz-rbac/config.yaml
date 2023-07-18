@@ -1,14 +1,15 @@
-apiserver:
-  insecureServing:
-    bindPort: 8080
-    enabled: true
-  secureServing:
-    enabled: false
+insecureServing:
+  bindPort: 8080
+  enabled: true
+
+secureServing:
+  enabled: false
+
 authentication:
-  anonymous: false
+  anonymous: true
   tokenAuthFile: ./tokens.cvs
+
 authorization:
   modes:
   - RBAC
-  rbac:
-    configPath: ./testdata
+  rbacConfigDir: ./testdata

@@ -68,8 +68,8 @@ type Config struct {
 	ServiceAccountIssuers       []string
 	APIAudiences                authenticator.Audiences
 	WebhookTokenAuthnConfigFile string
-	WebhookTokenAuthnVersion    string
-	WebhookTokenAuthnCacheTTL   time.Duration
+	//WebhookTokenAuthnVersion    string
+	WebhookTokenAuthnCacheTTL time.Duration
 	// WebhookRetryBackoff specifies the backoff parameters for the authentication webhook retry logic.
 	// This allows us to configure the sleep time at each iteration and the maximum number of retries allowed
 	// before we fail the webhook call in order to limit the fan out that ensues when the system is degraded.

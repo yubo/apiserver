@@ -27,7 +27,7 @@ type session struct {
 
 func (p *session) Install() {
 	rest.SwaggerTagRegister("session", "demo session")
-	rest.WsRouteBuild(&rest.WsOption{
+	server.WsRouteBuild(&server.WsOption{
 		// << set filter >>
 		// has been added filters.session at apiserver.DefaultBuildHandlerChain
 		// Filter: filters.Session(p.session),
@@ -35,7 +35,7 @@ func (p *session) Install() {
 		Consumes:           []string{"*/*"},
 		Tags:               []string{"session"},
 		GoRestfulContainer: p.container,
-		Routes: []rest.WsRoute{{
+		Routes: []server.WsRoute{{
 			Method: "GET", SubPath: "/",
 			Desc:   "get session info",
 			Handle: p.info,

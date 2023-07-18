@@ -1,12 +1,8 @@
-apiserver:
-  secureServing:
-    enabled: true
-    bindNework: tcp
-    bindPort: 8443
-    serverCert:
-      certDir: ./testdata/
-      pairName: server
+secureServing:
+  bindPort: 8443
+  serverCert:
+    certDir: ./testdata/
+    pairName: server
 
 authentication:
   clientCAFile: ./testdata/ca.crt
-

@@ -8,18 +8,14 @@ import (
 	"github.com/yubo/apiserver/components/cli"
 	"github.com/yubo/apiserver/components/dbus"
 	"github.com/yubo/apiserver/pkg/proc"
-	"github.com/yubo/apiserver/pkg/rest"
+	"github.com/yubo/apiserver/pkg/server"
 
 	// http
-	server "github.com/yubo/apiserver/pkg/server/module"
 	_ "github.com/yubo/apiserver/pkg/server/register"
-
-	// audit
-	_ "github.com/yubo/apiserver/pkg/audit/register"
 )
 
 func main() {
-	cmd := proc.NewRootCmd(server.WithoutTLS(), proc.WithRun(start))
+	cmd := proc.NewRootCmd(proc.WithRun(start))
 	code := cli.Run(cmd)
 	os.Exit(code)
 }
@@ -30,18 +26,18 @@ func start(ctx context.Context) error {
 		return err
 	}
 
-	rest.WsRouteBuild(&rest.WsOption{
-		Path:               "/api",
-		GoRestfulContainer: srv,
-		Routes: []rest.WsRoute{
+	server.WsRouteBuild(&server.WsOption{
+		Path:   "/api",
+		Server: srv,
+		Routes: []server.WsRoute{
 			{Method: "POST", SubPath: "/users", Handle: hw}, // RequestResponse
 			{Method: "GET", SubPath: "/tokens", Handle: hw}, // metadata
 		},
 	})
-	rest.WsRouteBuild(&rest.WsOption{
-		Path:               "/static",
-		GoRestfulContainer: srv,
-		Routes: []rest.WsRoute{
+	server.WsRouteBuild(&server.WsOption{
+		Path:   "/static",
+		Server: srv,
+		Routes: []server.WsRoute{
 			{Method: "GET", SubPath: "/hw", Handle: hw}, // none
 		},
 	})

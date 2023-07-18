@@ -68,3 +68,5 @@ require (
 )
 
 replace github.com/yubo/apiserver => ../../
+
+replace github.com/yubo/golib => ../../../golib

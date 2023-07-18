@@ -15,6 +15,7 @@ import (
 	"github.com/yubo/apiserver/pkg/server"
 	"github.com/yubo/apiserver/pkg/server/dynamiccertificates"
 	"github.com/yubo/golib/configer"
+	"github.com/yubo/golib/util"
 	utilcert "github.com/yubo/golib/util/cert"
 	"github.com/yubo/golib/util/keyutil"
 	utilnet "github.com/yubo/golib/util/net"
@@ -23,6 +24,7 @@ import (
 
 func NewSecureServingOptions() *SecureServingOptions {
 	return &SecureServingOptions{
+		Enabled:     util.Bool(true),
 		BindAddress: utilnet.ParseIPSloppy("0.0.0.0"),
 		BindPort:    8443,
 		Required:    true,
@@ -34,7 +36,7 @@ func NewSecureServingOptions() *SecureServingOptions {
 }
 
 type SecureServingOptions struct {
-	Enabled     bool   `json:"enabled" flag:"secure-serving" default:"true" description:"enable the secure serving"`
+	Enabled     *bool  `json:"enabled" flag:"secure-serving" default:"true" description:"enable the secure serving"`
 	BindAddress net.IP `json:"bindAddress" default:"0.0.0.0" flag:"bind-address" description:"The IP address on which to listen for the --secure-port port. The associated interface(s) must be reachable by the rest of the cluster, and by CLI/web clients. If blank or an unspecified address (0.0.0.0 or ::), all interfaces will be used."`
 	BindPort    int    `json:"bindPort" default:"443" flag:"secure-port" description:"BindPort is ignored when Listener is set, will serve https even with 0."`
 	BindNetwork string `json:"bindNework" default:"tcp" description:"BindNetwork is the type of network to bind to - accepts \"tcp\", \"tcp4\", and \"tcp6\"."`
@@ -160,7 +162,7 @@ func (p *SecureServingOptions) Validate() []error {
 
 // ApplyTo fills up serving information in the server configuration.
 func (p *SecureServingOptions) ApplyTo(config **server.SecureServingInfo) error {
-	if p == nil || !p.Enabled {
+	if p == nil || !util.BoolValue(p.Enabled) {
 		return nil
 	}
 	if p.BindPort <= 0 && p.Listener == nil {
@@ -244,7 +246,7 @@ func (p *SecureServingOptions) ApplyTo(config **server.SecureServingInfo) error 
 }
 
 func (p *SecureServingOptions) MaybeDefaultWithSelfSignedCerts(publicAddress string, alternateDNS []string, alternateIPs []net.IP) error {
-	if p == nil || (p.BindPort == 0 && p.Listener == nil) || !p.Enabled {
+	if p == nil || (p.BindPort == 0 && p.Listener == nil) || !util.BoolValue(p.Enabled) {
 		return nil
 	}
 

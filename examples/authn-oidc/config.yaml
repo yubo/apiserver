@@ -1,19 +1,14 @@
-apiserver:
-  insecureServing:
-    bindAddress: 0.0.0.0
-    bindNework: tcp
-    bindPort: 8080
-    enabled: true
-  secureServing:
-    enabled: false
-  securitySchemes:
-    - name: BearerToken
-      type: bearer
+insecureServing:
+  bindPort: 8080
+  enabled: true
+
+secureServing:
+  enabled: false
 
 authentication:
   oidc:
-    caFile:
+    caFile: ./testdata/openid.crt
     clientID: my-client
-    issuerURL: http://localhost:8081
+    issuerURL: https://localhost:8443
     usernameClaim: username
     groupsClaim: groups

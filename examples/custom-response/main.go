@@ -4,15 +4,17 @@ import (
 	"context"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/yubo/apiserver/components/cli"
 	"github.com/yubo/apiserver/components/dbus"
 	"github.com/yubo/apiserver/pkg/proc"
-	"github.com/yubo/apiserver/pkg/rest"
+	"github.com/yubo/apiserver/pkg/server"
+	"github.com/yubo/apiserver/pkg/tracing"
 	"github.com/yubo/apiserver/plugin/responsewriter/umi"
 	"github.com/yubo/golib/util"
+	"go.opentelemetry.io/otel/attribute"
 
-	server "github.com/yubo/apiserver/pkg/server/module"
 	_ "github.com/yubo/apiserver/pkg/server/register"
 )
 
@@ -20,7 +22,7 @@ import (
 // Open in browser http://localhost:8080/swagger
 
 func main() {
-	command := proc.NewRootCmd(server.WithoutTLS(), proc.WithRun(start))
+	command := proc.NewRootCmd(proc.WithoutHTTPS(), proc.WithRun(start))
 	code := cli.Run(command)
 	os.Exit(code)
 }
@@ -30,24 +32,24 @@ func start(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	rest.SwaggerTagRegister("user", "user Api - swagger api sample")
-	rest.WsRouteBuild(&rest.WsOption{
-		Path:               "/api/v1/users",
-		Tags:               []string{"user"},
-		GoRestfulContainer: srv,
-		Routes: []rest.WsRoute{{
+	server.SwaggerTagRegister("user", "user Api - swagger api sample")
+	server.WsRouteBuild(&server.WsOption{
+		Path:   "/api/v1/users",
+		Tags:   []string{"user"},
+		Server: srv,
+		Routes: []server.WsRoute{{
 			Method: "GET", SubPath: "/{name}",
 			Desc:   "get user",
 			Handle: getUser,
 		}},
 	})
 
-	rest.WsRouteBuild(&rest.WsOption{
-		Path:               "/api/v2/users",
-		Tags:               []string{"user"},
-		GoRestfulContainer: srv,
-		RespWriter:         umi.RespWriter,
-		Routes: []rest.WsRoute{{
+	server.WsRouteBuild(&server.WsOption{
+		Path:       "/api/v2/users",
+		Tags:       []string{"user"},
+		Server:     srv,
+		RespWriter: umi.RespWriter,
+		Routes: []server.WsRoute{{
 			Method: "GET", SubPath: "/{name}",
 			Desc:   "get user",
 			Handle: getUser,
@@ -68,5 +70,7 @@ type GetUserInput struct {
 }
 
 func getUser(w http.ResponseWriter, req *http.Request, in *GetUserInput) (*User, error) {
+	_, span := tracing.Start(req.Context(), "getUser", attribute.String("name", in.Name))
+	defer span.End(100 * time.Millisecond)
 	return &User{Name: in.Name, Phone: util.String("12345")}, nil
 }

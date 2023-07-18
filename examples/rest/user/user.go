@@ -29,13 +29,13 @@ func (p *user) Install() {
 	rest.SwaggerTagRegister("v1", "user Api - for restful sample")
 	rest.SwaggerTagRegister("v2", "user Api(umi styles) - for restful sample - https://pro.ant.design/zh-CN/docs/request")
 
-	rest.WsRouteBuild(&rest.WsOption{
+	server.WsRouteBuild(&server.WsOption{
 		Path:               "/api/v1",
 		Produces:           []string{rest.MIME_JSON},
 		Consumes:           []string{rest.MIME_JSON},
 		Tags:               []string{"v1"},
 		GoRestfulContainer: p.container,
-		Routes: []rest.WsRoute{{
+		Routes: []server.WsRoute{{
 			Method:    "POST",
 			SubPath:   "/users",
 			Operation: "createUser",
@@ -75,14 +75,14 @@ func (p *user) Install() {
 		}},
 	})
 
-	rest.WsRouteBuild(&rest.WsOption{
+	server.WsRouteBuild(&server.WsOption{
 		Path:               "/api/v2",
 		Produces:           []string{rest.MIME_JSON},
 		Consumes:           []string{rest.MIME_JSON},
 		Tags:               []string{"v2"},
 		RespWriter:         umi.RespWriter,
 		GoRestfulContainer: p.container,
-		Routes: []rest.WsRoute{{
+		Routes: []server.WsRoute{{
 			Method:    "POST",
 			SubPath:   "/users",
 			Operation: "createUserV2",

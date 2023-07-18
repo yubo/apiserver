@@ -1,6 +1,7 @@
-.PHONY: server client
+.PHONY: server
 server:
-	go run ./server/main.go -f ./server/config.yaml
+	go run ./main.go -f ./config.yaml
 
-client:
-	go run ./client/main.go
+.PHONY: test
+test:
+	go run ./client/main.go 

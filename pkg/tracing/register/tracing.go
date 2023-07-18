@@ -52,13 +52,13 @@ var (
 )
 
 type Config struct {
-	RadioBased        float64           `json:"radioBased"`
-	ServiceName       string            `json:"serviceName"`
-	ContextHeaderName string            `json:"contextHeaderName"`
-	Attributes        map[string]string `json:"attributes"`
-	Debug             bool              `json:"debug"`
-	Otel              *OtelConfig       `json:"otel"`
-	Jaeger            *JaegerConfig     `json:"jaeger"`
+	RadioBased  float64           `json:"radioBased"`
+	ServiceName string            `json:"serviceName"`
+	InjectName  string            `json:"injectName"`
+	Attributes  map[string]string `json:"attributes"`
+	Debug       bool              `json:"debug"`
+	Otel        *OtelConfig       `json:"otel"`
+	Jaeger      *JaegerConfig     `json:"jaeger"`
 }
 
 type OtelConfig struct {
@@ -75,9 +75,9 @@ type JaegerConfig struct {
 
 func newConfig() *Config {
 	return &Config{
-		ServiceName:       filepath.Base(os.Args[0]),
-		ContextHeaderName: "",
-		RadioBased:        1.0,
+		ServiceName: filepath.Base(os.Args[0]),
+		InjectName:  "",
+		RadioBased:  1.0,
 	}
 }
 
@@ -101,9 +101,9 @@ func (p *tracingT) start(ctx context.Context) error {
 		return err
 	}
 
-	if cf.Otel == nil && cf.Jaeger == nil && !cf.Debug {
-		return nil
-	}
+	//if cf.Otel == nil && cf.Jaeger == nil && !cf.Debug {
+	//	return nil
+	//}
 
 	tp, err := p.initProvider(ctx, cf)
 	if err != nil {
@@ -119,7 +119,7 @@ func (p *tracingT) start(ctx context.Context) error {
 	tracing.SetOptions(
 		tracing.WithTracerProvider(tp),
 		tracing.WithServiceName(cf.ServiceName),
-		tracing.WithContextHeaderName(cf.ContextHeaderName),
+		tracing.WithInjectName(cf.InjectName),
 	)
 
 	//ops.SetContext(options.WithTracer(p.ctx, p.tracer))

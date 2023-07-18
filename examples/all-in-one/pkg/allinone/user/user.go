@@ -31,13 +31,13 @@ func (p *user) Install() {
 	rest.ScopeRegister("user:write", "user")
 	rest.SwaggerTagRegister("user", "user Api - for restful sample")
 
-	rest.WsRouteBuild(&rest.WsOption{
+	server.WsRouteBuild(&server.WsOption{
 		Path:               "/users",
 		Produces:           []string{rest.MIME_JSON},
 		Consumes:           []string{rest.MIME_JSON},
 		Tags:               []string{"user"},
 		GoRestfulContainer: p.container,
-		Routes: []rest.WsRoute{{
+		Routes: []server.WsRoute{{
 			Method: "POST", SubPath: "/",
 			Desc:   "create user",
 			Handle: p.create,

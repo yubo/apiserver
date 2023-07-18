@@ -26,6 +26,7 @@ import (
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer/modes"
 	"github.com/yubo/apiserver/pkg/authorization/authorizerfactory"
+	"github.com/yubo/apiserver/pkg/authorization/path"
 	"github.com/yubo/apiserver/pkg/authorization/union"
 	webhookutil "github.com/yubo/apiserver/pkg/util/webhook"
 	"github.com/yubo/apiserver/plugin/authorizer/abac"
@@ -69,6 +70,13 @@ type Config struct {
 
 	// Optional field, custom dial function used to connect to webhook
 	CustomDial utilnet.DialFunc
+
+	// AlwaysAllowPaths are HTTP paths which are excluded from authorization. They can be plain
+	// paths or end in * in which case prefix-match is applied. A leading / is optional.
+	AlwaysAllowPaths []string
+
+	// AlwaysAllowGroups are groups which are allowed to take any actions.  In kube, this is system:masters.
+	AlwaysAllowGroups []string
 }
 
 // New returns the right sort of union of multiple authorizer.Authorizer objects
@@ -84,8 +92,20 @@ func (config Config) New() (authorizer.Authorizer, authorizer.RuleResolver, erro
 	)
 
 	// Add SystemPrivilegedGroup as an authorizing group
-	superuserAuthorizer := authorizerfactory.NewPrivilegedGroups(user.SystemPrivilegedGroup)
-	authorizers = append(authorizers, superuserAuthorizer)
+	if len(config.AlwaysAllowGroups) > 0 {
+		authorizers = append(authorizers, authorizerfactory.NewPrivilegedGroups(config.AlwaysAllowGroups...))
+	} else {
+		authorizers = append(authorizers, authorizerfactory.NewPrivilegedGroups(user.SystemPrivilegedGroup))
+	}
+
+	// add AlwaysAllowPaths
+	if len(config.AlwaysAllowPaths) > 0 {
+		a, err := path.NewAuthorizer(config.AlwaysAllowPaths)
+		if err != nil {
+			return nil, nil, err
+		}
+		authorizers = append(authorizers, a)
+	}
 
 	for _, authorizationMode := range config.AuthorizationModes {
 		// Keep cases in sync with constant list in k8s.io/kubernetes/pkg/kubeapiserver/authorizer/modes/modes.go.

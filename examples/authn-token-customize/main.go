@@ -8,18 +8,15 @@ import (
 
 	"github.com/yubo/apiserver/components/cli"
 	"github.com/yubo/apiserver/components/dbus"
-	"github.com/yubo/apiserver/pkg/authentication"
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/proc"
 	"github.com/yubo/apiserver/pkg/request"
-	"github.com/yubo/apiserver/pkg/rest"
+	"github.com/yubo/apiserver/pkg/server"
+	authn "github.com/yubo/apiserver/pkg/server/authenticator"
 
 	// http
 	_ "github.com/yubo/apiserver/pkg/server/register"
-
-	// authn
-	_ "github.com/yubo/apiserver/pkg/authentication/register"
 )
 
 func main() {
@@ -33,10 +30,10 @@ func start(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	rest.WsRouteBuild(&rest.WsOption{
-		Path:               "/hello",
-		GoRestfulContainer: srv,
-		Routes: []rest.WsRoute{
+	server.WsRouteBuild(&server.WsOption{
+		Path:   "/hello",
+		Server: srv,
+		Routes: []server.WsRoute{
 			{Method: "GET", SubPath: "/", Handle: hw},
 		},
 	})
@@ -45,7 +42,7 @@ func start(ctx context.Context) error {
 }
 
 func auth(ctx context.Context) error {
-	return authentication.RegisterTokenAuthn(func(_ context.Context) (authenticator.Token, error) {
+	return authn.RegisterTokenAuthn(func(_ context.Context) (authenticator.Token, error) {
 		return &TokenAuthenticator{}, nil
 	})
 }

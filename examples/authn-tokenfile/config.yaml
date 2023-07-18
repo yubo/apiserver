@@ -1,9 +1,9 @@
-apiserver:
-  insecureServing:
-    bindPort: 8080
-    enabled: true
-  secureServing:
-    enabled: false
+insecureServing:
+  bindPort: 8080
+  enabled: true
+
+secureServing:
+  enabled: false
 
 authentication:
   tokenAuthFile: ./tokens.cvs

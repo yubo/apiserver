@@ -9,10 +9,9 @@ import (
 	"github.com/yubo/apiserver/components/cli"
 	"github.com/yubo/apiserver/components/dbus"
 	"github.com/yubo/apiserver/pkg/proc"
-	"github.com/yubo/apiserver/pkg/rest"
+	"github.com/yubo/apiserver/pkg/server"
 	"github.com/yubo/golib/api"
 
-	server "github.com/yubo/apiserver/pkg/server/module"
 	_ "github.com/yubo/apiserver/pkg/server/register"
 )
 
@@ -21,7 +20,7 @@ import (
 // GET http://localhost:8080/hello
 
 func main() {
-	command := proc.NewRootCmd(server.WithoutTLS(), proc.WithRun(start))
+	command := proc.NewRootCmd(proc.WithRun(start), proc.WithoutHTTPS())
 	code := cli.Run(command)
 	os.Exit(code)
 }
@@ -31,10 +30,10 @@ func start(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	rest.WsRouteBuild(&rest.WsOption{
-		Path:               "/users",
-		GoRestfulContainer: srv,
-		Routes: []rest.WsRoute{
+	server.WsRouteBuild(&server.WsOption{
+		Path:   "/users",
+		Server: srv,
+		Routes: []server.WsRoute{
 			{Method: "GET", SubPath: "/", Handle: list, Desc: "list users"},
 		},
 	})

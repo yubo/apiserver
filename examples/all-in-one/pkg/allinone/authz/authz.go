@@ -25,11 +25,11 @@ type authz struct {
 func (p *authz) Install() {
 	rest.SwaggerTagRegister("authorization", "authorization sample")
 
-	rest.WsRouteBuild(&rest.WsOption{
+	server.WsRouteBuild(&server.WsOption{
 		Path:               "/api/v1/namespaces/{namespace}/pods",
 		Tags:               []string{"authorization"},
 		GoRestfulContainer: p.container,
-		Routes: []rest.WsRoute{{
+		Routes: []server.WsRoute{{
 			Method: "GET", SubPath: "/{name}",
 			Desc:   "get pod info",
 			Handle: p.ns,

@@ -33,7 +33,7 @@ User-Agent: Go-http-client/1.1
 ### Client
 
 ```sh
-$ curl -H 'Content-Type:application/json' -H 'Authorization: bearer 123' http://localhot:8080/hello
+$ curl -H 'Content-Type:application/json' -H 'Authorization: bearer 123' http://localhost:8080/hello
 {
   "Name": "test",
   "UID": "u110",

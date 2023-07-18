@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/yubo/apiserver/components/dbus"
@@ -93,8 +94,6 @@ func (p *serverModule) start(ctx context.Context) error {
 		return err
 	}
 
-	//p.Info()
-
 	return nil
 }
 
@@ -105,73 +104,6 @@ func (p *serverModule) stop(ctx context.Context) error {
 	return nil
 }
 
-//	func (p *serverModule) Info() {
-//		if !klog.V(10).Enabled() {
-//			return
-//		}
-//		for _, path := range p.serverConfig.Handler.ListedPaths() {
-//			klog.V(1).Infof("apiserver path %s", path)
-//		}
-//	}
-//
-//	func (p *serverModule) Config() *server.Config {
-//		return p.serverConfig
-//	}
-//
-// // Add a WebService to the Container. It will detect duplicate root paths and exit in that case.
-//
-//	func (p *serverModule) Add(service *restful.WebService) *restful.Container {
-//		return p.serverConfig.Handler.GoRestfulContainer.Add(service)
-//	}
-//
-// // Remove a WebService from the Container.
-//
-//	func (p *serverModule) Remove(service *restful.WebService) error {
-//		return p.serverConfig.Handler.GoRestfulContainer.Remove(service)
-//	}
-//
-// // Handle registers the handler for the given pattern.
-// // If a handler already exists for pattern, Handle panics.
-//
-//	func (p *serverModule) Handle(path string, handler http.Handler) {
-//		p.serverConfig.Handler.NonGoRestfulMux.Handle(path, handler)
-//	}
-//
-// // UnlistedHandle registers the handler for the given pattern, but doesn't list it.
-// // If a handler already exists for pattern, Handle panics.
-//
-//	func (p *serverModule) UnlistedHandle(path string, handler http.Handler) {
-//		p.serverConfig.Handler.NonGoRestfulMux.UnlistedHandle(path, handler)
-//	}
-//
-// // HandlePrefix is like Handle, but matches for anything under the path.  Like a standard golang trailing slash.
-//
-//	func (p *serverModule) HandlePrefix(path string, handler http.Handler) {
-//		p.serverConfig.Handler.NonGoRestfulMux.HandlePrefix(path, handler)
-//	}
-//
-// // UnlistedHandlePrefix is like UnlistedHandle, but matches for anything under the path.  Like a standard golang trailing slash.
-//
-//	func (p *serverModule) UnlistedHandlePrefix(path string, handler http.Handler) {
-//		p.serverConfig.Handler.NonGoRestfulMux.UnlistedHandlePrefix(path, handler)
-//	}
-//
-// // ListedPaths is an alphabetically sorted list of paths to be reported at /.
-//
-//	func (p *serverModule) ListedPaths() []string {
-//		return p.serverConfig.ListedPathProvider.ListedPaths()
-//	}
-//
-//	func (p *serverModule) Serializer() runtime.NegotiatedSerializer {
-//		return p.serverConfig.Serializer
-//	}
-//
-// // Filter appends a container FilterFunction. These are called before dispatching
-// // a http.Request to a WebService from the container
-//
-//	func (p *serverModule) Filter(filter restful.FilterFunction) {
-//		p.serverConfig.Handler.GoRestfulContainer.Filter(filter)
-//	}
 func (p *serverModule) Start(stopCh <-chan struct{}, done chan struct{}) error {
 	s := p.server
 
@@ -201,6 +133,15 @@ func (p *serverModule) Start(stopCh <-chan struct{}, done chan struct{}) error {
 			<-stoppedCh
 			s.NonLongRunningRequestWaitGroup.Done()
 		}()
+	}
+
+	// Start the audit backend before any request comes in. This means we must call Backend.Run
+	// before http server start serving. Otherwise the Backend.ProcessEvents call might block.
+	// AuditBackend.Run will stop as soon as all in-flight requests are drained.
+	if s.AuditBackend != nil {
+		if err := s.AuditBackend.Run(stopCh); err != nil {
+			return fmt.Errorf("failed to run the audit backend: %v", err)
+		}
 	}
 
 	go func() {

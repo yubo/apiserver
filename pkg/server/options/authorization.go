@@ -23,6 +23,7 @@ import (
 
 	"github.com/spf13/pflag"
 
+	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/authorization/authorizer"
 	authzmodes "github.com/yubo/apiserver/pkg/authorization/authorizer/modes"
 	"github.com/yubo/apiserver/pkg/authorization/authorizerfactory"
@@ -31,6 +32,8 @@ import (
 	"github.com/yubo/apiserver/pkg/server"
 	serverauthorizer "github.com/yubo/apiserver/pkg/server/authorizer"
 	"github.com/yubo/client-go/transport"
+	"github.com/yubo/golib/api"
+	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/util/sets"
 	"github.com/yubo/golib/util/wait"
 )
@@ -245,26 +248,56 @@ func (s *DelegatingAuthorizationOptions) toAuthorizer( /*client kubernetes.Inter
 
 // BuiltInAuthorizationOptions contains all build-in authorization options for API Server
 type BuiltInAuthorizationOptions struct {
-	Modes                       []string
-	PolicyFile                  string
-	WebhookConfigFile           string
-	WebhookVersion              string
-	WebhookCacheAuthorizedTTL   time.Duration
-	WebhookCacheUnauthorizedTTL time.Duration
+	Modes             []string `json:"modes" flag:"authorization-mode" description:"Ordered list of plug-ins to do authorization on secure port."`
+	PolicyFile        string   `json:"policyFile" flag:"authorization-policy-file" description:"File with authorization policy in json line by line format, used with --authorization-mode=ABAC, on the secure port."`
+	RBACConfigDir     string   `json:"rbacConfigDir"`
+	WebhookConfigFile string   `json:"webhookConfigFile" flag:"authorization-webhook-config-file" description:"File with webhook configuration in kubeconfig format, used with --authorization-mode=Webhook. "`
+	//WebhookVersion              string       `json:"webhookVersion"`
+	WebhookCacheAuthorizedTTL   api.Duration `json:"webhookCacheAuthorizedTTL" flag:"authorization-webhook-cache-authorized-ttl" description:"The duration to cache 'authorized' responses from the webhook authorizer."`
+	WebhookCacheUnauthorizedTTL api.Duration `json:"webhookCacheUnauthorizedTTL" flag:"authorization-webhook-cache-unauthorized-ttl" description:"The duration to cache 'unauthorized' responses from the webhook authorizer."`
 	// WebhookRetryBackoff specifies the backoff parameters for the authorization webhook retry logic.
 	// This allows us to configure the sleep time at each iteration and the maximum number of retries allowed
 	// before we fail the webhook call in order to limit the fan out that ensues when the system is degraded.
-	WebhookRetryBackoff *wait.Backoff
+	WebhookRetryBackoff *wait.BackoffConfig `json:"webhookRetryBackoff"`
+
+	// AlwaysAllowPaths are HTTP paths which are excluded from authorization. They can be plain
+	// paths or end in * in which case prefix-match is applied. A leading / is optional.
+	AlwaysAllowPaths []string `json:"alwaysAllowPaths" flag:"authorization-always-allow-paths" description:"A list of HTTP paths to skip during authorization, i.e. these are authorized without contacting the 'core' kubernetes server."`
+
+	// AlwaysAllowGroups are groups which are allowed to take any actions.  In kube, this is system:masters.
+	AlwaysAllowGroups []string `json:"alwaysAllowGroups" flag:"authorization-always-allow-groups" description:"AlwaysAllowGroups are groups which are allowed to take any actions."`
 }
 
 // NewBuiltInAuthorizationOptions create a BuiltInAuthorizationOptions with default value
 func NewBuiltInAuthorizationOptions() *BuiltInAuthorizationOptions {
 	return &BuiltInAuthorizationOptions{
-		Modes:                       []string{authzmodes.ModeAlwaysAllow},
-		WebhookVersion:              "v1beta1",
-		WebhookCacheAuthorizedTTL:   5 * time.Minute,
-		WebhookCacheUnauthorizedTTL: 30 * time.Second,
-		WebhookRetryBackoff:         DefaultAuthWebhookRetryBackoff(),
+		Modes: []string{authzmodes.ModeAlwaysAllow},
+		//WebhookVersion:              "v1beta1",
+		WebhookCacheAuthorizedTTL:   api.NewDuration("5m"),
+		WebhookCacheUnauthorizedTTL: api.NewDuration("30s"),
+		WebhookRetryBackoff:         DefaultAuthWebhookRetryBackoff().BackoffConfig(),
+		// This allows the kubelet to always get health and readiness without causing an authorization check.
+		// This field can be cleared by callers if they don't want this behavior.
+		AlwaysAllowPaths: []string{"/healthz", "/readyz", "/livez"},
+		// In an authorization call delegated to a kube-apiserver (the expected common-case), system:masters has full
+		// authority in a hard-coded authorizer.  This means that our default can reasonably be to skip an authorization
+		// check for system:masters.
+		// This field can be cleared by callers if they don't want this behavior.
+		AlwaysAllowGroups: []string{user.SystemPrivilegedGroup},
+	}
+}
+
+func (p *BuiltInAuthorizationOptions) GetTags() map[string]*configer.FieldTag {
+	defaultMode := authzmodes.ModeAlwaysAllow
+	modeChoices := authzmodes.AuthorizationModeChoices
+	if len(modeChoices) > 0 && !authzmodes.IsValidAuthorizationMode(defaultMode) {
+		defaultMode = modeChoices[0]
+	}
+	return map[string]*configer.FieldTag{
+		"modes": {
+			Description: "Ordered list of plug-ins to do authorization on secure port. Comma-delimited list of: " + strings.Join(modeChoices, ",") + ".",
+			Default:     defaultMode,
+		},
 	}
 }
 
@@ -308,44 +341,51 @@ func (o *BuiltInAuthorizationOptions) Validate() []error {
 		allErrors = append(allErrors, fmt.Errorf("number of webhook retry attempts must be greater than 0, but is: %d", o.WebhookRetryBackoff.Steps))
 	}
 
+	if len(o.AlwaysAllowGroups) == 0 {
+		o.AlwaysAllowGroups = []string{user.SystemPrivilegedGroup}
+	}
+
 	return allErrors
 }
 
 // AddFlags returns flags of authorization for a API Server
-func (o *BuiltInAuthorizationOptions) AddFlags(fs *pflag.FlagSet) {
-	fs.StringSliceVar(&o.Modes, "authorization-mode", o.Modes, ""+
-		"Ordered list of plug-ins to do authorization on secure port. Comma-delimited list of: "+
-		strings.Join(authzmodes.AuthorizationModeChoices, ",")+".")
-
-	fs.StringVar(&o.PolicyFile, "authorization-policy-file", o.PolicyFile, ""+
-		"File with authorization policy in json line by line format, used with --authorization-mode=ABAC, on the secure port.")
-
-	fs.StringVar(&o.WebhookConfigFile, "authorization-webhook-config-file", o.WebhookConfigFile, ""+
-		"File with webhook configuration in kubeconfig format, used with --authorization-mode=Webhook. "+
-		"The API server will query the remote service to determine access on the API server's secure port.")
-
-	fs.StringVar(&o.WebhookVersion, "authorization-webhook-version", o.WebhookVersion, ""+
-		"The API version of the authorization.k8s.io SubjectAccessReview to send to and expect from the webhook.")
-
-	fs.DurationVar(&o.WebhookCacheAuthorizedTTL, "authorization-webhook-cache-authorized-ttl",
-		o.WebhookCacheAuthorizedTTL,
-		"The duration to cache 'authorized' responses from the webhook authorizer.")
-
-	fs.DurationVar(&o.WebhookCacheUnauthorizedTTL,
-		"authorization-webhook-cache-unauthorized-ttl", o.WebhookCacheUnauthorizedTTL,
-		"The duration to cache 'unauthorized' responses from the webhook authorizer.")
-}
+//func (o *BuiltInAuthorizationOptions) AddFlags(fs *pflag.FlagSet) {
+//	fs.StringSliceVar(&o.Modes, "authorization-mode", o.Modes, ""+
+//		"Ordered list of plug-ins to do authorization on secure port. Comma-delimited list of: "+
+//		strings.Join(authzmodes.AuthorizationModeChoices, ",")+".")
+//
+//	fs.StringVar(&o.PolicyFile, "authorization-policy-file", o.PolicyFile, ""+
+//		"File with authorization policy in json line by line format, used with --authorization-mode=ABAC, on the secure port.")
+//
+//	fs.StringVar(&o.WebhookConfigFile, "authorization-webhook-config-file", o.WebhookConfigFile, ""+
+//		"File with webhook configuration in kubeconfig format, used with --authorization-mode=Webhook. "+
+//		"The API server will query the remote service to determine access on the API server's secure port.")
+//
+//	fs.StringVar(&o.WebhookVersion, "authorization-webhook-version", o.WebhookVersion, ""+
+//		"The API version of the authorization.k8s.io SubjectAccessReview to send to and expect from the webhook.")
+//
+//	fs.DurationVar(&o.WebhookCacheAuthorizedTTL, "authorization-webhook-cache-authorized-ttl",
+//		o.WebhookCacheAuthorizedTTL,
+//		"The duration to cache 'authorized' responses from the webhook authorizer.")
+//
+//	fs.DurationVar(&o.WebhookCacheUnauthorizedTTL,
+//		"authorization-webhook-cache-unauthorized-ttl", o.WebhookCacheUnauthorizedTTL,
+//		"The duration to cache 'unauthorized' responses from the webhook authorizer.")
+//}
 
 // ToAuthorizationConfig convert BuiltInAuthorizationOptions to authorizer.Config
 func (o *BuiltInAuthorizationOptions) ToAuthorizationConfig( /*versionedInformerFactory versionedinformers.SharedInformerFactory*/ ) serverauthorizer.Config {
 	return serverauthorizer.Config{
-		AuthorizationModes:          o.Modes,
-		PolicyFile:                  o.PolicyFile,
-		WebhookConfigFile:           o.WebhookConfigFile,
-		WebhookVersion:              o.WebhookVersion,
-		WebhookCacheAuthorizedTTL:   o.WebhookCacheAuthorizedTTL,
-		WebhookCacheUnauthorizedTTL: o.WebhookCacheUnauthorizedTTL,
+		AuthorizationModes: o.Modes,
+		PolicyFile:         o.PolicyFile,
+		RBACConfigDir:      o.RBACConfigDir,
+		WebhookConfigFile:  o.WebhookConfigFile,
+		//WebhookVersion:              o.WebhookVersion,
+		WebhookCacheAuthorizedTTL:   o.WebhookCacheAuthorizedTTL.Duration,
+		WebhookCacheUnauthorizedTTL: o.WebhookCacheUnauthorizedTTL.Duration,
 		//VersionedInformerFactory:    versionedInformerFactory,
-		WebhookRetryBackoff: o.WebhookRetryBackoff,
+		WebhookRetryBackoff: o.WebhookRetryBackoff.Backoff(),
+		AlwaysAllowPaths:    o.AlwaysAllowPaths,
+		AlwaysAllowGroups:   o.AlwaysAllowGroups,
 	}
 }

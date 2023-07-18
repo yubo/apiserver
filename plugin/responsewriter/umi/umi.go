@@ -11,7 +11,7 @@ import (
 	"github.com/emicklei/go-restful/v3"
 	"github.com/go-openapi/spec"
 	"github.com/yubo/apiserver/pkg/responsewriters"
-	"github.com/yubo/apiserver/pkg/rest"
+	"github.com/yubo/apiserver/pkg/server"
 	"github.com/yubo/golib/runtime"
 	"github.com/yubo/golib/util"
 	"github.com/yubo/golib/util/errors"
@@ -22,8 +22,8 @@ import (
 // https://pro.ant.design/zh-CN/docs/request
 
 var (
-	modelTypePrefix = "__umi__."
-	_hostname, _    = os.Hostname()
+	ModelTypePrefix = "__umi__."
+	Hostname, _     = os.Hostname()
 	RespWriter      = newRespWriter()
 	schemas         = map[int]string{
 		http.StatusOK: `{
@@ -69,7 +69,7 @@ type route struct {
 	path   string
 }
 
-func newRespWriter() rest.RespWriter {
+func newRespWriter() server.RespWriter {
 	return &respWriter{
 		routes:  []route{},
 		schemas: schemas,
@@ -91,11 +91,11 @@ func (p *respWriter) Name() string {
 func (p *respWriter) RespWrite(resp *restful.Response, req *http.Request, data interface{}, err error, s runtime.NegotiatedSerializer) {
 	v := map[string]interface{}{
 		"success": true,
-		"host":    _hostname,
+		"host":    Hostname,
 	}
 
-	if traceID := trace.SpanFromContext(req.Context()).SpanContext().TraceID().String(); traceID != "" {
-		v["traceId"] = traceID
+	if traceID := trace.SpanFromContext(req.Context()).SpanContext().TraceID(); traceID.IsValid() {
+		v["traceId"] = traceID.String()
 	}
 
 	if data != nil {
@@ -115,7 +115,7 @@ func (p *respWriter) RespWrite(resp *restful.Response, req *http.Request, data i
 // SwaggerHandler: called at PostBuildSwaggerObjectHandler, use to rewrite the response definitions
 func (p *respWriter) SwaggerHandler(s *spec.Swagger) {
 	for _, route := range p.routes {
-		o, err := rest.OperationFrom(s, route.method, route.path)
+		o, err := server.OperationFrom(s, route.method, route.path)
 		if err != nil {
 			panic(err)
 		}
@@ -151,7 +151,7 @@ func (p *respWriter) AddRoute(method, path string) {
 }
 
 func init() {
-	rest.ResponseWriterRegister(RespWriter)
+	server.ResponseWriterRegister(RespWriter)
 }
 
 func nameOfSchema(status int, prop *spec.Schema) string {
@@ -195,11 +195,11 @@ func buildResponse(status int, responses *spec.Responses) (resp spec.Response, m
 	modelType = nameOfSchema(status, resp.Schema)
 	rawSchema = resp.Schema
 
-	if strings.HasPrefix(modelType, modelTypePrefix) {
+	if strings.HasPrefix(modelType, ModelTypePrefix) {
 		err = errors.Errorf("invalie prefix model name %s", modelType)
 		return
 	}
-	modelType = modelTypePrefix + modelType
+	modelType = ModelTypePrefix + modelType
 
 	schema := spec.Schema{}
 	schema.Ref = spec.MustCreateRef("#/definitions/" + modelType)

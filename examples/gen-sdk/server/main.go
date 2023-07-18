@@ -105,13 +105,13 @@ func start(ctx context.Context) error {
 
 func (p *Module) installWs(http rest.GoRestfulContainer) {
 	rest.SwaggerTagRegister("user", "user Api - swagger api sample")
-	rest.WsRouteBuild(&rest.WsOption{
+	server.WsRouteBuild(&server.WsOption{
 		Path:               "/api/user",
 		Produces:           []string{rest.MIME_JSON},
 		Consumes:           []string{rest.MIME_JSON},
 		Tags:               []string{"user"},
 		GoRestfulContainer: http,
-		Routes: []rest.WsRoute{{
+		Routes: []server.WsRoute{{
 			Method: "POST", SubPath: "/",
 			Desc:      "create user",
 			Operation: "createUser",

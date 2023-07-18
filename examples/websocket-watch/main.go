@@ -44,10 +44,10 @@ func start(ctx context.Context) error {
 }
 
 func installWs(http rest.GoRestfulContainer) {
-	rest.WsRouteBuild(&rest.WsOption{
+	server.WsRouteBuild(&server.WsOption{
 		Path:               "/hello",
 		GoRestfulContainer: http,
-		Routes: []rest.WsRoute{
+		Routes: []server.WsRoute{
 			{Method: "GET", SubPath: "/", Handle: watchHandle},
 		},
 	})

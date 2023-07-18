@@ -1,16 +1,13 @@
-apiserver:
-  insecureServing:
-    bindAddress: 0.0.0.0
-    bindNework: tcp
-    bindPort: 8080
-    enabled: true
-  secureServing:
-    enabled: false
+insecureServing:
+  bindPort: 8080
+  enabled: true
+
+secureServing:
+  enabled: false
 
 db:
   driver: sqlite3
   dsn: file:test.db?cache=shared&mode=memory
 
 authentication:
-  BootstrapToken:
-    Enable: true
+  bootstrapToken: true

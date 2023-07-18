@@ -29,11 +29,11 @@ func New(ctx context.Context, cf *config.Config) *trace {
 func (p *trace) Install() {
 	rest.SwaggerTagRegister("tracing", "tracing demo")
 
-	rest.WsRouteBuild(&rest.WsOption{
+	server.WsRouteBuild(&server.WsOption{
 		Path:               "/tracing",
 		Tags:               []string{"tracing"},
 		GoRestfulContainer: p.container,
-		Routes: []rest.WsRoute{
+		Routes: []server.WsRoute{
 			{Method: "GET", SubPath: "v1/users/{name}", Handle: getUser},
 			{Method: "GET", SubPath: "v2/users/{name}", Handle: getUser2},
 		},

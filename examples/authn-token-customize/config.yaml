@@ -1,11 +1,6 @@
-apiserver:
-  insecureServing:
-    bindAddress: 0.0.0.0
-    bindNework: tcp
-    bindPort: 8080
-    enabled: true
-  secureServing:
-    enabled: false
-  securitySchemes:
-    - name: BearerToken
-      type: bearer
+insecureServing:
+  bindPort: 8080
+  enabled: true
+
+secureServing:
+  enabled: false

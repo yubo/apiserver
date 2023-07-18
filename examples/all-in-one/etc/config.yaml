@@ -11,44 +11,46 @@ logging:
   verbosity: 10
   vmodule:
 
-#apiserver:
-  generic:
-    enablePriorityAndFairness: true
-    goawayChance: 0
-    livezGracePeriod: 0
-    maxMutatingRequestsInFlight: 200
-    maxRequestBodyBytes: 3145728
-    maxRequestsInFlight: 400
-    minRequestTimeout: 30m0s
-    requestTimeout: 1m0s
-    shutdownDelayDuration: 0
-  insecureServing:
-    bindAddress: 0.0.0.0
-    bindNework: tcp
-    bindPort: 8080
-    enabled: true
-  secureServing:
-    PermitAddressSharing: false
-    bindAddress: 0.0.0.0
-    bindNework: tcp
-    bindPort: 8443
-    enabled: false
-    http2MaxStreamsPerConnection: 0
-    permitPortSharing: false
-    serverCert:
-      certDir: ./etc/cert
-      pairName: apiserver
+generic:
+  enablePriorityAndFairness: true
+  goawayChance: 0
+  livezGracePeriod: 0
+  maxMutatingRequestsInFlight: 200
+  maxRequestBodyBytes: 3145728
+  maxRequestsInFlight: 400
+  minRequestTimeout: 30m0s
+  requestTimeout: 1m0s
+  shutdownDelayDuration: 0
   securitySchemes:
     - name: bearerToken
       type: bearer
-  feature:
-    enableContentionProfiling: true
-    enableIndex: false
-    enableMetrics: false
-    enablePriorityAndFairness: true
-    enableProfiling: true
-    enableOpenAPI: true
-    enableHealthz: true
+
+insecureServing:
+  bindAddress: 0.0.0.0
+  bindNework: tcp
+  bindPort: 8080
+  enabled: true
+
+secureServing:
+  PermitAddressSharing: false
+  bindAddress: 0.0.0.0
+  bindNework: tcp
+  bindPort: 8443
+  enabled: false
+  http2MaxStreamsPerConnection: 0
+  permitPortSharing: false
+  serverCert:
+    certDir: ./etc/cert
+    pairName: apiserver
+
+feature:
+  enableContentionProfiling: true
+  enableIndex: false
+  enableMetrics: false
+  enablePriorityAndFairness: true
+  enableProfiling: true
+  enableOpenAPI: true
+  enableHealthz: true
 
 
 authentication:
@@ -74,6 +76,7 @@ authorization:
     - /apidocs.json
     - /swagger/*
     - /healthz
+
 models:
   autoMigrate: true
   storage: db

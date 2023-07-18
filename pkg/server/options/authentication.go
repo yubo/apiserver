@@ -41,18 +41,20 @@ import (
 
 // BuiltInAuthenticationOptions contains all build-in authentication options for API Server
 type BuiltInAuthenticationOptions struct {
-	APIAudiences   []string                        `json:"apiAudiences" flag:"api-audiences" description:"Identifiers of the API. The service account token authenticator will validate that tokens used against the API are bound to at least one of these audiences. If the --service-account-issuer flag is configured and this flag is not, this field defaults to a single element list containing the issuer URL."`
-	Anonymous      *AnonymousAuthenticationOptions `json:"inline"`
-	BootstrapToken *BootstrapTokenAuthenticationOptions
-	ClientCert     *ClientCertAuthenticationOptions
-	OIDC           *OIDCAuthenticationOptions
-	RequestHeader  *RequestHeaderAuthenticationOptions
+	APIAudiences []string `json:"apiAudiences" flag:"api-audiences" description:"Identifiers of the API. The service account token authenticator will validate that tokens used against the API are bound to at least one of these audiences. If the --service-account-issuer flag is configured and this flag is not, this field defaults to a single element list containing the issuer URL."`
+	*AnonymousAuthenticationOptions
+	*BootstrapTokenAuthenticationOptions
+	*ClientCertAuthenticationOptions
+	OIDC          *OIDCAuthenticationOptions          `json:"oidc"`
+	RequestHeader *RequestHeaderAuthenticationOptions `json:"requestHeader"`
+	*TokenFileAuthenticationOptions
+	WebHook *WebHookAuthenticationOptions `json:"webhook"`
 	//ServiceAccounts *ServiceAccountAuthenticationOptions
-	TokenFile *TokenFileAuthenticationOptions
-	WebHook   *WebHookAuthenticationOptions
 
 	TokenSuccessCacheTTL api.Duration `json:"tokenSuccessCacheTTL" flag:"token-success-cache-ttl" default:"10s" description:"The duration to cache success token."`
 	TokenFailureCacheTTL api.Duration `json:"tokenFailureCacheTTL" flag:"token-failure-cache-ttl" description:"The duration to cache failure token."`
+
+	AlwaysAllowPaths []string
 }
 
 // AnonymousAuthenticationOptions contains anonymous authentication options for API Server
@@ -62,7 +64,7 @@ type AnonymousAuthenticationOptions struct {
 
 // BootstrapTokenAuthenticationOptions contains bootstrap token authentication options for API Server
 type BootstrapTokenAuthenticationOptions struct {
-	Enable bool
+	Enable bool `json:"bootstrapToken"`
 }
 
 // OIDCAuthenticationOptions contains OIDC authentication options for API Server
@@ -90,19 +92,19 @@ type ServiceAccountAuthenticationOptions struct {
 
 // TokenFileAuthenticationOptions contains token file authentication options for API Server
 type TokenFileAuthenticationOptions struct {
-	TokenFile string
+	TokenAuthFile string `json:"tokenAuthFile" flag:"token-auth-file" description:"If set, the file that will be used to secure the secure port of the API server via token authentication."`
 }
 
 // WebHookAuthenticationOptions contains web hook authentication options for API Server
 type WebHookAuthenticationOptions struct {
-	ConfigFile string
-	Version    string
-	CacheTTL   time.Duration
+	ConfigFile string `json:"configFile" flag:"authentication-token-webhook-config-file" description:"File with webhook configuration for token authentication in kubeconfig format. The API server will query the remote service to determine authentication for bearer tokens."`
+	//Version    string       `json:"version" default:"v1beta1" flag:"authentication-token-webhook-version" description:"The API version of the authentication.k8s.io TokenReview to send to and expect from the webhook."`
+	CacheTTL api.Duration `json:"cacheTTL" default:"2m" flag:"authentication-token-webhook-cache-ttl" description:"The duration to cache responses from the webhook token authenticator."`
 
 	// RetryBackoff specifies the backoff parameters for the authentication webhook retry logic.
 	// This allows us to configure the sleep time at each iteration and the maximum number of retries allowed
 	// before we fail the webhook call in order to limit the fan out that ensues when the system is degraded.
-	RetryBackoff *wait.Backoff
+	RetryBackoff *wait.BackoffConfig `json:"retryBackoff"`
 }
 
 // NewBuiltInAuthenticationOptions create a new BuiltInAuthenticationOptions, just set default token cache TTL
@@ -128,19 +130,19 @@ func (o *BuiltInAuthenticationOptions) WithAll() *BuiltInAuthenticationOptions {
 
 // WithAnonymous set default value for anonymous authentication
 func (o *BuiltInAuthenticationOptions) WithAnonymous() *BuiltInAuthenticationOptions {
-	o.Anonymous = &AnonymousAuthenticationOptions{Allow: true}
+	o.AnonymousAuthenticationOptions = &AnonymousAuthenticationOptions{Allow: true}
 	return o
 }
 
 // WithBootstrapToken set default value for bootstrap token authentication
 func (o *BuiltInAuthenticationOptions) WithBootstrapToken() *BuiltInAuthenticationOptions {
-	o.BootstrapToken = &BootstrapTokenAuthenticationOptions{}
+	o.BootstrapTokenAuthenticationOptions = &BootstrapTokenAuthenticationOptions{}
 	return o
 }
 
 // WithClientCert set default value for client cert
 func (o *BuiltInAuthenticationOptions) WithClientCert() *BuiltInAuthenticationOptions {
-	o.ClientCert = &ClientCertAuthenticationOptions{}
+	o.ClientCertAuthenticationOptions = &ClientCertAuthenticationOptions{}
 	return o
 }
 
@@ -164,16 +166,16 @@ func (o *BuiltInAuthenticationOptions) WithRequestHeader() *BuiltInAuthenticatio
 
 // WithTokenFile set default value for token file authentication
 func (o *BuiltInAuthenticationOptions) WithTokenFile() *BuiltInAuthenticationOptions {
-	o.TokenFile = &TokenFileAuthenticationOptions{}
+	o.TokenFileAuthenticationOptions = &TokenFileAuthenticationOptions{}
 	return o
 }
 
 // WithWebHook set default value for web hook authentication
 func (o *BuiltInAuthenticationOptions) WithWebHook() *BuiltInAuthenticationOptions {
 	o.WebHook = &WebHookAuthenticationOptions{
-		Version:      "v1beta1",
-		CacheTTL:     2 * time.Minute,
-		RetryBackoff: DefaultAuthWebhookRetryBackoff(),
+		//Version:      "v1beta1",
+		CacheTTL:     api.NewDuration("2m"),
+		RetryBackoff: DefaultAuthWebhookRetryBackoff().BackoffConfig(),
 	}
 	return o
 }
@@ -247,17 +249,17 @@ func (o *BuiltInAuthenticationOptions) ToAuthenticationConfig() (serverauthentic
 		TokenFailureCacheTTL: o.TokenFailureCacheTTL.Duration,
 	}
 
-	if o.Anonymous != nil {
-		ret.Anonymous = o.Anonymous.Allow
+	if o.AnonymousAuthenticationOptions != nil {
+		ret.Anonymous = o.AnonymousAuthenticationOptions.Allow
 	}
 
-	if o.BootstrapToken != nil {
-		ret.BootstrapToken = o.BootstrapToken.Enable
+	if o.BootstrapTokenAuthenticationOptions != nil {
+		ret.BootstrapToken = o.BootstrapTokenAuthenticationOptions.Enable
 	}
 
-	if o.ClientCert != nil {
+	if o.ClientCertAuthenticationOptions != nil {
 		var err error
-		ret.ClientCAContentProvider, err = o.ClientCert.GetClientCAContentProvider()
+		ret.ClientCAContentProvider, err = o.ClientCertAuthenticationOptions.GetClientCAContentProvider()
 		if err != nil {
 			return serverauthenticator.Config{}, err
 		}
@@ -293,21 +295,21 @@ func (o *BuiltInAuthenticationOptions) ToAuthenticationConfig() (serverauthentic
 	//	ret.ServiceAccountLookup = o.ServiceAccounts.Lookup
 	//}
 
-	if o.TokenFile != nil {
-		ret.TokenAuthFile = o.TokenFile.TokenFile
+	if o.TokenFileAuthenticationOptions != nil {
+		ret.TokenAuthFile = o.TokenFileAuthenticationOptions.TokenAuthFile
 	}
 
 	if o.WebHook != nil {
 		ret.WebhookTokenAuthnConfigFile = o.WebHook.ConfigFile
-		ret.WebhookTokenAuthnVersion = o.WebHook.Version
-		ret.WebhookTokenAuthnCacheTTL = o.WebHook.CacheTTL
-		ret.WebhookRetryBackoff = o.WebHook.RetryBackoff
+		//ret.WebhookTokenAuthnVersion = o.WebHook.Version
+		ret.WebhookTokenAuthnCacheTTL = o.WebHook.CacheTTL.Duration
+		ret.WebhookRetryBackoff = o.WebHook.RetryBackoff.Backoff()
 
-		if len(o.WebHook.ConfigFile) > 0 && o.WebHook.CacheTTL > 0 {
-			if o.TokenSuccessCacheTTL.Duration > 0 && o.WebHook.CacheTTL < o.TokenSuccessCacheTTL.Duration {
+		if len(o.WebHook.ConfigFile) > 0 && o.WebHook.CacheTTL.Duration > 0 {
+			if o.TokenSuccessCacheTTL.Duration > 0 && o.WebHook.CacheTTL.Duration < o.TokenSuccessCacheTTL.Duration {
 				klog.Warningf("the webhook cache ttl of %s is shorter than the overall cache ttl of %s for successful token authentication attempts.", o.WebHook.CacheTTL, o.TokenSuccessCacheTTL)
 			}
-			if o.TokenFailureCacheTTL.Duration > 0 && o.WebHook.CacheTTL < o.TokenFailureCacheTTL.Duration {
+			if o.TokenFailureCacheTTL.Duration > 0 && o.WebHook.CacheTTL.Duration < o.TokenFailureCacheTTL.Duration {
 				klog.Warningf("the webhook cache ttl of %s is shorter than the overall cache ttl of %s for failed token authentication attempts.", o.WebHook.CacheTTL, o.TokenFailureCacheTTL)
 			}
 		}
@@ -374,15 +376,15 @@ func (o *BuiltInAuthenticationOptions) ApplyTo(ctx context.Context, authInfo *ge
 
 // ApplyAuthorization will conditionally modify the authentication options based on the authorization options
 func (o *BuiltInAuthenticationOptions) ApplyAuthorization(authorization *BuiltInAuthorizationOptions) {
-	if o == nil || authorization == nil || o.Anonymous == nil {
+	if o == nil || authorization == nil || o.AnonymousAuthenticationOptions == nil {
 		return
 	}
 
 	// authorization ModeAlwaysAllow cannot be combined with AnonymousAuth.
 	// in such a case the AnonymousAuth is stomped to false and you get a message
-	if o.Anonymous.Allow && sets.NewString(authorization.Modes...).Has(authzmodes.ModeAlwaysAllow) {
+	if o.AnonymousAuthenticationOptions.Allow && sets.NewString(authorization.Modes...).Has(authzmodes.ModeAlwaysAllow) {
 		klog.Warningf("AnonymousAuth is not allowed with the AlwaysAllow authorizer. Resetting AnonymousAuth to false. You should use a different authorizer")
-		o.Anonymous.Allow = false
+		o.AnonymousAuthenticationOptions.Allow = false
 	}
 }
 
@@ -483,12 +485,12 @@ func (s *RequestHeaderAuthenticationOptions) ToAuthenticationRequestHeaderConfig
 // get the verify options for your authenticator.
 type ClientCertAuthenticationOptions struct {
 	// ClientCA is the certificate bundle for all the signers that you'll recognize for incoming client certificates
-	ClientCA string
+	ClientCA string `json:"clientCAFile" flag:"client-ca-file" description:"If set, any request presenting a client certificate signed by one of the authorities in the client-ca-file is authenticated with an identity corresponding to the CommonName of the client certificate."`
 
 	// CAContentProvider are the options for verifying incoming connections using mTLS and directly assigning to users.
 	// Generally this is the CA bundle file used to authenticate client certificates
 	// If non-nil, this takes priority over the ClientCA file.
-	CAContentProvider dynamiccertificates.CAContentProvider
+	CAContentProvider dynamiccertificates.CAContentProvider `json:"-"`
 }
 
 // GetClientVerifyOptionFn provides verify options for your authenticator while respecting the preferred order of verifiers.

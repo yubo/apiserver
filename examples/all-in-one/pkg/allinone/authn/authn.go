@@ -30,11 +30,11 @@ func (p *authn) Install() {
 
 	rest.SwaggerTagRegister("authentication", "authentication sample")
 
-	rest.WsRouteBuild(&rest.WsOption{
+	server.WsRouteBuild(&server.WsOption{
 		Path:               "/authn",
 		Tags:               []string{"authentication"},
 		GoRestfulContainer: p.container,
-		Routes: []rest.WsRoute{{
+		Routes: []server.WsRoute{{
 			Method: "GET", SubPath: "/info",
 			Desc:   "get authentication info",
 			Handle: p.getAuthn,

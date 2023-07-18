@@ -8,18 +8,14 @@ import (
 	"github.com/yubo/apiserver/components/cli"
 	"github.com/yubo/apiserver/components/dbus"
 	"github.com/yubo/apiserver/pkg/proc"
-	"github.com/yubo/apiserver/pkg/rest"
+	"github.com/yubo/apiserver/pkg/server"
 
 	// http
-	server "github.com/yubo/apiserver/pkg/server/module"
 	_ "github.com/yubo/apiserver/pkg/server/register"
-
-	// audit
-	_ "github.com/yubo/apiserver/pkg/audit/register"
 )
 
 func main() {
-	command := proc.NewRootCmd(server.WithoutTLS(), proc.WithRun(start))
+	command := proc.NewRootCmd(proc.WithRun(start))
 	code := cli.Run(command)
 	os.Exit(code)
 }
@@ -30,10 +26,10 @@ func start(ctx context.Context) error {
 		return err
 	}
 
-	rest.WsRouteBuild(&rest.WsOption{
-		Path:               "/audit",
-		GoRestfulContainer: srv,
-		Routes: []rest.WsRoute{
+	server.WsRouteBuild(&server.WsOption{
+		Path:   "/audit",
+		Server: srv,
+		Routes: []server.WsRoute{
 			{Method: "POST", SubPath: "/hello", Handle: hw},
 		},
 	})

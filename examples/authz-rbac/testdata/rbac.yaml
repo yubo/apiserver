@@ -31,7 +31,7 @@ roleRef:
   name: apiserver-guest
 subjects:
   - kind: Group
-    name: "*"
+    name: system:unauthenticated
 ---
 kind: Role
 metadata:
@@ -40,7 +40,7 @@ metadata:
 rules:
   - resources:
       - users 
-      - status 
+      - metrics
     verbs: ["get", "list", "watch"]
 ---
 kind: Role
@@ -50,7 +50,7 @@ metadata:
 rules:
   - resources:
       - users
-      - status 
+      - metrics
     verbs: ["*"]
 ---
 kind: Role
@@ -60,8 +60,6 @@ metadata:
 rules:
   - resources:
       - users
-      - status 
-    nonResourceURLs:
-      - "/unauthenticated"
+      - metrics
     verbs: ["get", "list", "watch"]
 

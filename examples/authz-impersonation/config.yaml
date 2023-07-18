@@ -1,18 +1,9 @@
-logging:
-  verbosity: 10
+insecureServing:
+  bindPort: 8080
+  enabled: true
 
-apiserver:
-  insecureServing:
-    bindAddress: 0.0.0.0
-    bindNework: tcp
-    bindPort: 8080
-    enabled: true
-  secureServing:
-    enabled: false
-  # for swagger
-  securitySchemes:
-    - name: BaseAuth
-      type: base
+secureServing:
+  enabled: false
 
 authentication:
   anonymous: false
@@ -21,5 +12,4 @@ authentication:
 authorization:
   modes:
   - RBAC
-  rbac:
-    configPath: ./testdata
+  rbacConfigDir: ./testdata

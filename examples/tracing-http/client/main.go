@@ -109,7 +109,7 @@ func main() {
 
 	tracer := otel.Tracer(traceName, oteltrace.WithInstrumentationVersion("0.1"))
 	ctx, span := tracer.Start(context.Background(), "ExecuteRequest")
-	log.Printf("tracer.Start TraceID: %s", span.SpanContext().TraceID())
+	log.Printf("tracer.Start span.TraceID: %s", span.SpanContext().TraceID())
 	makeRequest(ctx, *version)
 	span.End()
 }
