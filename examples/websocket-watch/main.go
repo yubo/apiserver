@@ -10,11 +10,10 @@ import (
 	"github.com/yubo/apiserver/components/dbus"
 	"github.com/yubo/apiserver/pkg/handlers"
 	"github.com/yubo/apiserver/pkg/proc"
-	"github.com/yubo/apiserver/pkg/rest"
+	"github.com/yubo/apiserver/pkg/server"
 	"github.com/yubo/golib/watch"
 	"k8s.io/klog/v2"
 
-	server "github.com/yubo/apiserver/pkg/server/module"
 	_ "github.com/yubo/apiserver/pkg/server/register"
 )
 
@@ -25,35 +24,29 @@ import (
 // go run ./apiserver-watch.go --request-timeout=10
 
 func main() {
-	command := proc.NewRootCmd(
-		server.WithoutTLS(),
-		proc.WithRun(start),
-	)
+	command := proc.NewRootCmd(proc.WithoutHTTPS(), proc.WithRun(start))
 	code := cli.Run(command)
 	os.Exit(code)
 }
 
 func start(ctx context.Context) error {
-	http, err := dbus.GetAPIServer()
+	srv, err := dbus.GetAPIServer()
 	if err != nil {
 		return err
 	}
 
-	installWs(http)
-	return nil
-}
-
-func installWs(http rest.GoRestfulContainer) {
 	server.WsRouteBuild(&server.WsOption{
-		Path:               "/hello",
-		GoRestfulContainer: http,
+		Path:   "/hello",
+		Server: srv,
 		Routes: []server.WsRoute{
 			{Method: "GET", SubPath: "/", Handle: watchHandle},
 		},
 	})
+
+	return nil
 }
 
-func watchHandle(w http.ResponseWriter, req *http.Request) error {
+func watchHandle(w http.ResponseWriter, req *http.Request) {
 	watcher := watch.NewFakeWithChanSize(2, false)
 
 	go func() {
@@ -70,5 +63,4 @@ func watchHandle(w http.ResponseWriter, req *http.Request) error {
 
 	err := handlers.ServeWatch(watcher, req, w, 0)
 	klog.V(10).Infof("exit with err %v", err)
-	return err
 }

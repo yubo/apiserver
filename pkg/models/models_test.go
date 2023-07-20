@@ -29,7 +29,7 @@ func runTests(t *testing.T, tests ...func(*Role)) {
 
 	db, err := orm.Open(driver, dsn)
 	if err != nil {
-		t.Error(err)
+		t.Skip(err)
 		return
 	}
 	defer db.Close()

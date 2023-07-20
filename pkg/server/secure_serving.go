@@ -32,8 +32,8 @@ import (
 	"k8s.io/klog/v2"
 
 	"github.com/yubo/apiserver/components/cli/flag"
-	"github.com/yubo/apiserver/pkg/server/dynamiccertificates"
 	"github.com/yubo/apiserver/pkg/metrics"
+	"github.com/yubo/apiserver/pkg/server/dynamiccertificates"
 	utilruntime "github.com/yubo/golib/util/runtime"
 )
 
@@ -217,12 +217,7 @@ func (s *SecureServingInfo) Serve(handler http.Handler, shutdownTimeout time.Dur
 // have been processed.
 // This function does not block
 // TODO: make private when insecure serving is gone from the kube-apiserver
-func RunServer(
-	server *http.Server,
-	ln net.Listener,
-	shutDownTimeout time.Duration,
-	stopCh <-chan struct{},
-) (<-chan struct{}, <-chan struct{}, error) {
+func RunServer(server *http.Server, ln net.Listener, shutDownTimeout time.Duration, stopCh <-chan struct{}) (<-chan struct{}, <-chan struct{}, error) {
 	if ln == nil {
 		return nil, nil, fmt.Errorf("listener must not be nil")
 	}

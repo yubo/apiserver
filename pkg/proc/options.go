@@ -56,6 +56,7 @@ func WithHooks(hooks ...v1.HookOps) ProcessOption {
 	}
 }
 
+// WithRegisterAuth call fn between db and http init
 func WithRegisterAuth(fn ...func(ctx context.Context) error) ProcessOption {
 	hooks := make([]v1.HookOps, len(fn))
 	for i := range fn {

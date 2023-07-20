@@ -8,12 +8,11 @@ import (
 	"github.com/yubo/apiserver/components/cli"
 	"github.com/yubo/apiserver/components/dbus"
 	"github.com/yubo/apiserver/pkg/proc"
-	"github.com/yubo/apiserver/pkg/rest"
+	genericserver "github.com/yubo/apiserver/pkg/server"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/api/errors"
 	"github.com/yubo/golib/util"
 
-	server "github.com/yubo/apiserver/pkg/server/module"
 	_ "github.com/yubo/apiserver/pkg/server/register"
 )
 
@@ -22,7 +21,7 @@ import (
 // Open in browser http://localhost:8080/swagger
 
 func main() {
-	cmd := proc.NewRootCmd(server.WithoutTLS(), proc.WithRun(start))
+	cmd := proc.NewRootCmd(proc.WithoutHTTPS(), proc.WithRun(new(Module).start))
 	code := cli.Run(cmd)
 	os.Exit(code)
 }
@@ -87,30 +86,20 @@ type Module struct {
 	users []*User
 }
 
-var (
-	module Module
-)
-
-func start(ctx context.Context) error {
+func (p *Module) start(ctx context.Context) error {
 	srv, err := dbus.GetAPIServer()
 	if err != nil {
 		return err
 	}
 
-	module.installWs(srv)
-
-	return nil
-}
-
-func (p *Module) installWs(http rest.GoRestfulContainer) {
-	rest.SwaggerTagRegister("user", "user Api - swagger api sample")
-	server.WsRouteBuild(&server.WsOption{
-		Path:               "/api/users",
-		Produces:           []string{rest.MIME_JSON},
-		Consumes:           []string{rest.MIME_JSON},
-		Tags:               []string{"user"},
-		GoRestfulContainer: http,
-		Routes: []server.WsRoute{{
+	genericserver.SwaggerTagRegister("user", "user Api - swagger api sample")
+	genericserver.WsRouteBuild(&genericserver.WsOption{
+		Path:     "/api/users",
+		Produces: []string{genericserver.MIME_JSON},
+		Consumes: []string{genericserver.MIME_JSON},
+		Tags:     []string{"user"},
+		Server:   srv,
+		Routes: []genericserver.WsRoute{{
 			Method: "POST", SubPath: "/",
 			Desc:   "create user",
 			Handle: p.createUser,
@@ -132,6 +121,8 @@ func (p *Module) installWs(http rest.GoRestfulContainer) {
 			Handle: p.deleteUser,
 		}},
 	})
+
+	return nil
 }
 
 func (p *Module) createUser(w http.ResponseWriter, req *http.Request, in *CreateUserInput) (CreateUserOutput, error) {

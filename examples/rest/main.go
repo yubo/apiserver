@@ -7,7 +7,6 @@ import (
 
 	"github.com/yubo/apiserver/components/cli"
 	"github.com/yubo/apiserver/pkg/proc"
-	server "github.com/yubo/apiserver/pkg/server/module"
 
 	_ "github.com/yubo/apiserver/pkg/models/register"
 	_ "github.com/yubo/apiserver/pkg/server/register"
@@ -18,7 +17,7 @@ import (
 )
 
 func main() {
-	cmd := proc.NewRootCmd(server.WithoutTLS(), proc.WithRun(start))
+	cmd := proc.NewRootCmd(proc.WithRun(start))
 	code := cli.Run(cmd)
 	os.Exit(code)
 }

@@ -50,7 +50,7 @@ func run() error {
 		if err != nil {
 			return err
 		}
-		klog.InfoS("recv", "contain", b)
+		klog.InfoS("recv", "msg", b)
 	}
 }
 

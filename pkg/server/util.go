@@ -88,7 +88,9 @@ func newInterfaceFromInterface(i interface{}) interface{} {
 
 func NewBaseServer() *GenericAPIServer {
 	return &GenericAPIServer{
-		Handler:    &APIServerHandler{},
+		Handler: &APIServerHandler{
+			GoRestfulContainer: restful.NewContainer(),
+		},
 		Serializer: scheme.NegotiatedSerializer,
 	}
 }

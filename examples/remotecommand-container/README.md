@@ -5,7 +5,7 @@
 #### server
 
 ```sh
-$ go run ./server/main.go
+$ go run ./main.go
 ```
 
 

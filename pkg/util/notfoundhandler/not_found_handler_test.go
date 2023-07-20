@@ -66,7 +66,7 @@ func TestNotFoundHandler(t *testing.T) {
 	if resp.StatusCode != 503 {
 		t.Fatalf("unexpected status code %d, expected 503", resp.StatusCode)
 	}
-	expectedMsg = `{"kind":"Status","apiVersion":"v1","metadata":{},"status":"Failure","message":"the request has been made before all known HTTP paths have been installed, please try again","reason":"ServiceUnavailable","details":{"retryAfterSeconds":5},"code":503}`
+	expectedMsg = `{"metadata":{},"status":"Failure","message":"the request has been made before all known HTTP paths have been installed, please try again","reason":"ServiceUnavailable","details":{"retryAfterSeconds":5},"code":503}`
 	if bodyStr != expectedMsg {
 		t.Fatalf("unexpected response: %v, expected: %v", bodyStr, expectedMsg)
 	}

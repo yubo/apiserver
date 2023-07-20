@@ -16,14 +16,14 @@ var shutdownHandler chan os.Signal
 // is terminated with exit code 1.
 // Only one of SetupSignalContext and SetupSignalHandler should be called, and only can
 // be called once.
-func SetupSignalHandler() <-chan struct{} {
-	return SetupSignalContext().Done()
+func SetupSignalHandler(stopCh <-chan struct{}) <-chan struct{} {
+	return SetupSignalContext(stopCh).Done()
 }
 
 // SetupSignalContext is same as SetupSignalHandler, but a context.Context is returned.
 // Only one of SetupSignalContext and SetupSignalHandler should be called, and only can
 // be called once.
-func SetupSignalContext() context.Context {
+func SetupSignalContext(stopCh <-chan struct{}) context.Context {
 	close(onlyOneSignalHandler) // panics when called twice
 
 	shutdownHandler = make(chan os.Signal, 2)
@@ -31,7 +31,10 @@ func SetupSignalContext() context.Context {
 	ctx, cancel := context.WithCancel(context.Background())
 	signal.Notify(shutdownHandler, shutdownSignals...)
 	go func() {
-		<-shutdownHandler
+		select {
+		case <-shutdownHandler:
+		case <-stopCh:
+		}
 		cancel()
 		<-shutdownHandler
 		klog.V(1).Info("[graceful-termination] apiserver is exiting")

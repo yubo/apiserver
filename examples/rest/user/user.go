@@ -8,33 +8,33 @@ import (
 	"examples/rest/models"
 
 	"github.com/yubo/apiserver/components/dbus"
-	"github.com/yubo/apiserver/pkg/rest"
+	"github.com/yubo/apiserver/pkg/server"
 	"github.com/yubo/apiserver/plugin/responsewriter/umi"
 	libapi "github.com/yubo/golib/api"
 )
 
 func New(ctx context.Context) *user {
 	return &user{
-		container: dbus.APIServer(),
-		user:      models.NewUser(),
+		server: dbus.APIServer(),
+		user:   models.NewUser(),
 	}
 }
 
 type user struct {
-	container rest.GoRestfulContainer
-	user      *models.User
+	server *server.GenericAPIServer
+	user   *models.User
 }
 
 func (p *user) Install() {
-	rest.SwaggerTagRegister("v1", "user Api - for restful sample")
-	rest.SwaggerTagRegister("v2", "user Api(umi styles) - for restful sample - https://pro.ant.design/zh-CN/docs/request")
+	server.SwaggerTagRegister("v1", "user Api - for restful sample")
+	server.SwaggerTagRegister("v2", "user Api(umi styles) - for restful sample - https://pro.ant.design/zh-CN/docs/request")
 
 	server.WsRouteBuild(&server.WsOption{
-		Path:               "/api/v1",
-		Produces:           []string{rest.MIME_JSON},
-		Consumes:           []string{rest.MIME_JSON},
-		Tags:               []string{"v1"},
-		GoRestfulContainer: p.container,
+		Path:     "/api/v1",
+		Produces: []string{server.MIME_JSON},
+		Consumes: []string{server.MIME_JSON},
+		Tags:     []string{"v1"},
+		Server:   p.server,
 		Routes: []server.WsRoute{{
 			Method:    "POST",
 			SubPath:   "/users",
@@ -76,12 +76,12 @@ func (p *user) Install() {
 	})
 
 	server.WsRouteBuild(&server.WsOption{
-		Path:               "/api/v2",
-		Produces:           []string{rest.MIME_JSON},
-		Consumes:           []string{rest.MIME_JSON},
-		Tags:               []string{"v2"},
-		RespWriter:         umi.RespWriter,
-		GoRestfulContainer: p.container,
+		Path:       "/api/v2",
+		Produces:   []string{server.MIME_JSON},
+		Consumes:   []string{server.MIME_JSON},
+		Tags:       []string{"v2"},
+		RespWriter: umi.RespWriter,
+		Server:     p.server,
 		Routes: []server.WsRoute{{
 			Method:    "POST",
 			SubPath:   "/users",
@@ -154,8 +154,8 @@ func (p *user) del(w http.ResponseWriter, req *http.Request, in *nameParam) erro
 }
 
 type createInput struct {
-	Name string
-	Age  int
+	Name string `json:"name"`
+	Age  int    `json:"age"`
 }
 
 func (p *createInput) User() *api.User {

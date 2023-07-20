@@ -25,7 +25,7 @@ var (
 		Owner:       moduleName,
 		HookNum:     v1.ACTION_START,
 		Priority:    v1.PRI_SYS_INIT,
-		SubPriority: v1.PRI_M_AUTHN_MODULE,
+		SubPriority: v1.PRI_M_AUTHN,
 	}}
 	_config *config
 )

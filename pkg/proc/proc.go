@@ -57,6 +57,7 @@ type Process struct {
 	err     error
 
 	addFlagsOnce sync.Once
+	stopOnce     sync.Once
 }
 
 func newProcess() *Process {
@@ -299,7 +300,7 @@ func (p *Process) Start(fs *pflag.FlagSet) error {
 		klog.Errorf("Unable to send systemd daemon successful start message: %v\n", err)
 	}
 
-	<-SetupSignalHandler()
+	<-SetupSignalHandler(p.ctx.Done())
 
 	p.stop()
 
@@ -394,59 +395,52 @@ func (p *Process) start() error {
 }
 
 func (p *Process) shutdown() error {
-	proc, err := os.FindProcess(os.Getpid())
-	if err != nil {
-		return err
-	}
-	return proc.Signal(shutdownSignal)
+	p.cancel()
+	return nil
 }
 
 // reverse order
 func (p *Process) stop() error {
-	select {
-	case <-p.ctx.Done():
-		return nil
-	default:
-	}
+	p.stopOnce.Do(func() {
+		// cancel ctx first
+		p.cancel()
+		p.status.Set(v1.STATUS_EXIT)
 
-	// cancel ctx first
-	p.cancel()
-	p.status.Set(v1.STATUS_EXIT)
+		wg := p.wg
+		wgCh := make(chan struct{})
 
-	wg := p.wg
-	wgCh := make(chan struct{})
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-
-		ops := p.hookOps[v1.ACTION_STOP]
-		ctx := configer.WithConfiger(p.ctx, p.parsedConfiger)
-		for i := len(ops) - 1; i >= 0; i-- {
-			op := ops[i]
-			op.Dlog()
-			if err := op.Hook(WithHookOps(ctx, op)); err != nil {
-				p.err = fmt.Errorf("%s.%s() err: %s", op.Owner, util.Name(op.Hook), err)
-				return
+			ops := p.hookOps[v1.ACTION_STOP]
+			ctx := configer.WithConfiger(p.ctx, p.parsedConfiger)
+			for i := len(ops) - 1; i >= 0; i-- {
+				op := ops[i]
+				op.Dlog()
+				if err := op.Hook(WithHookOps(ctx, op)); err != nil {
+					p.err = fmt.Errorf("%s.%s() err: %s", op.Owner, util.Name(op.Hook), err)
+					return
+				}
 			}
-		}
-	}()
+		}()
 
-	go func() {
-		wg.Wait()
-		wgCh <- struct{}{}
-	}()
+		go func() {
+			wg.Wait()
+			wgCh <- struct{}{}
+		}()
 
-	// Wait then close or hard close.
-	closeTimeout := serverGracefulCloseTimeout
-	select {
-	case <-wgCh:
-		if !p.noloop {
-			klog.Info("See ya!")
+		// Wait then close or hard close.
+		closeTimeout := serverGracefulCloseTimeout
+		select {
+		case <-wgCh:
+			if !p.noloop {
+				klog.Info("See ya!")
+			}
+		case <-time.After(closeTimeout):
+			p.err = fmt.Errorf("%s closed after timeout %s", p.name, closeTimeout.String())
 		}
-	case <-time.After(closeTimeout):
-		p.err = fmt.Errorf("%s closed after timeout %s", p.name, closeTimeout.String())
-	}
+	})
 
 	return p.err
 }

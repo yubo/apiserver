@@ -2,8 +2,6 @@ package server
 
 import (
 	"context"
-	"fmt"
-	"time"
 
 	"github.com/yubo/apiserver/components/dbus"
 	"github.com/yubo/apiserver/pkg/filters"
@@ -12,6 +10,7 @@ import (
 	genericapiserver "github.com/yubo/apiserver/pkg/server"
 	"github.com/yubo/apiserver/pkg/util/notfoundhandler"
 	utilerrors "github.com/yubo/golib/util/errors"
+	"k8s.io/klog/v2"
 )
 
 const (
@@ -45,15 +44,11 @@ type serverModule struct {
 	name   string
 	server *genericapiserver.GenericAPIServer
 
-	ctx       context.Context
-	cancel    context.CancelFunc
-	stoppedCh chan struct{}
+	stopCh, runCompletedCh chan struct{}
 }
 
 // init: no dep
 func (p *serverModule) init(ctx context.Context) error {
-	p.ctx, p.cancel = context.WithCancel(ctx)
-
 	cf := newConfig()
 	if err := proc.ReadConfig("", cf); err != nil {
 		return err
@@ -75,8 +70,6 @@ func (p *serverModule) init(ctx context.Context) error {
 		return err
 	}
 
-	p.stoppedCh = make(chan struct{})
-
 	notFoundHandler := notfoundhandler.New(genericConfig.Serializer, filters.NoMuxAndDiscoveryIncompleteKey)
 
 	p.server, err = genericConfig.Complete().New("apiserver", genericapiserver.NewEmptyDelegateWithCustomHandler(notFoundHandler))
@@ -90,80 +83,89 @@ func (p *serverModule) init(ctx context.Context) error {
 }
 
 func (p *serverModule) start(ctx context.Context) error {
-	if err := p.Start(p.ctx.Done(), p.stoppedCh); err != nil {
-		return err
-	}
+
+	p.stopCh, p.runCompletedCh = make(chan struct{}), make(chan struct{})
+
+	go func() {
+		defer close(p.runCompletedCh)
+		if err := p.server.PrepareRun().Run(p.stopCh); err != nil {
+			klog.Error(err)
+		}
+	}()
+	//if err := p.Start(); err != nil {
+	//	return err
+	//}
 
 	return nil
 }
 
 func (p *serverModule) stop(ctx context.Context) error {
-	p.cancel()
+	close(p.stopCh)
 
-	<-p.stoppedCh
+	<-p.runCompletedCh
 	return nil
 }
 
-func (p *serverModule) Start(stopCh <-chan struct{}, done chan struct{}) error {
-	s := p.server
-
-	delayedStopCh := make(chan struct{})
-
-	// close socket after delayed stopCh
-
-	if s.SecureServingInfo != nil {
-		_, stoppedCh, err := s.SecureServingInfo.Serve(s.Handler, s.ShutdownTimeout, delayedStopCh)
-		if err != nil {
-			return err
-		}
-		s.NonLongRunningRequestWaitGroup.Add(1)
-		go func() {
-			<-stoppedCh
-			s.NonLongRunningRequestWaitGroup.Done()
-		}()
-	}
-
-	if s.InsecureServingInfo != nil {
-		_, stoppedCh, err := s.InsecureServingInfo.Serve(s.Handler, s.ShutdownTimeout, delayedStopCh)
-		if err != nil {
-			return err
-		}
-		s.NonLongRunningRequestWaitGroup.Add(1)
-		go func() {
-			<-stoppedCh
-			s.NonLongRunningRequestWaitGroup.Done()
-		}()
-	}
-
-	// Start the audit backend before any request comes in. This means we must call Backend.Run
-	// before http server start serving. Otherwise the Backend.ProcessEvents call might block.
-	// AuditBackend.Run will stop as soon as all in-flight requests are drained.
-	if s.AuditBackend != nil {
-		if err := s.AuditBackend.Run(stopCh); err != nil {
-			return fmt.Errorf("failed to run the audit backend: %v", err)
-		}
-	}
-
-	go func() {
-		<-stopCh
-		time.Sleep(s.ShutdownDelayDuration)
-		close(delayedStopCh)
-	}()
-
-	go func() {
-		<-stopCh
-
-		// wait for the delayed stopCh before closing the handler chain (it rejects everything after Wait has been called).
-		<-delayedStopCh
-
-		// Wait for all requests to finish, which are bounded by the RequestTimeout variable.
-		s.NonLongRunningRequestWaitGroup.Wait()
-
-		close(done)
-	}()
-
-	return nil
-}
+//func (p *serverModule) Start(stopCh <-chan struct{}, done chan struct{}) error {
+//	s := p.server
+//
+//	delayedStopCh := make(chan struct{})
+//
+//	// close socket after delayed stopCh
+//
+//	if s.SecureServingInfo != nil {
+//		_, stoppedCh, err := s.SecureServingInfo.Serve(s.Handler, s.ShutdownTimeout, delayedStopCh)
+//		if err != nil {
+//			return err
+//		}
+//		s.NonLongRunningRequestWaitGroup.Add(1)
+//		go func() {
+//			<-stoppedCh
+//			s.NonLongRunningRequestWaitGroup.Done()
+//		}()
+//	}
+//
+//	if s.InsecureServingInfo != nil {
+//		_, stoppedCh, err := s.InsecureServingInfo.Serve(s.Handler, s.ShutdownTimeout, delayedStopCh)
+//		if err != nil {
+//			return err
+//		}
+//		s.NonLongRunningRequestWaitGroup.Add(1)
+//		go func() {
+//			<-stoppedCh
+//			s.NonLongRunningRequestWaitGroup.Done()
+//		}()
+//	}
+//
+//	// Start the audit backend before any request comes in. This means we must call Backend.Run
+//	// before http server start serving. Otherwise the Backend.ProcessEvents call might block.
+//	// AuditBackend.Run will stop as soon as all in-flight requests are drained.
+//	if s.AuditBackend != nil {
+//		if err := s.AuditBackend.Run(stopCh); err != nil {
+//			return fmt.Errorf("failed to run the audit backend: %v", err)
+//		}
+//	}
+//
+//	go func() {
+//		<-stopCh
+//		time.Sleep(s.ShutdownDelayDuration)
+//		close(delayedStopCh)
+//	}()
+//
+//	go func() {
+//		<-stopCh
+//
+//		// wait for the delayed stopCh before closing the handler chain (it rejects everything after Wait has been called).
+//		<-delayedStopCh
+//
+//		// Wait for all requests to finish, which are bounded by the RequestTimeout variable.
+//		s.NonLongRunningRequestWaitGroup.Wait()
+//
+//		close(done)
+//	}()
+//
+//	return nil
+//}
 
 func Register() {
 	proc.RegisterHooks(hookOps)

@@ -181,24 +181,23 @@ func apply(c *LoggingConfiguration, featureGate featuregate.FeatureGate) error {
 }
 
 // AddFlags adds command line flags for the configuration.
-//func AddFlags(c *LoggingConfiguration, fs *pflag.FlagSet) {
-//	formats := logRegistry.list()
-//	fs.StringVar(&c.Format, "logging-format", c.Format, fmt.Sprintf("Sets the log format. Permitted formats: %s.", formats))
-//	// No new log formats should be added after generation is of flag options
-//	logRegistry.freeze()
-//
-//	fs.DurationVar(&c.FlushFrequency.Duration, LogFlushFreqFlagName, c.FlushFrequency.Duration, "Maximum number of seconds between log flushes")
-//	fs.VarP(VerbosityLevelPflag(&c.Verbosity), "v", "v", "number for the log level verbosity")
-//	fs.Var(VModuleConfigurationPflag(&c.VModule), "vmodule", "comma-separated list of pattern=N settings for file-filtered logging (only works for text log format)")
-//
-//	// JSON options. We only register them if "json" is a valid format. The
-//	// config file API however always has them.
-//	if _, err := logRegistry.get("json"); err == nil {
-//		fs.BoolVar(&c.Options.JSON.SplitStream, "log-json-split-stream", false, "[Alpha] In JSON format, write error messages to stderr and info messages to stdout. The default is to write a single stream to stdout. Enable the LoggingAlphaOptions feature gate to use this.")
-//		fs.Var(&c.Options.JSON.InfoBufferSize, "log-json-info-buffer-size", "[Alpha] In JSON format with split output streams, the info messages can be buffered for a while to increase performance. The default value of zero bytes disables buffering. The size can be specified as number of bytes (512), multiples of 1000 (1K), multiples of 1024 (2Ki), or powers of those (3M, 4G, 5Mi, 6Gi). Enable the LoggingAlphaOptions feature gate to use this.")
-//	}
-//	panic("deprecated")
-//}
+func AddFlags(c *LoggingConfiguration, fs *pflag.FlagSet) {
+	formats := logRegistry.list()
+	fs.StringVar(&c.Format, "logging-format", c.Format, fmt.Sprintf("Sets the log format. Permitted formats: %s.", formats))
+	// No new log formats should be added after generation is of flag options
+	logRegistry.freeze()
+
+	fs.DurationVar(&c.FlushFrequency.Duration, LogFlushFreqFlagName, c.FlushFrequency.Duration, "Maximum number of seconds between log flushes")
+	fs.VarP(VerbosityLevelPflag(&c.Verbosity), "v", "v", "number for the log level verbosity")
+	fs.Var(VModuleConfigurationPflag(&c.VModule), "vmodule", "comma-separated list of pattern=N settings for file-filtered logging (only works for text log format)")
+
+	// JSON options. We only register them if "json" is a valid format. The
+	// config file API however always has them.
+	if _, err := logRegistry.get("json"); err == nil {
+		fs.BoolVar(&c.Options.JSON.SplitStream, "log-json-split-stream", false, "[Alpha] In JSON format, write error messages to stderr and info messages to stdout. The default is to write a single stream to stdout. Enable the LoggingAlphaOptions feature gate to use this.")
+		fs.Var(&c.Options.JSON.InfoBufferSize, "log-json-info-buffer-size", "[Alpha] In JSON format with split output streams, the info messages can be buffered for a while to increase performance. The default value of zero bytes disables buffering. The size can be specified as number of bytes (512), multiples of 1000 (1K), multiples of 1024 (2Ki), or powers of those (3M, 4G, 5Mi, 6Gi). Enable the LoggingAlphaOptions feature gate to use this.")
+	}
+}
 
 // SetRecommendedLoggingConfiguration sets the default logging configuration
 // for fields that are unset.

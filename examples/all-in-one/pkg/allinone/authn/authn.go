@@ -9,32 +9,32 @@ import (
 	"github.com/yubo/apiserver/components/dbus"
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/request"
-	"github.com/yubo/apiserver/pkg/rest"
+	genericserver "github.com/yubo/apiserver/pkg/server"
 	"github.com/yubo/apiserver/pkg/sessions"
 	"github.com/yubo/golib/api/errors"
 )
 
 func New(ctx context.Context, cf *config.Config) *authn {
 	return &authn{
-		container: dbus.APIServer(),
+		server: dbus.APIServer(),
 	}
 }
 
 type authn struct {
-	container    rest.GoRestfulContainer
+	server       *genericserver.GenericAPIServer
 	passwordfile dbus.PasswordfileT
 }
 
 func (p *authn) Install() {
 	p.passwordfile = dbus.Passwordfile()
 
-	rest.SwaggerTagRegister("authentication", "authentication sample")
+	genericserver.SwaggerTagRegister("authentication", "authentication sample")
 
-	server.WsRouteBuild(&server.WsOption{
-		Path:               "/authn",
-		Tags:               []string{"authentication"},
-		GoRestfulContainer: p.container,
-		Routes: []server.WsRoute{{
+	genericserver.WsRouteBuild(&genericserver.WsOption{
+		Path:   "/authn",
+		Tags:   []string{"authentication"},
+		Server: p.server,
+		Routes: []genericserver.WsRoute{{
 			Method: "GET", SubPath: "/info",
 			Desc:   "get authentication info",
 			Handle: p.getAuthn,
@@ -47,7 +47,7 @@ func (p *authn) Install() {
 		}, {
 			Method: "POST", SubPath: "/logout",
 			Desc:    "delete session userInfo",
-			Consume: rest.MIME_ALL,
+			Consume: genericserver.MIME_ALL,
 			Handle:  p.logout,
 		}},
 	})

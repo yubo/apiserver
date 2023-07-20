@@ -12,7 +12,6 @@ import (
 	"github.com/yubo/apiserver/components/dbus"
 	"github.com/yubo/apiserver/pkg/proc"
 	"github.com/yubo/apiserver/pkg/responsewriters"
-	"github.com/yubo/apiserver/pkg/rest"
 	"github.com/yubo/apiserver/pkg/s3"
 	"github.com/yubo/golib/scheme"
 
@@ -20,27 +19,18 @@ import (
 	_ "github.com/yubo/apiserver/pkg/server/register"
 )
 
-const (
-	moduleName = "client.s3.examples"
-)
-
 type module struct {
-	name string
-	s3   s3.S3Client
+	s3 s3.S3Client
 }
 
-var (
-	_module = &module{name: moduleName}
-)
-
 func main() {
-	command := proc.NewRootCmd(proc.WithRun(_module.start))
+	command := proc.NewRootCmd(proc.WithRun(new(module).start))
 	code := cli.Run(command)
 	os.Exit(code)
 }
 
 func (p *module) start(ctx context.Context) error {
-	http, err := dbus.GetAPIServer()
+	srv, err := dbus.GetAPIServer()
 	if err != nil {
 		return err
 	}
@@ -51,12 +41,8 @@ func (p *module) start(ctx context.Context) error {
 	}
 	p.s3 = s3
 
-	p.installWs(http)
+	srv.HandlePrefix("/s3/", p)
 	return nil
-}
-
-func (p *module) installWs(c rest.GoRestfulContainer) {
-	c.HandlePrefix("/s3/", p)
 }
 
 func (p *module) ServeHTTP(w http.ResponseWriter, req *http.Request) {

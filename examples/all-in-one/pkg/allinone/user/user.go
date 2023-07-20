@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/yubo/apiserver/components/dbus"
-	"github.com/yubo/apiserver/pkg/rest"
+	genericserver "github.com/yubo/apiserver/pkg/server"
 	libapi "github.com/yubo/golib/api"
 
 	"examples/all-in-one/pkg/allinone/config"
@@ -17,27 +17,27 @@ import (
 
 func New(ctx context.Context, cf *config.Config) *user {
 	return &user{
-		container: dbus.APIServer(),
-		user:      models.NewUser(),
+		server: dbus.APIServer(),
+		user:   models.NewUser(),
 	}
 }
 
 type user struct {
-	container rest.GoRestfulContainer
-	user      *models.User
+	server *genericserver.GenericAPIServer
+	user   *models.User
 }
 
 func (p *user) Install() {
-	rest.ScopeRegister("user:write", "user")
-	rest.SwaggerTagRegister("user", "user Api - for restful sample")
+	genericserver.ScopeRegister("user:write", "user")
+	genericserver.SwaggerTagRegister("user", "user Api - for restful sample")
 
-	server.WsRouteBuild(&server.WsOption{
-		Path:               "/users",
-		Produces:           []string{rest.MIME_JSON},
-		Consumes:           []string{rest.MIME_JSON},
-		Tags:               []string{"user"},
-		GoRestfulContainer: p.container,
-		Routes: []server.WsRoute{{
+	genericserver.WsRouteBuild(&genericserver.WsOption{
+		Path:     "/users",
+		Produces: []string{genericserver.MIME_JSON},
+		Consumes: []string{genericserver.MIME_JSON},
+		Tags:     []string{"user"},
+		Server:   p.server,
+		Routes: []genericserver.WsRoute{{
 			Method: "POST", SubPath: "/",
 			Desc:   "create user",
 			Handle: p.create,

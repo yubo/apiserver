@@ -7,6 +7,7 @@ import (
 	"github.com/yubo/apiserver/pkg/db"
 	"github.com/yubo/apiserver/pkg/proc"
 	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
+	"github.com/yubo/golib/orm"
 )
 
 const (
@@ -45,6 +46,9 @@ func (p *module) init(ctx context.Context) (err error) {
 
 	if p.db, err = db.NewDB(ctx, cf); err != nil {
 		return err
+	}
+	if cf.Debug {
+		orm.DEBUG = true
 	}
 	dbus.RegisterDB(p.db)
 

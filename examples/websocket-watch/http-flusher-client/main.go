@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/yubo/apiserver/pkg/proc"
+	"github.com/yubo/apiserver/pkg/server"
 	"github.com/yubo/client-go/rest"
 	"github.com/yubo/golib/scheme"
 	"k8s.io/klog/v2"
@@ -26,7 +27,10 @@ func run() error {
 		return err
 	}
 
-	watching, err := c.Get().Prefix("hello").Watch(context.Background(), new(string))
+	watching, err := c.Get().
+		SetHeader("Content-Type", server.MIME_JSON).
+		Prefix("hello").
+		Watch(context.Background(), new(string))
 	if err != nil {
 		return err
 	}

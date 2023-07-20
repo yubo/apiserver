@@ -5,13 +5,9 @@ import (
 	"errors"
 	"io"
 
-	"github.com/yubo/apiserver/pkg/audit"
-	"github.com/yubo/apiserver/pkg/authentication/authenticatorfactory"
 	authUser "github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/db"
-	corev1listers "github.com/yubo/apiserver/pkg/listers"
 	"github.com/yubo/apiserver/pkg/server"
-	"github.com/yubo/apiserver/pkg/server/dynamiccertificates"
 	"google.golang.org/grpc"
 )
 
@@ -24,12 +20,12 @@ const (
 	s3ClientKey
 	apiServerKey
 	grpcserverKey
-	authnKey              // Authentication
-	authzKey              // authorization
-	auditKey              // audit
-	clientCAKey           // clientCA
-	authnRequestHeaderkey // Authentication.RequestHeader
-	listSecretKey         //
+	//authnKey              // Authentication
+	//authzKey              // authorization
+	//auditKey              // audit
+	//clientCAKey           // clientCA
+	//authnRequestHeaderkey // Authentication.RequestHeader
+	//listSecretKey //
 )
 
 // password file
@@ -141,99 +137,99 @@ func GrpcServer() *grpc.Server {
 }
 
 // authn / Authentication
-func RegisterAuthenticationInfo(o *server.AuthenticationInfo) {
-	MustRegister(authnKey, o)
-}
-func GetAuthenticationInfo() (*server.AuthenticationInfo, error) {
-	ret, ok := get(authnKey).(*server.AuthenticationInfo)
-	if !ok {
-		return nil, errors.New("AuthenticationInfo not registered")
-	}
-	return ret, nil
-}
-func AuthenticationInfo() *server.AuthenticationInfo {
-	ret, err := GetAuthenticationInfo()
-	if err != nil {
-		panic(err)
-	}
-	return ret
-}
-
-// authz // authorizationInfo
-func RegisterAuthorizationInfo(o *server.AuthorizationInfo) {
-	MustRegister(authzKey, o)
-}
-func GetAuthorizationInfo() (*server.AuthorizationInfo, error) {
-	ret, ok := get(authzKey).(*server.AuthorizationInfo)
-	if !ok {
-		return nil, errors.New("AuthorizationInfo not registered")
-	}
-	return ret, nil
-}
-func AuthorizationInfo() *server.AuthorizationInfo {
-	ret, err := GetAuthorizationInfo()
-	if err != nil {
-		panic(err)
-	}
-	return ret
-}
+//func RegisterAuthenticationInfo(o *server.AuthenticationInfo) {
+//	MustRegister(authnKey, o)
+//}
+//func GetAuthenticationInfo() (*server.AuthenticationInfo, error) {
+//	ret, ok := get(authnKey).(*server.AuthenticationInfo)
+//	if !ok {
+//		return nil, errors.New("AuthenticationInfo not registered")
+//	}
+//	return ret, nil
+//}
+//func AuthenticationInfo() *server.AuthenticationInfo {
+//	ret, err := GetAuthenticationInfo()
+//	if err != nil {
+//		panic(err)
+//	}
+//	return ret
+//}
+//
+//// authz // authorizationInfo
+//func RegisterAuthorizationInfo(o *server.AuthorizationInfo) {
+//	MustRegister(authzKey, o)
+//}
+//func GetAuthorizationInfo() (*server.AuthorizationInfo, error) {
+//	ret, ok := get(authzKey).(*server.AuthorizationInfo)
+//	if !ok {
+//		return nil, errors.New("AuthorizationInfo not registered")
+//	}
+//	return ret, nil
+//}
+//func AuthorizationInfo() *server.AuthorizationInfo {
+//	ret, err := GetAuthorizationInfo()
+//	if err != nil {
+//		panic(err)
+//	}
+//	return ret
+//}
 
 // audit
-type Audit interface {
-	Backend() audit.Backend
-	AuditPolicyRuleEvaluator() audit.PolicyRuleEvaluator
-}
-
-func RegisterAudit(a Audit) {
-	MustRegister(auditKey, a)
-}
-func GetAuditor() (Audit, error) {
-	ret, ok := get(auditKey).(Audit)
-	if !ok {
-		return nil, errors.New("Audit not registered")
-	}
-	return ret, nil
-}
+//type Audit interface {
+//	Backend() audit.Backend
+//	AuditPolicyRuleEvaluator() audit.PolicyRuleEvaluator
+//}
+//
+//func RegisterAudit(a Audit) {
+//	MustRegister(auditKey, a)
+//}
+//func GetAuditor() (Audit, error) {
+//	ret, ok := get(auditKey).(Audit)
+//	if !ok {
+//		return nil, errors.New("Audit not registered")
+//	}
+//	return ret, nil
+//}
 
 // clientCA
-func RegisterClientCA(o dynamiccertificates.CAContentProvider) {
-	MustRegister(authzKey, o)
-}
-func GetClientCA() (dynamiccertificates.CAContentProvider, error) {
-	ret, ok := get(authzKey).(dynamiccertificates.CAContentProvider)
-	if !ok {
-		return nil, errors.New("ClientCA not registered")
-	}
-	return ret, nil
-}
-func ClientCA() dynamiccertificates.CAContentProvider {
-	ret, err := GetClientCA()
-	if err != nil {
-		panic(err)
-	}
-	return ret
-}
-
-func RegisterRequestHeaderConfig(o *authenticatorfactory.RequestHeaderConfig) {
-	MustRegister(authnRequestHeaderkey, o)
-}
-
-func GetRequestHeaderConfig() (*authenticatorfactory.RequestHeaderConfig, error) {
-	ret, ok := get(authnRequestHeaderkey).(*authenticatorfactory.RequestHeaderConfig)
-	if !ok {
-		return nil, errors.New("RequestHeaderConfig not registered")
-	}
-	return ret, nil
-}
-
-func RegisterSecretLister(lister corev1listers.SecretLister) {
-	MustRegister(listSecretKey, lister)
-}
-
-func GetSecretLister() (corev1listers.SecretLister, error) {
-	ret, ok := get(listSecretKey).(corev1listers.SecretLister)
-	if !ok {
-		return nil, errors.New("secretLister not registered")
-	}
-	return ret, nil
-}
+//func RegisterClientCA(o dynamiccertificates.CAContentProvider) {
+//	MustRegister(authzKey, o)
+//}
+//func GetClientCA() (dynamiccertificates.CAContentProvider, error) {
+//	ret, ok := get(authzKey).(dynamiccertificates.CAContentProvider)
+//	if !ok {
+//		return nil, errors.New("ClientCA not registered")
+//	}
+//	return ret, nil
+//}
+//func ClientCA() dynamiccertificates.CAContentProvider {
+//	ret, err := GetClientCA()
+//	if err != nil {
+//		panic(err)
+//	}
+//	return ret
+//}
+//
+//func RegisterRequestHeaderConfig(o *authenticatorfactory.RequestHeaderConfig) {
+//	MustRegister(authnRequestHeaderkey, o)
+//}
+//
+//func GetRequestHeaderConfig() (*authenticatorfactory.RequestHeaderConfig, error) {
+//	ret, ok := get(authnRequestHeaderkey).(*authenticatorfactory.RequestHeaderConfig)
+//	if !ok {
+//		return nil, errors.New("RequestHeaderConfig not registered")
+//	}
+//	return ret, nil
+//}
+//
+//func RegisterSecretLister(lister corev1listers.SecretLister) {
+//	MustRegister(listSecretKey, lister)
+//}
+//
+//func GetSecretLister() (corev1listers.SecretLister, error) {
+//	ret, ok := get(listSecretKey).(corev1listers.SecretLister)
+//	if !ok {
+//		return nil, errors.New("secretLister not registered")
+//	}
+//	return ret, nil
+//}

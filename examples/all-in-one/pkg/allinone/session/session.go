@@ -8,34 +8,34 @@ import (
 	"net/http"
 
 	"github.com/yubo/apiserver/components/dbus"
-	"github.com/yubo/apiserver/pkg/rest"
 
+	genericserver "github.com/yubo/apiserver/pkg/server"
 	"github.com/yubo/apiserver/pkg/sessions"
 	_ "github.com/yubo/apiserver/pkg/sessions/register"
 )
 
 func New(ctx context.Context, cf *config.Config) *session {
 	return &session{
-		container: dbus.APIServer(),
+		server: dbus.APIServer(),
 	}
 
 }
 
 type session struct {
-	container rest.GoRestfulContainer
+	server *genericserver.GenericAPIServer
 }
 
 func (p *session) Install() {
-	rest.SwaggerTagRegister("session", "demo session")
-	server.WsRouteBuild(&server.WsOption{
+	genericserver.SwaggerTagRegister("session", "demo session")
+	genericserver.WsRouteBuild(&genericserver.WsOption{
 		// << set filter >>
 		// has been added filters.session at apiserver.DefaultBuildHandlerChain
 		// Filter: filters.Session(p.session),
-		Path:               "/session",
-		Consumes:           []string{"*/*"},
-		Tags:               []string{"session"},
-		GoRestfulContainer: p.container,
-		Routes: []server.WsRoute{{
+		Path:     "/session",
+		Consumes: []string{"*/*"},
+		Tags:     []string{"session"},
+		Server:   p.server,
+		Routes: []genericserver.WsRoute{{
 			Method: "GET", SubPath: "/",
 			Desc:   "get session info",
 			Handle: p.info,

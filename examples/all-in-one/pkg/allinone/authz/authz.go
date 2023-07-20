@@ -8,28 +8,28 @@ import (
 	"net/http"
 
 	"github.com/yubo/apiserver/components/dbus"
-	"github.com/yubo/apiserver/pkg/rest"
+	genericserver "github.com/yubo/apiserver/pkg/server"
 	"k8s.io/klog/v2"
 )
 
 func New(ctx context.Context, cf *config.Config) *authz {
 	return &authz{
-		container: dbus.APIServer(),
+		server: dbus.APIServer(),
 	}
 }
 
 type authz struct {
-	container rest.GoRestfulContainer
+	server *genericserver.GenericAPIServer
 }
 
 func (p *authz) Install() {
-	rest.SwaggerTagRegister("authorization", "authorization sample")
+	genericserver.SwaggerTagRegister("authorization", "authorization sample")
 
-	server.WsRouteBuild(&server.WsOption{
-		Path:               "/api/v1/namespaces/{namespace}/pods",
-		Tags:               []string{"authorization"},
-		GoRestfulContainer: p.container,
-		Routes: []server.WsRoute{{
+	genericserver.WsRouteBuild(&genericserver.WsOption{
+		Path:   "/api/v1/namespaces/{namespace}/pods",
+		Tags:   []string{"authorization"},
+		Server: p.server,
+		Routes: []genericserver.WsRoute{{
 			Method: "GET", SubPath: "/{name}",
 			Desc:   "get pod info",
 			Handle: p.ns,

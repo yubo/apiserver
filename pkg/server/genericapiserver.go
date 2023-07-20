@@ -44,6 +44,7 @@ import (
 
 var (
 	DefaultAPIServer *GenericAPIServer
+	closedCh         = makeClosedCh()
 )
 
 type APIGroupInfo struct{}
@@ -406,6 +407,8 @@ func (s *GenericAPIServer) PrepareRun() preparedGenericAPIServer {
 		); err != nil {
 			panic(err)
 		}
+
+		(&routes.Swagger{}).Install(s.Handler.NonGoRestfulMux, APIDocsPath)
 	}
 
 	s.installHealthz()
@@ -552,9 +555,15 @@ func (s preparedGenericAPIServer) Run(stopCh <-chan struct{}) error {
 		return err
 	}
 
+	stoppedCh2, listenerStoppedCh2, err := s.NonBlockingRun2(stopHttpServerCh, shutdownTimeout)
+	if err != nil {
+		return err
+	}
+
 	httpServerStoppedListeningCh := s.lifecycleSignals.HTTPServerStoppedListening
 	go func() {
 		<-listenerStoppedCh
+		<-listenerStoppedCh2
 		httpServerStoppedListeningCh.Signal()
 		klog.V(1).InfoS("[graceful-termination] shutdown event", "name", httpServerStoppedListeningCh.Name())
 	}()
@@ -669,8 +678,17 @@ func (s preparedGenericAPIServer) Run(stopCh <-chan struct{}) error {
 	<-listenerStoppedCh
 	<-stoppedCh
 
+	<-listenerStoppedCh2
+	<-stoppedCh2
+
 	klog.V(1).Info("[graceful-termination] apiserver is exiting")
 	return nil
+}
+
+func makeClosedCh() chan struct{} {
+	ch := make(chan struct{})
+	close(ch)
+	return ch
 }
 
 // NonBlockingRun spawns the secure http server. An error is
@@ -681,6 +699,7 @@ func (s preparedGenericAPIServer) NonBlockingRun(stopCh <-chan struct{}, shutdow
 	internalStopCh := make(chan struct{})
 	var stoppedCh <-chan struct{}
 	var listenerStoppedCh <-chan struct{}
+
 	if s.SecureServingInfo != nil && s.Handler != nil {
 		var err error
 		stoppedCh, listenerStoppedCh, err = s.SecureServingInfo.Serve(s.Handler, shutdownTimeout, internalStopCh)
@@ -688,6 +707,9 @@ func (s preparedGenericAPIServer) NonBlockingRun(stopCh <-chan struct{}, shutdow
 			close(internalStopCh)
 			return nil, nil, err
 		}
+	} else {
+		stoppedCh = closedCh
+		listenerStoppedCh = closedCh
 	}
 
 	// Now that listener have bound successfully, it is the
@@ -698,11 +720,43 @@ func (s preparedGenericAPIServer) NonBlockingRun(stopCh <-chan struct{}, shutdow
 		close(internalStopCh)
 	}()
 
-	//s.RunPostStartHooks(stopCh)
+	s.RunPostStartHooks(stopCh)
 
 	//if _, err := systemd.SdNotify(true, "READY=1\n"); err != nil {
 	//	klog.Errorf("Unable to send systemd daemon successful start message: %v\n", err)
 	//}
+
+	return stoppedCh, listenerStoppedCh, nil
+}
+
+// NonBlockingRun2 spawns the secure http server. An error is
+// returned if the secure port cannot be listened on.
+// The returned channel is closed when the (asynchronous) termination is finished.
+func (s preparedGenericAPIServer) NonBlockingRun2(stopCh <-chan struct{}, shutdownTimeout time.Duration) (<-chan struct{}, <-chan struct{}, error) {
+	// Use an internal stop channel to allow cleanup of the listeners on error.
+	internalStopCh := make(chan struct{})
+	var stoppedCh <-chan struct{}
+	var listenerStoppedCh <-chan struct{}
+
+	if s.InsecureServingInfo != nil && s.Handler != nil {
+		var err error
+		stoppedCh, listenerStoppedCh, err = s.InsecureServingInfo.Serve(s.Handler, shutdownTimeout, internalStopCh)
+		if err != nil {
+			close(internalStopCh)
+			return nil, nil, err
+		}
+	} else {
+		stoppedCh = closedCh
+		listenerStoppedCh = closedCh
+	}
+
+	// Now that listener have bound successfully, it is the
+	// responsibility of the caller to close the provided channel to
+	// ensure cleanup.
+	go func() {
+		<-stopCh
+		close(internalStopCh)
+	}()
 
 	return stoppedCh, listenerStoppedCh, nil
 }

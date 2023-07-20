@@ -33,6 +33,7 @@ func TestAddGlobalFlags(t *testing.T) {
 	namedFlagSets := &cliflag.NamedFlagSets{}
 	nfs := namedFlagSets.FlagSet("global")
 	nfs.SetNormalizeFunc(cliflag.WordSepNormalizeFunc)
+	logs.AddFlags(nfs)
 	AddGlobalFlags(nfs, "test-cmd")
 
 	actualFlag := []string{}

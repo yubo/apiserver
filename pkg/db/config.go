@@ -37,6 +37,7 @@ func (p *DBConfig) Validate() error {
 }
 
 type Config struct {
+	Debug bool `json:"debug"`
 	DBConfig
 	Databases []DBConfig `json:"databases"`
 }

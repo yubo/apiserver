@@ -1,12 +1,12 @@
-apiserver:
-  insecureServing:
-    enabled: true
-    bindAddress: 0.0.0.0
-    bindPort: 8080
-  secureServing:
-    enabled: false
+insecureServing:
+  enabled: true
+  bindPort: 8080
+
+secureServing:
+  enabled: false
 
 db:
+  debug: false
   connMaxIdletime: 0
   connMaxLifetime: 0
   maxOpenConns: 1

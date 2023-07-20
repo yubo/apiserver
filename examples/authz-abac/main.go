@@ -11,12 +11,11 @@ import (
 	"github.com/yubo/apiserver/pkg/proc"
 	"github.com/yubo/apiserver/pkg/server"
 
-	_ "github.com/yubo/apiserver/pkg/authentication/token/tokenfile/register"
 	_ "github.com/yubo/apiserver/pkg/server/register"
 )
 
 func main() {
-	cmd := proc.NewRootCmd(proc.WithRun(start))
+	cmd := proc.NewRootCmd(proc.WithoutHTTPS(), proc.WithRun(start))
 	code := cli.Run(cmd)
 	os.Exit(code)
 }

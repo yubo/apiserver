@@ -11,29 +11,29 @@ import (
 	"time"
 
 	"github.com/yubo/apiserver/components/dbus"
-	"github.com/yubo/apiserver/pkg/rest"
+	genericserver "github.com/yubo/apiserver/pkg/server"
 	"github.com/yubo/apiserver/pkg/tracing"
 	"go.opentelemetry.io/otel/attribute"
 )
 
 type trace struct {
-	container rest.GoRestfulContainer
+	server *genericserver.GenericAPIServer
 }
 
 func New(ctx context.Context, cf *config.Config) *trace {
 	return &trace{
-		container: dbus.APIServer(),
+		server: dbus.APIServer(),
 	}
 }
 
 func (p *trace) Install() {
-	rest.SwaggerTagRegister("tracing", "tracing demo")
+	genericserver.SwaggerTagRegister("tracing", "tracing demo")
 
-	server.WsRouteBuild(&server.WsOption{
-		Path:               "/tracing",
-		Tags:               []string{"tracing"},
-		GoRestfulContainer: p.container,
-		Routes: []server.WsRoute{
+	genericserver.WsRouteBuild(&genericserver.WsOption{
+		Path:   "/tracing",
+		Tags:   []string{"tracing"},
+		Server: p.server,
+		Routes: []genericserver.WsRoute{
 			{Method: "GET", SubPath: "v1/users/{name}", Handle: getUser},
 			{Method: "GET", SubPath: "v2/users/{name}", Handle: getUser2},
 		},

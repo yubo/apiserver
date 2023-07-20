@@ -5,5 +5,6 @@ run:
 	go run ./main.go
 
 .PHONY: test
+
 test:
-	python -mwebbrowser http://localhost:8080/swagger
+	go run ./client/main.go

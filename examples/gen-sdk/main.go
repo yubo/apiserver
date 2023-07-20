@@ -8,12 +8,11 @@ import (
 	"github.com/yubo/apiserver/components/cli"
 	"github.com/yubo/apiserver/components/dbus"
 	"github.com/yubo/apiserver/pkg/proc"
-	"github.com/yubo/apiserver/pkg/rest"
+	"github.com/yubo/apiserver/pkg/server"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/api/errors"
 	"github.com/yubo/golib/util"
 
-	server "github.com/yubo/apiserver/pkg/server/module"
 	_ "github.com/yubo/apiserver/pkg/server/register"
 )
 
@@ -88,7 +87,7 @@ var (
 )
 
 func main() {
-	command := proc.NewRootCmd(server.WithoutTLS(), proc.WithRun(start))
+	command := proc.NewRootCmd(proc.WithoutHTTPS(), proc.WithRun(start))
 	code := cli.Run(command)
 	os.Exit(code)
 }
@@ -103,14 +102,14 @@ func start(ctx context.Context) error {
 	return nil
 }
 
-func (p *Module) installWs(http rest.GoRestfulContainer) {
-	rest.SwaggerTagRegister("user", "user Api - swagger api sample")
+func (p *Module) installWs(http *server.GenericAPIServer) {
+	server.SwaggerTagRegister("user", "user Api - swagger api sample")
 	server.WsRouteBuild(&server.WsOption{
-		Path:               "/api/user",
-		Produces:           []string{rest.MIME_JSON},
-		Consumes:           []string{rest.MIME_JSON},
-		Tags:               []string{"user"},
-		GoRestfulContainer: http,
+		Path:     "/api/user",
+		Produces: []string{server.MIME_JSON},
+		Consumes: []string{server.MIME_JSON},
+		Tags:     []string{"user"},
+		Server:   http,
 		Routes: []server.WsRoute{{
 			Method: "POST", SubPath: "/",
 			Desc:      "create user",

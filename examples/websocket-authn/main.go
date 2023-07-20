@@ -8,19 +8,17 @@ import (
 
 	"github.com/yubo/apiserver/components/cli"
 	"github.com/yubo/apiserver/components/dbus"
-	"github.com/yubo/apiserver/pkg/authentication"
 	"github.com/yubo/apiserver/pkg/authentication/authenticator"
 	"github.com/yubo/apiserver/pkg/authentication/user"
 	"github.com/yubo/apiserver/pkg/proc"
 	"github.com/yubo/apiserver/pkg/request"
-	"github.com/yubo/apiserver/pkg/rest"
+	"github.com/yubo/apiserver/pkg/server"
+	authn "github.com/yubo/apiserver/pkg/server/authenticator"
 	"github.com/yubo/apiserver/plugin/authenticator/token/tokentest"
 	"github.com/yubo/golib/stream/wsstream"
 	"github.com/yubo/golib/util/runtime"
 	"golang.org/x/net/websocket"
 
-	_ "github.com/yubo/apiserver/pkg/authentication/register"
-	server "github.com/yubo/apiserver/pkg/server/module"
 	_ "github.com/yubo/apiserver/pkg/server/register"
 )
 
@@ -35,7 +33,7 @@ const (
 func main() {
 
 	cmd := proc.NewRootCmd(
-		server.WithoutTLS(),
+		proc.WithoutHTTPS(),
 		proc.WithRun(start),
 		proc.WithRegisterAuth(registerAuthn),
 	)
@@ -50,8 +48,8 @@ func start(ctx context.Context) error {
 	}
 
 	server.WsRouteBuild(&server.WsOption{
-		Path:               "/hello",
-		GoRestfulContainer: srv,
+		Path:   "/hello",
+		Server: srv,
 		Routes: []server.WsRoute{
 			{Method: "GET", SubPath: "/", Handle: wsHandle},
 		},
@@ -65,12 +63,12 @@ func wsHandle(w http.ResponseWriter, req *http.Request) error {
 		return fmt.Errorf("not a websocket request")
 	}
 
-	w.Header().Set("Content-Type", rest.MIME_TXT)
-	websocket.Handler(_wsHandle).ServeHTTP(w, req)
+	w.Header().Set("Content-Type", server.MIME_TXT)
+	websocket.Handler(wsHandle2).ServeHTTP(w, req)
 	return nil
 }
 
-func _wsHandle(ws *websocket.Conn) {
+func wsHandle2(ws *websocket.Conn) {
 	defer ws.Close()
 
 	go func() {
@@ -91,7 +89,7 @@ func _wsHandle(ws *websocket.Conn) {
 }
 
 func registerAuthn(ctx context.Context) error {
-	authentication.RegisterTokenAuthn(func(context.Context) (authenticator.Token, error) {
+	authn.RegisterTokenAuthn(func(context.Context) (authenticator.Token, error) {
 		return &tokentest.TokenAuthenticator{
 			Tokens: map[string]*user.DefaultInfo{
 				fakeToken: {Name: fakeUser},

@@ -9,8 +9,7 @@ import (
 	"github.com/yubo/apiserver/components/cli"
 	"github.com/yubo/apiserver/components/dbus"
 	"github.com/yubo/apiserver/pkg/proc"
-	"github.com/yubo/apiserver/pkg/rest"
-	servermodule "github.com/yubo/apiserver/pkg/server/module"
+	"github.com/yubo/apiserver/pkg/server"
 	"github.com/yubo/apiserver/pkg/streaming"
 	"github.com/yubo/apiserver/pkg/streaming/portforward"
 	"github.com/yubo/apiserver/pkg/streaming/providers/dockershim"
@@ -21,26 +20,20 @@ import (
 	_ "github.com/yubo/apiserver/pkg/server/register"
 )
 
-// This example shows the minimal code needed to get a restful.WebService working.
-//
-// curl -X GET http://localhost:8080/hello
-//
-// go run ./apiserver-watch.go --request-timeout=10
-
 var (
-	_server = &server{
+	_module = &module{
 		config:   streaming.DefaultConfig,
 		provider: dockershim.NewProvider("unix:///var/run/docker.sock", 2*time.Minute, time.Minute),
 	}
 )
 
-type server struct {
+type module struct {
 	config   streaming.Config
 	provider streaming.Provider
 }
 
 func main() {
-	command := proc.NewRootCmd(servermodule.WithoutTLS(), proc.WithRun(start))
+	command := proc.NewRootCmd(proc.WithoutHTTPS(), proc.WithRun(start))
 	code := cli.Run(command)
 	os.Exit(code)
 }
@@ -50,15 +43,15 @@ func start(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	_server.installWs(srv)
+	_module.installWs(srv)
 	return nil
 }
 
-func (p *server) installWs(http rest.GoRestfulContainer) {
+func (p *module) installWs(srv *server.GenericAPIServer) {
 	server.WsRouteBuild(&server.WsOption{
-		Path:               "/remotecommand",
-		GoRestfulContainer: http,
-		Consumes:           []string{rest.MIME_ALL},
+		Path:     "/remotecommand",
+		Server:   srv,
+		Consumes: []string{server.MIME_ALL},
 		Routes: []server.WsRoute{
 			{Method: "POST", SubPath: "/exec", Handle: p.exec},
 			{Method: "POST", SubPath: "/attach", Handle: p.attach},
@@ -67,7 +60,7 @@ func (p *server) installWs(http rest.GoRestfulContainer) {
 	})
 }
 
-func (p *server) exec(w http.ResponseWriter, req *http.Request, in *api.ExecRequest) error {
+func (p *module) exec(w http.ResponseWriter, req *http.Request, in *api.ExecRequest) error {
 	klog.Infof("entering exec %#v", in)
 	streamOpts := &remotecommandserver.Options{
 		Stdin:  in.Stdin,
@@ -93,7 +86,7 @@ func (p *server) exec(w http.ResponseWriter, req *http.Request, in *api.ExecRequ
 
 }
 
-func (p *server) attach(w http.ResponseWriter, req *http.Request, in *api.AttachRequest) error {
+func (p *module) attach(w http.ResponseWriter, req *http.Request, in *api.AttachRequest) error {
 	streamOpts := &remotecommandserver.Options{
 		Stdin:  in.Stdin,
 		Stdout: in.Stdout,
@@ -114,7 +107,7 @@ func (p *server) attach(w http.ResponseWriter, req *http.Request, in *api.Attach
 	return nil
 }
 
-func (p *server) portForward(w http.ResponseWriter, req *http.Request, in *api.PortForwardRequest) error {
+func (p *module) portForward(w http.ResponseWriter, req *http.Request, in *api.PortForwardRequest) error {
 	portForwardOptions, err := portforward.BuildV4Options(in.Port)
 	if err != nil {
 		return err

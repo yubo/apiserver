@@ -43,8 +43,8 @@ func newEvents(number int) []*auditinternal.Event {
 	return events
 }
 
-func testBatchConfig() BatchConfig {
-	return BatchConfig{
+func testBatchConfig() *BatchConfig {
+	return &BatchConfig{
 		BufferSize:     100,
 		MaxBatchSize:   10,
 		MaxBatchWait:   wait.ForeverTestTimeout,

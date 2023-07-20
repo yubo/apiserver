@@ -8,8 +8,7 @@ import (
 	"github.com/yubo/apiserver/components/cli"
 	"github.com/yubo/apiserver/components/dbus"
 	"github.com/yubo/apiserver/pkg/proc"
-	"github.com/yubo/apiserver/pkg/rest"
-	servermodule "github.com/yubo/apiserver/pkg/server/module"
+	genericserver "github.com/yubo/apiserver/pkg/server"
 	"github.com/yubo/apiserver/pkg/streaming"
 	"github.com/yubo/apiserver/pkg/streaming/portforward"
 	"github.com/yubo/apiserver/pkg/streaming/providers/native"
@@ -20,25 +19,19 @@ import (
 	_ "github.com/yubo/apiserver/pkg/server/register"
 )
 
-// This example shows the minimal code needed to get a restful.WebService working.
-//
-// curl -X GET http://localhost:8080/hello
-//
-// go run ./apiserver-watch.go --request-timeout=10
-
-type server struct {
+type module struct {
 	config   streaming.Config
 	provider streaming.Provider
 }
 
 func main() {
-	cmd := proc.NewRootCmd(servermodule.WithoutTLS(), proc.WithRun(start))
+	cmd := proc.NewRootCmd(proc.WithoutHTTPS(), proc.WithRun(start))
 	code := cli.Run(cmd)
 	os.Exit(code)
 }
 
 func start(ctx context.Context) error {
-	http, err := dbus.GetAPIServer()
+	srv, err := dbus.GetAPIServer()
 	if err != nil {
 		return err
 	}
@@ -48,24 +41,24 @@ func start(ctx context.Context) error {
 		return err
 	}
 
-	srv := &server{
+	m := &module{
 		config: streaming.DefaultConfig,
 		provider: native.NewProvider(ctx,
 			native.WithRecorder(recorderProvider),
 			native.WithRecFilePathFactroy(func(id string) string { return id }),
 		),
 	}
-	srv.installWs(http)
+	m.installWs(srv)
 
 	return nil
 }
 
-func (p *server) installWs(http rest.GoRestfulContainer) {
-	server.WsRouteBuild(&server.WsOption{
-		Path:               "/remotecommand",
-		GoRestfulContainer: http,
-		Consumes:           []string{rest.MIME_ALL},
-		Routes: []server.WsRoute{
+func (p *module) installWs(http *genericserver.GenericAPIServer) {
+	genericserver.WsRouteBuild(&genericserver.WsOption{
+		Path:     "/remotecommand",
+		Server:   http,
+		Consumes: []string{genericserver.MIME_ALL},
+		Routes: []genericserver.WsRoute{
 			{Method: "POST", SubPath: "/exec", Handle: p.exec},
 			{Method: "POST", SubPath: "/attach", Handle: p.attach},
 			{Method: "POST", SubPath: "/portforward", Handle: p.portForward},
@@ -73,7 +66,7 @@ func (p *server) installWs(http rest.GoRestfulContainer) {
 	})
 }
 
-func (p *server) exec(w http.ResponseWriter, req *http.Request, in *api.ExecRequest) error {
+func (p *module) exec(w http.ResponseWriter, req *http.Request, in *api.ExecRequest) error {
 	klog.Info("entering exec")
 	defer klog.Info("leaving exec")
 	streamOpts := &remotecommandserver.Options{
@@ -99,7 +92,7 @@ func (p *server) exec(w http.ResponseWriter, req *http.Request, in *api.ExecRequ
 	return nil
 }
 
-func (p *server) attach(w http.ResponseWriter, req *http.Request, in *api.AttachRequest) error {
+func (p *module) attach(w http.ResponseWriter, req *http.Request, in *api.AttachRequest) error {
 	streamOpts := &remotecommandserver.Options{
 		Stdin:  in.Stdin,
 		Stdout: in.Stdout,
@@ -120,7 +113,7 @@ func (p *server) attach(w http.ResponseWriter, req *http.Request, in *api.Attach
 	return nil
 }
 
-func (p *server) portForward(w http.ResponseWriter, req *http.Request, in *api.PortForwardRequest) error {
+func (p *module) portForward(w http.ResponseWriter, req *http.Request, in *api.PortForwardRequest) error {
 	portForwardOptions, err := portforward.BuildV4Options(in.Port)
 	if err != nil {
 		return err
