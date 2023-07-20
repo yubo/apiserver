@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/yubo/apiserver v0.1.2-0.20230610144149-75aee6ab6e2f
-	github.com/yubo/golib v0.0.3-0.20230610143102-4246ac8662ee
+	github.com/yubo/golib v0.0.3-0.20230720182343-f21a09ec290e
 	go.opentelemetry.io/otel v1.13.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.12.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.5.0
@@ -94,5 +94,3 @@ require (
 )
 
 replace github.com/yubo/apiserver => ../../
-
-replace github.com/yubo/golib => ../../../golib

@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/yubo/apiserver v0.1.2-0.20230610144149-75aee6ab6e2f
 	github.com/yubo/client-go v0.0.2-0.20230610143343-1d2f115e6765
-	github.com/yubo/golib v0.0.3-0.20230610143102-4246ac8662ee
+	github.com/yubo/golib v0.0.3-0.20230720182343-f21a09ec290e
 )
 
 require (
@@ -50,5 +50,3 @@ require (
 )
 
 replace github.com/yubo/apiserver => ../../
-
-replace github.com/yubo/golib => ../../../golib

@@ -50,7 +50,7 @@ require (
 	github.com/prometheus/procfs v0.8.0 // indirect
 	github.com/spf13/cobra v1.4.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/yubo/golib v0.0.3-0.20230610143102-4246ac8662ee // indirect
+	github.com/yubo/golib v0.0.3-0.20230720182343-f21a09ec290e // indirect
 	github.com/yubo/goswagger v0.0.0-20211115071236-bbeda335e7c1 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.39.0 // indirect
 	go.opentelemetry.io/otel v1.13.0 // indirect
@@ -77,5 +77,3 @@ require (
 )
 
 replace github.com/yubo/apiserver => ../../
-
-replace github.com/yubo/golib => ../../../golib

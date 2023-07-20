@@ -7,7 +7,7 @@ require (
 	github.com/go-openapi/spec v0.20.7
 	github.com/spf13/cobra v1.4.0
 	github.com/yubo/apiserver v0.1.2-0.20230610144149-75aee6ab6e2f
-	github.com/yubo/golib v0.0.3-0.20230610143102-4246ac8662ee
+	github.com/yubo/golib v0.0.3-0.20230720182343-f21a09ec290e
 	go.opentelemetry.io/otel v1.13.0
 	k8s.io/klog/v2 v2.80.1
 )
@@ -103,5 +103,3 @@ require (
 )
 
 replace github.com/yubo/apiserver => ../../
-
-replace github.com/yubo/golib => ../../../golib

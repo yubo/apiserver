@@ -32,7 +32,7 @@ require (
 	github.com/prometheus/common v0.37.0 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/yubo/golib v0.0.3-0.20230610143102-4246ac8662ee // indirect
+	github.com/yubo/golib v0.0.3-0.20230720182343-f21a09ec290e // indirect
 	golang.org/x/net v0.10.0 // indirect
 	golang.org/x/sys v0.8.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
@@ -43,5 +43,3 @@ require (
 )
 
 replace github.com/yubo/apiserver => ../../
-
-replace github.com/yubo/golib => ../../../golib
