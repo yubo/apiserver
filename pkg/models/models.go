@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/yubo/apiserver/components/dbus"
-	"github.com/yubo/apiserver/pkg/db"
+	db "github.com/yubo/apiserver/pkg/db/api"
 	"github.com/yubo/apiserver/pkg/proc"
 	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
 	"github.com/yubo/apiserver/pkg/storage"
@@ -17,9 +17,41 @@ import (
 	"github.com/yubo/golib/util/errors"
 )
 
-const (
-	moduleName = "models"
+const moduleName = "models"
+
+var (
+	_module = &module{
+		name:     moduleName,
+		registry: make(map[string]Model),
+	}
+	hookOps = []v1.HookOps{{
+		Hook:        _module.init,
+		Owner:       moduleName,
+		HookNum:     v1.ACTION_START,
+		Priority:    v1.PRI_SYS_INIT,
+		SubPriority: v1.PRI_M_DB + 1,
+	}, {
+		// after moduels start
+		// before services start
+		Hook:        _module.preStart,
+		Owner:       moduleName,
+		HookNum:     v1.ACTION_START,
+		Priority:    v1.PRI_SYS_PRESTART,
+		SubPriority: v1.PRI_M_DB + 1,
+	}}
 )
+
+func RegisterModule(opts ...proc.ModuleOption) {
+	o := &proc.ModuleOptions{
+		Proc: proc.DefaultProcess,
+	}
+	for _, v := range opts {
+		v(o)
+	}
+
+	o.Proc.RegisterHooks(hookOps)
+	o.Proc.AddConfig(moduleName, newConfig(), proc.WithConfigGroup("models"))
+}
 
 type module struct {
 	db.DB
@@ -44,28 +76,6 @@ func newConfig() *Config {
 		AutoMigrate: true,
 	}
 }
-
-var (
-	_module = &module{
-		name:     moduleName,
-		registry: make(map[string]Model),
-	}
-	hookOps = []v1.HookOps{{
-		Hook:        _module.init,
-		Owner:       moduleName,
-		HookNum:     v1.ACTION_START,
-		Priority:    v1.PRI_SYS_INIT,
-		SubPriority: v1.PRI_M_DB + 1,
-	}, {
-		// after moduels start
-		// before services start
-		Hook:        _module.preStart,
-		Owner:       moduleName,
-		HookNum:     v1.ACTION_START,
-		Priority:    v1.PRI_SYS_PRESTART,
-		SubPriority: v1.PRI_M_DB + 1,
-	}}
-)
 
 // Because some configuration may be stored in the database,
 // set the db.connect into sys.db.prestart
@@ -148,11 +158,6 @@ func NewModels(s storage.Store) Models {
 		store:    s,
 		registry: map[string]Model{},
 	}
-}
-
-func RegisterModule() {
-	proc.RegisterHooks(hookOps)
-	proc.AddConfig("models", newConfig(), proc.WithConfigGroup("models"))
 }
 
 func Register(ms ...Model) {

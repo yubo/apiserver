@@ -14,7 +14,6 @@ import (
 	"github.com/yubo/apiserver/pkg/db"
 	"github.com/yubo/apiserver/pkg/proc"
 	"github.com/yubo/apiserver/pkg/sessions"
-	sessionsr "github.com/yubo/apiserver/pkg/sessions/register"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/orm"
 	"github.com/yubo/golib/util"
@@ -266,5 +265,5 @@ func (p *store) PeriodicCleanup(ctx context.Context, interval time.Duration) {
 }
 
 func init() {
-	sessionsr.RegisterStore(storeType, factory)
+	sessions.RegisterStore(storeType, factory)
 }

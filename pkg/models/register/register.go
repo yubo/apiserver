@@ -1,9 +1,5 @@
 package register
 
-import (
-	"github.com/yubo/apiserver/pkg/models"
-)
+import "github.com/yubo/apiserver/pkg/models"
 
-func init() {
-	models.RegisterModule()
-}
+func init() { models.RegisterModule() }

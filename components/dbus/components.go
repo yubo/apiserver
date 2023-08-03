@@ -6,7 +6,7 @@ import (
 	"io"
 
 	authUser "github.com/yubo/apiserver/pkg/authentication/user"
-	"github.com/yubo/apiserver/pkg/db"
+	db "github.com/yubo/apiserver/pkg/db/api"
 	"github.com/yubo/apiserver/pkg/server"
 	"google.golang.org/grpc"
 )

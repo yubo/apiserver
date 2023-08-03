@@ -161,3 +161,15 @@ func WithoutLoggingFlags() ProcessOption {
 		p.skipLoggingFlags = true
 	}
 }
+
+type ModuleOptions struct {
+	Proc *Process
+}
+
+type ModuleOption func(*ModuleOptions)
+
+func WithProc(proc *Process) ModuleOption {
+	return func(p *ModuleOptions) {
+		p.Proc = proc
+	}
+}

@@ -17,28 +17,46 @@ const (
 	moduleName = "apiserver"
 )
 
-var (
-	_module = &serverModule{name: moduleName}
-	hookOps = []v1.HookOps{{
-		Hook:        _module.init,
+func Register(opts ...proc.ModuleOption) {
+	o := &proc.ModuleOptions{
+		Proc: proc.DefaultProcess,
+	}
+	for _, v := range opts {
+		v(o)
+	}
+
+	module := &serverModule{name: moduleName}
+	hookOps := []v1.HookOps{{
+		Hook:        module.init,
 		Owner:       moduleName,
 		HookNum:     v1.ACTION_START,
 		Priority:    v1.PRI_SYS_INIT,
 		SubPriority: v1.PRI_M_HTTP,
 	}, {
-		Hook:        _module.start,
+		Hook:        module.start,
 		Owner:       moduleName,
 		HookNum:     v1.ACTION_START,
 		Priority:    v1.PRI_SYS_START,
 		SubPriority: v1.PRI_M_HTTP,
 	}, {
-		Hook:        _module.stop,
+		Hook:        module.stop,
 		Owner:       moduleName,
 		HookNum:     v1.ACTION_STOP,
 		Priority:    v1.PRI_SYS_START,
 		SubPriority: v1.PRI_M_HTTP,
 	}}
-)
+
+	o.Proc.RegisterHooks(hookOps)
+
+	cf := newConfig()
+	o.Proc.AddConfig("generic", cf.GenericServerRunOptions, proc.WithConfigGroup("generic"))
+	o.Proc.AddConfig("secureServing", cf.SecureServing, proc.WithConfigGroup("secureServing"))
+	o.Proc.AddConfig("insecureServing", cf.InsecureServing, proc.WithConfigGroup("insecureServing"))
+	o.Proc.AddConfig("audit", cf.Audit, proc.WithConfigGroup("audit"))
+	o.Proc.AddConfig("feature", cf.Features, proc.WithConfigGroup("feature"))
+	o.Proc.AddConfig("authentication", cf.Authentication, proc.WithConfigGroup("authentication"))
+	o.Proc.AddConfig("authorization", cf.Authorization, proc.WithConfigGroup("authorization"))
+}
 
 type serverModule struct {
 	name   string
@@ -104,78 +122,4 @@ func (p *serverModule) stop(ctx context.Context) error {
 
 	<-p.runCompletedCh
 	return nil
-}
-
-//func (p *serverModule) Start(stopCh <-chan struct{}, done chan struct{}) error {
-//	s := p.server
-//
-//	delayedStopCh := make(chan struct{})
-//
-//	// close socket after delayed stopCh
-//
-//	if s.SecureServingInfo != nil {
-//		_, stoppedCh, err := s.SecureServingInfo.Serve(s.Handler, s.ShutdownTimeout, delayedStopCh)
-//		if err != nil {
-//			return err
-//		}
-//		s.NonLongRunningRequestWaitGroup.Add(1)
-//		go func() {
-//			<-stoppedCh
-//			s.NonLongRunningRequestWaitGroup.Done()
-//		}()
-//	}
-//
-//	if s.InsecureServingInfo != nil {
-//		_, stoppedCh, err := s.InsecureServingInfo.Serve(s.Handler, s.ShutdownTimeout, delayedStopCh)
-//		if err != nil {
-//			return err
-//		}
-//		s.NonLongRunningRequestWaitGroup.Add(1)
-//		go func() {
-//			<-stoppedCh
-//			s.NonLongRunningRequestWaitGroup.Done()
-//		}()
-//	}
-//
-//	// Start the audit backend before any request comes in. This means we must call Backend.Run
-//	// before http server start serving. Otherwise the Backend.ProcessEvents call might block.
-//	// AuditBackend.Run will stop as soon as all in-flight requests are drained.
-//	if s.AuditBackend != nil {
-//		if err := s.AuditBackend.Run(stopCh); err != nil {
-//			return fmt.Errorf("failed to run the audit backend: %v", err)
-//		}
-//	}
-//
-//	go func() {
-//		<-stopCh
-//		time.Sleep(s.ShutdownDelayDuration)
-//		close(delayedStopCh)
-//	}()
-//
-//	go func() {
-//		<-stopCh
-//
-//		// wait for the delayed stopCh before closing the handler chain (it rejects everything after Wait has been called).
-//		<-delayedStopCh
-//
-//		// Wait for all requests to finish, which are bounded by the RequestTimeout variable.
-//		s.NonLongRunningRequestWaitGroup.Wait()
-//
-//		close(done)
-//	}()
-//
-//	return nil
-//}
-
-func Register() {
-	proc.RegisterHooks(hookOps)
-
-	cf := newConfig()
-	proc.AddConfig("generic", cf.GenericServerRunOptions, proc.WithConfigGroup("generic"))
-	proc.AddConfig("secureServing", cf.SecureServing, proc.WithConfigGroup("secureServing"))
-	proc.AddConfig("insecureServing", cf.InsecureServing, proc.WithConfigGroup("insecureServing"))
-	proc.AddConfig("audit", cf.Audit, proc.WithConfigGroup("audit"))
-	proc.AddConfig("feature", cf.Features, proc.WithConfigGroup("feature"))
-	proc.AddConfig("authentication", cf.Authentication, proc.WithConfigGroup("authentication"))
-	proc.AddConfig("authorization", cf.Authorization, proc.WithConfigGroup("authorization"))
 }

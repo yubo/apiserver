@@ -1,9 +1,5 @@
 package register
 
-import (
-	s3 "github.com/yubo/apiserver/pkg/s3/module"
-)
+import "github.com/yubo/apiserver/pkg/s3"
 
-func init() {
-	s3.Register()
-}
+func init() { s3.Register() }

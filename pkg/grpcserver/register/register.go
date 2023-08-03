@@ -1,9 +1,5 @@
 package register
 
-import (
-	"github.com/yubo/apiserver/pkg/grpcserver"
-)
+import "github.com/yubo/apiserver/pkg/grpcserver"
 
-func init() {
-	grpcserver.Register()
-}
+func init() { grpcserver.Register() }

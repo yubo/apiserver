@@ -3,22 +3,17 @@ package db
 import (
 	"context"
 
+	"github.com/yubo/apiserver/pkg/db/api"
 	"github.com/yubo/golib/orm"
 	"github.com/yubo/golib/util/errors"
 	"k8s.io/klog/v2"
 )
 
-var _ DB = new(serverDB)
+var _ api.DB = new(serverDB)
 
 const (
 	DefaultName = "__default__"
 )
-
-type DB interface {
-	orm.DB
-
-	GetDB(name string) DB // panic if db[name] is not exist
-}
 
 type serverDB struct {
 	name string
@@ -28,7 +23,7 @@ type serverDB struct {
 	cancel context.CancelFunc
 }
 
-func NewDB(ctx context.Context, config *Config) (DB, error) {
+func NewDB(ctx context.Context, config *Config) (api.DB, error) {
 	ret := &serverDB{
 		dbs: make(map[string]orm.DB),
 	}
@@ -92,7 +87,7 @@ func (p *serverDB) Close() error {
 	return errors.NewAggregate(errs)
 }
 
-func (p *serverDB) GetDB(name string) DB {
+func (p *serverDB) GetDB(name string) api.DB {
 	if p == nil {
 		return nil
 	}

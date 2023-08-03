@@ -5,7 +5,6 @@ import (
 
 	gsessions "github.com/gorilla/sessions"
 	"github.com/yubo/apiserver/pkg/sessions"
-	sessionsr "github.com/yubo/apiserver/pkg/sessions/register"
 )
 
 const (
@@ -54,5 +53,5 @@ func factory(ctx context.Context, option *sessions.Options) (sessions.Store, err
 }
 
 func init() {
-	sessionsr.RegisterStore(storeType, factory)
+	sessions.RegisterStore(storeType, factory)
 }
