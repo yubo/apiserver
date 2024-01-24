@@ -5,6 +5,7 @@ import (
 
 	"examples/models-kv/api"
 
+	"github.com/yubo/apiserver/pkg/db"
 	"github.com/yubo/apiserver/pkg/models"
 	libapi "github.com/yubo/golib/api"
 )
@@ -25,9 +26,7 @@ type Demo interface {
 // pkg/registry/rbac/role/storage/storage.go
 // pkg/registry/rbac/rest/storage_rbac.go
 func NewDemo() Demo {
-	o := &demo{}
-	o.store = models.NewModelStore(o.Name())
-	return o
+	return &demo{}
 }
 
 // demo implements the role interface.
@@ -71,5 +70,6 @@ func (p *demo) Delete(ctx context.Context, name string) (ret *api.Demo, err erro
 }
 
 func init() {
-	models.Register(&demo{})
+	db.Models(&demo{})
+
 }

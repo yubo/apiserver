@@ -77,10 +77,6 @@ authorization:
     - /swagger/*
     - /healthz
 
-models:
-  autoMigrate: true
-  storage: db
-
 session:
   name: "golib-example-sid"
   keyPairs: ["9d6cff86a33711684ee5220cb0083829"]
@@ -96,6 +92,7 @@ db:
   #dsn: "file:example-all.db?cache=shared&mode=memory"
   driver: "mysql"
   dsn: "root:1234@tcp(localhost:3306)/test?loc=Local&parseTime=true"
+  autoMigrate: true
 
 #tracing:
 #  contextHeadername: Trace-Id

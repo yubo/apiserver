@@ -23,7 +23,6 @@ import (
 
 	_ "github.com/yubo/apiserver/pkg/db/register"
 	_ "github.com/yubo/apiserver/pkg/grpcserver/register"
-	_ "github.com/yubo/apiserver/pkg/models/register"
 	_ "github.com/yubo/apiserver/pkg/server/register"
 	_ "github.com/yubo/apiserver/pkg/sessions/cookie"
 	_ "github.com/yubo/apiserver/pkg/sessions/orm"

@@ -8,10 +8,8 @@ import (
 	"github.com/yubo/apiserver/components/cli"
 	"github.com/yubo/apiserver/pkg/proc"
 
-	_ "github.com/yubo/apiserver/pkg/models/register"
-	_ "github.com/yubo/apiserver/pkg/server/register"
-
 	_ "github.com/yubo/apiserver/pkg/db/register"
+	_ "github.com/yubo/apiserver/pkg/server/register"
 	_ "github.com/yubo/golib/orm/mysql"
 	_ "github.com/yubo/golib/orm/sqlite"
 )

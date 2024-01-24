@@ -11,8 +11,6 @@ import (
 	"github.com/yubo/apiserver/pkg/proc"
 	"k8s.io/klog/v2"
 
-	// models
-	_ "github.com/yubo/apiserver/pkg/models/register"
 	// db
 	_ "github.com/yubo/apiserver/pkg/db/register"
 	_ "github.com/yubo/golib/orm/mysql"

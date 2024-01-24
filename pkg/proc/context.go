@@ -15,6 +15,7 @@ const (
 	hookOptsKey key = iota
 	wgKey
 	attrKey // attributes
+	procKey
 )
 
 func NewContext() context.Context {
@@ -38,6 +39,7 @@ func WgFrom(ctx context.Context) (*sync.WaitGroup, error) {
 	}
 	return wg, nil
 }
+
 func WgMustFrom(ctx context.Context) *sync.WaitGroup {
 	wg, ok := AttrMustFrom(ctx)[wgKey].(*sync.WaitGroup)
 	if !ok {
@@ -45,6 +47,7 @@ func WgMustFrom(ctx context.Context) *sync.WaitGroup {
 	}
 	return wg
 }
+
 func WaitGroupAdd(ctx context.Context, do func()) error {
 	wg, err := WgFrom(ctx)
 	if err != nil {

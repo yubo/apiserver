@@ -21,6 +21,7 @@ type DBConfig struct {
 	MaxOpenConns    int          `json:"maxOpenConns"`
 	ConnMaxLifetime api.Duration `json:"connMaxLifetime"`
 	ConnMaxIdletime api.Duration `json:"connMaxIdletime"`
+	AutoMigrate     bool         `json:"autoMigrate" description:"auto migrate"`
 }
 
 func (p *DBConfig) Validate() error {

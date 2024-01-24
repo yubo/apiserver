@@ -1,16 +1,114 @@
 package proc
 
 import (
+	"context"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"strconv"
 
+	"github.com/go-openapi/spec"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/yubo/apiserver/components/cli/flag"
+	cliflag "github.com/yubo/apiserver/components/cli/flag"
+	v1 "github.com/yubo/apiserver/pkg/proc/api/v1"
+	"github.com/yubo/golib/configer"
 	"github.com/yubo/golib/term"
+	"github.com/yubo/golib/version"
 )
 
+var (
+	DefaultProcess = NewProcess()
+)
+
+func Context() context.Context {
+	return DefaultProcess.Context()
+}
+
+func NewRootCmd(opts ...ProcessOption) *cobra.Command {
+	return DefaultProcess.NewRootCmd(opts...)
+}
+
+func Start(fs *pflag.FlagSet) error {
+	return DefaultProcess.Start(fs)
+}
+
+func Init(cmd *cobra.Command, opts ...ProcessOption) error {
+	DefaultProcess.Init(cmd, opts...)
+	return nil
+}
+
+func Shutdown() error {
+	return DefaultProcess.shutdown()
+}
+
+func PrintConfig(w io.Writer) {
+	DefaultProcess.PrintConfig(w)
+}
+
+func PrintFlags(fs *pflag.FlagSet) {
+	DefaultProcess.PrintFlags(fs)
+}
+
+func AddFlags(name string) {
+	DefaultProcess.AddFlags(name)
+}
+
+func Name() string {
+	return DefaultProcess.Name()
+}
+
+func Description() string {
+	return DefaultProcess.Description()
+}
+
+func License() *spec.License {
+	return DefaultProcess.License()
+}
+func Contact() *spec.ContactInfo {
+	return DefaultProcess.Contact()
+}
+func Version() *version.Info {
+	return DefaultProcess.Version()
+}
+
+func NamedFlagSets() *cliflag.NamedFlagSets {
+	return &DefaultProcess.namedFlagSets
+}
+
+func NewVersionCmd() *cobra.Command {
+	return DefaultProcess.NewVersionCmd()
+}
+
+func RegisterHooks(in []v1.HookOps) error {
+	return DefaultProcess.RegisterHooks(in)
+}
+
+func Configer() configer.ParsedConfiger {
+	return DefaultProcess.parsedConfiger
+}
+
+func ReadConfig(path string, into interface{}) error {
+	return DefaultProcess.ReadConfig(path, into)
+}
+
+func MustReadConfig(path string, into interface{}) error {
+	return DefaultProcess.MustReadConfig(path, into)
+}
+
+func AddConfig(path string, sample interface{}, opts ...ConfigOption) error {
+	return DefaultProcess.AddConfig(path, sample, opts...)
+}
+
+func AddGlobalConfig(sample interface{}) error {
+	return DefaultProcess.AddGlobalConfig(sample)
+}
+
+func Parse(fs *pflag.FlagSet, opts ...configer.ConfigerOption) (configer.ParsedConfiger, error) {
+	return DefaultProcess.Parse(fs, opts...)
+}
 func PrintErrln(err error) int {
 	if err == nil {
 		return 0

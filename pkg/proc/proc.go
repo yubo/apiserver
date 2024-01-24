@@ -6,6 +6,7 @@ import (
 	"io"
 	"math/rand"
 	"os"
+	"reflect"
 	"runtime"
 	"sync"
 	"time"
@@ -34,10 +35,6 @@ const (
 	moduleName                 = "proc"
 )
 
-var (
-	DefaultProcess = NewProcess()
-)
-
 type Process struct {
 	*ProcessOptions
 	featureGate featuregate.MutableFeatureGate
@@ -60,6 +57,16 @@ type Process struct {
 	stopOnce     sync.Once
 }
 
+func NewProcess(opts ...ProcessOption) *Process {
+	p := newProcess()
+
+	for _, opt := range opts {
+		opt(p.ProcessOptions)
+	}
+
+	return p
+}
+
 func newProcess() *Process {
 	hookOps := [v1.ACTION_SIZE]v1.Hooks{}
 	for i := v1.ACTION_START; i < v1.ACTION_SIZE; i++ {
@@ -74,129 +81,33 @@ func newProcess() *Process {
 	}
 
 }
+func (p *Process) BindRegisteredFlags(fs *pflag.FlagSet) error {
+	for _, v := range p.configs {
+		var fs_ *pflag.FlagSet
+		if v.group != "" {
+			fs_ = p.namedFlagSets.FlagSet(v.group)
+		} else if v.fs != nil {
+			fs_ = v.fs
+		} else {
+			fs_ = fs
+		}
 
-func NewProcess(opts ...ProcessOption) *Process {
-	p := newProcess()
-
-	for _, opt := range opts {
-		opt(p.ProcessOptions)
+		klog.V(10).InfoS("configVar", "path", v.path, "group", v.group, "type", reflect.TypeOf(v.sample).String())
+		if err := p.ConfigVar(fs_, v.path, v.sample, v.opts...); err != nil {
+			return err
+		}
 	}
 
-	return p
-}
+	// for namedFlagSets
+	for _, f := range p.namedFlagSets.FlagSets {
+		fs.AddFlagSet(f)
+	}
 
-func Context() context.Context {
-	return DefaultProcess.Context()
-}
-
-func NewRootCmd(opts ...ProcessOption) *cobra.Command {
-	return DefaultProcess.NewRootCmd(opts...)
-}
-
-func Start(fs *pflag.FlagSet) error {
-	return DefaultProcess.Start(fs)
-}
-
-func Init(cmd *cobra.Command, opts ...ProcessOption) error {
-	DefaultProcess.Init(cmd, opts...)
 	return nil
 }
 
-func Shutdown() error {
-	return DefaultProcess.shutdown()
-}
-
-func PrintConfig(w io.Writer) {
-	DefaultProcess.PrintConfig(w)
-}
-
-func PrintFlags(fs *pflag.FlagSet) {
-	DefaultProcess.PrintFlags(fs)
-}
-
-func AddFlags(name string) {
-	DefaultProcess.AddFlags(name)
-}
-
-func Name() string {
-	return DefaultProcess.Name()
-}
-
-func Description() string {
-	return DefaultProcess.Description()
-}
-
-func License() *spec.License {
-	return DefaultProcess.License()
-}
-func Contact() *spec.ContactInfo {
-	return DefaultProcess.Contact()
-}
-func Version() *version.Info {
-	return DefaultProcess.Version()
-}
-
-func NamedFlagSets() *cliflag.NamedFlagSets {
-	return &DefaultProcess.namedFlagSets
-}
-
-func NewVersionCmd() *cobra.Command {
-	return DefaultProcess.NewVersionCmd()
-}
-
-func RegisterHooks(in []v1.HookOps) error {
-	return DefaultProcess.RegisterHooks(in)
-}
-
-func Configer() configer.ParsedConfiger {
-	return DefaultProcess.parsedConfiger
-}
-
-func ReadConfig(path string, into interface{}) error {
-	err := DefaultProcess.parsedConfiger.Read(path, into)
-	if err == nil {
-		return nil
-	}
-	if _, ok := err.(configer.ErrNoValue); ok {
-		return nil
-	}
-	return err
-}
-
-func MustReadConfig(path string, into interface{}) error {
-	err := DefaultProcess.parsedConfiger.Read(path, into)
-	if err == nil {
-		return nil
-	}
-	if _, ok := err.(configer.ErrNoValue); ok {
-		return errors.NewNotFound(path)
-	}
-	return err
-}
-
-func AddConfig(path string, sample interface{}, opts ...ConfigOption) error {
-	return DefaultProcess.AddConfig(path, sample, opts...)
-}
-
-func AddGlobalConfig(sample interface{}) error {
-	return DefaultProcess.AddConfig("", sample, WithConfigGroup("global"))
-}
-
-func Parse(fs *pflag.FlagSet, opts ...configer.ConfigerOption) (configer.ParsedConfiger, error) {
-	return DefaultProcess.Parse(fs, opts...)
-}
-
-// RegisterHooks register hookOps as a module
-func (p *Process) RegisterHooks(in []v1.HookOps) error {
-	for i := range in {
-		v := &in[i]
-		v.SetContext(p.ctx)
-		//v.process = p
-		//v.priority = v1.ProcessPriority(uint32(v.Priority)<<(16-3) + uint32(v.SubPriority))
-
-		p.hookOps[v.HookNum] = append(p.hookOps[v.HookNum], v)
-	}
-	return nil
+func (p *Process) Context() context.Context {
+	return p.ctx
 }
 
 // with proc.Start
@@ -231,40 +142,10 @@ func (p *Process) NewRootCmd(opts ...ProcessOption) *cobra.Command {
 	return cmd
 }
 
-// NewCmd without set runtime
-func (p *Process) NewCmd(opts ...ProcessOption) *cobra.Command {
-	for _, opt := range opts {
-		opt(p.ProcessOptions)
-	}
-
-	cmd := &cobra.Command{
-		Use:          p.name,
-		Short:        p.description,
-		SilenceUsage: true,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			verflag.PrintAndExitIfRequested()
-			return p.Start(cmd.Flags())
-		},
-		Args: func(cmd *cobra.Command, args []string) error {
-			for _, arg := range args {
-				if len(arg) > 0 {
-					return fmt.Errorf("%q does not take any arguments, got %q", cmd.CommandPath(), args)
-				}
-			}
-			return nil
-		},
-	}
-
-	p.Init(cmd)
-
-	return cmd
-}
-
-func (p *Process) Context() context.Context {
-	return p.ctx
-}
-
 func (p *Process) Start(fs *pflag.FlagSet) error {
+	// set default
+	DefaultProcess = p
+
 	// To help debugging, immediately log version
 	klog.Infof("Version: %+v", p.version)
 
@@ -310,6 +191,48 @@ func (p *Process) Start(fs *pflag.FlagSet) error {
 
 	klog.V(1).Info("[graceful-termination] apiserver is exiting")
 	return nil
+}
+
+// RegisterHooks register hookOps as a module
+func (p *Process) RegisterHooks(in []v1.HookOps) error {
+	for i := range in {
+		v := &in[i]
+		v.SetContext(p.ctx)
+		//v.process = p
+		//v.priority = v1.ProcessPriority(uint32(v.Priority)<<(16-3) + uint32(v.SubPriority))
+
+		p.hookOps[v.HookNum] = append(p.hookOps[v.HookNum], v)
+	}
+	return nil
+}
+
+// NewCmd without set runtime
+func (p *Process) NewCmd(opts ...ProcessOption) *cobra.Command {
+	for _, opt := range opts {
+		opt(p.ProcessOptions)
+	}
+
+	cmd := &cobra.Command{
+		Use:          p.name,
+		Short:        p.description,
+		SilenceUsage: true,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			verflag.PrintAndExitIfRequested()
+			return p.Start(cmd.Flags())
+		},
+		Args: func(cmd *cobra.Command, args []string) error {
+			for _, arg := range args {
+				if len(arg) > 0 {
+					return fmt.Errorf("%q does not take any arguments, got %q", cmd.CommandPath(), args)
+				}
+			}
+			return nil
+		},
+	}
+
+	p.Init(cmd)
+
+	return cmd
 }
 
 func (p *Process) Parse(fs *pflag.FlagSet, opts ...configer.ConfigerOption) (configer.ParsedConfiger, error) {
@@ -453,13 +376,6 @@ func (p *Process) PrintFlags(fs *pflag.FlagSet) {
 	cliflag.PrintFlags(fs)
 }
 
-//func (p *Process) AddLoggingFlags() {
-//	fs := p.namedFlagSets.FlagSet("logging")
-//	o := logsapi.NewLoggingConfiguration()
-//	logsapi.AddFlags(o, fs)
-//	logs.AddFlags(fs, logs.SkipLoggingConfigurationFlags())
-//}
-
 func (p *Process) AddFlags(name string) {
 	p.addFlagsOnce.Do(func() {
 		gfs := p.namedFlagSets.FlagSet("global")
@@ -523,6 +439,58 @@ func (p *Process) NewVersionCmd() *cobra.Command {
 	}
 }
 
+func (p *Process) ConfigVar(fs *pflag.FlagSet, path string, sample interface{}, opts ...configer.ConfigFieldsOption) error {
+	return p.configer.Var(fs, path, sample, opts...)
+}
+
+func (p *Process) Configer() configer.ParsedConfiger {
+	return p.parsedConfiger
+}
+
+func (p *Process) ReadConfig(path string, into interface{}) error {
+	err := p.parsedConfiger.Read(path, into)
+	if err == nil {
+		return nil
+	}
+	if _, ok := err.(configer.ErrNoValue); ok {
+		return nil
+	}
+	return err
+}
+
+func (p *Process) MustReadConfig(path string, into interface{}) error {
+	err := p.parsedConfiger.Read(path, into)
+	if err == nil {
+		return nil
+	}
+	if _, ok := err.(configer.ErrNoValue); ok {
+		return errors.NewNotFound(path)
+	}
+	return err
+}
+
+func (p *Process) AddConfig(path string, sample interface{}, opts ...ConfigOption) error {
+	cf := &configOptions{
+		path:   path,
+		sample: sample,
+	}
+
+	for _, opt := range opts {
+		opt(cf)
+	}
+
+	if tagsGetter, ok := sample.(tagsGetter); ok {
+		cf.opts = append(cf.opts, configer.WithTags(tagsGetter.GetTags))
+	}
+
+	p.configs = append(p.configs, cf)
+
+	return nil
+}
+
+func (p *Process) AddGlobalConfig(sample interface{}) error {
+	return p.AddConfig("", sample, WithConfigGroup("global"))
+}
 func init() {
 	RegisterHooks(logging.HookOps)
 	AddConfig(logging.ModuleName, logging.NewConfig(), WithConfigGroup("logging"))

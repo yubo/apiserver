@@ -6,10 +6,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/yubo/apiserver/components/dbus"
 	"github.com/yubo/apiserver/pkg/apis/rbac"
-	dbstore "github.com/yubo/apiserver/pkg/storage/db"
+	libdb "github.com/yubo/apiserver/pkg/db"
 	"github.com/yubo/golib/api"
-	"github.com/yubo/golib/orm"
 
 	_ "github.com/yubo/golib/orm/mysql"
 	_ "github.com/yubo/golib/orm/sqlite"
@@ -26,22 +26,18 @@ func runTests(t *testing.T, tests ...func(*Role)) {
 	// See https://github.com/go-sql-driver/mysql/wiki/Testing
 	driver := envDef("TEST_DB_DRIVER", "sqlite3")
 	dsn := envDef("TEST_DB_DSN", "file:test.db?cache=shared&mode=memory")
-
-	db, err := orm.Open(driver, dsn)
+	db, err := libdb.NewDB(context.TODO(), libdb.NewConfig(driver, dsn))
 	if err != nil {
 		t.Skip(err)
 		return
 	}
 	defer db.Close()
 
-	store := dbstore.New(db)
-	defer store.Drop(context.Background(), "role")
-
-	m := NewModels(store)
-	m.Register(&Role{})
+	dbus.RegisterDB(db)
+	libdb.Models(&Role{})
 
 	roles := &Role{DB: db}
-	store.AutoMigrate(context.Background(), "role", roles.NewObj())
+	db.AutoMigrate(context.Background(), roles.NewObj())
 
 	for _, test := range tests {
 		test(roles)

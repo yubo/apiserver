@@ -5,6 +5,7 @@ import (
 	"context"
 	"examples/all-in-one/pkg/api"
 
+	"github.com/yubo/apiserver/pkg/db"
 	"github.com/yubo/apiserver/pkg/models"
 	libapi "github.com/yubo/golib/api"
 	"github.com/yubo/golib/orm"
@@ -60,5 +61,5 @@ func (p *User) Delete(ctx context.Context, name string) error {
 }
 
 func init() {
-	models.Register(&User{})
+	db.Models(&User{})
 }

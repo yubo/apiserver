@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/yubo/apiserver/pkg/apis/rbac"
+	"github.com/yubo/apiserver/pkg/db"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/orm"
 )
@@ -59,5 +60,5 @@ func (p *Role) Delete(ctx context.Context, name string) error {
 }
 
 func init() {
-	Register(&Role{})
+	db.Models(&Role{})
 }

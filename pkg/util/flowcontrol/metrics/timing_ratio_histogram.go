@@ -71,9 +71,9 @@ func NewTimingRatioHistogram(opts *TimingRatioHistogramOpts) *TimingRatioHistogr
 // NewTestableTimingHistogram adds injection of the clock
 func NewTestableTimingRatioHistogram(nowFunc func() time.Time, opts *TimingRatioHistogramOpts) *TimingRatioHistogram {
 	//nolint:govet // copylocks: assignment copies lock value to ratioedOpts: k8s.io/component-base/metrics.TimingHistogramOpts contains sync.Once contains sync.Mutex
-	ratioedOpts := opts.TimingHistogramOpts
+	ratioedOpts := &opts.TimingHistogramOpts
 	ratioedOpts.InitialValue /= opts.InitialDenominator
-	th := compbasemetrics.NewTestableTimingHistogram(nowFunc, &ratioedOpts)
+	th := compbasemetrics.NewTestableTimingHistogram(nowFunc, ratioedOpts)
 	return &TimingRatioHistogram{
 		Registerable: th,
 		timingRatioHistogramInner: timingRatioHistogramInner{

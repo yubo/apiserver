@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/yubo/apiserver/pkg/apis/rbac"
+	"github.com/yubo/apiserver/pkg/db"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/orm"
 )
@@ -57,5 +58,5 @@ func (p *ClusterRoleBinding) Delete(ctx context.Context, name string) error {
 }
 
 func init() {
-	Register(&ClusterRoleBinding{})
+	db.Models(&ClusterRoleBinding{})
 }

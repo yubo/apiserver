@@ -5,6 +5,7 @@ import (
 
 	"examples/models-db/api"
 
+	"github.com/yubo/apiserver/pkg/db"
 	"github.com/yubo/apiserver/pkg/models"
 	libapi "github.com/yubo/golib/api"
 	"github.com/yubo/golib/orm"
@@ -62,5 +63,5 @@ func (p *Demo) Delete(ctx context.Context, selector string) error {
 }
 
 func init() {
-	models.Register(&Demo{})
+	db.Models(&Demo{})
 }

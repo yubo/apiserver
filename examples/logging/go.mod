@@ -47,3 +47,7 @@ require (
 )
 
 replace github.com/yubo/apiserver => ../../
+
+replace github.com/yubo/client-go => ../../../client-go
+
+replace github.com/yubo/golib => ../../../golib

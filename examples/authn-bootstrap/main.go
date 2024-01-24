@@ -22,7 +22,6 @@ import (
 
 	// for models
 	_ "github.com/yubo/apiserver/pkg/db/register"
-	_ "github.com/yubo/apiserver/pkg/models/register"
 	_ "github.com/yubo/golib/orm/mysql"
 	_ "github.com/yubo/golib/orm/sqlite"
 )

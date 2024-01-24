@@ -3,6 +3,7 @@ package models
 import (
 	"context"
 
+	"github.com/yubo/apiserver/pkg/db"
 	"github.com/yubo/golib/api"
 	"github.com/yubo/golib/orm"
 )
@@ -58,5 +59,5 @@ func (p *Secret) Delete(ctx context.Context, name string) error {
 }
 
 func init() {
-	Register(&Secret{})
+	db.Models(&Secret{})
 }

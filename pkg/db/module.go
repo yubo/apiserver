@@ -16,11 +16,14 @@ func Register(opts ...proc.ModuleOption) {
 	o := &proc.ModuleOptions{
 		Proc: proc.DefaultProcess,
 	}
-	for _, v := range opts {
-		v(o)
+	for _, opt := range opts {
+		opt(o)
 	}
 
-	module := &module{name: moduleName}
+	module := &module{
+		name: moduleName,
+		proc: o.Proc,
+	}
 	hookOps := []v1.HookOps{{
 		Hook:        module.init,
 		Owner:       moduleName,
@@ -28,6 +31,7 @@ func Register(opts ...proc.ModuleOption) {
 		Priority:    v1.PRI_SYS_INIT,
 		SubPriority: v1.PRI_M_DB,
 	}, {
+
 		Hook:        module.stop,
 		Owner:       moduleName,
 		HookNum:     v1.ACTION_STOP,
@@ -42,13 +46,14 @@ func Register(opts ...proc.ModuleOption) {
 type module struct {
 	name string
 	db   api.DB
+	proc *proc.Process
 }
 
 // Because some configuration may be stored in the database,
 // set the db.connect into sys.db.prestart
 func (p *module) init(ctx context.Context) (err error) {
 	cf := newConfig()
-	if err := proc.ReadConfig(p.name, cf); err != nil {
+	if err := p.proc.ReadConfig(p.name, cf); err != nil {
 		return err
 	}
 
@@ -60,6 +65,10 @@ func (p *module) init(ctx context.Context) (err error) {
 	}
 	dbus.RegisterDB(p.db)
 
+	if err = autoMigrate(ctx, p.db); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -69,4 +78,11 @@ func (p *module) stop(ctx context.Context) error {
 
 func newConfig() *Config {
 	return &Config{}
+}
+
+func NewConfig(driver, dsn string) *Config {
+	c := &Config{}
+	c.Driver = driver
+	c.Dsn = dsn
+	return c
 }
